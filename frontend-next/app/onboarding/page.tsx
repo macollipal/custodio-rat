@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import { validarRUT, formatearRUT } from '@/components/ui/validation';
+import type { Rubro } from '@/types';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -15,9 +16,12 @@ export default function OnboardingPage() {
     rut: '',
     contacto_dpo: '',
     email_dpo: '',
+    rubro_id: '' as string,
   });
   const [rutError, setRutError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [rubros, setRubros] = useState<Rubro[]>([]);
+  const [loadingRubros, setLoadingRubros] = useState(true);
 
   const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
   const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
@@ -37,6 +41,10 @@ export default function OnboardingPage() {
     }
   }
 
+  useEffect(() => {
+    api.listarRubros().then(setRubros).catch(() => {}).finally(() => setLoadingRubros(false));
+  }, []);
+
   async function handleSubmit() {
     if (!form.nombre.trim()) { toast.error('La razón social es obligatoria.'); return; }
     if (!form.rut.trim()) { toast.error('El RUT es obligatorio.'); return; }
@@ -46,12 +54,13 @@ export default function OnboardingPage() {
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         nombre: form.nombre.trim(),
         rut: form.rut.trim(),
         contacto_dpo: form.contacto_dpo.trim() || undefined,
         email_dpo: form.email_dpo.trim(),
       };
+      if (form.rubro_id) payload.rubro_id = Number(form.rubro_id);
       const empresa = await api.crearEmpresa(payload);
       setCompany(empresa);
       setCompanies([empresa]);
@@ -150,6 +159,27 @@ export default function OnboardingPage() {
                 className={inputCls}
                 style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                Rubro de la empresa
+              </label>
+              {loadingRubros ? (
+                <div className="h-10 rounded-lg animate-pulse" style={{ background: '#F3F4F6' }} />
+              ) : (
+                <select
+                  value={form.rubro_id}
+                  onChange={e => set('rubro_id', e.target.value)}
+                  className={inputCls}
+                  style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
+                >
+                  <option value="">— Selecciona un rubro —</option>
+                  {rubros.map(r => (
+                    <option key={r.id} value={String(r.id)}>{r.nombre}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

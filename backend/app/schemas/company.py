@@ -21,6 +21,7 @@ class CompanyBase(BaseModel):
             raise ValueError("El RUT no puede estar vacío.")
         return v.strip()
     rubro: Optional[str] = None
+    rubro_id: Optional[int] = None
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
     email_dpo: Optional[str] = None
@@ -35,6 +36,7 @@ class CompanyCreate(CompanyBase):
 class CompanyUpdate(BaseModel):
     nombre: Optional[str] = None
     rubro: Optional[str] = None
+    rubro_id: Optional[int] = None
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
     email_dpo: Optional[str] = None
@@ -48,5 +50,6 @@ class CompanyOut(CompanyBase):
     updated_at: datetime
     total_rats: Optional[int] = 0
     mi_rol: Optional[str] = None  # rol del usuario actual en esta empresa (None = admin global)
+    rubro_id: Optional[int] = None
 
     model_config = {"from_attributes": True}

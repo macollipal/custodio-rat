@@ -5,7 +5,7 @@ Modelo de empresa (responsable del tratamiento de datos).
 from __future__ import annotations
 from datetime import datetime, timezone
 from typing import List
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -18,6 +18,7 @@ class Company(Base):
     nombre: Mapped[str] = mapped_column(String(300), nullable=False)
     rut: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
     rubro: Mapped[str] = mapped_column(String(200), nullable=True)
+    rubro_id: Mapped[int] = mapped_column(Integer, ForeignKey("rubros.id"), nullable=True)
     direccion: Mapped[str] = mapped_column(String(400), nullable=True)
     contacto_dpo: Mapped[str] = mapped_column(String(200), nullable=True)  # Delegado de Protección
     email_dpo: Mapped[str] = mapped_column(String(200), nullable=True)
@@ -35,3 +36,4 @@ class Company(Base):
     # Relación con registros RAT
     rats: Mapped[list["RAT"]] = relationship("RAT", back_populates="company", cascade="all, delete-orphan")
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="company", cascade="all, delete-orphan")  # noqa: F821
+    rubro: Mapped["Rubro"] = relationship("Rubro")  # noqa: F821
