@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-04-30T00:00:00.000Z" agent="Claude" version="21.0.9" type="device">
+  <diagram name="1. Ciclo de vida RAT" id="rat_lifecycle">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="ttl" value="Ciclo de Vida - Proceso RAT - Custodio" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="900" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_borr" value="BORRADOR (estado inicial)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="140" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_comp" value="COMPLETO (7 campos obligatorios llenos)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="300" y="140" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_rev" value="EN REVISION (alertas activas)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="600" y="140" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_aprob" value="APROBADO (firma DPO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="860" y="140" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_bc" value="completitud = 100%" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;" edge="1" source="s_borr" target="s_comp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_cr" value="marcar revision" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;" edge="1" source="s_comp" target="s_rev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_ra" value="aprobar" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;" edge="1" source="s_rev" target="s_aprob" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_act" value="Que accion sobre el RAT?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="290" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_edit" value="Editar directamente?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="290" width="140" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_risk" value="Nivel riesgo?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="570" y="290" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_new" value="NUEVO RAT - Wizard 4 pasos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="550" y="440" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_edit" value="Editar campos - inline o modal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="550" y="520" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_dup" value="Duplicar RAT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="520" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_del" value="Eliminar (soft delete + audit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="520" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_exp_c" value="Exportar CSV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="440" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_exp_p" value="Exportar PDF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="500" width="130" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_audit" value="Ver auditoria (log de cambios)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E7FF;strokeColor=#4F46E5;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="560" width="130" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_low" value="BAJO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="290" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_med" value="MEDIO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="345" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_high" value="ALTO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="400" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_crit" value="CRITICO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7F1D1D;strokeColor=#991B1B;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="345" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea1" edge="1" source="d_act" target="d_edit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea3" value="Duplicar" edge="1" source="d_edit" target="a_dup" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea4" value="Si" edge="1" source="d_edit" target="a_edit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea5" value="No" edge="1" source="d_edit" target="d_risk" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea6" value="Ver RAT" edge="1" source="d_risk" target="r_low" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea8" value="Eliminar" edge="1" source="d_act" target="a_del" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="380"/>
+              <mxPoint x="80" y="380"/>
+              <mxPoint x="80" y="547"/>
+              <mxPoint x="200" y="547"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="er1" value="score &gt;= 3" edge="1" source="r_low" target="r_med" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="er2" value="score &gt;= 5" edge="1" source="r_med" target="r_high" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="er3" value="score &gt;= 7" edge="1" source="r_high" target="r_crit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es1" edge="1" source="s_borr" target="d_act" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontColor=#6B7280;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="210"/>
+              <mxPoint x="140" y="330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg" value="Estados: BORRADOR -&gt; COMPLETO -&gt; EN_REVISION -&gt; APROBADO | Roles: admin/editor pueden crear/editar | Riesgos: bajo(0-2) medio(3-4) alto(5-6) critico(&gt;=7)" style="text;html=1;strokeColor=#E5E7EB;fillColor=#F9FAFB;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="640" width="1100" height="35" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram name="2. Wizard 4 pasos" id="rat_wizard">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="w_ttl" value="Wizard de Creacion RAT - 4 Pasos" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="900" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="w1" value="PASO 1 - IDENTIFICACION" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w1_c" value="nombre_proceso | categoria_titulares | fuente_datos | destinatarios | nombre_encargado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#93C5FD;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="180" width="280" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="w2" value="PASO 2 - DATOS TRATADOS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="400" y="100" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w2_c" value="categoria_datos | datos_sensibles -&gt; tipo_dato_sensible | evaluacion_impacto -&gt; estado_eipd | decisiones_automatizadas | tiene_contrato_encargado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#C4B5FD;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="180" width="310" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="w3" value="PASO 3 - FINALIDAD Y LEY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="100" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w3_c" value="finalidad | base_legal (Art. 12/13/16/16 BIS) | test_interes_legitimo | transferencia_datos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#FCD34D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="180" width="290" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="w4" value="PASO 4 - ALMACENAMIENTO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="100" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w4_c" value="plazo_retencion | medidas_seguridad | transferencia_internacional | pais_destino | garantias_transferencia_int" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#6EE7B7;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="180" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="wf1" value="-&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=18;fontStyle=1;" edge="1" source="w1" target="w2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wf2" value="-&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=18;fontStyle=1;" edge="1" source="w2" target="w3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wf3" value="-&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=18;fontStyle=1;" edge="1" source="w3" target="w4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_val" value="VALIDACION EN CADA PASO" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="500" y="310" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_ok" value="Campos minimos presentes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_err" value="Faltan campos obligatorios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="530" y="420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_warn" value="Alertas contextuales" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="700" y="420" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_sugg" value="SUGERENCIAS IA (suggestion_service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="870" y="400" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_sugg_c" value="base_legal segun finalidad | medidas_seguridad segun datos_sensibles | plazo_retencion segun categoria_datos | alertas si EIPD requerida" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#C4B5FD;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="500" width="240" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_save" value="GUARDAR RAT - POST /rats/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563EB;strokeColor=#1D4ED8;fontColor=#FFFFFF;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="490" y="620" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_calc" value="calcular_completitud() | _calcular_estado() | _generar_alertas_auditoria()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="620" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_audit" value="INSERT audit_log (accion=crear)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="690" y="620" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe1" edge="1" source="w1_c" target="w_val" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="270"/>
+              <mxPoint x="190" y="345"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wfe2" edge="1" source="w_val" target="w_ok" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe3" value="No valido" edge="1" source="w_val" target="w_err" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe4" value="Con alertas" edge="1" source="w_val" target="w_warn" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe5" edge="1" source="w_ok" target="w_calc" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe6" edge="1" source="w_warn" target="w_sugg" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe7" edge="1" source="w_calc" target="w_save" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="wfe8" edge="1" source="w_save" target="w_audit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;fontColor=#374151;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="w_leg" value="Campos obligatorios: nombre_proceso, categoria_datos, categoria_titulares, finalidad, base_legal, fuente_datos, plazo_retencion (7 campos) | Alertas: EIPD si datos_sensibles, transferencia sin garantias, decisiones automatizadas" style="text;html=1;strokeColor=#E5E7EB;fillColor=#F9FAFB;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="740" width="1250" height="35" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram name="3. Calculo de riesgo" id="rat_risk">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="ri_ttl" value="Calculo de Nivel de Riesgo - RAT" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="850" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f1" value="datos_sensibles = true | +2 puntos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="120" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f2" value="EIPD pendiente/no completada | +2 puntos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="200" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f3" value="decisiones_automatizadas = true | +2 puntos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="280" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f4" value="transferencia_internacional sin garantias_transferencia_int | +1 punto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="360" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f5" value="tipo_dato_sensible contiene biometric/menor | +1 punto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="450" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_f6" value="nombre_encargado presente sin tiene_contrato_encargado | +1 punto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="540" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_sum" value="SUMA DE PUNTOS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="300" width="150" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_dec" value="score" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7C3AED;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="590" y="305" width="120" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_low" value="BAJO (score 0-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="100" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_med" value="MEDIO (score 3-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="200" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_high" value="ALTO (score 5-6)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="300" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_crit" value="CRITICO (score &gt;= 7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7F1D1D;strokeColor=#991B1B;fontColor=#FFFFFF;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="400" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_a_low" value="Revision periodica anual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#059669;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="100" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_a_med" value="Revision semestral" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="200" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_a_high" value="Revision trimestral + DPO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="300" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ri_a_crit" value="Revision mensual + alerta CNI + EIPD obligatoria" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7F1D1D;strokeColor=#991B1B;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="400" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref1" edge="1" source="ri_f1" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#DC2626;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref2" edge="1" source="ri_f2" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#DC2626;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref3" edge="1" source="ri_f3" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#DC2626;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref4" edge="1" source="ri_f4" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#D97706;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref5" edge="1" source="ri_f5" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#D97706;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref6" edge="1" source="ri_f6" target="ri_sum" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontColor=#D97706;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="re_sum" edge="1" source="ri_sum" target="ri_dec" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="re_low" value="0-2" edge="1" source="ri_dec" target="ri_low" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="re_med" value="3-4" edge="1" source="ri_dec" target="ri_med" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="re_high" value="5-6" edge="1" source="ri_dec" target="ri_high" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="re_crit" value="&gt;=7" edge="1" source="ri_dec" target="ri_crit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rea1" edge="1" source="ri_low" target="ri_a_low" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rea2" edge="1" source="ri_med" target="ri_a_med" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rea3" edge="1" source="ri_high" target="ri_a_high" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rea4" edge="1" source="ri_crit" target="ri_a_crit" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram name="4. Estructura de campos" id="rat_fields">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="f_ttl" value="Estructura de Campos RAT - Art. 16 Ley 21.719" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="1000" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob" value="CAMPOS OBLIGATORIOS (7) - minimo legal Art. 16" style="swimlane;fontStyle=1;fontSize=13;fillColor=#DBEAFE;strokeColor=#2563EB;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="90" width="350" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob1" value="nombre_proceso" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="35" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob2" value="categoria_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="63" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob3" value="categoria_titulares" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="91" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob4" value="finalidad" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="119" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob5" value="base_legal" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="147" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob6" value="fuente_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="175" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob7" value="plazo_retencion" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#1E40AF;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="203" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ob8" value="completitud = (llenos / 10) x 100%" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;fontColor=#6B7280;" vertex="1" parent="f_ob">
+          <mxGeometry x="0" y="245" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_rec" value="CAMPOS RECOMENDADOS (3) - mejor practica" style="swimlane;fontStyle=1;fontSize=13;fillColor=#FEF3C7;strokeColor=#D97706;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="410" y="90" width="300" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_r1" value="medidas_seguridad" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_rec">
+          <mxGeometry x="0" y="35" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_r2" value="destinatarios" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_rec">
+          <mxGeometry x="0" y="63" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_r3" value="transferencia_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_rec">
+          <mxGeometry x="0" y="91" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds" value="DATOS SENSIBLES - trigger EIPD" style="swimlane;fontStyle=1;fontSize=13;fillColor=#FEE2E2;strokeColor=#DC2626;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="740" y="90" width="340" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds1" value="datos_sensibles (bool)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#DC2626;" vertex="1" parent="f_ds">
+          <mxGeometry x="0" y="35" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds2" value="tipo_dato_sensible (string)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_ds">
+          <mxGeometry x="0" y="63" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds3" value="evaluacion_impacto (bool) + estado_eipd" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_ds">
+          <mxGeometry x="0" y="91" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds4" value="fecha_eipd (date)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_ds">
+          <mxGeometry x="0" y="119" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ds5" value="decisiones_automatizadas (bool)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#DC2626;" vertex="1" parent="f_ds">
+          <mxGeometry x="0" y="147" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ti" value="TRANSFERENCIA INTERNACIONAL" style="swimlane;fontStyle=1;fontSize=13;fillColor=#F3E8FF;strokeColor=#7C3AED;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="90" width="350" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ti1" value="transferencia_internacional (bool)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#7C3AED;" vertex="1" parent="f_ti">
+          <mxGeometry x="0" y="35" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ti2" value="pais_destino (string)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_ti">
+          <mxGeometry x="0" y="63" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ti3" value="garantias_transferencia_int (string)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_ti">
+          <mxGeometry x="0" y="91" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_ti4" value="Riesgo +1 si falta garantias" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#DC2626;" vertex="1" parent="f_ti">
+          <mxGeometry x="0" y="125" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_enc" value="ENCARGADO DEL TRATAMIENTO" style="swimlane;fontStyle=1;fontSize=13;fillColor=#ECFDF5;strokeColor=#059669;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="440" width="350" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_enc1" value="nombre_encargado (string)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_enc">
+          <mxGeometry x="0" y="35" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_enc2" value="tiene_contrato_encargado (bool)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_enc">
+          <mxGeometry x="0" y="63" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_enc3" value="Riesgo +1 si hay nombre sin contrato" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#DC2626;" vertex="1" parent="f_enc">
+          <mxGeometry x="0" y="97" width="350" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl" value="BASE LEGAL - Art. 16 BIS" style="swimlane;fontStyle=1;fontSize=13;fillColor=#FFFBEB;strokeColor=#92400E;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="410" y="320" width="300" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl1" value="test_interes_legitimo (Text)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_bl">
+          <mxGeometry x="0" y="35" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl2" value="3 pasos obligatorios:" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;fontStyle=2;color:#92400E;" vertex="1" parent="f_bl">
+          <mxGeometry x="0" y="63" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl3" value="1. Proposito legitimo" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#374151;" vertex="1" parent="f_bl">
+          <mxGeometry x="0" y="91" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl4" value="2. Necesidad proporcional" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#374151;" vertex="1" parent="f_bl">
+          <mxGeometry x="0" y="119" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_bl5" value="3. Safeguards aplicadas" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#374151;" vertex="1" parent="f_bl">
+          <mxGeometry x="0" y="147" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud" value="AUDITORIA Y ESTADO" style="swimlane;fontStyle=1;fontSize=13;fillColor=#F5F5F5;strokeColor=#6B7280;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="740" y="320" width="340" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud1" value="estado: BORRADOR | COMPLETO | EN_REVISION | APROBADO" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;color:#374151;" vertex="1" parent="f_aud">
+          <mxGeometry x="0" y="35" width="340" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud2" value="observaciones_auditoria (Text)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_aud">
+          <mxGeometry x="0" y="91" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud3" value="created_by - updated_by" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_aud">
+          <mxGeometry x="0" y="119" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud4" value="created_at - updated_at" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="f_aud">
+          <mxGeometry x="0" y="147" width="340" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_aud5" value="audit_logs: accion, usuario, timestamp, detalle" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;color:#6B7280;" vertex="1" parent="f_aud">
+          <mxGeometry x="0" y="185" width="340" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_wiz" value="MAPA WIZARD 4 PASOS" style="swimlane;fontStyle=1;fontSize=13;fillColor=#DBEAFE;strokeColor=#1D4ED8;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="320" width="350" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_w1" value="Paso 1: nombre_proceso, categoria_titulares, fuente_datos, destinatarios, nombre_encargado" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#2563EB;" vertex="1" parent="f_wiz">
+          <mxGeometry x="0" y="35" width="350" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_w2" value="Paso 2: categoria_datos, datos_sensibles, tipo_dato_sensible, evaluacion_impacto, estado_eipd, fecha_eipd, decisiones_automatizadas, tiene_contrato_encargado" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=10;color:#7C3AED;" vertex="1" parent="f_wiz">
+          <mxGeometry x="0" y="105" width="350" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_w3" value="Paso 3: finalidad, base_legal, test_interes_legitimo, transferencia_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#D97706;" vertex="1" parent="f_wiz">
+          <mxGeometry x="0" y="190" width="350" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_w4" value="Paso 4: plazo_retencion, medidas_seguridad, transferencia_internacional, pais_destino, garantias_transferencia_int" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;color:#059669;" vertex="1" parent="f_wiz">
+          <mxGeometry x="0" y="250" width="350" height="55" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

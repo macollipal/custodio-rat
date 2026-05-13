@@ -1,0 +1,132 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\chelo\\Desktop\\RAT\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+INFO:     Started reloader process [13540] using WatchFiles
+INFO:     Started server process [10176]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app\schemas\company.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10176]
+WARNING:  WatchFiles detected changes in 'app\routes\deps.py'. Reloading...
+INFO:     Started server process [18780]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 629, in run_until_complete
+    self.run_forever()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 596, in run_forever
+    self._run_once()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 1890, in _run_once
+    handle._run()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\server.py", line 69, in serve
+    await self._serve(sockets)
+  File "C:\Trabajo\DUOC\Python\lib\contextlib.py", line 124, in __exit__
+    next(self.gen)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\server.py", line 332, in capture_signals
+    signal.raise_signal(captured_signal)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\starlette\routing.py", line 700, in lifespan
+    await receive()
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\lifespan\on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\queues.py", line 166, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+WARNING:  WatchFiles detected changes in 'app\routes\deps.py', 'app\routes\companies.py', 'app\routes\rats.py'. Reloading...
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Trabajo\DUOC\Python\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Trabajo\DUOC\Python\lib\multiprocessing\spawn.py", line 126, in _main
+    self = reduction.pickle.load(from_parent)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\__init__.py", line 1, in <module>
+    from uvicorn.config import Config
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\config.py", line 3, in <module>
+    import asyncio
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\__init__.py", line 8, in <module>
+    from .base_events import *
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 39, in <module>
+    from . import coroutines
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\coroutines.py", line 5, in <module>
+    import inspect
+  File "C:\Trabajo\DUOC\Python\lib\inspect.py", line 35, in <module>
+    import ast
+  File "C:\Trabajo\DUOC\Python\lib\ast.py", line 28, in <module>
+    from _ast import *
+KeyboardInterrupt
+WARNING:  WatchFiles detected changes in 'app\routes\rats.py'. Reloading...
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Trabajo\DUOC\Python\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Trabajo\DUOC\Python\lib\multiprocessing\spawn.py", line 126, in _main
+    self = reduction.pickle.load(from_parent)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\__init__.py", line 2, in <module>
+    from uvicorn.main import Server, main, run
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\main.py", line 33, in <module>
+    from uvicorn.supervisors import ChangeReload, Multiprocess
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\supervisors\__init__.py", line 12, in <module>
+    from uvicorn.supervisors.watchfilesreload import (
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\supervisors\watchfilesreload.py", line 7, in <module>
+    from watchfiles import watch
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\watchfiles\__init__.py", line 2, in <module>
+    from .main import Change, awatch, watch
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\watchfiles\main.py", line 9, in <module>
+    import anyio
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\anyio\__init__.py", line 3, in <module>
+    from ._core._contextmanagers import AsyncContextManagerMixin as AsyncContextManagerMixin
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 786, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 881, in get_code
+  File "<frozen importlib._bootstrap_external>", line 980, in get_data
+KeyboardInterrupt
+WARNING:  WatchFiles detected changes in 'app\routes\user_companies.py'. Reloading...
+INFO:     Started server process [6400]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 629, in run_until_complete
+    self.run_forever()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 596, in run_forever
+    self._run_once()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\base_events.py", line 1890, in _run_once
+    handle._run()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\server.py", line 69, in serve
+    await self._serve(sockets)
+  File "C:\Trabajo\DUOC\Python\lib\contextlib.py", line 124, in __exit__
+    next(self.gen)
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\server.py", line 332, in capture_signals
+    signal.raise_signal(captured_signal)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\starlette\routing.py", line 700, in lifespan
+    await receive()
+  File "C:\Users\chelo\Desktop\RAT\backend\venv\lib\site-packages\uvicorn\lifespan\on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "C:\Trabajo\DUOC\Python\lib\asyncio\queues.py", line 166, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+INFO:     Started server process [19444]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
