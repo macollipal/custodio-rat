@@ -1,0 +1,23 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/database.db
+backend/backend2.log
+backend/uvicorn_err.txt
+backend/uvicorn_out.txt
+
+# Node
+frontend-next/node_modules/
+frontend-next/.next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python env
+*.egg-info/

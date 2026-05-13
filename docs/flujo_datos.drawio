@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-04-24T00:00:00.000Z" agent="Claude" version="21.0.9" type="device">
+
+  <!-- ══════════════════════════════════════════════════════════
+       PÁGINA 1 — Flujo de Usuario
+  ══════════════════════════════════════════════════════════ -->
+  <diagram name="1. Flujo de usuario" id="pg_user">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título -->
+        <mxCell id="u_ttl" value="Flujo de Usuario — Custodio RAT Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="20" width="750" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- START -->
+        <mxCell id="u_s" value="INICIO" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="85" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- LOGIN -->
+        <mxCell id="u_lg" value="Login&#xa;username + password" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="445" y="175" width="160" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- AUTH -->
+        <mxCell id="u_au" value="¿Credenciales&#xa;válidas?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="445" y="275" width="160" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ERROR -->
+        <mxCell id="u_er" value="Mostrar error" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="293" width="140" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- JWT -->
+        <mxCell id="u_jw" value="Recibe JWT + datos de sesión&#xa;Persiste en localStorage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="400" width="190" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ADMIN -->
+        <mxCell id="u_ad" value="¿Admin&#xa;global?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="445" y="505" width="160" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ALL COMPANIES -->
+        <mxCell id="u_ac" value="Ve TODAS&#xa;las empresas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="220" y="520" width="160" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- OWN COMPANIES -->
+        <mxCell id="u_oc" value="Ve sus empresas asignadas&#xa;vía user_companies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="680" y="520" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- SEL COMPANY -->
+        <mxCell id="u_sc" value="Selecciona empresa activa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="625" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- DASHBOARD -->
+        <mxCell id="u_da" value="Dashboard&#xa;KPIs · alertas · revisión periódica" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="730" width="190" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- WHAT ACTION -->
+        <mxCell id="u_wh" value="¿Qué acción?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="445" y="845" width="160" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- BRANCH RAT LIST -->
+        <mxCell id="u_rl" value="Lista de procesos RAT&#xa;completitud % · badge ⏰ Revisar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="985" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- BRANCH WIZARD -->
+        <mxCell id="u_wz" value="Wizard 4 pasos&#xa;nuevo proceso RAT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="425" y="985" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- BRANCH USERS -->
+        <mxCell id="u_us" value="Panel de accesos&#xa;(solo admin global)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="760" y="985" width="180" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- RAT ACTIONS -->
+        <mxCell id="u_ra" value="Editar · Duplicar · Exportar CSV/PDF · Historial auditoría" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1100" width="330" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- WIZARD STEPS -->
+        <mxCell id="u_ws" value="Datos básicos → Datos personales → Seguridad → Revisión → Guardar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1100" width="320" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- USER ACTIONS -->
+        <mxCell id="u_ua" value="Invitar (username)&#xa;Asignar rol: admin · editor · viewer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1100" width="230" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── FLECHAS ── -->
+        <mxCell id="e1" edge="1" source="u_s" target="u_lg" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" source="u_lg" target="u_au" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="No" edge="1" source="u_au" target="u_er" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="Sí" edge="1" source="u_au" target="u_jw" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Error vuelve al login -->
+        <mxCell id="e5" edge="1" source="u_er" target="u_lg" parent="1" style="edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="260" />
+              <mxPoint x="610" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" source="u_jw" target="u_ad" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="Sí" edge="1" source="u_ad" target="u_ac" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="No" edge="1" source="u_ad" target="u_oc" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" source="u_ac" target="u_sc" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" source="u_oc" target="u_sc" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" source="u_sc" target="u_da" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" source="u_da" target="u_wh" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="Ver RATs" edge="1" source="u_wh" target="u_rl" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="Nuevo RAT" edge="1" source="u_wh" target="u_wz" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="Usuarios" edge="1" source="u_wh" target="u_us" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" source="u_rl" target="u_ra" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" source="u_wz" target="u_ws" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" source="u_us" target="u_ua" parent="1" style="edgeStyle=orthogonalEdgeStyle;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PÁGINA 2 — Arquitectura Técnica
+  ══════════════════════════════════════════════════════════ -->
+  <diagram name="2. Arquitectura técnica" id="pg_arch">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="860" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título -->
+        <mxCell id="a_ttl" value="Arquitectura Técnica — Custodio RAT Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="820" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── GRUPO FRONTEND ── -->
+        <mxCell id="a_fe" value="🖥️  Navegador — Next.js 16  (puerto 3000)" style="swimlane;fontStyle=1;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=38;align=center;" vertex="1" parent="1">
+          <mxGeometry x="25" y="75" width="370" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_pg" value="Páginas React&#xa;login · dashboard · rat · companies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="55" width="330" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_ct" value="AppContext — caché en memoria&#xa;token · user · company&#xa;companies · rats · dashboardStats" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="145" width="330" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_ap" value="lib/api.ts&#xa;fetch() + Bearer JWT headers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="245" width="330" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_ls" value="localStorage&#xa;token · user · company activa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="335" width="330" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_tp" value="types/index.ts&#xa;User · Company · RAT · UserCompany · RolEmpresa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="425" width="330" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fe_cp" value="Componentes clave&#xa;RatTable · RatWizard · UserAccessPanel&#xa;Sidebar · PasswordModal · KPICard · StatusChart" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="a_fe">
+          <mxGeometry x="20" y="510" width="330" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ── GRUPO BACKEND ── -->
+        <mxCell id="a_be" value="⚙️  Backend — FastAPI  (puerto 8002)" style="swimlane;fontStyle=1;fontSize=14;fillColor=#ffe6cc;strokeColor=#d79b00;startSize=38;align=center;" vertex="1" parent="1">
+          <mxGeometry x="455" y="75" width="430" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_mw" value="CORSMiddleware + JWT Guard&#xa;get_current_user() — deps.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="55" width="390" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_au" value="POST /auth/login&#xa;GET /auth/me · PUT /auth/me/password&#xa;GET/POST /auth/users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="135" width="390" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_co" value="GET/POST /companies/&#xa;PUT/DELETE /companies/{id}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="225" width="390" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_rt" value="GET/POST /rats/  ·  GET/PUT/DELETE /rats/{id}&#xa;GET /rats/dashboard/{cid}&#xa;GET /rats/export/csv|pdf  ·  GET /rats/{id}/auditoria" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="305" width="390" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_uc" value="GET/POST /companies/{id}/usuarios/&#xa;PUT/DELETE /companies/{id}/usuarios/{uid}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="405" width="390" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_sv" value="Services&#xa;user · company · rat · export · suggestion · user_company" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="490" width="390" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="a_be_md" value="SQLAlchemy Models&#xa;User · Company · RAT · UserCompany · AuditLog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="a_be">
+          <mxGeometry x="20" y="580" width="390" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ── GRUPO DATABASE ── -->
+        <mxCell id="a_db" value="🗄️  SQLite — rat.db" style="swimlane;fontStyle=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;startSize=38;align=center;" vertex="1" parent="1">
+          <mxGeometry x="955" y="75" width="290" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db_u" value="users&#xa;id · username · email · full_name&#xa;hashed_password · is_active · is_admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="a_db">
+          <mxGeometry x="20" y="55" width="250" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db_c" value="companies&#xa;id · nombre · rut · rubro&#xa;contacto_dpo · email_dpo · created_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="a_db">
+          <mxGeometry x="20" y="155" width="250" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db_uc" value="user_companies&#xa;id · user_id · company_id&#xa;rol (admin|editor|viewer) · created_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="a_db">
+          <mxGeometry x="20" y="255" width="250" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db_r" value="rats&#xa;id · company_id · nombre_proceso&#xa;categoria_datos · finalidad · base_legal&#xa;datos_sensibles · evaluacion_impacto&#xa;estado · created_at · updated_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="a_db">
+          <mxGeometry x="20" y="355" width="250" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db_al" value="audit_logs&#xa;id · rat_id · accion&#xa;usuario · timestamp · detalle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="a_db">
+          <mxGeometry x="20" y="490" width="250" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ── FLECHAS ENTRE GRUPOS ── -->
+        <!-- lib/api.ts → Backend -->
+        <mxCell id="aa1" value="HTTP + Bearer JWT" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;strokeWidth=3;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="a_fe_ap" target="a_be_mw" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- localStorage ↔ AppContext -->
+        <mxCell id="aa2" value="persiste" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;strokeColor=#6c8ebf;" edge="1" source="a_fe_ls" target="a_fe_ct" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Backend → Database -->
+        <mxCell id="aa3" value="SQLAlchemy ORM" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;fontStyle=1;strokeWidth=3;strokeColor=#82b366;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="a_be_md" target="a_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Leyenda -->
+        <mxCell id="a_leg" value="&lt;b&gt;Leyenda:&lt;/b&gt;  🔵 Frontend (Next.js)   🟠 Backend (FastAPI)   🟢 Base de datos (SQLite)" style="text;html=1;strokeColor=#E5E7EB;fillColor=#F9FAFB;align=left;verticalAlign=middle;spacingLeft=10;fontSize=12;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="25" y="820" width="800" height="35" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PÁGINA 3 — Modelo de Datos
+  ══════════════════════════════════════════════════════════ -->
+  <diagram name="3. Modelo de datos" id="pg_erd">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título -->
+        <mxCell id="e_ttl" value="Modelo de Datos (ERD) — Custodio RAT Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="15" width="820" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── TABLA users ── -->
+        <mxCell id="t_u" value="users" style="swimlane;fontStyle=1;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="110" width="250" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u1" value="🔑  id  (PK)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="35" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u2" value="username" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="63" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u3" value="email" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="91" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u4" value="full_name" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="119" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u5" value="hashed_password" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="147" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_u6" value="is_active  ·  is_admin" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_u">
+          <mxGeometry x="0" y="175" width="250" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ── TABLA companies ── -->
+        <mxCell id="t_c" value="companies" style="swimlane;fontStyle=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="480" width="250" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c1" value="🔑  id  (PK)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="35" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c2" value="nombre  ·  rut" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="63" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c3" value="rubro  ·  direccion" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="91" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c4" value="contacto_dpo  ·  email_dpo" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="119" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c5" value="descripcion" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="147" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_c6" value="created_at" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_c">
+          <mxGeometry x="0" y="175" width="250" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ── TABLA user_companies (tabla puente) ── -->
+        <mxCell id="t_uc" value="user_companies" style="swimlane;fontStyle=1;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="490" y="295" width="250" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="t_uc1" value="🔑  id  (PK)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;" vertex="1" parent="t_uc">
+          <mxGeometry x="0" y="35" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_uc2" value="🔗  user_id  (FK → users)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=2;" vertex="1" parent="t_uc">
+          <mxGeometry x="0" y="63" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_uc3" value="🔗  company_id  (FK → companies)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=2;" vertex="1" parent="t_uc">
+          <mxGeometry x="0" y="91" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_uc4" value="rol  (admin | editor | viewer)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_uc">
+          <mxGeometry x="0" y="119" width="250" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_uc5" value="created_at" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_uc">
+          <mxGeometry x="0" y="147" width="250" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ── TABLA rats ── -->
+        <mxCell id="t_r" value="rats" style="swimlane;fontStyle=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="960" y="80" width="260" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r1" value="🔑  id  (PK)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="35" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r2" value="🔗  company_id  (FK → companies)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=2;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="63" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r3" value="nombre_proceso" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="91" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r4" value="categoria_datos  ·  finalidad" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="119" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r5" value="base_legal  ·  fuente_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="147" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r6" value="plazo_retencion  ·  destinatarios" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="175" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r7" value="medidas_seguridad  ·  transferencia_datos" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="203" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r8" value="transferencia_internacional  ·  pais_destino" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="231" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r9" value="datos_sensibles  ·  evaluacion_impacto" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="259" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r10" value="estado  (borrador|completo|en_revision|aprobado)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=11;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="287" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_r11" value="created_at  ·  updated_at" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_r">
+          <mxGeometry x="0" y="315" width="260" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ── TABLA audit_logs ── -->
+        <mxCell id="t_al" value="audit_logs" style="swimlane;fontStyle=1;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;startSize=35;align=center;" vertex="1" parent="1">
+          <mxGeometry x="960" y="600" width="260" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="t_al1" value="🔑  id  (PK)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=1;" vertex="1" parent="t_al">
+          <mxGeometry x="0" y="35" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_al2" value="🔗  rat_id  (FK → rats)" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;fontStyle=2;" vertex="1" parent="t_al">
+          <mxGeometry x="0" y="63" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_al3" value="accion  ·  usuario  ·  detalle" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_al">
+          <mxGeometry x="0" y="91" width="260" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="t_al4" value="timestamp" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=top;spacingLeft=12;fontSize=12;" vertex="1" parent="t_al">
+          <mxGeometry x="0" y="119" width="260" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ── RELACIONES ── -->
+        <!-- users 1-N user_companies -->
+        <mxCell id="r1" value="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=13;fontStyle=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="t_u" target="t_uc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- companies 1-N user_companies -->
+        <mxCell id="r2" value="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=13;fontStyle=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#82b366;strokeWidth=2;" edge="1" source="t_c" target="t_uc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- companies 1-N rats -->
+        <mxCell id="r3" value="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=13;fontStyle=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#82b366;strokeWidth=2;" edge="1" source="t_c" target="t_r" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="600" />
+              <mxPoint x="750" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <!-- rats 1-N audit_logs -->
+        <mxCell id="r4" value="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=13;fontStyle=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#9673a6;strokeWidth=2;" edge="1" source="t_r" target="t_al" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Leyenda relaciones -->
+        <mxCell id="e_leg" value="🔑 PK = Clave primaria     🔗 FK = Clave foránea     ─── 1:N = uno a muchos" style="text;html=1;strokeColor=#E5E7EB;fillColor=#F9FAFB;align=left;verticalAlign=middle;spacingLeft=10;fontSize=12;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="800" width="700" height="35" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PÁGINA 4 — Flujo de Datos Completo (Secuencia)
+  ══════════════════════════════════════════════════════════ -->
+  <diagram name="4. Flujo de datos completo" id="pg_seq">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título -->
+        <mxCell id="s_ttl" value="Flujo de Datos Completo — Custodio RAT Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="15" width="880" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── CABECERAS DE COLUMNA ── -->
+        <mxCell id="h1" value="👤 Usuario" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="20" y="75" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" value="🖥️ Frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="200" y="75" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" value="⚙️ Backend (FastAPI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="430" y="75" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h4" value="🗄️ SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="720" y="75" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Líneas de vida (vertical dashed) -->
+        <mxCell id="ll1" value="" style="endArrow=none;dashed=1;strokeColor=#9CA3AF;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="95" y="125" width="10" height="10" as="geometry">
+            <Array as="points">
+              <mxPoint x="95" y="125" />
+              <mxPoint x="95" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" value="" style="endArrow=none;dashed=1;strokeColor=#9CA3AF;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="300" y="125" width="10" height="10" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="125" />
+              <mxPoint x="300" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" value="" style="endArrow=none;dashed=1;strokeColor=#9CA3AF;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="560" y="125" width="10" height="10" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="125" />
+              <mxPoint x="560" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" value="" style="endArrow=none;dashed=1;strokeColor=#9CA3AF;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry x="820" y="125" width="10" height="10" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="125" />
+              <mxPoint x="820" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ── SECCIÓN 1: AUTENTICACIÓN ── -->
+        <mxCell id="s1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#BFDBFE;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="15" y="140" width="930" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_lbl" value="🔐  AUTENTICACIÓN" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1">
+          <mxGeometry x="25" y="143" width="250" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1_1" value="Ingresa credentials" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="20" y="175" width="150" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_a1" value="POST /auth/login" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="192" />
+              <mxPoint x="430" y="192" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1_a2" value="SELECT user WHERE username=?" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="225" />
+              <mxPoint x="720" y="225" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1_be1" value="verify_password()&#xa;create_access_token()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="205" width="260" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_a3" value="user record" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="255" />
+              <mxPoint x="690" y="255" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1_a4" value="{access_token, user}" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="285" />
+              <mxPoint x="200" y="285" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1_fe1" value="setToken() · setUser()&#xa;Persiste en localStorage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="300" width="200" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── SECCIÓN 2: CARGA EMPRESAS ── -->
+        <mxCell id="s2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#BBF7D0;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="15" y="430" width="930" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_lbl" value="🏢  CARGA DE EMPRESAS  (filtro según rol)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#166534;" vertex="1" parent="1">
+          <mxGeometry x="25" y="433" width="400" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_a1" value="GET /companies/  [Bearer JWT]" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="465" />
+              <mxPoint x="430" y="465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2_be1" value="get_current_user() — valida JWT&#xa;Admin: SELECT * FROM companies&#xa;Normal: SELECT c JOIN user_companies WHERE user_id=?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="475" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_a2" value="query a tabla companies / user_companies" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="510" />
+              <mxPoint x="720" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2_a3" value="lista empresas" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="555" />
+              <mxPoint x="690" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2_a4" value="[Company]" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="580" />
+              <mxPoint x="400" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2_fe1" value="setCompanies() · setCompany()&#xa;Limpia caché rats y stats" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="590" width="200" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ── SECCIÓN 3: CARGA RATs ── -->
+        <mxCell id="s3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#DDD6FE;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="15" y="700" width="930" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_lbl" value="📋  CARGA Y CACHÉ DE RATs" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#6B21A8;" vertex="1" parent="1">
+          <mxGeometry x="25" y="703" width="350" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3_a1" value="GET /rats/?company_id=X  [Bearer JWT]" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="735" />
+              <mxPoint x="430" y="735" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3_be1" value="SELECT * FROM rats WHERE company_id=X&#xa;calcular_completitud() por cada RAT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="745" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_a2" value="query rats" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="772" />
+              <mxPoint x="720" y="772" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3_a3" value="lista RATs" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="815" />
+              <mxPoint x="690" y="815" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3_a4" value="[RAT] + completitud" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="840" />
+              <mxPoint x="400" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3_fe1" value="setRats() ← caché inmediato&#xa;Próximas navegaciones usan caché" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="850" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ── SECCIÓN 4: CREAR RAT ── -->
+        <mxCell id="s4_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#FDBA74;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="15" y="965" width="930" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_lbl" value="✏️  CREAR RAT  (wizard 4 pasos)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="25" y="968" width="380" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s4_u1" value="Completa wizard y confirma" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1000" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_a1" value="POST /rats/ {nombre_proceso, categoria_datos, ...}" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1020" />
+              <mxPoint x="430" y="1020" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4_a2" value="INSERT INTO rats (...)" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="1050" />
+              <mxPoint x="720" y="1050" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4_a3" value="INSERT INTO audit_logs (accion=&#39;crear&#39;, usuario, rat_id)" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="1090" />
+              <mxPoint x="720" y="1090" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4_a4" value="RAT creado + completitud" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="1130" />
+              <mxPoint x="400" y="1130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4_fe1" value="setRats([...rats, nuevo])" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1143" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ── SECCIÓN 5: MULTI-USUARIO ── -->
+        <mxCell id="s5_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#FDE68A;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="15" y="1245" width="930" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="s5_lbl" value="👥  GESTIÓN DE ACCESOS  (solo admin)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="25" y="1248" width="400" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5_u1" value="Abre panel&#xa;Usuarios de empresa X" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1278" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="s5_a1" value="GET /companies/X/usuarios/" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1300" />
+              <mxPoint x="430" y="1300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5_a2" value="SELECT uc JOIN users" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="1320" />
+              <mxPoint x="720" y="1320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5_a3" value="[UserCompany]" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="1350" />
+              <mxPoint x="200" y="1350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5_u2" value="Invita jperez&#xa;rol: editor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F4F6;strokeColor=#6B7280;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1360" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s5_a4" value="POST /companies/X/usuarios/ {username, rol}" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1380" />
+              <mxPoint x="430" y="1380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5_a5" value="INSERT INTO user_companies (user_id, company_id, rol)" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;fontStyle=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="1415" />
+              <mxPoint x="720" y="1415" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5_a6" value="UserCompany creado" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;dashed=1;strokeColor=#374151;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="1450" />
+              <mxPoint x="200" y="1450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
