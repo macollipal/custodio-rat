@@ -15,6 +15,7 @@ export interface Company {
   nombre: string;
   rut: string;
   rubro?: string;
+  rubro_id?: number;
   direccion?: string;
   contacto_dpo?: string;
   email_dpo?: string;
@@ -22,6 +23,27 @@ export interface Company {
   canal_ejercicio_derechos?: string;
   total_rats?: number;
   mi_rol?: RolEmpresa | null;
+}
+
+export interface Rubro {
+  id: number;
+  nombre: string;
+  orden: number;
+  total_sugerencias?: number;
+}
+
+export interface RATSugerido {
+  id: number;
+  rubro_id: number;
+  nombre_proceso: string;
+  categoria_datos: string;
+  categoria_titulares?: string;
+  finalidad?: string;
+  base_legal?: string;
+  plazo_retencion?: string;
+  datos_sensibles: boolean;
+  evaluacion_impacto: boolean;
+  decisiones_automatizadas: boolean;
 }
 
 export interface RAT {

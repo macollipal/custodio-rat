@@ -31,10 +31,12 @@ def get_db():
 
 def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
-    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento  # noqa: F401
+    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido  # noqa: F401
     Base.metadata.create_all(bind=engine)
     _migrate_rats_table()
     _migrate_companies_table()
+    _migrate_rubros_table()
+    _migrate_rats_sugeridos_table()
 
 
 def _migrate_rats_table():
@@ -69,6 +71,7 @@ def _migrate_companies_table():
     """Agrega columnas nuevas a la tabla companies si no existen."""
     nuevas_columnas = [
         ("canal_ejercicio_derechos", "TEXT"),
+        ("rubro_id", "INTEGER REFERENCES rubros(id)"),
     ]
     with engine.connect() as conn:
         resultado = conn.execute(
@@ -83,3 +86,46 @@ def _migrate_companies_table():
                     )
                 )
         conn.commit()
+
+
+def _migrate_rubros_table():
+    """Agrega columna rubro_id a companies si no existe."""
+    with engine.connect() as conn:
+        resultado = conn.execute(
+            __import__("sqlalchemy").text("PRAGMA table_info(companies)")
+        )
+        columnas_existentes = {row[1] for row in resultado}
+        if "rubro_id" not in columnas_existentes:
+            conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE companies ADD COLUMN rubro_id INTEGER REFERENCES rubros(id)"
+                )
+            )
+            conn.commit()
+
+
+def _migrate_rats_sugeridos_table():
+    """Crea tabla rats_sugeridos si no existe."""
+    with engine.connect() as conn:
+        resultado = conn.execute(
+            __import__("sqlalchemy").text("SELECT name FROM sqlite_master WHERE type='table' AND name='rats_sugeridos'")
+        )
+        if not resultado.fetchone():
+            conn.execute(
+                __import__("sqlalchemy").text("""
+                    CREATE TABLE rats_sugeridos (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        rubro_id INTEGER NOT NULL REFERENCES rubros(id),
+                        nombre_proceso VARCHAR(300) NOT NULL,
+                        categoria_datos VARCHAR(500) NOT NULL,
+                        categoria_titulares VARCHAR(500),
+                        finalidad TEXT,
+                        base_legal VARCHAR(300),
+                        plazo_retencion VARCHAR(200),
+                        datos_sensibles BOOLEAN DEFAULT 0,
+                        evaluacion_impacto BOOLEAN DEFAULT 0,
+                        decisiones_automatizadas BOOLEAN DEFAULT 0
+                    )
+                """)
+            )
+            conn.commit()

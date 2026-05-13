@@ -1,4 +1,4 @@
-import type { AuthResponse, Company, RAT, DashboardStats, AuditLog, User, UserCompany, RolEmpresa, SecurityBreach } from '@/types';
+import type { AuthResponse, Company, RAT, DashboardStats, AuditLog, User, UserCompany, RolEmpresa, SecurityBreach, Rubro, RATSugerido } from '@/types';
 import { API_BASE } from './constants';
 
 function getToken(): string {
@@ -447,6 +447,27 @@ export async function cambiarPasswordOtro(userId: number, newPassword: string): 
     method: 'PUT',
     headers: authHeaders(),
     body: JSON.stringify({ new_password: newPassword }),
+  });
+  return handle<void>(res);
+}
+
+// ── Rubros ────────────────────────────────────────────────────────────────────
+
+export async function listarRubros(): Promise<Rubro[]> {
+  const res = await fetch(`${API_BASE}/rubros`, { headers: authHeaders() });
+  return handle<Rubro[]>(res);
+}
+
+export async function sugerenciasPorRubro(rubroId: number): Promise<RATSugerido[]> {
+  const res = await fetch(`${API_BASE}/rubros/${rubroId}/sugerencias`, { headers: authHeaders() });
+  return handle<RATSugerido[]>(res);
+}
+
+export async function actualizarRubro(rubroId: number, data: { nombre?: string; orden?: number }): Promise<void> {
+  const res = await fetch(`${API_BASE}/rubros/${rubroId}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
   });
   return handle<void>(res);
 }

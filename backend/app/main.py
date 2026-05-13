@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.database import init_db, SessionLocal
-from app.routes import auth, companies, rats, user_companies, breaches, ai
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros
 
 
 @asynccontextmanager
@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
     """Crea las tablas e inserta el usuario admin por defecto si no existe."""
     init_db()
     _seed_admin()
+    _seed_rubros()
     yield
 
 
@@ -40,6 +41,97 @@ def _seed_admin():
             db.add(admin)
             db.commit()
             print("✅ Superadmin creado: admin / admin1234")
+    finally:
+        db.close()
+
+
+def _seed_rubros():
+    """Crea rubros y RATs sugeridos si la tabla está vacía."""
+    from app.models.rubro import Rubro
+    from app.models.rats_sugerido import RATSugerido
+
+    db = SessionLocal()
+    try:
+        if db.query(Rubro).first():
+            return
+
+        rubros_data = [
+            ("Salud", 1),
+            ("Retail", 2),
+            ("Educación", 3),
+            ("Financiero", 4),
+            ("Tecnología", 5),
+            ("Construcción", 6),
+            ("Transportes", 7),
+            ("Telecomunicaciones", 8),
+            ("Turismo", 9),
+            ("Agronomía", 10),
+            ("Minería", 11),
+            ("Energía", 12),
+            ("Servicios profesionales", 13),
+            ("Juegos de azar", 14),
+            ("Aseguradoras", 15),
+            ("Administraciones públicas", 16),
+            ("Medios de comunicación", 17),
+            ("Otro", 18),
+        ]
+
+        sugerencias_data = {
+            "Salud": [
+                {"nombre_proceso": "Gestión de pacientes", "categoria_datos": "Datos identificativos, Datos de salud", "categoria_titulares": "Pacientes", "finalidad": "Prestacion de servicios de salud", "base_legal": "Consentimiento del titular", "plazo_retencion": "15 años después del último contacto", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Gestión de personal médico", "categoria_datos": "Datos identificativos, Datos laborales", "categoria_titulares": "Empleados", "finalidad": "Cumplimiento de obligaciones laborales", "base_legal": "Obligación legal", "plazo_retencion": "5 años después del término de la relación laboral", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Investigación clínica", "categoria_datos": "Datos identificativos, Datos de salud, Datos biométricos", "categoria_titulares": "Pacientes, voluntarios", "finalidad": "Investigación y desarrollo", "base_legal": "Consentimiento del titular", "plazo_retencion": "20 años", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Gestión de seguros de salud", "categoria_datos": "Datos identificativos, Datos de salud, Datos financieros", "categoria_titulares": "Asegurados", "finalidad": "Gestión de pólizas y reclamos", "base_legal": "Ejecución de contrato", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": False},
+                {"nombre_proceso": "Videovigilancia en instalaciones", "categoria_datos": "Datos biométricos (imagen)", "categoria_titulares": "Pacientes, visitantes", "finalidad": "Seguridad de instalaciones", "base_legal": "Interés legítimo", "plazo_retencion": "30 días", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Retail": [
+                {"nombre_proceso": "Gestión de clientes", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Comercialización de productos", "base_legal": "Consentimiento del titular", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de proveedores", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Proveedores", "finalidad": "Gestión de compras y pagos", "base_legal": "Ejecución de contrato", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Marketing y publicidad", "categoria_datos": "Datos identificativos, Datos de contacto", "categoria_titulares": "Clientes, potenciales clientes", "finalidad": "Promoción de productos y servicios", "base_legal": "Consentimiento del titular", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de garantías", "categoria_datos": "Datos identificativos, Datos de compra", "categoria_titulares": "Clientes", "finalidad": "Gestión de garantías y devoluciones", "base_legal": "Ejecución de contrato", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Control de acceso a tiendas", "categoria_datos": "Datos biométricos (imagen)", "categoria_titulares": "Empleados, visitantes", "finalidad": "Seguridad y control de inventarios", "base_legal": "Interés legítimo", "plazo_retencion": "30 días", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Educación": [
+                {"nombre_proceso": "Gestión académica de estudiantes", "categoria_datos": "Datos identificativos, Datos académicos, Datos de contacto", "categoria_titulares": "Estudiantes", "finalidad": "Gestión académica y administrativa", "base_legal": "Consentimiento del titular", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de personal docente", "categoria_datos": "Datos identificativos, Datos laborales", "categoria_titulares": "Docentes", "finalidad": "Cumplimiento de obligaciones laborales", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Control de asistencia y notas", "categoria_datos": "Datos identificativos, Datos académicos", "categoria_titulares": "Estudiantes", "finalidad": "Seguimiento del desempeño académico", "base_legal": "Interés legítimo", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Becas y ayudas económicas", "categoria_datos": "Datos identificativos, Datos financieros, Datos socioeconómicos", "categoria_titulares": "Estudiantes", "finalidad": "Gestión de becas", "base_legal": "Consentimiento del titular", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": False},
+                {"nombre_proceso": "Videoconferencia y clases online", "categoria_datos": "Datos identificativos, Datos de contacto, Imagen", "categoria_titulares": "Estudiantes, docentes", "finalidad": "Educación a distancia", "base_legal": "Consentimiento del titular", "plazo_retencion": "1 año", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Financiero": [
+                {"nombre_proceso": "Gestión de clientes y cuentas", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Prestación de servicios financieros", "base_legal": "Ejecución de contrato", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Prevención de lavado de activos", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Cumplimiento normativo AML/KYC", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de riesgos crediticios", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Evaluación de riesgo crediticio", "base_legal": "Interés legítimo", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Marketing y promoción de productos", "categoria_datos": "Datos identificativos, Datos de contacto", "categoria_titulares": "Clientes, potenciales clientes", "finalidad": "Comercialización de productos financieros", "base_legal": "Consentimiento del titular", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de cobros y morosidad", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Gestión de deuda", "base_legal": "Interés legítimo", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Tecnología": [
+                {"nombre_proceso": "Gestión de usuarios de plataforma", "categoria_datos": "Datos identificativos, Datos de contacto", "categoria_titulares": "Usuarios", "finalidad": "Prestación de servicios digitales", "base_legal": "Consentimiento del titular", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Análisis de comportamiento", "categoria_datos": "Datos identificativos, Datos de navegación", "categoria_titulares": "Usuarios", "finalidad": "Mejora de productos y experiencia", "base_legal": "Consentimiento del titular", "plazo_retencion": "2 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Soporte técnico", "categoria_datos": "Datos identificativos, Datos técnicos", "categoria_titulares": "Clientes, usuarios", "finalidad": "Atención de soporte", "base_legal": "Ejecución de contrato", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de empleados tecnológicos", "categoria_datos": "Datos identificativos, Datos laborales", "categoria_titulares": "Empleados", "finalidad": "Gestión de recursos humanos", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Videovigilancia en data centers", "categoria_datos": "Datos biométricos (imagen)", "categoria_titulares": "Visitantes, empleados", "finalidad": "Seguridad física", "base_legal": "Interés legítimo", "plazo_retencion": "30 días", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+        }
+
+        # Crear rubros
+        for nombre, orden in rubros_data:
+            rubro = Rubro(nombre=nombre, orden=orden)
+            db.add(rubro)
+
+        db.commit()
+
+        # Buscar rubro_id para sugerencias_data
+        for nombre_rubro, sugerencias in sugerencias_data.items():
+            rubro = db.query(Rubro).filter(Rubro.nombre == nombre_rubro).first()
+            if not rubro:
+                continue
+            for sg in sugerencias:
+                sugerencia = RATSugerido(rubro_id=rubro.id, **sg)
+                db.add(sugerencia)
+
+        db.commit()
+        print(f"✅ {len(rubros_data)} rubros y sugerencias seedeados")
     finally:
         db.close()
 
@@ -67,6 +159,8 @@ app.include_router(rats.router)
 app.include_router(user_companies.router)
 app.include_router(breaches.router)
 app.include_router(ai.router)
+app.include_router(rubros.router)
+app.include_router(rubros.router_sugeridos)
 
 
 @app.get("/", tags=["Sistema"])

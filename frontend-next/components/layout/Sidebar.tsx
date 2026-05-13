@@ -20,6 +20,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: 'breaches', label: 'Brechas', icon: '🛡' },
   { key: 'companies', label: 'Empresas', icon: '🏢' },
   { key: 'usuarios', label: 'Usuarios', icon: '👤' },
+  { key: 'rubros', label: 'Rubros', icon: '🏷' },
 ];
 
 export default function Sidebar({ currentPage, onNavigate, companies }: SidebarProps) {
@@ -38,6 +39,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
     { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
+    { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
   ];
 
   return (

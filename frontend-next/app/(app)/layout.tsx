@@ -8,7 +8,7 @@ import Topbar from '@/components/layout/Topbar';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros';
 
 function pathToPage(pathname: string): Page {
   if (pathname.includes('/rat')) return 'rat';
@@ -16,6 +16,7 @@ function pathToPage(pathname: string): Page {
   if (pathname.includes('/breaches')) return 'breaches';
   if (pathname.includes('/reportes')) return 'reportes';
   if (pathname.includes('/usuarios')) return 'usuarios';
+  if (pathname.includes('/rubros')) return 'rubros';
   return 'dashboard';
 }
 
@@ -34,6 +35,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
     if (pathname.includes('/usuarios') && user?.rol_global !== 'superadmin') {
+      router.replace('/dashboard');
+      return;
+    }
+    if (pathname.includes('/rubros') && user?.rol_global === 'usuario') {
       router.replace('/dashboard');
       return;
     }

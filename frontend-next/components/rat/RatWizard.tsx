@@ -36,12 +36,15 @@ interface RatWizardProps {
 }
 
 export default function RatWizard({ company, onDone, onCancel }: RatWizardProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [data, setData] = useState<RATWizardData>({});
   const [tipos, setTipos] = useState<string[]>([]);
   const [tipoSel, setTipoSel] = useState('');
   const [saving, setSaving] = useState(false);
   const [draftToastShown, setDraftToastShown] = useState(false);
+  const [sugerencias, setSugerencias] = useState<import('@/types').RATSugerido[]>([]);
+  const [mostrarPaso0, setMostrarPaso0] = useState(false);
+  const [rubroNombre, setRubroNombre] = useState('');
 
   const DRAFT_KEY = `${DRAFT_KEY_PREFIX}${company.id}`;
 
@@ -63,6 +66,41 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   useEffect(() => {
     api.listarTiposProceso().then(setTipos).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (company.rubro_id) {
+      api.sugerenciasPorRubro(company.rubro_id).then(sugs => {
+        setSugerencias(sugs);
+        setMostrarPaso0(sugs.length > 0);
+      }).catch(() => {});
+      api.listarRubros().then(rubros => {
+        const r = rubros.find(rub => rub.id === company.rubro_id);
+        if (r) setRubroNombre(r.nombre);
+      }).catch(() => {});
+    }
+  }, [company.rubro_id]);
+
+  function usarSugerencia(sug: import('@/types').RATSugerido) {
+    setData(d => ({
+      ...d,
+      nombre_proceso: sug.nombre_proceso,
+      categoria_datos: sug.categoria_datos,
+      categoria_titulares: sug.categoria_titulares || '',
+      finalidad: sug.finalidad || '',
+      base_legal: sug.base_legal || 'Consentimiento del titular',
+      plazo_retencion: sug.plazo_retencion || '',
+      datos_sensibles: sug.datos_sensibles,
+      evaluacion_impacto: sug.evaluacion_impacto,
+      decisiones_automatizadas: sug.decisiones_automatizadas,
+    }));
+    setMostrarPaso0(false);
+    setStep(1);
+  }
+
+  function crearPersonalizado() {
+    setMostrarPaso0(false);
+    setStep(1);
+  }
 
   function guardarDraft() {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step }));
@@ -147,6 +185,60 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
   return (
     <div>
+      {/* PASO 0: Sugerencias por rubro */}
+      {mostrarPaso0 && step === 0 && (
+        <div className="space-y-6">
+          <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Rat sugeridos para tu rubro</p>
+            <h3 className="text-lg font-bold text-white">{rubroNombre || '...'}</h3>
+            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Selecciona un proceso predefinido o crea uno personalizado</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {sugerencias.map(sug => (
+              <div
+                key={sug.id}
+                className="rounded-xl p-4 cursor-pointer transition hover:shadow-md"
+                style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}
+                onClick={() => usarSugerencia(sug)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm" style={{ color: '#111827' }}>{sug.nombre_proceso}</p>
+                    <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{sug.categoria_datos}</p>
+                    {sug.categoria_titulares && (
+                      <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Titulares: {sug.categoria_titulares}</p>
+                    )}
+                    <div className="flex gap-1 flex-wrap mt-2">
+                      {sug.datos_sensibles && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>⚠️ Datos sensibles</span>}
+                      {sug.evaluacion_impacto && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📋 EIPD</span>}
+                      {sug.decisiones_automatizadas && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Dec. auto</span>}
+                    </div>
+                  </div>
+                  <button
+                    className="ml-3 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition flex-shrink-0"
+                    style={{ background: '#2563EB' }}
+                    onClick={e => { e.stopPropagation(); usarSugerencia(sug); }}
+                  >
+                    Usar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={crearPersonalizado}
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
+              style={{ color: '#374151', borderColor: '#E5E7EB' }}
+            >
+              + Crear proceso personalizado
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={onCancel}
