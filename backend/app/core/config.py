@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Base de datos
     # Para SQLite local: sqlite:///database.db
     # Para Neon: postgresql://user:password@ep-xxx-xxx-123456.neon.tech/custodio?sslmode=require
-    DATABASE_URL: str = f"sqlite:///{BASE_DIR}/database.db"
+    DATABASE_URL: str = f"sqlite:///{BASE_DIR}/data/database.db"
 
     # Seguridad JWT
     SECRET_KEY: str = ""  # Requerida en producción
