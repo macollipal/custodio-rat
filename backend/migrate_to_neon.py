@@ -18,9 +18,6 @@ from pathlib import Path
 
 import sqlalchemy as sa
 
-from app.core.config import settings
-from app.database.database import Base
-
 BACKUP_FILE = Path(__file__).parent / "backup_data.json"
 
 
@@ -29,7 +26,7 @@ def cmd_export():
     from sqlalchemy import create_engine, text
     from sqlalchemy.orm import sessionmaker
 
-    DB_PATH = Path(__file__).parent / "database.db"
+    DB_PATH = Path(__file__).parent.parent / "data" / "database.db"
     engine = create_engine(f"sqlite:///{DB_PATH}")
     Session = sessionmaker(bind=engine)
     db = Session()
@@ -42,7 +39,7 @@ def cmd_export():
     data = {}
     for table in tables:
         rows = db.execute(text(f"SELECT * FROM {table}")).fetchall()
-        cols = [desc[0] for desc in db.execute(text(f"PRAGMA table_info({table})")).fetchall()]
+        cols = [desc[1] for desc in db.execute(text(f"PRAGMA table_info({table})")).fetchall()]
         data[table] = [{col: val for col, val in zip(cols, row)} for row in rows]
         print(f"  {table}: {len(rows)} registros")
 
@@ -63,8 +60,10 @@ def cmd_export():
 
 def cmd_init():
     """Crea todas las tablas en PostgreSQL/Neon."""
+    from app.core.config import settings
     engine = sa.create_engine(settings.resolved_database_url, echo=False, pool_pre_ping=True)
 
+    from app.database.database import Base
     from app.models import (
         company, rat, user, audit_log, user_company,
         breach, eipd, consentimiento, rubro, rats_sugerido
@@ -93,6 +92,7 @@ def cmd_init():
 def cmd_import():
     """Importa datos desde JSON a PostgreSQL/Neon."""
     from sqlalchemy.orm import sessionmaker
+    from app.core.config import settings
     if not BACKUP_FILE.exists():
         print(f"ERROR: {BACKUP_FILE} no existe. Ejecuta 'export' primero.")
         sys.exit(1)
