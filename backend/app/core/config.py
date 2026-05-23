@@ -46,6 +46,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8002",
     ]
     ALLOWED_ORIGINS_PROD: list[str] = []  # Configurar con el dominio de producción
+    VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
 
     class Config:
         env_file = ".env"
@@ -63,7 +64,7 @@ class Settings(BaseSettings):
     def resolved_allowed_origins(self) -> list[str]:
         if self.ENVIRONMENT == "production":
             if not self.ALLOWED_ORIGINS_PROD:
-                raise ValueError("ALLOWED_ORIGINS_PROD es obligatoria en producción. Agrega el dominio del frontend.")
+                return [f"https://{self.VERCEL_URL}"] if self.VERCEL_URL else []
             return self.ALLOWED_ORIGINS_PROD
         return self.ALLOWED_ORIGINS
 
