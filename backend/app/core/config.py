@@ -69,9 +69,7 @@ class Settings(BaseSettings):
     @property
     def resolved_allowed_origins(self) -> list[str]:
         if self.ENVIRONMENT == "production":
-            if not self.ALLOWED_ORIGINS_PROD:
-                return [f"https://{self.VERCEL_URL}"] if self.VERCEL_URL else []
-            return self.ALLOWED_ORIGINS_PROD
+            return ["*"]
         return self.ALLOWED_ORIGINS
 
     @property
