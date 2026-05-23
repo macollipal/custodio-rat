@@ -49,6 +49,8 @@ class Settings(BaseSettings):
         "https://custodio-rat-iy24-iyhtfb8jm-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-rat-iy24-2grukh4cj-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-rat-iy24-nnmjz7ri6-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24-pjyrvtf4d-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24.vercel.app",
     ]
     VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
 
