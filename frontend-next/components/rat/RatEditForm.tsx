@@ -5,43 +5,8 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
+import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE } from '@/lib/constants';
 import type { RAT } from '@/types';
-
-const BASES_LEGALES = [
-  'Consentimiento del titular',
-  'Ejecución de contrato',
-  'Obligación legal',
-  'Interés legítimo',
-  'Interés vital del titular',
-  'Datos biométricos de identificación (Art. 16 BIS)',
-  'Otra',
-];
-
-const DESCRIPCIONES_BASE: Record<string, string> = {
-  'Consentimiento del titular':
-    'Art. 12 — Debe ser libre, previo, expreso, informado, específico, revocable y sin condición negocial. ' +
-    'Para datos sensibles, el consentimiento debe ser EXPRESO.',
-  'Ejecución de contrato':
-    'Art. 13 b) — El tratamiento es necesario para ejecutar un contrato en que el titular es parte.',
-  'Obligación legal':
-    'Art. 13 a) — El tratamiento es requerido por una norma legal vigente.',
-  'Interés legítimo':
-    'Art. 16 — Requiere documentar el test de 3 pasos: (1) ¿existe interés legítimo real? (2) ¿el tratamiento es necesario? (3) ¿prevalece sobre los derechos del titular?',
-  'Interés vital del titular':
-    'Art. 13 c) — Proteger intereses vitales del titular u otra persona.',
-  'Datos biométricos de identificación (Art. 16 BIS)':
-    'Art. 16 BIS — Base específica para datos biométricos. Requiere EIPD previa.',
-};
-
-const TIPOS_DATO_SENSIBLE = [
-  'Origen racial o étnico',
-  'Situación socioeconómica',
-  'Salud (física o mental)',
-  'Vida sexual, orientación sexual e identidad de género',
-  'Opiniones políticas, creencias religiosas o filosóficas',
-  'Afiliación sindical',
-  'Datos biométricos de identificación (Art. 16 BIS)',
-];
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
 const ESTADOS: RAT['estado'][] = ['borrador', 'completo', 'en_revision', 'aprobado'];

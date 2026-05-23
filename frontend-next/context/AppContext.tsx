@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { User, Company, RAT, DashboardStats, RolEmpresa, SecurityBreach } from '@/types';
+import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal, SecurityBreach } from '@/types';
 import { STORAGE_KEYS, API_BASE } from '@/lib/constants';
 
 interface AppState {
@@ -13,7 +13,7 @@ interface AppState {
   dashboardStats: DashboardStats | null;
   rolEnEmpresa: RolEmpresa | null;
   puedeEditar: boolean;
-  rolGlobal: 'admin' | 'admin_empresa' | 'usuario' | null;
+  rolGlobal: RolGlobal | null;
   darkMode: boolean;
   setToken: (token: string) => void;
   setUser: (user: User) => void;

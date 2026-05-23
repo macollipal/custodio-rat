@@ -8,7 +8,7 @@ import Topbar from '@/components/layout/Topbar';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros';
 
 function pathToPage(pathname: string): Page {
   if (pathname.includes('/rat')) return 'rat';
@@ -16,6 +16,7 @@ function pathToPage(pathname: string): Page {
   if (pathname.includes('/breaches')) return 'breaches';
   if (pathname.includes('/reportes')) return 'reportes';
   if (pathname.includes('/usuarios')) return 'usuarios';
+  if (pathname.includes('/conexion')) return 'conexion';
   if (pathname.includes('/rubros')) return 'rubros';
   return 'dashboard';
 }
@@ -25,6 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { token, company, setCompany, setCompanies, companies, user } = useApp();
   const [hydrated, setHydrated] = useState(false);
+  const [empresasCargadas, setEmpresasCargadas] = useState(false);
 
   useEffect(() => setHydrated(true), []);
 
@@ -42,15 +44,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace('/dashboard');
       return;
     }
+    if (empresasCargadas && companies.length > 0) return;
     api.listarEmpresas().then((list: Company[]) => {
       setCompanies(list);
+      setEmpresasCargadas(true);
       if (!company && list.length > 0) {
         setCompany(list[0]);
       } else if (!company && list.length === 0) {
         router.replace('/onboarding');
       }
     }).catch(() => {});
-  }, [hydrated, token, router]);
+  }, [hydrated, token, router, pathname, user?.rol_global]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
