@@ -4,6 +4,9 @@ backend/__pycache__/
 backend/*.pyc
 backend/.env
 backend/database.db
+data/
+data/database.db
+data/*.db
 backend/backend2.log
 backend/uvicorn_err.txt
 backend/uvicorn_out.txt
