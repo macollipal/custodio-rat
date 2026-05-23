@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros';
 
 interface SidebarProps {
   currentPage: Page;
@@ -39,6 +39,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
     { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
+    { key: 'conexion', label: 'Conexión', icon: '🔗', roles: ['superadmin'] },
     { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
   ];
 

@@ -36,4 +36,4 @@ class Company(Base):
     # Relación con registros RAT
     rats: Mapped[list["RAT"]] = relationship("RAT", back_populates="company", cascade="all, delete-orphan")
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="company", cascade="all, delete-orphan")  # noqa: F821
-    rubro: Mapped["Rubro"] = relationship("Rubro")  # noqa: F821
+    rubro_rel: Mapped["Rubro"] = relationship("Rubro")

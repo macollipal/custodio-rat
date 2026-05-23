@@ -23,7 +23,10 @@ async def lifespan(app: FastAPI):
 
 
 def _seed_admin():
-    """Crea el usuario superadmin inicial si la BD está vacía."""
+    """Crea el usuario superadmin inicial si la BD está vacía y ENVIRONMENT=development."""
+    import os
+    if os.getenv("ENVIRONMENT", "development") != "development":
+        return
     from app.models.user import User, RolGlobal
     from app.core.security import get_password_hash
 
@@ -40,7 +43,7 @@ def _seed_admin():
             )
             db.add(admin)
             db.commit()
-            print("✅ Superadmin creado: admin / admin1234")
+            print("✅ Superadmin creado (solo en desarrollo): admin / admin1234")
     finally:
         db.close()
 
@@ -147,7 +150,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.resolved_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -176,3 +179,28 @@ async def root():
 @app.get("/health", tags=["Sistema"])
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/health/db", tags=["Sistema"])
+async def health_db():
+    from app.core.config import settings
+    from sqlalchemy import text
+    import time
+
+    db_info = {
+        "engine": "postgresql" if settings.is_postgres else "sqlite",
+        "url": settings.DATABASE_URL.split("@")[1] if "@" in settings.DATABASE_URL else settings.DATABASE_URL,
+    }
+
+    start = time.time()
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        db_info["status"] = "ok"
+        db_info["latency_ms"] = round((time.time() - start) * 1000, 1)
+    except Exception as e:
+        db_info["status"] = "error"
+        db_info["error"] = str(e)
+
+    return db_info

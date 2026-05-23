@@ -125,22 +125,6 @@ export interface ReportesParams {
   limit?: number;
 }
 
-export interface ReportesParams {
-  company_id?: number;
-  search?: string;
-  estado?: string;
-  base_legal?: string;
-  categoria_titulares?: string;
-  datos_sensibles?: boolean;
-  evaluacion_impacto?: boolean;
-  transferencia_internacional?: boolean;
-  created_by?: string;
-  sort_by?: string;
-  sort_order?: string;
-  skip?: number;
-  limit?: number;
-}
-
 export async function getReportes(params: ReportesParams): Promise<ReportesResponse> {
   const searchParams = new URLSearchParams();
   if (params.company_id) searchParams.set('company_id', String(params.company_id));

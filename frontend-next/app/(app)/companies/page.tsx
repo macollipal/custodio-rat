@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import { validarRUT, formatearRUT } from '@/components/ui/validation';
-import type { Company, UserCompany, RolEmpresa } from '@/types';
+import type { Company, UserCompany, RolEmpresa, Rubro } from '@/types';
 
 type View = 'list' | 'create';
 
@@ -269,21 +269,28 @@ function CompanyForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =>
 function CompanyEditForm({ empresa, onDone, onCancel }: { empresa: Company; onDone: (updated: Company) => void; onCancel: () => void }) {
   const [form, setFormState] = useState({
     nombre: empresa.nombre ?? '',
-    rubro: empresa.rubro ?? '',
+    rubro_id: empresa.rubro_id?.toString() ?? '',
     direccion: empresa.direccion ?? '',
     contacto_dpo: empresa.contacto_dpo ?? '',
     email_dpo: empresa.email_dpo ?? '',
     descripcion: empresa.descripcion ?? '',
   });
   const [saving, setSaving] = useState(false);
+  const [rubros, setRubros] = useState<Rubro[]>([]);
+
+  useEffect(() => { api.listarRubros().then(setRubros).catch(() => {}); }, []);
 
   function set(k: string, v: string) { setFormState(f => ({ ...f, [k]: v })); }
 
   async function handleSave() {
     setSaving(true);
     try {
-      const payload = Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v.trim() || null]));
-      const result = await api.actualizarEmpresa(empresa.id, payload);
+      const payload: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(form)) {
+        if (k === 'rubro_id') payload[k] = v ? Number(v) : null;
+        else payload[k] = v.trim ? (v.trim() || null) : v;
+      }
+      const result = await api.actualizarEmpresa(empresa.id, payload as Partial<Company>);
       toast.success('Empresa actualizada correctamente.');
       onDone(result);
     } catch (e: unknown) {
@@ -297,19 +304,30 @@ function CompanyEditForm({ empresa, onDone, onCancel }: { empresa: Company; onDo
     <div className="rounded-xl p-5 mt-4 space-y-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
       <p className="text-sm font-semibold" style={{ color: '#111827' }}>Editar: {empresa.nombre}</p>
       <div className="grid grid-cols-2 gap-3">
-        {[
-          { k: 'nombre', label: 'Razón social' },
-          { k: 'rubro', label: 'Rubro' },
-          { k: 'direccion', label: 'Dirección' },
-          { k: 'contacto_dpo', label: 'DPO' },
-          { k: 'email_dpo', label: 'Email DPO' },
-        ].map(({ k, label }) => (
-          <div key={k}>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>{label}</label>
-            <input type="text" value={(form as Record<string, string>)[k]} onChange={e => set(k, e.target.value)} className={inputCls} style={inputStyle} />
-          </div>
-        ))}
         <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Razón social</label>
+          <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Rubro</label>
+          <select value={form.rubro_id} onChange={e => set('rubro_id', e.target.value)} className={inputCls} style={inputStyle}>
+            <option value="">— Sin rubro —</option>
+            {rubros.map(r => <option key={r.id} value={String(r.id)}>{r.nombre}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Dirección</label>
+          <input type="text" value={form.direccion} onChange={e => set('direccion', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>DPO</label>
+          <input type="text" value={form.contacto_dpo} onChange={e => set('contacto_dpo', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Email DPO</label>
+          <input type="email" value={form.email_dpo} onChange={e => set('email_dpo', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div className="col-span-2">
           <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Descripción</label>
           <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
         </div>
@@ -446,7 +464,7 @@ export default function CompaniesPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              {user?.rol_global === 'admin' && (
+              {user?.rol_global === 'superadmin' && (
                 <button
                   onClick={() => setShowCreateUser(true)}
                   className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"

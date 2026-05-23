@@ -1,5 +1,6 @@
 """
 Configuración de SQLAlchemy: engine, sesión y función de inicialización de tablas.
+Soporta SQLite (desarrollo) y PostgreSQL/Neon (producción).
 """
 
 from sqlalchemy import create_engine
@@ -7,11 +8,16 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},  # Solo SQLite
-    echo=False,
-)
+_is_postgres = settings.DATABASE_URL.startswith("postgresql")
+
+
+def _engine_kwargs():
+    if _is_postgres:
+        return {"pool_pre_ping": True}
+    return {"connect_args": {"check_same_thread": False}}
+
+
+engine = create_engine(settings.DATABASE_URL, echo=False, **_engine_kwargs())
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -33,14 +39,15 @@ def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
     from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido  # noqa: F401
     Base.metadata.create_all(bind=engine)
-    _migrate_rats_table()
-    _migrate_companies_table()
-    _migrate_rubros_table()
-    _migrate_rats_sugeridos_table()
+    if not _is_postgres:
+        _migrate_rats_table()
+        _migrate_companies_table()
+        _migrate_rubros_table()
+        _migrate_rats_sugeridos_table()
 
 
 def _migrate_rats_table():
-    """Agrega columnas nuevas a la tabla rats si no existen (migraciones incrementales)."""
+    """Agrega columnas nuevas a la tabla rats si no existen (migraciones incrementales SQLite)."""
     nuevas_columnas = [
         ("categoria_titulares", "VARCHAR(500)"),
         ("garantias_transferencia_int", "VARCHAR(500)"),
@@ -68,7 +75,7 @@ def _migrate_rats_table():
 
 
 def _migrate_companies_table():
-    """Agrega columnas nuevas a la tabla companies si no existen."""
+    """Agrega columnas nuevas a la tabla companies si no existen (SQLite)."""
     nuevas_columnas = [
         ("canal_ejercicio_derechos", "TEXT"),
         ("rubro_id", "INTEGER REFERENCES rubros(id)"),
@@ -89,7 +96,7 @@ def _migrate_companies_table():
 
 
 def _migrate_rubros_table():
-    """Agrega columna rubro_id a companies si no existe."""
+    """Agrega columna rubro_id a companies si no existe (SQLite)."""
     with engine.connect() as conn:
         resultado = conn.execute(
             __import__("sqlalchemy").text("PRAGMA table_info(companies)")
@@ -105,7 +112,7 @@ def _migrate_rubros_table():
 
 
 def _migrate_rats_sugeridos_table():
-    """Crea tabla rats_sugeridos si no existe."""
+    """Crea tabla rats_sugeridos si no existe (SQLite)."""
     with engine.connect() as conn:
         resultado = conn.execute(
             __import__("sqlalchemy").text("SELECT name FROM sqlite_master WHERE type='table' AND name='rats_sugeridos'")

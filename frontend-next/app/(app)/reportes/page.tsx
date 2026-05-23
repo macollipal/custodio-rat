@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import type { RAT, ReportesParams } from '@/types';
+import { BASES_LEGALES as basesLegalesConst } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Drawer from '@/components/ui/Drawer';
@@ -21,15 +22,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const BASES_LEGALES = [
-  'Consentimiento del titular',
-  'Ejecución de contrato',
-  'Obligación legal',
-  'Interés legítimo',
-  'Interés vital del titular',
-  'Datos biométricos de identificación (Art. 16 BIS)',
-  'Otra',
-];
+const BASES_LEGALES = [...basesLegalesConst];
 
 const COLUMN_OPTIONS = [
   { key: 'nombre_proceso', label: 'Proceso' },
@@ -81,6 +74,7 @@ export default function ReportesPage() {
   const colPickerRef = useRef<HTMLDivElement>(null);
 
   // AI chat state
+  const MAX_CHAT_MESSAGES = 50;
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     { role: 'assistant', content: 'Hola! Soy tu asistente RAT. Puedo responder dudas sobre la Ley 21.719 de Chile, qué es un RAT, cuándo se requiere EIPD, transferencias internacionales, y más. ¿En qué puedo ayudarte?' }
@@ -116,7 +110,10 @@ export default function ReportesPage() {
   async function sendChat() {
     const q = chatInput.trim();
     if (!q || chatLoading) return;
-    setChatMessages(m => [...m, { role: 'user', content: q }]);
+    setChatMessages(m => {
+      const next = [...m, { role: 'user' as const, content: q }];
+      return next.length > MAX_CHAT_MESSAGES ? next.slice(-MAX_CHAT_MESSAGES) : next;
+    });
     setChatInput('');
     setChatLoading(true);
     try {
@@ -124,10 +121,16 @@ export default function ReportesPage() {
         ? `Empresa: ${company?.nombre}. RATs activos: ${rats.map(r => `${r.nombre_proceso} (${r.estado})`).join(', ')}`
         : undefined;
       const res = await api.askAI(q, context);
-      setChatMessages(m => [...m, { role: 'assistant', content: res.answer }]);
+      setChatMessages(m => {
+        const next = [...m, { role: 'assistant' as const, content: res.answer }];
+        return next.length > MAX_CHAT_MESSAGES ? next.slice(-MAX_CHAT_MESSAGES) : next;
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error';
-      setChatMessages(m => [...m, { role: 'assistant', content: `Error: ${msg}` }]);
+      setChatMessages(m => {
+        const next = [...m, { role: 'assistant' as const, content: `Error: ${msg}`}];
+        return next.length > MAX_CHAT_MESSAGES ? next.slice(-MAX_CHAT_MESSAGES) : next;
+      });
     } finally {
       setChatLoading(false);
     }
@@ -249,12 +252,6 @@ export default function ReportesPage() {
     setFiltrosActivos(f => ({ ...f, [key]: !f[key] }));
   }
 
-  function limpiarFiltros() {
-    setFilters({ search: '', estado: '', base_legal: '', categoria_titulares: '', datos_sensibles: false, evaluacion_impacto: false, transferencia_internacional: false });
-    setFiltrosActivos({ estado: false, base_legal: false, categoria_titulares: false, datos_sensibles: false, evaluacion_impacto: false, transferencia_internacional: false });
-    setPage(0);
-  }
-
   function toggleColumn(key: string) {
     setColumns(c => c.includes(key) ? c.filter(x => x !== key) : [...c, key]);
   }
@@ -268,27 +265,6 @@ export default function ReportesPage() {
     setSaveFilterName('');
     setShowSaveModal(false);
     toast.success('Filtro guardado');
-  }
-
-  function loadSavedFilter(f: { id: string; name: string; filters: Partial<ReportesParams> }) {
-    setFilters({
-      search: f.filters.search ?? '',
-      estado: f.filters.estado ?? '',
-      base_legal: f.filters.base_legal ?? '',
-      categoria_titulares: f.filters.categoria_titulares ?? '',
-      datos_sensibles: f.filters.datos_sensibles ?? false,
-      evaluacion_impacto: f.filters.evaluacion_impacto ?? false,
-      transferencia_internacional: f.filters.transferencia_internacional ?? false,
-    });
-    setFiltrosActivos({
-      estado: !!f.filters.estado,
-      base_legal: !!f.filters.base_legal,
-      categoria_titulares: !!f.filters.categoria_titulares,
-      datos_sensibles: !!f.filters.datos_sensibles,
-      evaluacion_impacto: !!f.filters.evaluacion_impacto,
-      transferencia_internacional: !!f.filters.transferencia_internacional,
-    });
-    setPage(0);
   }
 
   function deleteSavedFilter(id: string) {
@@ -654,7 +630,9 @@ export default function ReportesPage() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${selectedRat.nombre_proceso?.replace(/\s+/g, '_') || 'RAT'}.pdf`;
+                const fecha = new Date().toISOString().slice(0, 10);
+                const nombre = (selectedRat.nombre_proceso || 'RAT').replace(/\s+/g, '_');
+                a.download = `reporte_rat_${selectedRat.id}_${nombre}_${fecha}.pdf`;
                 a.click();
                 URL.revokeObjectURL(url);
               } catch { toast.error('Error al exportar PDF'); }
