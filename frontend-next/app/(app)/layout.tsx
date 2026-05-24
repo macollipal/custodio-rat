@@ -106,16 +106,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
+          role="presentation"
+          aria-hidden="true"
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      {/* Sidebar: fixed on desktop, slide-in overlay on mobile */}
+      {/* Sidebar: fixed overlay on mobile, visible on desktop */}
       <div
+        id="main-sidebar"
         className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          transform transition-transform duration-300 ease-in-out
-          lg:transform-none lg:translate-x-0
+          fixed inset-y-0 left-0 z-50
+          transition-transform duration-300 ease-in-out
+          lg:static
+          lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
