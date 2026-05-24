@@ -1,6 +1,7 @@
 # Custodio — RAT Manager · Ley 21.719
 
-Sistema de gestión del **Registro de Actividades de Tratamiento (RAT)** conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
+Sistema de gestión del **Registro de Actividades de Tratamiento (RAT)** 
+conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
 
 ---
 
