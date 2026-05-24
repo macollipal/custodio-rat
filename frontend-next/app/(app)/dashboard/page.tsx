@@ -267,9 +267,10 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-0 overflow-x-auto">
+          <div className="space-y-0">
+            {/* Desktop header */}
             <div
-              className="grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg overflow-x-auto whitespace-nowrap"
+              className="hidden sm:grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg whitespace-nowrap"
               style={{ gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}
             >
               <span>Proceso</span>
@@ -277,33 +278,47 @@ export default function DashboardPage() {
               <span>Estado</span>
               <span>Completitud</span>
             </div>
-            {recientes.map((rat, i) => (
-              <div
-                key={rat.id}
-                className="grid items-center py-3 px-3 overflow-x-auto whitespace-nowrap"
-                style={{
-                  gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px',
-                  background: i % 2 === 0 ? 'white' : '#FAFAFA',
-                  border: '1px solid #E5E7EB',
-                  borderTop: 'none',
-                  borderRadius: i === recientes.length - 1 ? '0 0 8px 8px' : 0,
-                }}
-              >
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: '#111827' }}>
-                    {rat.nombre_proceso}
+            {/* Desktop rows */}
+            <div className="hidden sm:block">
+              {recientes.map((rat, i) => (
+                <div
+                  key={rat.id}
+                  className="grid items-center py-3 px-3 whitespace-nowrap"
+                  style={{
+                    gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px',
+                    background: i % 2 === 0 ? 'white' : '#FAFAFA',
+                    border: '1px solid #E5E7EB',
+                    borderTop: 'none',
+                  }}
+                >
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
+                    <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
                   </div>
-                  <div className="text-xs" style={{ color: '#9CA3AF' }}>
-                    ID #{rat.id} · {rat.updated_at?.slice(0, 10)}
+                  <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</div>
+                  <div><Badge estado={rat.estado} /></div>
+                  <div><CompletitudBar pct={rat.completitud ?? 0} /></div>
+                </div>
+              ))}
+            </div>
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y" style={{ border: '1px solid #E5E7EB', borderRadius: '0 0 8px 8px' }}>
+              {recientes.map((rat, i) => (
+                <div key={rat.id} className="px-4 py-3 bg-white" style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge estado={rat.estado} />
+                        <CompletitudBar pct={rat.completitud ?? 0} />
+                        <span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id}</span>
+                      </div>
+                    </div>
                   </div>
+                  <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 40)}{rat.base_legal && rat.base_legal.length > 40 ? '...' : ''}</div>
                 </div>
-                <div className="text-xs" style={{ color: '#6B7280' }}>
-                  {(rat.base_legal ?? '—').slice(0, 30)}
-                </div>
-                <div><Badge estado={rat.estado} /></div>
-                <div><CompletitudBar pct={rat.completitud ?? 0} /></div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

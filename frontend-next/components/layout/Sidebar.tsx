@@ -11,6 +11,7 @@ interface SidebarProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   companies: Company[];
+  onClose?: () => void;
 }
 
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
@@ -23,7 +24,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: 'rubros', label: 'Rubros', icon: '🏷' },
 ];
 
-export default function Sidebar({ currentPage, onNavigate, companies }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
   const { user, company, setCompany, logout, darkMode, toggleDarkMode } = useApp();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [ratInfoOpen, setRatInfoOpen] = useState(false);
@@ -49,19 +50,28 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
       style={{ background: '#111827' }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-700/50">
+      <div className="px-5 py-5 border-b border-gray-700/50 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
           >
-            🛡
+<span aria-hidden="true" style={{ fontSize: 18 }}>🛡</span>
           </div>
           <div>
             <div className="text-white font-bold text-sm leading-tight">Custodio</div>
             <div className="text-gray-500 text-xs">Ley 21.719</div>
           </div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-gray-700 transition text-lg"
+            aria-label="Cerrar menú"
+          >
+            ←
+          </button>
+        )}
       </div>
 
       {/* Empresa activa */}
@@ -71,6 +81,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
         </div>
         {companies.length > 0 ? (
           <select
+            aria-label="Seleccionar empresa activa"
             value={company?.id ?? ''}
             onChange={e => {
               const emp = companies.find(c => c.id === Number(e.target.value));
@@ -106,6 +117,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
+                aria-current={active ? 'page' : undefined}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left"
                 style={{
                   background: active ? '#2563EB' : 'transparent',
@@ -118,7 +130,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
                   if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
                 }}
               >
-                <span className="text-base w-5 text-center">{item.icon}</span>
+                <span aria-hidden="true" className="text-base w-5 text-center">{item.icon}</span>
                 {item.label}
               </button>
             );
@@ -135,17 +147,19 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
             style={{ color: '#9CA3AF', background: ratInfoOpen ? '#1F2937' : 'transparent' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1F2937'; }}
             onMouseLeave={e => { if (!ratInfoOpen) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            aria-expanded={ratInfoOpen}
+            aria-label="¿Qué es un RAT? — información sobre el registro de actividades de tratamiento"
           >
-            <span className="text-sm">❓</span> ¿Qué es un RAT?
+            <span aria-hidden="true" className="text-sm">❓</span> ¿Qué es un RAT?
           </button>
           {ratInfoOpen && (
             <div
-              className="absolute left-full top-0 ml-2 bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
+              className="absolute left-0 top-full mt-1 sm:relative sm:left-0 sm:top-auto sm:mt-0 bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
               style={{ border: '1px solid #E5E7EB', width: 320, color: '#374151' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: '#E5E7EB', color: '#111827', background: '#F9FAFB' }}>
-                📋 ¿Qué es un RAT?
+                <span aria-hidden="true" style={{ fontSize: 14 }}>📋</span> ¿Qué es un RAT?
               </div>
               <div className="p-4 text-xs leading-relaxed" style={{ color: '#6B7280', maxHeight: 360, overflowY: 'auto' }}>
                 <p className="mb-2">

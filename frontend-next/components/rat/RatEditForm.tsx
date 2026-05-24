@@ -114,7 +114,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <input type="text" value={form.categoria_titulares} onChange={e => set('categoria_titulares', e.target.value)} placeholder="Ej: Clientes, empleados, proveedores..." className={inputCls} style={inputStyle} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fuente de los datos *</label>
                 <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} className={inputCls} style={inputStyle} />
@@ -185,7 +185,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={form.evaluacion_impacto} onChange={e => set('evaluacion_impacto', e.target.checked)} className="mt-0.5 rounded" />
@@ -305,7 +305,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Plazo de retención *</label>
