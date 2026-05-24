@@ -212,7 +212,7 @@ function CompanyForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =>
           Complete los datos del responsable conforme al Art. 5 de la Ley 21.719.
         </p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Razón social *</label>
             <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: Empresa Ejemplo SpA" className={inputCls} style={inputStyle} />
@@ -303,7 +303,7 @@ function CompanyEditForm({ empresa, onDone, onCancel }: { empresa: Company; onDo
   return (
     <div className="rounded-xl p-5 mt-4 space-y-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
       <p className="text-sm font-semibold" style={{ color: '#111827' }}>Editar: {empresa.nombre}</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Razón social</label>
           <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} className={inputCls} style={inputStyle} />

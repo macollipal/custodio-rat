@@ -123,41 +123,54 @@ export default function UsersPage() {
       {loading ? (
         <div className="text-center py-16 text-sm" style={{ color: '#9CA3AF' }}>Cargando...</div>
       ) : (
-        <div className="rounded-xl overflow-hidden bg-white" style={{ border: '1px solid #D1D5DB' }}>
-          <table className="w-full">
-            <thead>
-              <tr className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280', background: '#F9FAFB', borderBottom: '1px solid #D1D5DB' }}>
-                <th className="px-4 py-3 text-left">Usuario</th>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Nombre completo</th>
-                <th className="px-4 py-3 text-left">Empresa asignada</th>
-                <th className="px-4 py-3 text-center">Rol global</th>
-                <th className="px-4 py-3 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u, i) => (
-                <tr key={u.id} style={{ borderTop: i > 0 ? '1px solid #F3F4F6' : 'none' }}>
-                  <td className="px-4 py-3">
-                    <div className="text-sm font-semibold" style={{ color: '#111827' }}>{u.username}</div>
-                  </td>
-                  <td className="px-4 py-3 text-sm" style={{ color: '#6B7280' }}>{u.email}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: '#6B7280' }}>{u.full_name}</td>
-                  <td className="px-4 py-3">
-                    {u.empresa_nombre
-                      ? <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#ECFDF5', color: '#059669' }}>{u.empresa_nombre}</span>
-                      : <span className="text-xs" style={{ color: '#9CA3AF' }}>Sin asignar</span>
-                    }
-                  </td>
-                  <td className="px-4 py-3 text-center">{rolBadge(u.rol_global)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 justify-center flex-wrap">
+        <div className="rounded-xl overflow-hidden bg-white sm:overflow-visible" style={{ border: '1px solid #D1D5DB' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ minWidth: 700 }}>
+              <thead>
+                <tr className="text-xs font-semibold uppercase tracking-wide hidden sm:table-row" style={{ color: '#6B7280', background: '#F9FAFB', borderBottom: '1px solid #D1D5DB' }}>
+                  <th className="px-4 py-3 text-left">Usuario</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Nombre completo</th>
+                  <th className="px-4 py-3 text-left">Empresa asignada</th>
+                  <th className="px-4 py-3 text-center">Rol global</th>
+                  <th className="px-4 py-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="sm:table-row-group">
+                {users.map((u, i) => (
+                  <tr key={u.id} className="sm:table-row" style={{ borderTop: i > 0 ? '1px solid #F3F4F6' : 'none', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <div className="text-sm font-semibold" style={{ color: '#111827' }}>{u.username}</div>
+                    </td>
+                    <td className="sm:hidden px-4 py-3 border-b" style={{ borderColor: '#F3F4F6' }}>
+                      <div className="text-sm font-semibold" style={{ color: '#111827' }}>{u.username}</div>
+                      <div className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>{u.email} · {u.full_name}</div>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-sm" style={{ color: '#6B7280' }}>{u.email}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-sm" style={{ color: '#6B7280' }}>{u.full_name}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      {u.empresa_nombre
+                        ? <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#ECFDF5', color: '#059669' }}>{u.empresa_nombre}</span>
+                        : <span className="text-xs" style={{ color: '#9CA3AF' }}>Sin asignar</span>
+                      }
+                    </td>
+                    <td className="sm:hidden px-4 py-3 border-b" style={{ borderColor: '#F3F4F6' }}>
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        {u.empresa_nombre
+                          ? <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#ECFDF5', color: '#059669' }}>{u.empresa_nombre}</span>
+                          : <span className="text-xs" style={{ color: '#9CA3AF' }}>Sin asignar</span>
+                        }
+                        {rolBadge(u.rol_global)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-center">{rolBadge(u.rol_global)}</td>
+                    <td className="px-4 py-3 flex gap-1 justify-start sm:justify-center flex-wrap sm:table-cell">
                       <button
                         onClick={() => setShowEdit(u)}
                         className="px-3 py-1 rounded-lg text-xs font-medium border transition hover:bg-gray-50"
                         style={{ borderColor: '#D1D5DB', color: '#374151' }}
                       >
-                        ✏️ Editar
+                        ✏️
                       </button>
                       {u.id !== currentUser?.id && (
                         <button
@@ -165,15 +178,15 @@ export default function UsersPage() {
                           className="px-3 py-1 rounded-lg text-xs font-medium border transition hover:bg-red-50"
                           style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
                         >
-                          🗑 Eliminar
+                          🗑
                         </button>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

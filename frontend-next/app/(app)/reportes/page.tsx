@@ -14,9 +14,9 @@ import Drawer from '@/components/ui/Drawer';
 function Field({ label, value }: { label: string; value?: string | null }) {
   const isEmpty = !value || value.trim() === '';
   return (
-    <div className="flex flex-col gap-1 p-3 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
+    <div className="flex flex-col gap-1 p-2 sm:p-3 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
       <span className="text-xs font-semibold" style={{ color: '#6B7280' }}>{label}</span>
-      <span className="text-sm" style={{ color: isEmpty ? '#9CA3AF' : '#111827' }}>{isEmpty ? <em style={{ color: '#DC2626' }}>** {label}</em> : value}</span>
+      <span className="text-sm break-words" style={{ color: isEmpty ? '#9CA3AF' : '#111827' }}>{isEmpty ? <em style={{ color: '#DC2626' }}>** {label}</em> : value}</span>
     </div>
   );
 }
@@ -684,7 +684,7 @@ export default function ReportesPage() {
             {/* Sección: Identificación */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Identificación</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Categoría titulares" value={selectedRat.categoria_titulares} />
                 <Field label="Fuente de datos" value={selectedRat.fuente_datos} />
                 <Field label="Destinatarios" value={selectedRat.destinatarios} />
@@ -710,7 +710,7 @@ export default function ReportesPage() {
             {/* Sección: Datos tratados */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Datos tratados</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Categoría datos" value={selectedRat.categoria_datos} />
                 <Field label="Tipo dato sensible" value={selectedRat.tipo_dato_sensible} />
               </div>
@@ -719,7 +719,7 @@ export default function ReportesPage() {
             {/* Sección: Almacenamiento */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Almacenamiento y transferencias</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Plazo retención" value={selectedRat.plazo_retencion} />
                 <Field label="Medidas de seguridad" value={selectedRat.medidas_seguridad} />
                 <Field label="Transferencia datos" value={selectedRat.transferencia_datos} />
@@ -731,7 +731,7 @@ export default function ReportesPage() {
             {/* Sección: Metadatos */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Información del registro</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Creado por" value={selectedRat.created_by} />
                 <Field label="Fecha creación" value={selectedRat.created_at?.slice(0, 10) ?? '—'} />
                 <Field label="Última actualización" value={selectedRat.updated_at?.slice(0, 10) ?? '—'} />
