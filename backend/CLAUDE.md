@@ -4,7 +4,7 @@
 
 **Custodio RAT Manager** — Gestión del Registro de Actividades de Tratamiento (RAT) conforme a la Ley 21.719 de Chile.
 
-Stack: FastAPI + SQLAlchemy + SQLite + JWT + Bcrypt + ReportLab (PDF).
+Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt + ReportLab (PDF).
 
 ---
 
@@ -22,19 +22,42 @@ Stack: FastAPI + SQLAlchemy + SQLite + JWT + Bcrypt + ReportLab (PDF).
 
 ---
 
-## Estructura de carpetas
+## Despliegue
 
+| Entorno | URL | Base de datos |
+|---------|-----|---------------|
+| **Producción** | https://custodio-rat.vercel.app | Neon PostgreSQL |
+| **Local** | http://localhost:8002 | SQLite (`data/database.db`) |
+
+### Vercel (Producción)
+
+- Entry point: `api/index.py` → importa de `backend/app/main.py`
+- Runtime: Python 3.9 (`@vercel/python` builder, auto-detectado)
+- Environment variables en Vercel:
+  - `ENVIRONMENT=production` → activa `allow_origins=["*"]` y requiere `SECRET_KEY`
+  - `DATABASE_URL` → connection string de Neon
+  - `SECRET_KEY` → generar con `openssl rand -hex 64`
+
+### Migración SQLite → Neon
+
+```bash
+# 1. Exportar datos de SQLite
+python migrate_to_neon.py export    # → backend/backup_data.json
+
+# 2. Crear schema en Neon
+python migrate_to_neon.py init       # crea tablas + reinicia sequences
+
+# 3. Importar datos a Neon
+python migrate_to_neon.py import      # desde backup_data.json
 ```
-backend/
-├── app/
-│   ├── core/          Configuración y seguridad JWT
-│   ├── database/      Engine y sesión SQLAlchemy
-│   ├── models/        Tablas: User, Company, RAT, AuditLog, SecurityBreach, EIPD, Consentimiento
-│   ├── schemas/       Validación Pydantic
-│   ├── routes/        Endpoints: /auth, /companies, /rats, /brechas, /ai
-│   └── services/      Lógica: rat, company, export, suggestions, user, breach
-├── tests/             95+ tests (pytest + httpx)
-└── venv/              Entorno virtual Python
+
+### Desarrollo local
+
+```bash
+cd backend
+venv\Scripts\activate
+uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+# API docs: http://localhost:8002/docs
 ```
 
 ---
