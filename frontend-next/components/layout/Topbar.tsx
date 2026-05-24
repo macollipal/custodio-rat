@@ -43,7 +43,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         {/* Hamburger button - mobile only */}
         <button
           onClick={onMenuClick}
-          className="hidden lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+          className="block lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
           aria-label="Abrir menú"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round">
