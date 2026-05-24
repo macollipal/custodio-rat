@@ -10,6 +10,10 @@ data/*.db
 backend/backend2.log
 backend/uvicorn_err.txt
 backend/uvicorn_out.txt
+backend/backup_data.json
+backend/export_sqlite.py
+backend/migrate_check.py
+check_backup.py
 
 # Node
 frontend-next/node_modules/
@@ -22,5 +26,7 @@ Thumbs.db
 # Logs
 *.log
 
-# Python env
-*.egg-info/
+# OpenCode
+.opencode/node_modules/
+.opencode/package-lock.json
+.opencode/package.json
