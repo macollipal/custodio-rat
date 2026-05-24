@@ -32,7 +32,10 @@ frontend-next/
 │   │   ├── rat/page.tsx
 │   │   ├── companies/page.tsx
 │   │   ├── breaches/page.tsx
-│   │   └── reportes/page.tsx  # Reportes avanzados + chat IA
+│   │   ├── reportes/page.tsx  # Reportes avanzados + chat IA
+│   │   ├── usuarios/page.tsx   # Gestión de usuarios (superadmin)
+│   │   ├── conexion/page.tsx   # Diagnóstico de conexión
+│   │   └── rubros/page.tsx     # Gestión de rubros y sugerencias
 │   ├── login/page.tsx
 │   ├── onboarding/page.tsx    # Primera empresa (onboarding)
 │   ├── layout.tsx
@@ -40,9 +43,9 @@ frontend-next/
 │
 ├── components/
 │   ├── dashboard/             # KPICard, StatusChart, AlertBanner
-│   ├── layout/                # Sidebar, Topbar, PasswordModal
+│   ├── layout/                # Sidebar (responsive overlay), Topbar (hamburger), PasswordModal
 │   ├── rat/                   # RatTable, RatWizard, RatEditForm
-│   └── ui/                    # Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
+│   └── ui/                    # Badge, CompletitudBar, Skeleton, Drawer (responsive), StepIndicator, validation
 │
 ├── context/
 │   └── AppContext.tsx          # Estado global: auth, empresa activa, rats, stats
@@ -124,50 +127,14 @@ Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
 `SkeletonCard`, `SkeletonTable`, `SkeletonTableRow`, `SkeletonKPIGrid`, `SkeletonList`
 
 ### Drawer — components/ui/Drawer.tsx
-Panel lateral centrado con `60vw`, fondo oscuro, bordes redondeados, animación `scaleIn`.
+Panel lateral centrado con `95vw` en mobile, `60vw` en desktop. Max-width 640px. Fondo oscuro con backdrop blur. Bordes redondeados, animación `scaleIn`.
 Props: `open`, `onClose`, `title`, `children`, `width`, `extraAction`.
 El `title=""` elimina el título del Drawer wrapper para evitar duplicación con el gradiente header interno.
 
----
-
-## Campos del RAT y completitud
-
-### Fórmula de completitud (backend)
-**10 campos** divididos en:
-- **Obligatorios (7)**: `nombre_proceso`, `categoria_datos`, `categoria_titulares`, `finalidad`, `base_legal`, `fuente_datos`, `plazo_retencion`
-- **Recomendados (3)**: `medidas_seguridad`, `destinatarios`, `transferencia_datos`
-
-`completitud = round((completados / 10) * 100)`
-
-### Campos que el drawer muestra (todos los del backend)
-| Campo | Sección en drawer |
-|-------|-------------------|
-| `nombre_proceso` | Encabezado (no como Field) |
-| `categoria_titulares` | Identificación |
-| `fuente_datos` | Identificación |
-| `destinatarios` | Identificación |
-| `nombre_encargado` | Identificación |
-| `base_legal` | Base legal y finalidad |
-| `finalidad` | Base legal y finalidad |
-| `test_interes_legitimo` | Base legal y finalidad (recuadro amarillo si existe) |
-| `categoria_datos` | Datos tratados |
-| `tipo_dato_sensible` | Datos tratados |
-| `transferencia_datos` | Almacenamiento y transferencias |
-| `plazo_retencion` | Almacenamiento y transferencias |
-| `medidas_seguridad` | Almacenamiento y transferencias |
-| `pais_destino` | Almacenamiento y transferencias |
-| `garantias_transferencia_int` | Almacenamiento y transferencias |
-| `observaciones_auditoria` | Información del registro |
-| `created_by` | Información del registro |
-| `created_at` | Información del registro |
-| `updated_at` | Información del registro |
-
-### Campos booleanos que se muestran como badges
-- `datos_sensibles` → badge amarillo "⚠️ Datos sensibles"
-- `evaluacion_impacto` → badge azul "📋 EIPD requerida"
-- `transferencia_internacional` → badge púrpura "🌐 Transfer. internacional"
-- `decisiones_automatizadas` → badge gris "🤖 Decisiones automatizadas"
-- `nivel_riesgo === 'Crítico'` → badge rojo "⚠️ Crítico"
+### Responsive — components/layout/
+**Sidebar:** overlay deslizable desde izquierda en mobile (<1024px). Hidden por default, se abre con hamburger button del Topbar. Backdrop oscuro cierra al clickear fuera.
+**Topbar:** botón hamburguesa `☰` visible solo en mobile (`lg:hidden`). Pasa `onMenuClick` handler para toggle del sidebar.
+**AppLayout:** maneja estado `sidebarOpen` + resize listener que cierra sidebar en desktop (≥1024px). Navegación cierra sidebar automáticamente.
 
 ---
 
@@ -184,9 +151,12 @@ La navegación se maneja con `router.push('/ruta')` desde Next.js. Sidebar tiene
 - Los colores principales: azul `#2563EB`, verde `#059669`, rojo `#DC2626`, amarillo `#D97706`, púrpura `#7C3AED`
 - Siempre usar `toast` de `sonner` para feedback de usuario
 - Los formularios guardan en localStorage la empresa activa, token y usuario
-- Fuente base: `18px` en globals.css
-- Login centrado con `pt-16`
-- Drawer centrado: `60vw`, bordes redondeados, animación `scaleIn`
+- Fuente base: `16px` en mobile, `18px` en desktop (`lg:` media query) — globals.css
+- Login centrado con `pt-8 sm:pt-16`
+- Drawer: `w-[95vw] max-w-[640px] sm:w-[60vw]`
+- AI Chat drawer (reportes): `width: 95vw` mobile, `maxWidth: 420px` desktop
+- Tablas: `overflow-x-auto` para scroll horizontal en mobile
+- **No hacer commits directos a `main` para cambios de features** — usar rama develop o feature branches
 
 ---
 

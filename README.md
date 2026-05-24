@@ -7,63 +7,103 @@ Sistema de gestión del **Registro de Actividades de Tratamiento (RAT)** conform
 ## Arquitectura
 
 ```
-RAT/
-├── backend/              FastAPI + SQLAlchemy + SQLite
+RAT_opencode/
+├── backend/              FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt
+│   ├── api/              Vercel Serverless handler (@vercel/python)
 │   ├── app/
 │   │   ├── core/         Configuración y seguridad JWT
 │   │   ├── database/     Engine y sesión SQLAlchemy
 │   │   ├── models/       Tablas: User, Company, RAT, AuditLog, SecurityBreach, EIPD, Consentimiento
 │   │   ├── schemas/      Validación Pydantic
-│   │   ├── routes/      Endpoints: /auth, /companies, /rats, /brechas, /ai, /rubros, /rats-sugeridos
+│   │   ├── routes/       Endpoints: /auth, /companies, /rats, /brechas, /ai, /rubros, /rats-sugeridos
 │   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro, rats_sugerido
-│   ├── tests/            95+ tests (pytest + httpx)
+│   ├── tests/             95+ tests (pytest + httpx)
+│   ├── data/             SQLite local para desarrollo (git ignored)
 │   └── venv/             Entorno virtual Python
 │
-└── frontend-next/        Next.js 16.2 + React 19 + TypeScript + Tailwind CSS v4
-    ├── app/
-    │   ├── login/        Pantalla de autenticación
-    │   ├── onboarding/  Configuración inicial (primera empresa)
-    │   ├── (app)/
-    │   │   ├── dashboard/   KPIs, gráfico, alertas de cumplimiento
-    │   │   ├── rat/         CRUD procesos RAT + wizard 4 pasos + exportación
-    │   │   ├── companies/   Gestión de empresas y usuarios por empresa
-    │   │   ├── breaches/    Gestión de brechas de seguridad
-    │   │   └── reportes/    Reportes avanzados + drawer RAT + chat IA
-    │   └── layout.tsx    Layout raíz + Toaster
-    ├── components/
-    │   ├── layout/       Sidebar + Topbar + PasswordModal
-    │   ├── dashboard/    KPICard, StatusChart, AlertBanner
-    │   ├── rat/          RatTable, RatWizard, RatEditForm
-    │   └── ui/           Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
-    ├── context/          AppContext (auth + empresa activa)
-    ├── lib/api.ts        Cliente HTTP a FastAPI
-    └── types/index.ts    Tipos TypeScript
+├── frontend-next/        Next.js 16.2 + React 19 + TypeScript + Tailwind CSS v4
+│   ├── app/
+│   │   ├── login/        Pantalla de autenticación
+│   │   ├── onboarding/   Configuración inicial (primera empresa)
+│   │   ├── (app)/
+│   │   │   ├── dashboard/   KPIs, gráfico, alertas de cumplimiento
+│   │   │   ├── rat/         CRUD procesos RAT + wizard 4 pasos + exportación
+│   │   │   ├── companies/   Gestión de empresas y usuarios por empresa
+│   │   │   ├── breaches/    Gestión de brechas de seguridad
+│   │   │   ├── reportes/    Reportes avanzados + drawer RAT + chat IA
+│   │   │   ├── usuarios/     Gestión de usuarios (superadmin)
+│   │   │   ├── conexion/     Diagnóstico de conexión
+│   │   │   └── rubros/       Gestión de rubros y sugerencias
+│   │   └── layout.tsx    Layout raíz + Toaster
+│   ├── components/
+│   │   ├── layout/       Sidebar + Topbar (responsive con hamburger) + PasswordModal
+│   │   ├── dashboard/    KPICard, StatusChart, AlertBanner
+│   │   ├── rat/          RatTable, RatWizard, RatEditForm
+│   │   └── ui/           Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
+│   ├── context/          AppContext (auth + empresa activa)
+│   ├── lib/api.ts        Cliente HTTP a FastAPI
+│   └── types/index.ts    Tipos TypeScript
+│
+├── docs/                 Documentación (casos de uso, flujos, manual de usuario)
+└── data/                 Base de datos SQLite local (fuera del repo)
 ```
 
 ---
 
-## Puertos
+## Despliegue
 
-| Servicio | Puerto | URL |
-|----------|--------|-----|
-| Frontend (Next.js) | 3000 | http://localhost:3000 |
-| Backend (FastAPI) | 8002 | http://localhost:8002 |
-| API Docs (Swagger) | 8002 | http://localhost:8002/docs |
+| Entorno | URL | Base de datos |
+|---------|-----|---------------|
+| **Producción** | https://custodio-rat.vercel.app (backend) | Neon PostgreSQL |
+| **Frontend** | https://custodio-rat-iy24.vercel.app | — |
+| **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
 
 ---
 
-## Iniciar el sistema
+## Iniciar el sistema (desarrollo local)
 
-```batch
-iniciar.bat
+### Requisitos
+- Python 3.9+
+- Node.js 18+
+- Git
+
+### Setup
+
+```bash
+# Clonar repositorio
+git clone https://github.com/macollipal/custodio-rat.git
+cd RAT_opencode
+
+# Backend
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+# Frontend
+cd ..\frontend-next
+npm install
 ```
 
-El script levanta backend y frontend automáticamente y abre el navegador en `http://localhost:3000`.
-
-## Detener el sistema
+### Scripts de inicio rápido
 
 ```batch
-detener.bat
+# Desde la raíz del proyecto
+iniciar.bat    # Levanta backend (8002) + frontend (3000) y abre navegador
+detener.bat    # Detiene ambos servicios
+```
+
+### Desarrollo individual
+
+```bash
+# Backend
+cd backend
+venv\Scripts\activate
+python -c "from app.main import app; print('Backend OK')"
+
+# Frontend
+cd frontend-next
+npm run dev
 ```
 
 ---
@@ -76,11 +116,19 @@ cd backend
 # Activar entorno virtual
 venv\Scripts\activate
 
-# Ejecutar servidor
+# Ejecutar servidor local
 uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
 
 # Ejecutar tests
 pytest tests/ -v
+
+# Verificar conexión a base
+python -c "from app.core.config import settings; print(settings.resolved_database_url[:50])"
+
+# Migrar datos SQLite → Neon (production)
+python migrate_to_neon.py export    # Exporta SQLite a JSON
+python migrate_to_neon.py init       # Crea schema en Neon
+python migrate_to_neon.py import     # Importa datos a Neon
 ```
 
 ---
@@ -98,7 +146,31 @@ npm run build
 
 # Iniciar build
 npm start
+
+# Linting
+npm run lint
 ```
+
+---
+
+## Variables de entorno
+
+### Backend (.env)
+
+| Variable | Descripción | development | production |
+|----------|-------------|--------------|-------------|
+| `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
+| `ENVIRONMENT` | `development` \| `production` | `development` | `production` |
+| `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
+| `ALLOWED_ORIGINS` | CORS origins | localhost:3000, :8002 | `*` (auto en prod) |
+| `MINIMAX_API_KEY` | IA chat | — | Opcional |
+| `OPENAI_API_KEY` | IA chat | — | Opcional |
+
+### Frontend (.env.local)
+
+| Variable | Descripción |
+|----------|-------------|
+| `NEXT_PUBLIC_API_BASE` | URL del backend FastAPI (local: `http://localhost:8002`, prod: `https://custodio-rat.vercel.app`) |
 
 ---
 
@@ -106,7 +178,7 @@ npm start
 
 **Backend:**
 - FastAPI 0.115 + Uvicorn
-- SQLAlchemy 2.0 + SQLite
+- SQLAlchemy 2.0 + PostgreSQL (Neon) / SQLite (local)
 - Pydantic 2.10
 - JWT + Bcrypt
 - ReportLab (exportación PDF)
@@ -118,7 +190,11 @@ npm start
 - Tailwind CSS v4
 - Sonner (notificaciones)
 - React Hook Form + Zod
-- Lucide React (iconos)
+- jsPDF + jspdf-autotable (exportación)
+
+**Infraestructura:**
+- Vercel (serverless functions + hosting)
+- Neon PostgreSQL (base de datos production)
 
 ---
 
