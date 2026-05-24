@@ -44,7 +44,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         <button
           onClick={onMenuClick}
           className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition border border-gray-200 lg:hidden"
-          aria-label="Abrir menú"
+          aria-label="Abrir/cerrar menú"
         >
           <span className="text-gray-600 text-xl">☰</span>
         </button>

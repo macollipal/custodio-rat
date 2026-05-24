@@ -11,6 +11,7 @@ interface SidebarProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   companies: Company[];
+  onClose?: () => void;
 }
 
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
@@ -23,7 +24,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: 'rubros', label: 'Rubros', icon: '🏷' },
 ];
 
-export default function Sidebar({ currentPage, onNavigate, companies }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
   const { user, company, setCompany, logout, darkMode, toggleDarkMode } = useApp();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [ratInfoOpen, setRatInfoOpen] = useState(false);
@@ -49,7 +50,7 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
       style={{ background: '#111827' }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-700/50">
+      <div className="px-5 py-5 border-b border-gray-700/50 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
@@ -62,6 +63,15 @@ export default function Sidebar({ currentPage, onNavigate, companies }: SidebarP
             <div className="text-gray-500 text-xs">Ley 21.719</div>
           </div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-gray-700 transition text-lg"
+            aria-label="Cerrar menú"
+          >
+            ←
+          </button>
+        )}
       </div>
 
       {/* Empresa activa */}

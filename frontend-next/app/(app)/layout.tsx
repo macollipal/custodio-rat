@@ -123,6 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           currentPage={currentPage}
           onNavigate={handleNavigate}
           companies={companies}
+          onClose={() => setSidebarOpen(false)}
         />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">

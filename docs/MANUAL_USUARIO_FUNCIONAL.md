@@ -6,7 +6,8 @@
 
 ## 1. ¿Qué es Custodio?
 
-Custodio es un sistema digital que te ayuda a cumplir con la **Ley 21.719 de Protección de Datos Personales de Chile**. Permite documentar, gestionar y mantener actualizado el Registro de Actividades de Tratamiento (RAT) de tu organización.
+Custodio es un sistema digital que te ayuda a cumplir con la **Ley 21.719 de Protección de Datos Personales de Chile**. 
+Permite documentar, gestionar y mantener actualizado el Registro de Actividades de Tratamiento (RAT) de tu organización.
 
 **En resumen:** Custodio hace el trabajo pesado de crear y mantener el RAT para que tú no tengas que hacerlo en planillas de Excel.
 
@@ -16,7 +17,8 @@ Custodio es un sistema digital que te ayuda a cumplir con la **Ley 21.719 de Pro
 
 ### ¿Por qué existe la Ley 21.719?
 
-La Ley 21.719, publicada en diciembre de 2024, moderniza la antigua normativa de protección de datos en Chile. Crea la **Agencia de Protección de Datos Personales (APDC)** y establece obligaciones concretas para todas las organizaciones que traten datos personales.
+La Ley 21.719, publicada en diciembre de 2024, moderniza la antigua normativa de protección de datos en Chile. 
+Crea la **Agencia de Protección de Datos Personales (APDC)** y establece obligaciones concretas para todas las organizaciones que traten datos personales.
 
 **¿Qué pasa si no cumplimiento?**
 
@@ -40,7 +42,7 @@ Además, la APDC puede fiscalizar tu organización en cualquier momento y solici
 
 Es un documento formal donde describes **cada actividad de tratamiento de datos personales** que realiza tu organización. Por cada tratamiento debes documentar:
 
-- **Qué datos**收集 y de quién (empleados, clientes, proveedores)
+- **Qué datos** y de quién (empleados, clientes, proveedores)
 - **Para qué finalidad** se usan esos datos
 - **Con qué autorización legal** los tratas (consentimiento, contrato, obligación legal)
 - **Quiénes tienen acceso** a esos datos (internos y externos)
@@ -82,7 +84,8 @@ El RAT es la **columna vertebral documental** de tu cumplimiento. Si la APDC te 
 
 ### 5.1 Gestión de empresas
 
-Registra cada empresa u organización responsable del tratamiento de datos. Cada empresa tiene su propio conjunto de RATs, usuarios y brechas.
+Registra cada empresa u organización responsable del tratamiento de datos. 
+Cada empresa tiene su propio conjunto de RATs, usuarios y brechas.
 
 **Datos que se registran:**
 - Razón social y RUT
@@ -179,7 +182,7 @@ Genera reportes filtrados por estado, base legal, nivel de riesgo y más. Export
 - **PDF** — para presentar a la APDC o auditorías
 - **CNI** — formato oficial para la Agencia de Protección de Datos Personales
 
-### 5.8 Chat de asistencia IA
+### 5.8 Chat de asistencia IA(aún no esta, en alguna proxima version)
 
 El sistema incluye un asistente con IA entrenado en la Ley 21.719. Te puede explicar conceptos, ayudarte a clasificar tratamientos y responder dudas sobre cumplimiento.
 

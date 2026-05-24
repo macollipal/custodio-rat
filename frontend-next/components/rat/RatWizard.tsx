@@ -184,7 +184,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
 
   return (
-    <div>
+    <div className="overflow-x-auto pb-4 -mx-4 px-4">
       {/* PASO 0: Sugerencias por rubro */}
       {mostrarPaso0 && step === 0 && (
         <div className="space-y-6">
@@ -350,7 +350,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
                 onClick={() => {
                   if (!data.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
@@ -358,7 +358,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   if (!data.fuente_datos?.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
                   cambiarStep(2);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -421,7 +421,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
@@ -463,7 +463,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
                 onClick={() => cambiarStep(1)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
@@ -476,7 +476,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   if (!data.categoria_datos?.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
                   cambiarStep(3);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -586,7 +586,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </details>
             )}
 
-            <div className="flex justify-between pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
                 onClick={() => cambiarStep(2)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
@@ -603,7 +603,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   }
                   cambiarStep(4);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -620,7 +620,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
@@ -642,7 +642,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   <textarea
                     value={data.medidas_seguridad ?? ''}
                     onChange={e => setData(d => ({ ...d, medidas_seguridad: e.target.value }))}
-                    rows={3}
+                    rows={2}
                     placeholder="Ej: Cifrado AES-256, acceso por roles, MFA..."
                     className={inputCls}
                     style={inputStyle}
@@ -657,7 +657,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   <textarea
                     value={data.transferencia_datos ?? ''}
                     onChange={e => setData(d => ({ ...d, transferencia_datos: e.target.value }))}
-                    rows={3}
+                    rows={2}
                     placeholder="Ej: Compartidos con proveedor de nómina bajo contrato de encargo"
                     className={inputCls}
                     style={inputStyle}
@@ -714,7 +714,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <summary className="px-4 py-3 text-sm font-medium cursor-pointer" style={{ color: '#374151' }}>
                 📋 Revisar resumen antes de guardar
               </summary>
-              <div className="px-4 pb-4 grid grid-cols-2 gap-x-8 gap-y-1">
+              <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
                 {[
                   ['Proceso', data.nombre_proceso],
                   ['Titulares', data.categoria_titulares],
