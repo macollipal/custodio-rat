@@ -775,7 +775,7 @@ export default function ReportesPage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
           <div
             className="relative flex flex-col h-full shadow-2xl overflow-hidden"
-            style={{ width: 420, maxWidth: '100vw', background: 'white', animation: 'slideInRight 0.25s ease' }}
+            style={{ width: '95vw', maxWidth: 420, background: 'white', animation: 'slideInRight 0.25s ease' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}>

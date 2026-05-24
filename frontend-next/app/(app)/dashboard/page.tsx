@@ -267,7 +267,7 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-0 overflow-x-auto" style={{ minWidth: 600 }}>
+          <div className="space-y-0 overflow-x-auto">
             <div
               className="grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg overflow-x-auto whitespace-nowrap"
               style={{ gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}

@@ -24,15 +24,14 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         style={{ animation: 'fadeIn 0.2s ease' }}
       />
       <div
-        className="relative flex flex-col shadow-2xl overflow-hidden rounded-2xl"
+        className="relative flex flex-col shadow-2xl overflow-hidden rounded-2xl w-[95vw] max-w-[640px] sm:w-[60vw]"
         style={{
-          width: '60vw',
           maxHeight: '90vh',
           background: 'white',
           animation: 'scaleIn 0.2s ease',

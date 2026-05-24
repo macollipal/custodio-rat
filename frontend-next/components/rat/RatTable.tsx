@@ -249,7 +249,7 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
           )}
         </div>
       ) : (
-        <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: '1px solid #E5E7EB', minWidth: 800 }}>
+        <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: '1px solid #E5E7EB' }}>
           <div className="grid text-xs font-semibold uppercase tracking-wide px-5 py-3 whitespace-nowrap" style={{ gridTemplateColumns: '3fr 2fr 1.5fr 1fr 120px 80px', color: '#6B7280', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
             <span>Proceso</span><span>Categoría de datos</span><span>Base legal</span><span>Estado</span><span>Completitud</span><span>Riesgo</span>
           </div>

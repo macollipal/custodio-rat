@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuClick: () => void;
+}
+
+export default function Topbar({ onMenuClick }: TopbarProps) {
   const { user, company, companies, setCompany, dashboardStats, darkMode, toggleDarkMode } = useApp();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -32,10 +36,22 @@ export default function Topbar() {
 
   return (
     <div
-      className="flex items-center justify-between px-8 py-3 border-b"
+      className="flex items-center justify-between px-4 lg:px-8 py-3 border-b"
       style={{ background: 'white', borderColor: '#E5E7EB' }}
     >
       <div className="flex items-center gap-3 relative">
+        {/* Hamburger button - mobile only */}
+        <button
+          onClick={onMenuClick}
+          className="hidden lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+          aria-label="Abrir menú"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="17" y2="6" />
+            <line x1="3" y1="10" x2="17" y2="10" />
+            <line x1="3" y1="14" x2="17" y2="14" />
+          </svg>
+        </button>
         <span className="text-sm" style={{ color: '#6B7280' }}>Empresa activa:</span>
         <button
           onClick={() => setOpen(o => !o)}
