@@ -39,29 +39,29 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-start justify-center pt-8 sm:pt-16 px-4"
+      className="h-screen flex items-center justify-center p-4"
       style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)' }}
     >
       <div className="w-full max-w-md px-4">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div
-            className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-lg"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center text-2xl sm:text-3xl shadow-lg"
             style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
           >
             🛡
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight mb-1">Custodio</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-white text-xl sm:text-2xl font-bold tracking-tight mb-1">Custodio</h1>
+          <p className="text-slate-400 text-xs sm:text-sm">
             Gestión inteligente del Registro de Actividades<br />
             de Tratamiento · <span className="text-blue-400 font-semibold">Ley 21.719</span>
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-9">
-          <h2 className="text-gray-900 text-xl font-bold mb-1">Iniciar sesión</h2>
-          <p className="text-gray-500 text-sm mb-6">Ingresa tus credenciales para continuar</p>
+        <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-9">
+          <h2 className="text-gray-900 text-lg sm:text-xl font-bold mb-1">Iniciar sesión</h2>
+          <p className="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6">Ingresa tus credenciales para continuar</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

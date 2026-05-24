@@ -43,14 +43,18 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         {/* Hamburger button - mobile only */}
         <button
           onClick={onMenuClick}
+          aria-label="Abrir menú de navegación"
+          aria-controls="main-sidebar"
           className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition border border-gray-200 lg:hidden"
-          aria-label="Abrir/cerrar menú"
         >
-          <span className="text-gray-600 text-xl">☰</span>
+          <span aria-hidden="true" className="text-gray-600 text-xl">☰</span>
         </button>
         <span className="text-sm" style={{ color: '#6B7280' }}>Empresa activa:</span>
         <button
           onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label="Cambiar empresa activa"
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition hover:bg-gray-50"
           style={{ color: '#111827', border: '1px solid #E5E7EB' }}
         >
@@ -117,30 +121,36 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 <div className="flex items-center gap-3">
         <button
           onClick={toggleDarkMode}
+          aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           className="p-2 rounded-lg transition hover:bg-gray-100"
-          title={darkMode ? 'Modo claro' : 'Modo oscuro'}
         >
-          <span style={{ fontSize: 16 }}>{darkMode ? '☀️' : '🌙'}</span>
+          <span aria-hidden="true" role="img" style={{ fontSize: 16 }}>{darkMode ? '☀️' : '🌙'}</span>
         </button>
         {alertCount > 0 && (
           <div className="relative">
             <button
               onClick={() => setNotifOpen(o => !o)}
+              aria-label={`Alertas de cumplimiento: ${alertCount} alerta${alertCount !== 1 ? 's' : ''}`}
+              aria-expanded={notifOpen}
+              aria-haspopup="menu"
               className="relative p-2 rounded-lg transition hover:bg-gray-100"
-              title="Alertas de cumplimiento"
             >
-              <span style={{ fontSize: 18 }}>🔔</span>
+              <span aria-hidden="true" role="img" style={{ fontSize: 18 }}>🔔</span>
               <span
                 className="absolute top-1 right-1 w-4 h-4 rounded-full text-xs font-bold flex items-center justify-center"
-                style={{ background: '#DC2626', color: 'white', fontSize: 9 }}
+                style={{ background: '#B91C1C', color: 'white', fontSize: 9 }}
+                aria-hidden="true"
               >
                 {alertCount > 9 ? '9+' : alertCount}
               </span>
             </button>
             {notifOpen && (
               <div
+                role="menu"
+                aria-label="Alertas de cumplimiento"
                 className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-50 overflow-hidden"
-                style={{ border: '1px solid #E5E7EB', minWidth: 280, maxWidth: 320 }}
+                style={{ border: '1px solid #E5E7EB', minWidth: 280, maxWidth: 'calc(100vw - 32px)' }}
+                onKeyDown={e => { if (e.key === 'Escape') setNotifOpen(false); }}
               >
                 <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: '#E5E7EB', color: '#111827' }}>
                   Alertas de cumplimiento

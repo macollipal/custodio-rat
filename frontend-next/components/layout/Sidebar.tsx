@@ -56,7 +56,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
             className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
           >
-            🛡
+<span aria-hidden="true" style={{ fontSize: 18 }}>🛡</span>
           </div>
           <div>
             <div className="text-white font-bold text-sm leading-tight">Custodio</div>
@@ -81,6 +81,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
         </div>
         {companies.length > 0 ? (
           <select
+            aria-label="Seleccionar empresa activa"
             value={company?.id ?? ''}
             onChange={e => {
               const emp = companies.find(c => c.id === Number(e.target.value));
@@ -116,6 +117,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
+                aria-current={active ? 'page' : undefined}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left"
                 style={{
                   background: active ? '#2563EB' : 'transparent',
@@ -128,7 +130,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
                   if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
                 }}
               >
-                <span className="text-base w-5 text-center">{item.icon}</span>
+                <span aria-hidden="true" className="text-base w-5 text-center">{item.icon}</span>
                 {item.label}
               </button>
             );
@@ -145,17 +147,19 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
             style={{ color: '#9CA3AF', background: ratInfoOpen ? '#1F2937' : 'transparent' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1F2937'; }}
             onMouseLeave={e => { if (!ratInfoOpen) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            aria-expanded={ratInfoOpen}
+            aria-label="¿Qué es un RAT? — información sobre el registro de actividades de tratamiento"
           >
-            <span className="text-sm">❓</span> ¿Qué es un RAT?
+            <span aria-hidden="true" className="text-sm">❓</span> ¿Qué es un RAT?
           </button>
           {ratInfoOpen && (
             <div
-              className="absolute left-full top-0 ml-2 bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
+              className="absolute left-0 top-full mt-1 sm:relative sm:left-0 sm:top-auto sm:mt-0 bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
               style={{ border: '1px solid #E5E7EB', width: 320, color: '#374151' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: '#E5E7EB', color: '#111827', background: '#F9FAFB' }}>
-                📋 ¿Qué es un RAT?
+                <span aria-hidden="true" style={{ fontSize: 14 }}>📋</span> ¿Qué es un RAT?
               </div>
               <div className="p-4 text-xs leading-relaxed" style={{ color: '#6B7280', maxHeight: 360, overflowY: 'auto' }}>
                 <p className="mb-2">

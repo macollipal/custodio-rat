@@ -7,6 +7,7 @@ import * as api from '@/lib/api';
 import RatTable from '@/components/rat/RatTable';
 import RatWizard from '@/components/rat/RatWizard';
 import RatEditForm from '@/components/rat/RatEditForm';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 import type { RAT } from '@/types';
 
 type View = 'table' | 'wizard' | 'edit';
@@ -15,6 +16,7 @@ export default function RatPage() {
   const { company, rats, setRats, puedeEditar } = useApp();
   const [view, setView] = useState<View>('table');
   const [refreshing, setRefreshing] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [editingRat, setEditingRat] = useState<RAT | null>(null);
 
   const hasCache = rats.length > 0;
@@ -29,10 +31,11 @@ export default function RatPage() {
       if (!hasCache) toast.error('No se pudieron cargar los procesos.');
     } finally {
       setRefreshing(false);
+      setInitialLoading(false);
     }
   }
 
-  useEffect(() => { loadRats(); }, [company?.id]);
+  useEffect(() => { setInitialLoading(true); loadRats(); }, [company?.id]);
 
   if (!company) {
     return (
@@ -42,10 +45,24 @@ export default function RatPage() {
     );
   }
 
+  if (initialLoading) {
+    return (
+      <div className="p-4 sm:p-8 space-y-4">
+        <div className="flex items-start justify-between mb-6 flex-col sm:flex-row gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Procesos RAT</h1>
+            <p className="text-sm mt-1" style={{ color: '#6B7280' }}>Registro de Actividades de Tratamiento · Art. 16 Ley 21.719</p>
+          </div>
+        </div>
+        <SkeletonTable rows={5} />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       {view === 'table' && (
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-6 flex-col sm:flex-row gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Procesos RAT</h1>
             <p className="text-sm mt-1" style={{ color: '#6B7280' }}>

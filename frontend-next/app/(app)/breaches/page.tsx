@@ -86,7 +86,7 @@ function BreachForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fecha y hora de detección *</label>
           <input
@@ -134,7 +134,7 @@ function BreachForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-3 rounded-lg p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input

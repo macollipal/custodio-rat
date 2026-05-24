@@ -11,7 +11,10 @@ export default function StepIndicator({ steps, current }: StepIndicatorProps) {
         const active = i + 1 === current;
         return (
           <div key={s} className="flex items-center flex-shrink-0">
-            <div className="flex items-center gap-2">
+            <div
+                aria-current={active ? 'step' : undefined}
+                className="flex items-center gap-2"
+              >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                 style={{

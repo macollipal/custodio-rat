@@ -44,7 +44,7 @@ echo       puerto 3000: disponible
 echo.
 echo  [1/3] Iniciando Backend (FastAPI)...
 cd /d C:\Users\chelo\Desktop\RAT_opencode\backend
-start "Custodio - Backend" uvicorn.exe app.main:app --host 0.0.0.0 --port 8002 --reload
+start "Custodio - Backend" cmd /c "venv\Scripts\activate.bat && uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload"
 
 timeout /t 3 /nobreak >nul
 
