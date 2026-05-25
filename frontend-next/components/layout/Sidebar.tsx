@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros' | 'configuracion';
 
 interface SidebarProps {
   currentPage: Page;
@@ -22,6 +22,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: 'companies', label: 'Empresas', icon: '🏢' },
   { key: 'usuarios', label: 'Usuarios', icon: '👤' },
   { key: 'rubros', label: 'Rubros', icon: '🏷' },
+  { key: 'configuracion', label: 'Configuración', icon: '⚙' },
 ];
 
 export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
@@ -42,6 +43,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
     { key: 'conexion', label: 'Conexión', icon: '🔗', roles: ['superadmin'] },
     { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
+    { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa', 'usuario'] },
   ];
 
   return (

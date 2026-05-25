@@ -8,7 +8,7 @@ import Topbar from '@/components/layout/Topbar';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros' | 'configuracion';
 
 function pathToPage(pathname: string): Page {
   if (pathname.includes('/rat')) return 'rat';
@@ -18,6 +18,7 @@ function pathToPage(pathname: string): Page {
   if (pathname.includes('/usuarios')) return 'usuarios';
   if (pathname.includes('/conexion')) return 'conexion';
   if (pathname.includes('/rubros')) return 'rubros';
+  if (pathname.includes('/configuracion')) return 'configuracion';
   return 'dashboard';
 }
 
