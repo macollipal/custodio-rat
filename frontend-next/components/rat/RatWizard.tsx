@@ -241,7 +241,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={onCancel}
+          onClick={() => {
+            if (confirm('¿Estás seguro de que quieres salir?\n\nLos datos no guardados se perderán.')) {
+              limpiarDraft();
+              onCancel();
+            }
+          }}
           className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
           style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
         >
@@ -351,6 +356,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                onClick={() => {
+                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
+                    limpiarDraft();
+                    onCancel();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
+                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+              >
+                Cancelar
+              </button>
               <button
                 onClick={() => {
                   if (!data.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
@@ -481,6 +498,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               >
                 Siguiente →
               </button>
+              <button
+                onClick={() => {
+                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
+                    limpiarDraft();
+                    onCancel();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
+                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
@@ -607,6 +636,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
+                    limpiarDraft();
+                    onCancel();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
+                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+              >
+                Cancelar
               </button>
             </div>
           </div>
@@ -752,6 +793,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 style={{ background: '#059669' }}
               >
                 {saving ? 'Guardando...' : '✓ Guardar en el RAT'}
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
+                    limpiarDraft();
+                    onCancel();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
+                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+              >
+                Cancelar
               </button>
             </div>
           </div>
