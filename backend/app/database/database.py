@@ -28,5 +28,5 @@ def get_db():
 
 def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
-    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, solicitud_derecho  # noqa: F401
+    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido  # noqa: F401
     Base.metadata.create_all(bind=engine)
