@@ -22,7 +22,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const BASES_LEGALES = [...basesLegalesConst];
+const BASES_LEGALES = basesLegalesConst;
 
 const COLUMN_OPTIONS = [
   { key: 'nombre_proceso', label: 'Proceso' },
@@ -289,7 +289,13 @@ export default function ReportesPage() {
         r.created_by ?? '',
       ]);
     });
-    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const csv = rows.map(r => r.map(v => {
+      const str = String(v ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return `"${str}"`;
+    }).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -384,20 +390,24 @@ export default function ReportesPage() {
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
-    return Object.entries(groups).map(([groupKey, groupRats]) => (
-      <tbody key={groupKey}>
-        <tr style={{ background: '#F9FAFB' }}>
-          <td colSpan={columns.length} className="px-4 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: '#374151', borderBottom: '1px solid #E5E7EB' }}>
-            {groupBy === 'estado' ? groupKey.replace('_', ' ') : groupKey} ({groupRats.length})
-          </td>
-        </tr>
-        {groupRats.map((rat, i) => (
-          <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
-            {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
-          </tr>
+    return (
+      <tbody>
+        {Object.entries(groups).map(([groupKey, groupRats]) => (
+          <>
+            <tr key={`hdr-${groupKey}`} style={{ background: '#F9FAFB' }}>
+              <td colSpan={columns.length} className="px-4 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: '#374151', borderBottom: '1px solid #E5E7EB', textAlign: 'left' }}>
+                {groupBy === 'estado' ? groupKey.replace('_', ' ') : groupKey} ({groupRats.length})
+              </td>
+            </tr>
+            {groupRats.map((rat) => (
+              <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
+                {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
+              </tr>
+            ))}
+          </>
         ))}
       </tbody>
-    ));
+    );
   }
 
   function renderCell(rat: RAT, col: string): React.ReactNode {
@@ -509,7 +519,7 @@ export default function ReportesPage() {
                 {savedFilters.map(f => (
                   <div key={f.id} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style={{ background: '#EEF2FF', color: '#3730A3' }}>
                     <button onClick={() => loadSavedFilter(f)} className="hover:underline">{f.name}</button>
-                    <button onClick={() => deleteSavedFilter(f.id)} className="font-bold hover:text-red-500">✕</button>
+                    <button aria-label={`Eliminar filtro "${f.name}"`} onClick={() => deleteSavedFilter(f.id)} className="font-bold hover:text-red-500">✕</button>
                   </div>
                 ))}
               </div>
@@ -521,7 +531,7 @@ export default function ReportesPage() {
         </div>
 
         <div className="flex gap-3 flex-wrap mb-4">
-          <input type="text" value={filters.search ?? ''} onChange={e => setFilters(f => ({ ...f, search: e.target.value }))} placeholder="Buscar por nombre..." className={`${inputCls} flex-1`} style={{ minWidth: 180 }} />
+          <input type="text" aria-label="Buscar por nombre" value={filters.search ?? ''} onChange={e => setFilters(f => ({ ...f, search: e.target.value }))} placeholder="Buscar por nombre..." className={`${inputCls} flex-1`} style={{ minWidth: 180 }} />
           <select value={filters.estado ?? ''} onChange={e => setFilters(f => ({ ...f, estado: e.target.value }))} className={inputCls}>
             <option value="">Estado (todos)</option>
             {ESTADOS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
@@ -607,7 +617,7 @@ export default function ReportesPage() {
             <table className="w-full" style={{ minWidth: Math.max(600, columns.length * 100) }}>
               <thead>
                 <tr className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
-                  {columns.map(col => <th key={col} className="px-4 py-3 text-left whitespace-nowrap">{COLUMN_OPTIONS.find(c => c.key === col)?.label ?? col}</th>)}
+                  {columns.map(col => <th key={col} role="columnheader" scope="col" className="px-4 py-3 text-left whitespace-nowrap">{COLUMN_OPTIONS.find(c => c.key === col)?.label ?? col}</th>)}
                 </tr>
               </thead>
               <GroupedRows rats={rats} />

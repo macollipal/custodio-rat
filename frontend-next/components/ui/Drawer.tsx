@@ -59,14 +59,15 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-6" onClick={onClose}>
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 sm:backdrop-blur-sm"
         style={{ animation: 'fadeIn 0.2s ease' }}
       />
       <div
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="drawer-title"
+        aria-labelledby={title ? 'drawer-title' : undefined}
+        aria-label={title ? undefined : 'Diálogo'}
         className="relative flex flex-col shadow-2xl overflow-hidden rounded-2xl w-[95vw] max-w-[640px] sm:w-[60vw]"
         style={{
           maxHeight: '90vh',
@@ -80,7 +81,7 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
           style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}
         >
           <div className="flex items-center gap-3">
-            <h2 id="drawer-title" className="text-base font-semibold" style={{ color: '#111827' }}>{title}</h2>
+            {title ? <h2 id="drawer-title" className="text-base font-semibold" style={{ color: '#111827' }}>{title}</h2> : <div id="drawer-title" />}
             {extraAction}
           </div>
           <button

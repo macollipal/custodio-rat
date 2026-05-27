@@ -5,20 +5,20 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
+import Chatbot from '@/components/ui/Chatbot';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros' | 'configuracion';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion';
 
 function pathToPage(pathname: string): Page {
-  if (pathname.includes('/rat')) return 'rat';
-  if (pathname.includes('/companies')) return 'companies';
-  if (pathname.includes('/breaches')) return 'breaches';
-  if (pathname.includes('/reportes')) return 'reportes';
-  if (pathname.includes('/usuarios')) return 'usuarios';
-  if (pathname.includes('/conexion')) return 'conexion';
-  if (pathname.includes('/rubros')) return 'rubros';
-  if (pathname.includes('/configuracion')) return 'configuracion';
+  if (pathname.startsWith('/rat')) return 'rat';
+  if (pathname.startsWith('/companies')) return 'companies';
+  if (pathname.startsWith('/breaches')) return 'breaches';
+  if (pathname.startsWith('/reportes')) return 'reportes';
+  if (pathname.startsWith('/usuarios')) return 'usuarios';
+  if (pathname.startsWith('/rubros')) return 'rubros';
+  if (pathname.startsWith('/configuracion')) return 'configuracion';
   return 'dashboard';
 }
 
@@ -66,8 +66,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       } else if (!company && list.length === 0) {
         router.replace('/onboarding');
       }
-    }).catch(() => {});
-  }, [hydrated, token, router, pathname, user?.rol_global]);
+    }).catch(() => {
+      setEmpresasCargadas(true);
+    });
+  }, [hydrated, token, router, pathname, user?.rol_global, empresasCargadas, companies.length, company]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -137,6 +139,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      <Chatbot />
     </div>
   );
 }
