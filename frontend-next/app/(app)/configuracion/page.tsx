@@ -428,7 +428,7 @@ export default function ConfiguracionPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-xs font-semibold" style={{ color: '#111827' }}>
-                          {(log.entidad ?? 'N/A').toUpperCase()} #{log.entidad_id ?? '—'}
+                          RAT #{log.rat_id ?? '—'}
                         </span>
                         <span className="text-xs" style={{ color: '#9CA3AF' }}>·</span>
                         <span className="text-xs" style={{ color: '#9CA3AF' }}>{log.usuario ?? '—'}</span>
