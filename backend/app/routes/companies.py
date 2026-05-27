@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database.database import get_db
-from app.schemas.company import CompanyCreate, CompanyOut, CompanyUpdate
+from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate
 from app.services.company_service import (
     create_company, delete_company, get_companies, get_company, update_company
 )
@@ -16,6 +16,15 @@ from app.routes.deps import get_current_user, require_admin
 from app.models.rat import RAT as RATModel
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
+
+
+@router.get("/publico", response_model=list[CompanyPublicOut], summary="Listar empresas públicas (para formulario de derechos)")
+async def listar_publico(
+    db: Session = Depends(get_db),
+):
+    from app.models.company import Company
+    companies = db.query(Company).order_by(Company.nombre).all()
+    return companies
 
 
 @router.get("/", response_model=list[CompanyOut], summary="Listar empresas")

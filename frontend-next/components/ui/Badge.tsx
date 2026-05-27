@@ -8,6 +8,9 @@ const BADGE_STYLES: Record<string, { bg: string; color: string; label: string }>
 };
 
 export default function Badge({ estado }: { estado: string }) {
+  if (process.env.NODE_ENV === 'development' && !BADGE_STYLES[estado]) {
+    console.warn(`Badge: estado desconocido "${estado}"`);
+  }
   const s = BADGE_STYLES[estado] ?? { bg: '#F3F4F6', color: '#374151', label: estado };
   return (
     <span
