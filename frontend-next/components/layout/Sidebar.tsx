@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'conexion' | 'rubros' | 'configuracion';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion';
 
 interface SidebarProps {
   currentPage: Page;
@@ -13,17 +13,6 @@ interface SidebarProps {
   companies: Company[];
   onClose?: () => void;
 }
-
-const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: '▣' },
-  { key: 'rat', label: 'Procesos RAT', icon: '≡' },
-  { key: 'reportes', label: 'Reportes', icon: '📊' },
-  { key: 'breaches', label: 'Brechas', icon: '🛡' },
-  { key: 'companies', label: 'Empresas', icon: '🏢' },
-  { key: 'usuarios', label: 'Usuarios', icon: '👤' },
-  { key: 'rubros', label: 'Rubros', icon: '🏷' },
-  { key: 'configuracion', label: 'Configuración', icon: '⚙' },
-];
 
 export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
   const { user, company, setCompany, logout, darkMode, toggleDarkMode } = useApp();
@@ -41,7 +30,6 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
     { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
-    { key: 'conexion', label: 'Conexión', icon: '🔗', roles: ['superadmin'] },
     { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
     { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa', 'usuario'] },
   ];

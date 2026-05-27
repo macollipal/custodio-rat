@@ -32,13 +32,29 @@ def get_breach(db: Session, breach_id: int) -> SecurityBreach:
 
 def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreach:
     from app.models.company import Company
-    if not db.query(Company).filter(Company.id == data.company_id).first():
+    empresa = db.query(Company).filter(Company.id == data.company_id).first()
+    if not empresa:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
     breach = SecurityBreach(**data.model_dump(), creado_por=usuario)
     db.add(breach)
     db.commit()
     db.refresh(breach)
+
+    if empresa.email_dpo:
+        from app.services.email_service import notificar_nueva_brecha, EmailError
+        fecha_str = breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M")
+        try:
+            notificar_nueva_brecha(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                descripcion=breach.descripcion or "Sin descripción",
+                fecha_deteccion=fecha_str,
+            )
+        except EmailError:
+            pass
+
     return breach
 
 
