@@ -13,7 +13,6 @@ interface AuditEntry {
   usuario: string;
   timestamp: string;
   detalle?: string;
-  timestamp: string;
 }
 
 interface SolicitudDerecho {
