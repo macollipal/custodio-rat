@@ -215,6 +215,22 @@ export default function ConfiguracionPage() {
     }
   }, [company?.id, solicitudFiltro]);
 
+  function formatoAccion(accion: string) {
+    const map: Record<string, { label: string; color: string }> = {
+      crear: { label: 'Crear', color: '#059669' },
+      editar: { label: 'Editar', color: '#2563EB' },
+      eliminar: { label: 'Eliminar', color: '#DC2626' },
+      duplicar: { label: 'Duplicar', color: '#7C3AED' },
+      revision: { label: 'Revisión', color: '#D97706' },
+    };
+    return map[accion] ?? { label: accion, color: '#6B7280' };
+  }
+
+  function formatearFecha(ts: string) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
   useEffect(() => {
     if (tab === 'sistema') fetchDbHealth();
     if (tab === 'registros') fetchAuditLogs();
