@@ -174,9 +174,16 @@ export default function ConfiguracionPage() {
     return saved ? JSON.parse(saved) : { formatoPredeterminado: 'pdf', incluirAuditoria: true, nombreConRut: true };
   });
 
-  useEffect(() => {
-    localStorage.setItem(EXPORT_KEY, JSON.stringify(exportConfig));
-  }, [exportConfig]);
+  const fetchDbHealth = useCallback(async () => {
+    setLoadingDb(true);
+    try {
+      setDbHealth(await getDbHealth());
+    } catch {
+      setDbHealth({ engine: 'unknown', url: '-', status: 'error' });
+    } finally {
+      setLoadingDb(false);
+    }
+  }, []);
 
   const fetchAuditLogs = useCallback(async () => {
     if (!company?.id) return;
@@ -209,22 +216,15 @@ export default function ConfiguracionPage() {
     }
   }, [company?.id, solicitudFiltro]);
 
-  const fetchDbHealth = useCallback(async () => {
-    setLoadingDb(true);
-    try {
-      setDbHealth(await getDbHealth());
-    } catch {
-      setDbHealth({ engine: 'unknown', url: '-', status: 'error' });
-    } finally {
-      setLoadingDb(false);
-    }
-  }, []);
-
   useEffect(() => {
     if (tab === 'sistema') fetchDbHealth();
     if (tab === 'registros') fetchAuditLogs();
     if (tab === 'solicitudes' && company?.id) fetchSolicitudes();
   }, [tab, company?.id, fetchAuditLogs, fetchSolicitudes, fetchDbHealth]);
+
+  useEffect(() => {
+    localStorage.setItem(EXPORT_KEY, JSON.stringify(exportConfig));
+  }, [exportConfig]);
 
   async function responderSolicitud(id: number, estado: string, respuesta: string) {
     try {
