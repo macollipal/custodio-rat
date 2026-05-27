@@ -8,10 +8,10 @@ import { getDbHealth, getAuditoriaGlobal, type DbHealth } from '@/lib/api';
 
 interface AuditEntry {
   id: number;
-  entidad: string;
-  entidad_id: number;
+  rat_id: number;
   accion: string;
   usuario: string;
+  timestamp: string;
   detalle?: string;
   timestamp: string;
 }
