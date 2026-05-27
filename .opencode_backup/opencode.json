@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "git push *": "deny",
+      "*": "allow"
+    }
+  },
+  "available_skills": [
+    {
+      "name": "frontend-guardian",
+      "description": "Senior frontend engineer + UX auditor. Use when reviewing frontend code, mobile UX, responsive design, accessibility, or production readiness. Trigger keywords: review, UX, mobile, responsive, accessibility, frontend audit.",
+      "location": "file:///C:/Users/chelo/Desktop/RAT_opencode/.opencode/skills/frontend-guardian/SKILL.md"
+    },
+    {
+      "name": "qa-tester",
+      "description": "QA Tester. Use when testing the application, checking for bugs, verifying features work correctly, or doing acceptance testing. Trigger keywords: test, QA, verify, bug, smoke test, regression, acceptance testing.",
+      "location": "file:///C:/Users/chelo/Desktop/RAT_opencode/.opencode/skills/qa-tester/SKILL.md"
+    }
+  ]
+}
