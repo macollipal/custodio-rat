@@ -175,25 +175,8 @@ export default function ConfiguracionPage() {
   });
 
   useEffect(() => {
-    if (tab === 'sistema') fetchDbHealth();
-    if (tab === 'registros') fetchAuditLogs();
-    if (tab === 'solicitudes' && company?.id) fetchSolicitudes();
-  }, [tab, company?.id, fetchAuditLogs, fetchSolicitudes, fetchDbHealth]);
-
-  useEffect(() => {
     localStorage.setItem(EXPORT_KEY, JSON.stringify(exportConfig));
   }, [exportConfig]);
-
-  async function fetchDbHealth() {
-    setLoadingDb(true);
-    try {
-      setDbHealth(await getDbHealth());
-    } catch {
-      setDbHealth({ engine: 'unknown', url: '-', status: 'error' });
-    } finally {
-      setLoadingDb(false);
-    }
-  }
 
   const fetchAuditLogs = useCallback(async () => {
     if (!company?.id) return;
@@ -208,23 +191,7 @@ export default function ConfiguracionPage() {
     }
   }, [company?.id]);
 
-  function formatoAccion(accion: string) {
-    const map: Record<string, { label: string; color: string }> = {
-      crear: { label: 'Crear', color: '#059669' },
-      editar: { label: 'Editar', color: '#2563EB' },
-      eliminar: { label: 'Eliminar', color: '#DC2626' },
-      duplicar: { label: 'Duplicar', color: '#7C3AED' },
-      revision: { label: 'Revisión', color: '#D97706' },
-    };
-    return map[accion] ?? { label: accion, color: '#6B7280' };
-  }
-
-  function formatearFecha(ts: string) {
-    if (!ts) return '—';
-    return new Date(ts).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
-  }
-
-  async function fetchSolicitudes() {
+  const fetchSolicitudes = useCallback(async () => {
     if (!company?.id) return;
     setLoadingSolicitudes(true);
     try {
@@ -240,7 +207,24 @@ export default function ConfiguracionPage() {
     } finally {
       setLoadingSolicitudes(false);
     }
-  }
+  }, [company?.id, solicitudFiltro]);
+
+  const fetchDbHealth = useCallback(async () => {
+    setLoadingDb(true);
+    try {
+      setDbHealth(await getDbHealth());
+    } catch {
+      setDbHealth({ engine: 'unknown', url: '-', status: 'error' });
+    } finally {
+      setLoadingDb(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'sistema') fetchDbHealth();
+    if (tab === 'registros') fetchAuditLogs();
+    if (tab === 'solicitudes' && company?.id) fetchSolicitudes();
+  }, [tab, company?.id, fetchAuditLogs, fetchSolicitudes, fetchDbHealth]);
 
   async function responderSolicitud(id: number, estado: string, respuesta: string) {
     try {
