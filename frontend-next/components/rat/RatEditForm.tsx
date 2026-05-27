@@ -45,6 +45,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     tiene_contrato_encargado:      rat.tiene_contrato_encargado ?? false,
     estado:                       rat.estado ?? 'borrador',
     observaciones_auditoria:     rat.observaciones_auditoria ?? '',
+    archivo_base_legal_base64:  '',
+    archivo_base_legal_nombre:  '',
+    archivo_base_legal_tipo:   '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -262,6 +265,73 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   <AlertBanner message="⚠️ Consentimiento + datos sensibles: el consentimiento debe ser EXPRESO." type="warning" />
                 </div>
               )}
+
+              {form.base_legal && form.base_legal !== 'Otra' && (
+                <div className="mt-4 p-4 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: '#374151' }}>
+                    📄 Documento que respalda la base legal *
+                  </label>
+                  <p className="text-xs mb-3" style={{ color: '#6B7280' }}>
+                    {rat.tiene_archivo_base_legal && !form.archivo_base_legal_base64
+                      ? 'Ya existe un documento adjunto. Seleccione uno nuevo para reemplazarlo.'
+                      : 'Adjunte el documento: consentimiento firmado, contrato, norma legal, EIPD, etc. (PDF, imagen o Word, máx. 10MB).'}
+                  </p>
+                  {!form.archivo_base_legal_base64 ? (
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error('El archivo excede el límite de 10MB.');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = ev => {
+                          const b64 = (ev.target?.result as string)?.split(',')[1] || '';
+                          setForm(f => ({ ...f, archivo_base_legal_base64: b64, archivo_base_legal_nombre: file.name, archivo_base_legal_tipo: file.type }));
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="block w-full text-sm border rounded-lg p-2"
+                      style={{ borderColor: '#D1D5DB' }}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'white', border: '1px solid #D1D5DB' }}>
+                      <span className="text-lg">📎</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{form.archivo_base_legal_nombre}</p>
+                        <p className="text-xs" style={{ color: '#9CA3AF' }}>{form.archivo_base_legal_tipo}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, archivo_base_legal_base64: '', archivo_base_legal_nombre: '', archivo_base_legal_tipo: '' }))}
+                        className="text-xs font-semibold px-2 py-1 rounded"
+                        style={{ color: '#DC2626', background: '#FEE2E2' }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                  {rat.tiene_archivo_base_legal && !form.archivo_base_legal_base64 && (
+                    <button
+                      type="button"
+                      onClick={() => window.open(`/api/rats/${rat.id}/archivo`, '_blank')}
+                      className="mt-2 text-xs font-medium underline"
+                      style={{ color: '#2563EB' }}
+                    >
+                      Ver documento actual
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {form.base_legal && form.base_legal !== 'Otra' && !form.archivo_base_legal_base64 && !rat.tiene_archivo_base_legal && (
+                <div className="mt-2">
+                  <AlertBanner message="⚠️ Debe adjuntar el documento que respalda la base legal seleccionada para alcanzar el 100%." type="warning" />
+                </div>
+              )}
             </div>
 
             {(form.base_legal === 'Interés legítimo') && (
@@ -286,6 +356,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <button
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+                  if (form.base_legal && form.base_legal !== 'Otra' && !form.archivo_base_legal_base64 && !rat.tiene_archivo_base_legal) {
+                    toast.error('Debe adjuntar el documento que respalda la base legal seleccionada.'); return;
+                  }
                   setStep(4);
                 }}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"

@@ -305,6 +305,14 @@ export async function marcarRevisado(ratId: number): Promise<AuditLog> {
   return handle<AuditLog>(res);
 }
 
+export async function aprobarRat(ratId: number): Promise<RAT> {
+  const res = await fetch(`${API_BASE}/rats/${ratId}/aprobar`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  return handle<RAT>(res);
+}
+
 // ── Brechas de seguridad ──────────────────────────────────────────────────────
 
 export async function listarBrechas(companyId: number): Promise<SecurityBreach[]> {
@@ -447,6 +455,46 @@ export async function sugerenciasPorRubro(rubroId: number): Promise<RATSugerido[
   return handle<RATSugerido[]>(res);
 }
 
+export async function crearSolicitudDerecho(data: {
+  company_id: number;
+  tipo: string;
+  nombre_titular: string;
+  email_titular: string;
+  rut_titular?: string;
+  descripcion: string;
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<void>(res);
+}
+
+export async function listarSolicitudesDerecho(companyId: number, estado?: string): Promise<unknown[]> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (estado) params.set('estado', estado);
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/?${params}`, { headers: authHeaders() });
+  return handle<unknown[]>(res);
+}
+
+export async function actualizarSolicitudDerecho(id: number, data: { estado?: string; respuesta?: string }): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handle<void>(res);
+}
+
+export async function eliminarSolicitudDerecho(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  return handle<void>(res);
+}
+
 export async function actualizarRubro(rubroId: number, data: { nombre?: string; orden?: number }): Promise<void> {
   const res = await fetch(`${API_BASE}/rubros/${rubroId}`, {
     method: 'PUT',
@@ -454,4 +502,20 @@ export async function actualizarRubro(rubroId: number, data: { nombre?: string; 
     body: JSON.stringify(data),
   });
   return handle<void>(res);
+}
+
+export interface DbHealth {
+  engine: string;
+  url: string;
+  status: string;
+  latency_ms?: number;
+  error?: string;
+}
+
+export async function getDbHealth(): Promise<DbHealth> {
+  const res = await fetch(`${API_BASE}/health/db`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener estado de BD');
+  return res.json();
 }

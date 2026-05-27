@@ -79,6 +79,11 @@ export interface RAT {
   created_by?: string;
   updated_by?: string;
   observaciones_auditoria?: string;
+  aprobado_por?: string;
+  fecha_aprobacion?: string;
+  archivo_base_legal_nombre?: string;
+  archivo_base_legal_tipo?: string;
+  tiene_archivo_base_legal?: boolean;
 }
 
 export type EstadoEIPD = 'no_requerida' | 'pendiente' | 'en_proceso' | 'completada';
@@ -203,4 +208,7 @@ export interface RATWizardData {
   garantias_transferencia_int?: string;
   _sug_observacion?: string;
   _testIL?: { paso1?: string; paso2?: string; paso3?: string };
+  archivo_base_legal_base64?: string;
+  archivo_base_legal_nombre?: string;
+  archivo_base_legal_tipo?: string;
 }
