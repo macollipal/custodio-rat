@@ -120,6 +120,7 @@ export interface DashboardStats {
   encargados_sin_contrato?: number;
   rats_por_vencer?: number;
   rats_vencidos?: number;
+  rats_sin_doc_base_legal?: number;
 }
 
 export interface AuditLog {
