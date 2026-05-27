@@ -8,26 +8,17 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.routes.deps import get_current_user
+from app.routes.deps import get_current_user, require_editor_or_admin_empresa
 from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse
 from app.schemas.audit_log import AuditLogOut
 from app.services.rat_service import (
     create_rat, delete_rat, get_audit_logs, get_dashboard_stats,
-    get_rat, get_rats, update_rat, marcar_revisado,
+    get_rat, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
 from app.services.export_service import exportar_csv, exportar_pdf
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
 from app.services.user_company_service import get_empresas_usuario
-def _require_editor(db: Session, current_user, company_id: int):
-    if current_user.rol_global == "superadmin":
-        return
-    from app.services.user_company_service import get_rol_usuario
-    from app.models.user_company import RolEmpresa
-    rol = get_rol_usuario(db, current_user.id, company_id)
-    if rol is None or rol == RolEmpresa.VIEWER:
-        from fastapi import HTTPException, status
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol editor o administrador para modificar RATs.")
 
 router = APIRouter(prefix="/rats", tags=["Registro RAT"])
 
@@ -63,6 +54,10 @@ async def reportes(
         "completitud", "nivel_riesgo", "base_legal", "datos_sensibles",
         "evaluacion_impacto", "transferencia_internacional",
     }
+
+    def escape_like(s: str) -> str:
+        return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
     sort_col = sort_by if sort_by in SORTABLE_FIELDS else "created_at"
     sort_dir = "desc" if sort_order == "desc" else "asc"
 
@@ -75,16 +70,16 @@ async def reportes(
         query = query.filter(RATModel.company_id.in_(ids))
 
     if search:
-        query = query.filter(RATModel.nombre_proceso.ilike(f"%{search}%"))
+        query = query.filter(RATModel.nombre_proceso.ilike(f"%{escape_like(search)}%"))
 
     if estado:
         query = query.filter(RATModel.estado == estado)
 
     if base_legal:
-        query = query.filter(RATModel.base_legal.ilike(f"%{base_legal}%"))
+        query = query.filter(RATModel.base_legal.ilike(f"%{escape_like(base_legal)}%"))
 
     if categoria_titulares:
-        query = query.filter(RATModel.categoria_titulares.ilike(f"%{categoria_titulares}%"))
+        query = query.filter(RATModel.categoria_titulares.ilike(f"%{escape_like(categoria_titulares)}%"))
 
     if datos_sensibles is not None:
         query = query.filter(RATModel.datos_sensibles == datos_sensibles)
@@ -113,6 +108,7 @@ async def reportes(
         out = RATOut.model_validate(r)
         out.completitud = r.calcular_completitud()
         out.nivel_riesgo = r.calcular_nivel_riesgo()
+        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
         result.append(out)
 
     return {
@@ -157,6 +153,7 @@ async def listar(
         out = RATOut.model_validate(r)
         out.completitud = r.calcular_completitud()
         out.nivel_riesgo = r.calcular_nivel_riesgo()
+        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
         result.append(out)
     return result
 
@@ -199,6 +196,7 @@ async def obtener(
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
 
@@ -208,11 +206,12 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    _require_editor(db, current_user, data.company_id)
+    require_editor_or_admin_empresa(data.company_id, db, current_user)
     r = create_rat(db, data, current_user.username)
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
 
@@ -224,11 +223,12 @@ async def actualizar(
     current_user=Depends(get_current_user),
 ):
     rat = get_rat(db, rat_id)
-    _require_editor(db, current_user, rat.company_id)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username)
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
 
@@ -239,7 +239,7 @@ async def eliminar(
     current_user=Depends(get_current_user),
 ):
     rat = get_rat(db, rat_id)
-    _require_editor(db, current_user, rat.company_id)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return delete_rat(db, rat_id, current_user.username)
 
 
@@ -251,8 +251,51 @@ async def registrar_revision(
 ):
     """Marca el proceso como revisado periódicamente y registra el evento en la auditoría."""
     rat = get_rat(db, rat_id)
-    _require_editor(db, current_user, rat.company_id)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return marcar_revisado(db, rat_id, current_user.username)
+
+
+@router.post("/{rat_id}/aprobar", response_model=RATOut, summary="Aprobar un RAT (solo admin/empresa)")
+async def approve_rat(
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Aprueba un RAT. Solo admin_empresa o superadmin pueden aprobar.
+    Registra quién aprobó y la fecha de aprobación.
+    """
+    rat = get_rat(db, rat_id)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+    r = aprobar_rat(db, rat_id, current_user.username)
+    out = RATOut.model_validate(r)
+    out.completitud = r.calcular_completitud()
+    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+    return out
+
+
+@router.get("/{rat_id}/archivo", summary="Descargar documento de base legal del RAT")
+async def descargar_archivo(
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Retorna el documento que respalda la base legal del RAT.
+    Requiere autenticacion. Descarga en nueva pesta\u00f1a del navegador.
+    """
+    r = get_rat(db, rat_id)
+    if not r.archivo_base_legal_datos:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Este RAT no tiene documento de base legal adjunto.")
+    return Response(
+        content=r.archivo_base_legal_datos,
+        media_type=r.archivo_base_legal_tipo or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
+        },
+    )
 
 
 @router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditoría de un RAT")

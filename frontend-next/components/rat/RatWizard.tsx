@@ -49,6 +49,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const DRAFT_KEY = `${DRAFT_KEY_PREFIX}${company.id}`;
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const saved = localStorage.getItem(DRAFT_KEY);
     if (saved) {
       try {
@@ -564,6 +565,66 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   />
                 </div>
               )}
+
+              {data.base_legal && data.base_legal !== 'Otra' && (
+                <div className="mt-4 p-4 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: '#374151' }}>
+                    📄 Documento que respalda la base legal *
+                  </label>
+                  <p className="text-xs mb-3" style={{ color: '#6B7280' }}>
+                    Adjunte el documento correspondiente: consentimiento firmado, contrato, norma legal, EIPD, etc. (PDF, imagen o Word, máx. 10MB).
+                  </p>
+                  {!data.archivo_base_legal_base64 ? (
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error('El archivo excede el límite de 10MB.');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = ev => {
+                          const b64 = (ev.target?.result as string)?.split(',')[1] || '';
+                          setData(d => ({
+                            ...d,
+                            archivo_base_legal_base64: b64,
+                            archivo_base_legal_nombre: file.name,
+                            archivo_base_legal_tipo: file.type,
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="block w-full text-sm border rounded-lg p-2"
+                      style={{ borderColor: '#D1D5DB' }}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'white', border: '1px solid #D1D5DB' }}>
+                      <span className="text-lg">📎</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{data.archivo_base_legal_nombre}</p>
+                        <p className="text-xs" style={{ color: '#9CA3AF' }}>{data.archivo_base_legal_tipo}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setData(d => ({ ...d, archivo_base_legal_base64: undefined, archivo_base_legal_nombre: undefined, archivo_base_legal_tipo: undefined }))}
+                        className="text-xs font-semibold px-2 py-1 rounded"
+                        style={{ color: '#DC2626', background: '#FEE2E2' }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {data.base_legal && data.base_legal !== 'Otra' && !data.archivo_base_legal_base64 && (
+                <div className="mt-2">
+                  <AlertBanner message="⚠️ Debe adjuntar el documento que respalda la base legal seleccionada para alcanzar el 100% de completitud." type="warning" />
+                </div>
+              )}
             </div>
 
             {data.base_legal === 'Interés legítimo' && (
@@ -629,6 +690,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
                   if (data.base_legal === 'Interés legítimo' && (!data._testIL?.paso1 || !data._testIL?.paso2 || !data._testIL?.paso3)) {
                     toast.error('Complete los 3 pasos del test de interés legítimo.'); return;
+                  }
+                  if (data.base_legal && data.base_legal !== 'Otra' && !data.archivo_base_legal_base64) {
+                    toast.error('Debe adjuntar el documento que respalda la base legal seleccionada.'); return;
                   }
                   cambiarStep(4);
                 }}

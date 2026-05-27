@@ -29,6 +29,10 @@ class RATBase(BaseModel):
     tiene_contrato_encargado: bool = False
     test_interes_legitimo: Optional[str] = None
     observaciones_auditoria: Optional[str] = None
+    # Documento de base legal (base64 para transporte; se almacena como binary en BD)
+    archivo_base_legal_nombre: Optional[str] = None
+    archivo_base_legal_tipo: Optional[str] = None
+    archivo_base_legal_base64: Optional[str] = None  # base64 encoded file content
 
     @field_validator('estado_eipd')
     @classmethod
@@ -90,18 +94,25 @@ class RATUpdate(BaseModel):
     test_interes_legitimo: Optional[str] = None
     estado: Optional[EstadoRAT] = None
     observaciones_auditoria: Optional[str] = None
+    archivo_base_legal_nombre: Optional[str] = None
+    archivo_base_legal_tipo: Optional[str] = None
+    archivo_base_legal_base64: Optional[str] = None
 
 
 class RATOut(RATBase):
     id: int
     company_id: int
     estado: EstadoRAT
+    aprobado_por: Optional[str] = None
+    fecha_aprobacion: Optional[datetime] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     completitud: Optional[int] = None
     nivel_riesgo: Optional[str] = None
+    # Indica si existe documento de base legal (el contenido no se transmite por JSON)
+    tiene_archivo_base_legal: bool = False
 
     model_config = {"from_attributes": True}
 
