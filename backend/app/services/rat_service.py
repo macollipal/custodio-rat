@@ -4,6 +4,8 @@ Incluye validaciones de auditoría conforme a la Ley 21.719.
 """
 
 import json
+import base64
+import hashlib
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -64,16 +66,20 @@ ALERTAS_AUDITORIA = {
         "Sin este test documentado, la base no sirve como defensa ante la APDC."
     ),
     "interes_legitimo_sin_test": (
-        "⚖️ PENDIENTE: Base legal 'Interés legítimo' requiere documentar el test de 3 pasos en el campo correspondiente."
+        "⚖️ PENDIENTE: Base legal Interés legítimo requiere documentar el test de 3 pasos en el campo correspondiente."
     ),
     "encargado_sin_contrato": (
-        "📄 ENCARGADO SIN CONTRATO: Se registró un encargado del tratamiento pero no se ha confirmado la existencia "
+        "📄 ENCARGADO SIN CONTRATO: Se registro un encargado del tratamiento pero no se ha confirmado la existencia "
         "de un contrato de encargo que establezca las instrucciones de tratamiento, confidencialidad y seguridad "
-        "(Art. 14 quáter Ley 21.719)."
+        "(Art. 14 quater Ley 21.719)."
     ),
     "eipd_pendiente": (
         "🔍 EIPD PENDIENTE: Este proceso requiere Evaluación de Impacto en Protección de Datos y aún no está completada. "
         "No puede iniciarse el tratamiento hasta completar la EIPD (Art. 15 bis Ley 21.719)."
+    ),
+    "falta_doc_base_legal": (
+        "📄 SIN DOCUMENTO DE BASE LEGAL: La base legal seleccionada requiere un documento que la respalde "
+        "(consentimiento, contrato, norma legal, EIPD, etc.). Adjunte el documento correspondiente para alcanzar el 100% de completitud."
     ),
 }
 
@@ -92,26 +98,50 @@ def get_rat(db: Session, rat_id: int) -> RAT:
     return rat
 
 
+def _procesar_archivo_base_legal(data: dict) -> dict:
+    """Convierte archivo_base_legal_base64 (string) a binario y hash. Retorna campos a escribir en el modelo."""
+    base64_str = data.get("archivo_base_legal_base64")
+    if not base64_str:
+        return {}
+    try:
+        datos = base64.b64decode(base64_str)
+    except Exception:
+        return {}
+    hash_val = hashlib.sha256(datos).hexdigest()
+    return {
+        "archivo_base_legal_datos": datos,
+        "archivo_base_legal_hash": hash_val,
+        "archivo_base_legal_nombre": data.get("archivo_base_legal_nombre"),
+        "archivo_base_legal_tipo": data.get("archivo_base_legal_tipo"),
+    }
+
+
 def create_rat(db: Session, data: RATCreate, usuario: str) -> RAT:
     from app.models.company import Company
     if not db.query(Company).filter(Company.id == data.company_id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
-    observaciones = _generar_alertas_auditoria(data.model_dump())
-    if data.observaciones_auditoria:
-        observaciones = data.observaciones_auditoria + "\n" + observaciones if observaciones else data.observaciones_auditoria
+    datos = data.model_dump()
+    archivo_fields = _procesar_archivo_base_legal(datos)
+    datos.update(archivo_fields)
 
+    observaciones = _generar_alertas_auditoria(datos)
+    if datos.get("observaciones_auditoria"):
+        obs = datos["observaciones_auditoria"]
+        observaciones = (obs + "\n" + observaciones) if observaciones else obs
+
+    rat_data = {k: v for k, v in datos.items() if k not in ("observaciones_auditoria", "archivo_base_legal_base64")}
     rat = RAT(
-        **{k: v for k, v in data.model_dump().items() if k != "observaciones_auditoria"},
+        **rat_data,
         observaciones_auditoria=observaciones.strip() if observaciones else None,
         created_by=usuario,
         updated_by=usuario,
     )
-    rat.estado = _calcular_estado(data.model_dump())
+    rat.estado = _calcular_estado(datos)
 
     db.add(rat)
     db.flush()
-    _log_audit(db, rat.id, "crear", usuario, data.model_dump())
+    _log_audit(db, rat.id, "crear", usuario, datos)
     db.commit()
     db.refresh(rat)
     return rat
@@ -121,6 +151,9 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str) -> RAT:
     rat = get_rat(db, rat_id)
     cambios = data.model_dump(exclude_none=True)
 
+    archivo_fields = _procesar_archivo_base_legal(cambios)
+    cambios.update(archivo_fields)
+
     for field, value in cambios.items():
         setattr(rat, field, value)
 
@@ -128,8 +161,6 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str) -> RAT:
 
     rat_dict = {c.name: getattr(rat, c.name) for c in rat.__table__.columns}
 
-    # Regenerar alertas desde cero para reflejar el estado actual de los flags;
-    # si el usuario envió observaciones_auditoria explícitamente, ya fue aplicado arriba.
     if "observaciones_auditoria" not in cambios:
         rat.observaciones_auditoria = _generar_alertas_auditoria(rat_dict) or None
 
@@ -192,6 +223,13 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         1 for r in rats if r.nombre_encargado and not r.tiene_contrato_encargado
     )
 
+    # RATs sin documento de base legal (cuando base legal != "Otra")
+    rats_sin_doc = sum(
+        1 for r in rats
+        if r.base_legal and r.base_legal.strip().lower() != "otra"
+        if not r.archivo_base_legal_datos
+    )
+
     rats_por_vencer = 0
     rats_vencidos = 0
     from datetime import datetime, timezone, timedelta
@@ -232,6 +270,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         "encargados_sin_contrato": encargados_sin_contrato,
         "rats_por_vencer": rats_por_vencer,
         "rats_vencidos": rats_vencidos,
+        "rats_sin_doc_base_legal": rats_sin_doc,
     }
 
 
@@ -280,6 +319,11 @@ def _generar_alertas_auditoria(data: dict) -> str:
     if data.get("evaluacion_impacto") and (data.get("estado_eipd") or "pendiente") not in ("completada",):
         alertas.append(ALERTAS_AUDITORIA["eipd_pendiente"])
 
+    # Alerta si falta documento de base legal (pero no bloquea)
+    base_legal_raw = data.get("base_legal") or ""
+    if base_legal_raw.strip().lower() != "otra" and not data.get("archivo_base_legal_datos"):
+        alertas.append(ALERTAS_AUDITORIA["falta_doc_base_legal"])
+
     return "\n".join(alertas)
 
 
@@ -301,6 +345,43 @@ def marcar_revisado(db: Session, rat_id: int, usuario: str) -> AuditLog:
     return log
 
 
+def aprobar_rat(db: Session, rat_id: int, usuario: str) -> RAT:
+    """
+    Aprueba un RAT registrando el DPO que lo aprueba y la fecha.
+    El RAT debe tener 100% de completitud (incluyendo documento de base legal si aplica).
+    """
+    from datetime import datetime, timezone
+    rat = get_rat(db, rat_id)
+
+    completitud = rat.calcular_completitud()
+    if completitud < 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El RAT debe estar 100% completo para poder aprobarlo. Completitud actual: {completitud}%",
+        )
+
+    rat.estado = EstadoRAT.APROBADO
+    rat.aprobado_por = usuario
+    rat.fecha_aprobacion = datetime.now(timezone.utc)
+    rat.updated_at = datetime.now(timezone.utc)
+    rat.updated_by = usuario
+
+    log = AuditLog(
+        entidad="rat",
+        entidad_id=rat_id,
+        accion="aprobar",
+        usuario=usuario,
+        detalle=json.dumps({
+            "nota": f"RAT aprobado por {usuario}",
+            "fecha_aprobacion": rat.fecha_aprobacion.isoformat(),
+        }, ensure_ascii=False),
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(rat)
+    return rat
+
+
 def _log_audit(db: Session, rat_id: int, accion: str, usuario: str, detalle: dict):
     log = AuditLog(
         entidad="rat",
@@ -310,3 +391,5 @@ def _log_audit(db: Session, rat_id: int, accion: str, usuario: str, detalle: dic
         detalle=json.dumps(detalle, ensure_ascii=False, default=str),
     )
     db.add(log)
+    db.flush()
+    db.commit()

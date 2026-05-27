@@ -5,7 +5,7 @@ Basado en los requisitos del Art. 16 de la Ley 21.719 de Chile.
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import DateTime, Date, Enum, ForeignKey, Integer, String, Text, Boolean
+from sqlalchemy import DateTime, Date, Enum, ForeignKey, Integer, String, Text, Boolean, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -63,11 +63,23 @@ class RAT(Base):
     # Test interés legítimo (Art. 16 — 3 pasos obligatorios)
     test_interes_legitimo: Mapped[str] = mapped_column(Text, nullable=True)
 
+    # Documento que respalda la base legal (MVP: almacena en la BD)
+    # Nombre original del archivo
+    archivo_base_legal_nombre: Mapped[str] = mapped_column(String(500), nullable=True)
+    # Tipo MIME del archivo
+    archivo_base_legal_tipo: Mapped[str] = mapped_column(String(100), nullable=True)
+    # Contenido del archivo como binario (PostgreSQL BYTEA)
+    archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    # Hash SHA-256 para verificar integridad
+    archivo_base_legal_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+
     # Estado y auditoría
     estado: Mapped[EstadoRAT] = mapped_column(
         Enum(EstadoRAT), default=EstadoRAT.BORRADOR, nullable=False
     )
     observaciones_auditoria: Mapped[str] = mapped_column(Text, nullable=True)
+    aprobado_por: Mapped[str] = mapped_column(String(100), nullable=True)
+    fecha_aprobacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     updated_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -102,6 +114,12 @@ class RAT(Base):
         ]
         total = len(campos_obligatorios) + len(campos_recomendados)
         completados = sum(1 for c in campos_obligatorios + campos_recomendados if c and str(c).strip())
+
+        # Penalización: si base legal ≠ "Otra" y no hay documento que la respalde
+        if self.base_legal and self.base_legal.strip().lower() != "otra":
+            if not self.archivo_base_legal_datos:
+                completados = max(completados - 1, 0)
+
         return round((completados / total) * 100)
 
     def calcular_nivel_riesgo(self) -> str:

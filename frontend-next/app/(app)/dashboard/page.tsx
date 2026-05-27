@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
+import { DIAS_REVISION } from '@/lib/constants';
 import KPICard from '@/components/dashboard/KPICard';
 import AlertBanner, { AlertCard } from '@/components/dashboard/AlertBanner';
 import StatusChart from '@/components/dashboard/StatusChart';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Badge from '@/components/ui/Badge';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const tourDone = localStorage.getItem('custodio_tour_completed');
-    if (tourDone === 'false' && company) {
+    if (tourDone !== 'true' && company) {
       setShowTour(true);
     }
   }, [company]);
@@ -84,8 +86,14 @@ export default function DashboardPage() {
 
   if (!hasCache && refreshing) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400 text-sm">Cargando...</p>
+      <div className="space-y-6" aria-busy="true" aria-label="Cargando dashboard">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="bg-white rounded-xl p-6 animate-pulse" style={{ border: '1px solid #E5E7EB' }}>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          </div>)}
+        </div>
+        <SkeletonTable rows={4} />
       </div>
     );
   }
@@ -98,17 +106,18 @@ export default function DashboardPage() {
     eipd_pendientes = 0, transferencias_sin_garantias = 0,
     interes_legitimo_sin_test = 0, encargados_sin_contrato = 0,
     rats_por_vencer = 0, rats_vencidos = 0,
+    rats_sin_doc_base_legal = 0,
   } = dashboardStats;
   const completos  = por_estado?.completo  ?? 0;
   const borradores = por_estado?.borrador  ?? 0;
 
-  const recientes = [...rats]
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+  const recientes = rats
+    .toSorted((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
     .slice(0, 6);
 
   const sinRevision = rats.filter(r => {
     const dias = (Date.now() - new Date(r.updated_at).getTime()) / 86_400_000;
-    return dias > 180;
+    return dias > DIAS_REVISION;
   }).length;
 
   const alertas: { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] = [];
@@ -130,6 +139,8 @@ export default function DashboardPage() {
     alertas.push({ type: 'warning', message: `<strong>${interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.` });
   if (encargados_sin_contrato > 0)
     alertas.push({ type: 'info', message: `<strong>${encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).` });
+  if (rats_sin_doc_base_legal > 0)
+    alertas.push({ type: 'warning', message: `<strong>${rats_sin_doc_base_legal} proceso(s)</strong> sin documento de base legal adjunto. Para alcanzar el 100% de completitud, adjunte el documento que respalda la base legal.` });
 
   const kpiColor = completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
 
@@ -271,7 +282,7 @@ export default function DashboardPage() {
             {/* Desktop header */}
             <div
               className="hidden sm:grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg whitespace-nowrap"
-              style={{ gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}
+              style={{ gridTemplateColumns: '3fr 2fr 1.5fr 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}
             >
               <span>Proceso</span>
               <span>Base legal</span>
@@ -285,7 +296,7 @@ export default function DashboardPage() {
                   key={rat.id}
                   className="grid items-center py-3 px-3 whitespace-nowrap"
                   style={{
-                    gridTemplateColumns: 'minmax(150px,3fr) minmax(100px,2fr) minmax(80px,1.5fr) 120px',
+                    gridTemplateColumns: '3fr 2fr 1.5fr 120px',
                     background: i % 2 === 0 ? 'white' : '#FAFAFA',
                     border: '1px solid #E5E7EB',
                     borderTop: 'none',
