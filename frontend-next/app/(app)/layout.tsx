@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
-import Chatbot from '@/components/ui/Chatbot';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
@@ -139,7 +138,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <Chatbot />
     </div>
   );
 }
