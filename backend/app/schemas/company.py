@@ -53,3 +53,14 @@ class CompanyOut(CompanyBase):
     rubro_id: Optional[int] = None
 
     model_config = {"from_attributes": True}
+
+
+class CompanyPublicOut(BaseModel):
+    id: int
+    nombre: str
+    rut: str
+    email_dpo: Optional[str] = None
+    contacto_dpo: Optional[str] = None
+    canal_ejercicio_derechos: Optional[str] = None
+
+    model_config = {"from_attributes": True}

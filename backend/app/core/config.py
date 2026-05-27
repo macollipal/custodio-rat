@@ -17,10 +17,8 @@ class Settings(BaseSettings):
         "conforme a la Ley 21.719 de Protección de Datos Personales de Chile."
     )
 
-    # Base de datos
-    # Para SQLite local: sqlite:///database.db
-    # Para Neon: postgresql://user:password@ep-xxx-xxx-123456.neon.tech/custodio?sslmode=require
-    DATABASE_URL: str = f"sqlite:///{BASE_DIR}/data/database.db"
+    # Base de datos (Neon PostgreSQL)
+    DATABASE_URL: str = ""
 
     # Seguridad JWT
     SECRET_KEY: str = ""  # Requerida en producción
@@ -37,6 +35,13 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     MINIMAX_API_KEY: str = ""
     MINIMAX_MODEL: str = "MiniMax-M2.7"
+
+    # SMTP para envío de correos
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
 
     # CORS - en producción usar ALLOWED_ORIGINS desde .env
     ALLOWED_ORIGINS: list[str] = [
@@ -69,18 +74,9 @@ class Settings(BaseSettings):
     @property
     def resolved_allowed_origins(self) -> list[str]:
         if self.ENVIRONMENT == "production":
-            return ["*"]
+            if self.VERCEL_URL and not self.ALLOWED_ORIGINS_PROD:
+                return [f"https://{self.VERCEL_URL}"]
+            return self.ALLOWED_ORIGINS_PROD
         return self.ALLOWED_ORIGINS
-
-    @property
-    def resolved_database_url(self) -> str:
-        """Construye la URL de conexión a la base de datos."""
-        return self.DATABASE_URL
-
-    @property
-    def is_postgres(self) -> bool:
-        """True si la base de datos es PostgreSQL (Neon)."""
-        return self.DATABASE_URL.startswith("postgresql")
-
 
 settings = Settings()

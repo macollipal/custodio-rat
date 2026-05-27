@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.database import init_db, SessionLocal
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho
 
 
 @asynccontextmanager
@@ -164,6 +164,7 @@ app.include_router(breaches.router)
 app.include_router(ai.router)
 app.include_router(rubros.router)
 app.include_router(rubros.router_sugeridos)
+app.include_router(solicitudes_derecho.router)
 
 
 @app.get("/", tags=["Sistema"])
@@ -188,7 +189,7 @@ async def health_db():
     import time
 
     db_info = {
-        "engine": "postgresql" if settings.is_postgres else "sqlite",
+        "engine": "postgresql",
         "url": settings.DATABASE_URL.split("@")[1] if "@" in settings.DATABASE_URL else settings.DATABASE_URL,
     }
 
