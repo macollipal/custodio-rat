@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.database import Base
 import enum
@@ -22,7 +23,7 @@ class SolicitudDerecho(Base):
     __tablename__ = "solicitudes_derecho"
 
     id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, nullable=False, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     tipo = Column(SQLEnum(TipoSolicitud), nullable=False)
     nombre_titular = Column(String(255), nullable=False)
     rut_titular = Column(String(20), nullable=True)
@@ -33,3 +34,5 @@ class SolicitudDerecho(Base):
     respuesta = Column(String(1000), nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    company = relationship("Company", back_populates="solicitudes_derecho")
