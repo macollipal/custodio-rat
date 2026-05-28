@@ -19,70 +19,71 @@ echo  [0/4] Verificando configuraciones...
 if not exist "backend\venv" (
     echo  [ERROR] No se encontro venv en backend\venv
     pause
-    exit /b 1
+    exitl
 )
 echo       venv: OK
 
-netstat -ano | findstr ":8002" | findstr "LISTENING" >nul 2>&1
+netstat -ano ^| findstr ":8002" ^| findstr "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo  [ERROR] Puerto 8002 ya esta en uso
     echo         Ejecuta: matar_puertos.bat
     pause
-    exit /b 1
+    exitl
 )
 echo       puerto 8002: disponible
 
-netstat -ano | findstr ":3000" | findstr "LISTENING" >nul 2>&1
+netstat -ano ^| findstr ":3000" ^| findstr "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo  [ERROR] Puerto 3000 ya esta en uso
     echo         Ejecuta: matar_puertos.bat
     pause
-    exit /b 1
+    exitl
 )
 echo       puerto 3000: disponible
 
 echo.
 echo  [1/4] Iniciando Backend (FastAPI)...
 cd /d C:\Users\chelo\Desktop\RAT_opencode\backend
-start "Custodio - Backend" cmd /c "venv\Scripts\activate.bat && uvicorn app.main:app --host 0.0.0.0 --port 8002"
+start "Custodio - Backend" cmd /c "venv\Scripts\activate.bat ^&^& uvicorn app.main:app --host 0.0.0.0 --port 8002"
 
 timeout /t 3 /nobreak >nul
 
 echo  [2/4] Verificando Backend...
-netstat -ano | findstr ":8002" | findstr "LISTENING" >nul 2>&1
-if %errorlevel% equ 0 (
-    echo       Backend:  http://localhost:8002/docs - OK
-) else (
-    echo       Backend:  FALLO - verificando...
-)
-
-echo.
-echo  [3/4] Compilando Frontend (production build)...
-cd /d C:\Users\chelo\Desktop\RAT_opencode\frontend-next
-call npm run build >nul 2>&1
-if %errorlevel% neq 0 (
-    echo  [ERROR] Fallo la compilacion del frontend
-    pause
-    exit /b 1
-)
-echo       Build: OK
-
-echo.
-echo  [4/4] Iniciando Frontend (standalone production)...
-start "Custodio - Frontend" cmd /c "node .next\standalone\server.js"
-
-timeout /t 3 /nobreak >nul
-
-echo.
-echo  [FINAL] Verificando servicios...
-netstat -ano | findstr ":8002" | findstr "LISTENING" >nul 2>&1
+netstat -ano ^| findstr ":8002" ^| findstr "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo       Backend:  http://localhost:8002/docs - OK
 ) else (
     echo       Backend:  FALLO
 )
 
-netstat -ano | findstr ":3000" | findstr "LISTENING" >nul 2>&1
+echo.
+echo  [3/4] Compilando Frontend (sin standalone)...
+cd /d C:\Users\chelo\Desktop\RAT_opencode\frontend-next
+if exist ".next" rmdir /s /q ".next"
+call npm run build >nul 2>&1
+if %errorlevel% neq 0 (
+    echo  [ERROR] Fallo la compilacion del frontend
+    pause
+    exitl
+)
+echo       Build: OK
+
+echo.
+echo  [4/4] Iniciando Frontend (production server)...
+start "Custodio   - Frontend" cmd /c "node_modules\.bin\next.cmd start --port 3000"
+
+timeout /t 3 /nobreak >nul
+
+echo.
+echo  [FINAL] Verificando servicios...
+netstat -ano ^| findstr ":8002" ^| findstr "LISTENING" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo       Backend:  http://localhost:8002/docs - OK
+) else (
+    echo       Backend:  FALLO
+)
+
+netstat -ano ^| findstr ":3000" ^| findstr "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo       Frontend: http://localhost:3000 - OK
 ) else (
