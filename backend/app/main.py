@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.database import init_db, SessionLocal
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho
 
 
 @asynccontextmanager
@@ -164,6 +164,7 @@ app.include_router(breaches.router)
 app.include_router(ai.router)
 app.include_router(rubros.router)
 app.include_router(rubros.router_sugeridos)
+app.include_router(solicitudes_derecho.router)
 
 
 
