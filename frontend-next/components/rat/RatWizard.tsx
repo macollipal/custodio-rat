@@ -620,11 +620,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 </div>
               )}
 
-              {data.base_legal && data.base_legal !== 'Otra' && !data.archivo_base_legal_base64 && (
-                <div className="mt-2">
-                  <AlertBanner message="⚠️ Debe adjuntar el documento que respalda la base legal seleccionada para alcanzar el 100% de completitud." type="warning" />
-                </div>
-              )}
+              {/* documento de base legal ahora es opcional */}
             </div>
 
             {data.base_legal === 'Interés legítimo' && (
@@ -691,9 +687,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   if (data.base_legal === 'Interés legítimo' && (!data._testIL?.paso1 || !data._testIL?.paso2 || !data._testIL?.paso3)) {
                     toast.error('Complete los 3 pasos del test de interés legítimo.'); return;
                   }
-                  if (data.base_legal && data.base_legal !== 'Otra' && !data.archivo_base_legal_base64) {
-                    toast.error('Debe adjuntar el documento que respalda la base legal seleccionada.'); return;
-                  }
+                  // documento de base legal ahora es opcional
                   cambiarStep(4);
                 }}
                 className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
