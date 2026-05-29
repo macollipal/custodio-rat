@@ -461,7 +461,7 @@ export async function crearSolicitudDerecho(data: {
   nombre_titular: string;
   email_titular: string;
   rut_titular?: string;
-  descripcion: string;
+  descripcion?: string;
 }): Promise<void> {
   const res = await fetch(`${API_BASE}/solicitudes-derecho/`, {
     method: 'POST',
@@ -478,19 +478,14 @@ export async function listarSolicitudesDerecho(companyId: number, estado?: strin
   return handle<unknown[]>(res);
 }
 
-export async function actualizarSolicitudDerecho(id: number, data: { estado?: string; respuesta?: string }): Promise<void> {
-  const res = await fetch(`${API_BASE}/solicitudes-derecho/${id}`, {
+export async function actualizarSolicitudDerecho(
+  id: number,
+  data: { estado: string; respuesta: string; descripcion_accion?: string; usuario_nombre?: string }
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${id}/responder`, {
     method: 'PATCH',
-    headers: authHeaders(),
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  });
-  return handle<void>(res);
-}
-
-export async function eliminarSolicitudDerecho(id: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/solicitudes-derecho/${id}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
   });
   return handle<void>(res);
 }
