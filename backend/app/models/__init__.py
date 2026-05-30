@@ -7,5 +7,6 @@ from app.models.consentimiento import Consentimiento
 from app.models.rubro import Rubro
 from app.models.rats_sugerido import RATSugerido
 from app.models.solicitud_derecho import SolicitudDerecho, TipoSolicitud, EstadoSolicitud
+from app.models.solicitud_historial import SolicitudHistorial
 
-__all__ = ["User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido", "SolicitudDerecho", "TipoSolicitud", "EstadoSolicitud"]
+__all__ = ["User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido", "SolicitudDerecho", "TipoSolicitud", "EstadoSolicitud", "SolicitudHistorial"]
