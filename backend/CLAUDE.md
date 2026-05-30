@@ -34,9 +34,10 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 - Entry point: `api/index.py` → importa de `backend/app/main.py`
 - Runtime: Python 3.9 (`@vercel/python` builder, auto-detectado)
 - Environment variables en Vercel:
-  - `ENVIRONMENT=production` → activa `allow_origins=["*"]` y requiere `SECRET_KEY`
+  - `ENVIRONMENT=production` → activa CORS con regex `https://.*\.vercel\.app` y rate limiting
   - `DATABASE_URL` → connection string de Neon
-  - `SECRET_KEY` → generar con `openssl rand -hex 64`
+  - `SECRET_KEY` → generar con `openssl rand -hex 64` (requerida en producción)
+  - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
 
 ### Migración SQLite → Neon
 

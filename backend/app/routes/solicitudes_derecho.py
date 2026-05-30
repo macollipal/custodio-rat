@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
 from app.database.database import get_db
+from app.routes.deps import get_current_user
 from app.models.solicitud_derecho import SolicitudDerecho, TipoSolicitud, EstadoSolicitud
 from app.models.solicitud_historial import SolicitudHistorial
 from app.models.company import Company
+from app.services.user_company_service import get_empresas_usuario
 
 router = APIRouter(prefix="/solicitudes-derecho", tags=["Solicitudes de Derecho"])
 
@@ -35,8 +37,17 @@ class SolicitudResponse(BaseModel):
 
 
 @router.post("/", response_model=SolicitudResponse)
-def crear_solicitud(data: SolicitudCreate, db: Session = Depends(get_db)):
+def crear_solicitud(
+    data: SolicitudCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     from datetime import datetime, timezone
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if data.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
 
     company = db.query(Company).filter(Company.id == data.company_id).first()
     if not company:
@@ -77,7 +88,15 @@ def listar_solicitudes(
     company_id: Optional[int] = None,
     estado: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if company_id is None:
+            company_id = empresas[0] if empresas else 0
+        if company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
+
     q = db.query(SolicitudDerecho)
     if company_id:
         q = q.filter(SolicitudDerecho.company_id == company_id)
@@ -104,10 +123,18 @@ def listar_solicitudes(
 
 
 @router.get("/{solicitud_id}", response_model=SolicitudResponse)
-def obtener_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
+def obtener_solicitud(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
     if not s:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
     return SolicitudResponse(
         id=s.id,
         company_id=s.company_id,
@@ -134,7 +161,19 @@ class HistorialEntry(BaseModel):
 
 
 @router.get("/{solicitud_id}/historial", response_model=list[HistorialEntry])
-def obtener_historial(solicitud_id: int, db: Session = Depends(get_db)):
+def obtener_historial(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
+
     registros = db.query(SolicitudHistorial).filter(
         SolicitudHistorial.solicitud_id == solicitud_id
     ).order_by(SolicitudHistorial.fecha.asc()).all()
@@ -163,12 +202,17 @@ def responder_solicitud(
     solicitud_id: int,
     data: ResponderRequest,
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     from datetime import datetime, timezone
 
     s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
     if not s:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
 
     historial = SolicitudHistorial(
         solicitud_id=s.id,

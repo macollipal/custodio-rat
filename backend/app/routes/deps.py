@@ -1,23 +1,39 @@
 """
 Dependencias compartidas entre rutas: extracción y validación del token JWT.
+Acepta token desde cookie (httpOnly) o desde Authorization header (Bearer).
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database.database import get_db
 from app.core.security import decode_access_token
 from app.services.user_service import get_current_user as _get_current_user
 
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
+COOKIE_NAME = "custodio_token"
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ):
-    token = credentials.credentials
+    token = None
+
+    if credentials is not None:
+        token = credentials.credentials
+    elif COOKIE_NAME in request.cookies:
+        token = request.cookies[COOKIE_NAME]
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autenticado. Inicie sesión.",
+        )
+
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(

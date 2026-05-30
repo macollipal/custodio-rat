@@ -2,8 +2,9 @@
 Endpoints de autenticación: login, registro de usuarios (solo admin) y perfil.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database.database import get_db
 from app.schemas.user import LoginRequest, PasswordChange, Token, UserCreate, UserOut
@@ -13,17 +14,44 @@ from app.services.user_service import (
 )
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user, require_admin
+from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
+COOKIE_NAME = "custodio_token"
+COOKIE_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+
+
+def _cookie_options() -> dict:
+    return {
+        "max_age": COOKIE_MAX_AGE,
+        "httponly": True,
+        "secure": True,
+        "samesite": "none" if settings.ENVIRONMENT == "production" else "lax",
+        "path": "/",
+    }
+
 
 @router.post("/login", response_model=Token, summary="Iniciar sesión")
-async def login(data: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, data: LoginRequest, db: Session = Depends(get_db), response: Response = None):
     """
-    Autentica un usuario y retorna un token JWT de acceso.
+    Autentica un usuario, retorna el token y setea una cookie httpOnly.
     El token tiene validez de 8 horas.
     """
-    return authenticate_user(db, data.username, data.password)
+    result = authenticate_user(db, data.username, data.password)
+    if response is not None:
+        response.set_cookie(COOKIE_NAME, result.access_token, **_cookie_options())
+    return result
+
+
+@router.post("/logout", summary="Cerrar sesión")
+async def logout(response: Response = None):
+    """Elimina la cookie de sesión."""
+    if response is not None:
+        response.delete_cookie(COOKIE_NAME, path="/")
+    return {"message": "Sesión cerrada correctamente."}
 
 
 @router.get("/me", response_model=UserOut, summary="Perfil del usuario actual")
