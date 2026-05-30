@@ -1,4 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8002';
+export const API_BASE = (typeof window !== 'undefined' && window.location.origin) || 'http://localhost:8002';
 export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
   USER: 'custodio_user',
