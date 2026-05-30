@@ -41,9 +41,20 @@ export async function login(username: string, password: string): Promise<AuthRes
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ username, password }),
   });
   return handle<AuthResponse>(res);
+}
+
+export async function logout(): Promise<void> {
+  localStorage.removeItem('custodio_token');
+  localStorage.removeItem('custodio_user');
+  localStorage.removeItem('custodio_company');
+  await fetch(`${API_BASE}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
 }
 
 // ── Empresas ──────────────────────────────────────────────────────────────────

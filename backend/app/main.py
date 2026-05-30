@@ -5,10 +5,12 @@ Registra routers, configura CORS e inicializa la base de datos.
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.database.database import init_db, SessionLocal
 from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho
 
@@ -23,12 +25,17 @@ async def lifespan(app: FastAPI):
 
 
 def _seed_admin():
-    """Crea el usuario superadmin inicial si la BD está vacía y ENVIRONMENT=development."""
+    """Crea el usuario superadmin inicial si la BD está vacía y SEED_ADMIN=true."""
     import os
-    if os.getenv("ENVIRONMENT", "development") != "development":
+    if os.getenv("SEED_ADMIN", "").lower() != "true":
         return
     from app.models.user import User, RolGlobal
     from app.core.security import get_password_hash
+
+    secret = os.getenv("SEED_ADMIN_PASSWORD")
+    if not secret:
+        print("⚠️ SEED_ADMIN=true pero no se definió SEED_ADMIN_PASSWORD — omitiendo seed")
+        return
 
     db = SessionLocal()
     try:
@@ -37,13 +44,13 @@ def _seed_admin():
                 username="admin",
                 email="admin@ratmanager.cl",
                 full_name="Administrador del Sistema",
-                hashed_password=get_password_hash("admin1234"),
+                hashed_password=get_password_hash(secret),
                 is_active=True,
                 rol_global=RolGlobal.SUPERADMIN.value,
             )
             db.add(admin)
             db.commit()
-            print("✅ Superadmin creado (solo en desarrollo): admin / admin1234")
+            print(f"✅ Superadmin creado: admin / {secret[:4]}***")
     finally:
         db.close()
 
@@ -147,6 +154,17 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Demasiados intentos. Intente nuevamente en un minuto."},
+    )
 
 import os
 if os.getenv("ENVIRONMENT") == "production":
