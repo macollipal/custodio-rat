@@ -1,5 +1,14 @@
 {
   "version": 2,
+  "root": ".",
+  "projects": [
+    {
+      "path": "frontend-next",
+      "settings": {
+        "framework": "nextjs"
+      }
+    }
+  ],
   "builds": [
     {
       "src": "api/index.py",
