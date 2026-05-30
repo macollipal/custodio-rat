@@ -52,7 +52,8 @@ class Settings(BaseSettings):
     ]
     ALLOWED_ORIGINS_PROD: list[str] = [
         "https://custodio-rat.vercel.app",
-        "https://custodio-rat-iy24.vercel.app",
+        "https://custodio-rat-git-develop-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-erbrc0wqy-marcelos-projects-3cc299e0.vercel.app",
     ]
     VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
 
