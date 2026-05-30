@@ -1,4 +1,5 @@
-export const API_BASE = (typeof window !== 'undefined' && window.location.origin) || 'http://localhost:8002';
+const isDev = process.env.NODE_ENV === 'development';
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || (isDev ? 'http://localhost:8002' : '/api');
 export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
   USER: 'custodio_user',
