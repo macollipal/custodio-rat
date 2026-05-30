@@ -327,11 +327,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                 </div>
               )}
 
-              {form.base_legal && form.base_legal !== 'Otra' && !form.archivo_base_legal_base64 && !rat.tiene_archivo_base_legal && (
-                <div className="mt-2">
-                  <AlertBanner message="⚠️ Debe adjuntar el documento que respalda la base legal seleccionada para alcanzar el 100%." type="warning" />
-                </div>
-              )}
+              {/* alerta de documento ahora es opcional */}
             </div>
 
             {(form.base_legal === 'Interés legítimo') && (
@@ -356,9 +352,6 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <button
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
-                  if (form.base_legal && form.base_legal !== 'Otra' && !form.archivo_base_legal_base64 && !rat.tiene_archivo_base_legal) {
-                    toast.error('Debe adjuntar el documento que respalda la base legal seleccionada.'); return;
-                  }
                   setStep(4);
                 }}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"

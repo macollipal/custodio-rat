@@ -36,7 +36,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
 
   return (
     <aside
-      className="w-60 flex-shrink-0 flex flex-col h-full"
+      className="w-60 flex-shrink-0 flex flex-col h-full overflow-y-auto"
       style={{ background: '#111827' }}
     >
       {/* Logo */}
@@ -193,9 +193,8 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
           )}
         </div>
       </div>
-
-      {/* Usuario + logout */}
-      <div className="border-t border-gray-700/50 p-4">
+{/* Usuario + logout */}
+      <div className="border-t border-gray-700/50 p-4 flex-shrink-0">
         <div className="flex items-center gap-2.5 mb-3">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
