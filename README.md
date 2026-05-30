@@ -9,8 +9,8 @@ conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
 
 ```
 RAT_opencode/
+├── api/                  Vercel Serverless handler (@vercel/python, entry point para backend)
 ├── backend/              FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt
-│   ├── api/              Vercel Serverless handler (@vercel/python)
 │   ├── app/
 │   │   ├── core/         Configuración y seguridad JWT
 │   │   ├── database/     Engine y sesión SQLAlchemy
@@ -45,7 +45,7 @@ RAT_opencode/
 │   ├── lib/api.ts        Cliente HTTP a FastAPI
 │   └── types/index.ts    Tipos TypeScript
 │
-├── docs/                 Documentación (casos de uso, flujos, manual de usuario)
+├── docs/                 Documentación (casos de uso, flujos, manual de usuario, errores de deploy Vercel)
 └── data/                 Base de datos SQLite local (fuera del repo)
 ```
 
@@ -55,8 +55,8 @@ RAT_opencode/
 
 | Entorno | URL | Base de datos |
 |---------|-----|---------------|
-| **Producción** | https://custodio-rat.vercel.app (backend) | Neon PostgreSQL |
-| **Frontend** | https://custodio-rat-iy24.vercel.app | — |
+| **Backend API** | https://custodio-api.vercel.app | Neon PostgreSQL |
+| **Frontend** | https://custodio-indol.vercel.app | — |
 | **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
 
 ---
@@ -81,18 +81,20 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 
-# Frontend
+# Frontend ( usa Bun)
 cd ..\frontend-next
-npm install
+bun install
 ```
 
 ### Scripts de inicio rápido
 
 ```batch
 # Desde la raíz del proyecto
-iniciar.bat    # Levanta backend (8002) + frontend (3000) y abre navegador
-detener.bat    # Detiene ambos servicios
+iniciar_todo.bat  # Levanta backend (8002) + frontend (3000) y abre navegador
+matar_puertos.bat # Detiene ambos servicios (proceso huérfanos en puerto 3000)
 ```
+
+> **Nota:** `iniciar_todo.bat` es un script local, no está en git.
 
 ### Desarrollo individual
 
@@ -124,7 +126,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
 pytest tests/ -v
 
 # Verificar conexión a base
-python -c "from app.core.config import settings; print(settings.resolved_database_url[:50])"
+python -c "from app.core.config import settings; print(settings.DATABASE_URL[:50])"
 
 # Migrar datos SQLite → Neon (production)
 python migrate_to_neon.py export    # Exporta SQLite a JSON
@@ -136,20 +138,22 @@ python migrate_to_neon.py import     # Importa datos a Neon
 
 ## Frontend — comandos útiles
 
+> El proyecto usa **Bun** como package manager (bun.lock presente en git).
+
 ```bash
 cd frontend-next
 
+# Instalar dependencias
+bun install
+
 # Modo desarrollo
-npm run dev
+bun dev
 
 # Build de producción
-npm run build
-
-# Iniciar build
-npm start
+bun build
 
 # Linting
-npm run lint
+bun lint
 ```
 
 ---
@@ -163,7 +167,8 @@ npm run lint
 | `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
 | `ENVIRONMENT` | `development` \| `production` | `development` | `production` |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
-| `ALLOWED_ORIGINS` | CORS origins | localhost:3000, :8002 | `*` (auto en prod) |
+| `ALLOWED_ORIGINS_PROD` | CORS origins en producción | — | Lista de URLs de Vercel (o vacío si se usa `VERCEL_URL`) |
+| `VERCEL_URL` | URL del frontend en Vercel | — | Se setea automáticamente en Vercel |
 | `MINIMAX_API_KEY` | IA chat | — | Opcional |
 | `OPENAI_API_KEY` | IA chat | — | Opcional |
 
@@ -281,6 +286,17 @@ npm run lint
 - Gestión de brechas con plazos legales obligatorios
 - Plazo APDC (72h) vencido + cálculo de horas desde detección
 - Notificación a APDC y a los afectados
+
+### Módulo ARCO — Solicitudes de Derecho (Art. 14 y 16 bis Ley 21.719)
+- **Formulario público** (`/ejercitar`): permite a cualquier persona ejercer sus derechos ARCO
+  - Tipos: Acceso, Rectificación, Cancelación, Oposición
+  - Validación de RUT chileno, email, límite de 2000 caracteres en descripción
+  - Creación de solicitud → registra `solicitud_fecha`
+- **Panel admin** (`/configuracion`): gestión de solicitudes por empresa
+  - Tabla con paginación + ellipsis (max 7 páginas visibles)
+  - Filas expandibles mostrando historial de cambios (estado, fecha, usuario, descripción)
+  - Formulario de respuesta con transición de estado + registro en historial
+  - Filtro por estado (pendiente, en_proceso, resuelta, rechazada)
 
 ### Exportación
 - CSV por empresa
