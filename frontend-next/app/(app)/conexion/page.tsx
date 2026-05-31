@@ -29,7 +29,7 @@ export default function ConexionPage() {
       const data = await res.json();
       setDbHealth(data);
     } catch {
-      setDbHealth({ engine: 'unknown', url: '-', status: 'error' });
+      setDbHealth({ engine: 'unknown', url: '-', status: 'error', database: '-' });
     } finally {
       setLoading(false);
     }
