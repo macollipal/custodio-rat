@@ -46,3 +46,9 @@ class PasswordChange(BaseModel):
 
 class PasswordChangeOther(BaseModel):
     new_password: str
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
