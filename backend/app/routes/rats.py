@@ -4,7 +4,8 @@ Endpoints CRUD para el RAT, más exportación y sugerencias automáticas.
 
 import unicodedata
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, Request
+from app.routes.deps import get_client_ip
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
@@ -202,12 +203,13 @@ async def obtener(
 
 @router.post("/", response_model=RATOut, status_code=201, summary="Crear registro RAT")
 async def crear(
+    request: Request,
     data: RATCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     require_editor_or_admin_empresa(data.company_id, db, current_user)
-    r = create_rat(db, data, current_user.username)
+    r = create_rat(db, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
@@ -217,6 +219,7 @@ async def crear(
 
 @router.put("/{rat_id}", response_model=RATOut, summary="Actualizar registro RAT")
 async def actualizar(
+    request: Request,
     rat_id: int,
     data: RATUpdate,
     db: Session = Depends(get_db),
@@ -224,7 +227,7 @@ async def actualizar(
 ):
     rat = get_rat(db, rat_id)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
-    r = update_rat(db, rat_id, data, current_user.username)
+    r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
@@ -234,17 +237,19 @@ async def actualizar(
 
 @router.delete("/{rat_id}", summary="Eliminar registro RAT")
 async def eliminar(
+    request: Request,
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     rat = get_rat(db, rat_id)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
-    return delete_rat(db, rat_id, current_user.username)
+    return delete_rat(db, rat_id, current_user.username, get_client_ip(request))
 
 
 @router.post("/{rat_id}/revision", response_model=AuditLogOut, summary="Registrar revisión periódica del RAT")
 async def registrar_revision(
+    request: Request,
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -252,11 +257,12 @@ async def registrar_revision(
     """Marca el proceso como revisado periódicamente y registra el evento en la auditoría."""
     rat = get_rat(db, rat_id)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
-    return marcar_revisado(db, rat_id, current_user.username)
+    return marcar_revisado(db, rat_id, current_user.username, get_client_ip(request))
 
 
 @router.post("/{rat_id}/aprobar", response_model=RATOut, summary="Aprobar un RAT (solo admin/empresa)")
 async def approve_rat(
+    request: Request,
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -267,7 +273,7 @@ async def approve_rat(
     """
     rat = get_rat(db, rat_id)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
-    r = aprobar_rat(db, rat_id, current_user.username)
+    r = aprobar_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
@@ -319,9 +325,15 @@ async def auditoria_global(
     Retorna todos los eventos de auditoría de los RATs de una empresa,
     ordenados por timestamp descendente, para que el DPO pueda ver
     toda la actividad reciente de un vistazo.
+    Solo usuarios con acceso a la empresa pueden consultar.
     """
     from app.models.audit_log import AuditLog
     from app.models.rat import RAT as RATModel
+
+    ids = get_empresas_usuario(db, current_user.id)
+    if company_id not in ids:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
+
     rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id).all()]
     if not rat_ids:
         return []

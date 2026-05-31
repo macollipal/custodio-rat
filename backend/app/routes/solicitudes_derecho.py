@@ -83,10 +83,12 @@ def crear_solicitud(
     )
 
 
-@router.get("/", response_model=list[SolicitudResponse])
+@router.get("/", summary="Listar solicitudes de derechos ARCO")
 def listar_solicitudes(
     company_id: Optional[int] = None,
     estado: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -102,24 +104,31 @@ def listar_solicitudes(
         q = q.filter(SolicitudDerecho.company_id == company_id)
     if estado:
         q = q.filter(SolicitudDerecho.estado == estado)
-    solicitudes = q.order_by(SolicitudDerecho.solicitud_fecha.desc()).all()
-    return [
-        SolicitudResponse(
-            id=s.id,
-            company_id=s.company_id,
-            tipo=s.tipo,
-            nombre_titular=s.nombre_titular,
-            rut_titular=s.rut_titular,
-            email_titular=s.email_titular,
-            descripcion=s.descripcion,
-            estado=s.estado,
-            solicitud_fecha=s.solicitud_fecha.isoformat() if s.solicitud_fecha else None,
-            respuesta=s.respuesta,
-            respuesta_fecha=s.respuesta_fecha.isoformat() if s.respuesta_fecha else None,
-            created_at=s.created_at.isoformat() if s.created_at else None,
-        )
-        for s in solicitudes
-    ]
+
+    total = q.count()
+    solicitudes = q.order_by(SolicitudDerecho.solicitud_fecha.desc()).offset(skip).limit(limit).all()
+    return {
+        "solicitudes": [
+            SolicitudResponse(
+                id=s.id,
+                company_id=s.company_id,
+                tipo=s.tipo,
+                nombre_titular=s.nombre_titular,
+                rut_titular=s.rut_titular,
+                email_titular=s.email_titular,
+                descripcion=s.descripcion,
+                estado=s.estado,
+                solicitud_fecha=s.solicitud_fecha.isoformat() if s.solicitud_fecha else None,
+                respuesta=s.respuesta,
+                respuesta_fecha=s.respuesta_fecha.isoformat() if s.respuesta_fecha else None,
+                created_at=s.created_at.isoformat() if s.created_at else None,
+            )
+            for s in solicitudes
+        ],
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }
 
 
 @router.get("/{solicitud_id}", response_model=SolicitudResponse)
@@ -219,7 +228,7 @@ def responder_solicitud(
         estado_anterior=s.estado,
         estado_nuevo=data.estado,
         descripcion=data.descripcion_accion or data.respuesta,
-        usuario_nombre=data.usuario_nombre,
+        usuario_nombre=current_user.username,
     )
     db.add(historial)
 

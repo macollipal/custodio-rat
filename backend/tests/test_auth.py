@@ -2,8 +2,9 @@
 Tests de autenticación: login, token JWT, acceso sin credenciales.
 
 Notas de comportamiento real:
-- HTTPBearer retorna 403 cuando no hay cabecera Authorization (no 401).
-- Cuando el token existe pero es inválido, el código retorna 401.
+- Sin token → 401 Unauthorized (no autenticado).
+- Token inválido/expirado → 401 Unauthorized.
+- Con token válido pero sin permisos → 403 Forbidden.
 """
 
 import pytest
@@ -37,9 +38,9 @@ class TestLogin:
         assert resp.status_code == 422
 
     def test_acceso_sin_token_bloqueado(self, client, admin_user):
-        """HTTPBearer retorna 403 cuando no hay cabecera Authorization."""
+        """Sin token → 401 Unauthorized (no autenticado)."""
         resp = client.get("/companies/")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_acceso_token_invalido_bloqueado(self, client, admin_user):
         """Token presente pero inválido → 401."""
@@ -59,6 +60,6 @@ class TestLogin:
     def test_login_retorna_info_usuario(self, client, admin_user):
         resp = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         user = resp.json()["user"]
-        assert user["is_admin"] is True
+        assert user["rol_global"] == "superadmin"
         assert user["is_active"] is True
         assert "email" in user

@@ -7,6 +7,7 @@ import { API_BASE } from '@/lib/constants';
 
 interface DbHealth {
   engine: string;
+  database: string;
   url: string;
   status: string;
   latency_ms?: number;
@@ -83,14 +84,14 @@ export default function ConexionPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm" style={{ color: '#6B7280' }}>Motor</span>
                 <span className="text-sm font-medium" style={{ color: '#059669' }}>
-                  {dbHealth.engine === 'postgresql' ? '● PostgreSQL (Neon)' : '● SQLite local'}
+                  {dbHealth.engine === 'postgresql' ? '● PostgreSQL (Neon)' : '● Otro'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: '#6B7280' }}>URL</span>
-                <span className="text-sm font-mono" style={{ color: '#374151' }} title={dbHealth.url}>
-                  {dbHealth.url}
+                <span className="text-sm" style={{ color: '#6B7280' }}>Base de datos</span>
+                <span className="text-sm font-medium" style={{ color: '#059669' }}>
+                  {dbHealth.database}
                 </span>
               </div>
 

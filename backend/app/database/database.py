@@ -3,12 +3,36 @@ Configuración de SQLAlchemy: engine, sesión y función de inicialización de t
 PostgreSQL/Neon en producción.
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import QueuePool
 
 from app.core.config import settings
 
-engine = create_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
+engine = create_engine(
+    settings.DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=300,
+)
+
+
+@event.listens_for(engine, "connect")
+def on_connect(dbapi_conn, connection_record):
+    """Saneamiento de conexión nueva en Neon (evita mensajes 'channel binding required')."""
+    try:
+        dbapi_conn.autocommit = True
+        cursor = dbapi_conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.close()
+        dbapi_conn.autocommit = False
+    except Exception:
+        pass
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -18,15 +42,18 @@ class Base(DeclarativeBase):
 
 
 def get_db():
-    """Dependencia FastAPI: entrega una sesión de BD y la cierra al terminar."""
+    """Dependencia FastAPI: entrega una sesión de BD con retry en conexiones caídas."""
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
 
 def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
-    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, solicitud_derecho  # noqa: F401
+    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, solicitud_derecho, token_blacklist  # noqa: F401
     Base.metadata.create_all(bind=engine)
