@@ -5,66 +5,64 @@ import { describe, it, expect } from 'vitest';
 
 describe('puedeEditar — lógica de roles', () => {
   it('admin_global → puedeEditar = true', () => {
-    const rolGlobal = 'admin';
-    const rolEnEmpresa = null as string | null;
+    const rolGlobal: string | null = 'admin';
+    const rolEnEmpresa: string | null = null;
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('admin_empresa → puedeEditar = true', () => {
-    const rolGlobal = 'admin_empresa';
-    const rolEnEmpresa = null as string | null;
+    const rolGlobal: string | null = 'admin_empresa';
+    const rolEnEmpresa: string | null = null;
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('usuario + rol admin_en_empresa → puedeEditar = true', () => {
-    const rolGlobal = 'usuario';
-    const rolEnEmpresa = 'admin';
+    const rolGlobal: string | null = 'usuario';
+    const rolEnEmpresa: string | null = 'admin';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('usuario + rol editor_en_empresa → puedeEditar = true', () => {
-    const rolGlobal = 'usuario';
-    const rolEnEmpresa = 'editor';
+    const rolGlobal: string | null = 'usuario';
+    const rolEnEmpresa: string | null = 'editor';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('usuario + rol viewer_en_empresa → puedeEditar = false', () => {
-    const rolGlobal = 'usuario';
-    const rolEnEmpresa = 'viewer';
+    const rolGlobal: string | null = 'usuario';
+    const rolEnEmpresa: string | null = 'viewer';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(false);
   });
 
   it('usuario sin rol de empresa → puedeEditar = false', () => {
-    const rolGlobal = 'usuario';
-    const rolEnEmpresa = null;
+    const rolGlobal: string | null = 'usuario';
+    const rolEnEmpresa: string | null = null;
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(false);
   });
 
   it('sin rol global + rol admin en empresa → puedeEditar = true (cae en else branch)', () => {
-    // Sin rol global: rolGlobal === null → toma else branch
-    // else branch: rolEnEmpresa === 'admin' || 'admin' === 'editor' → true
-    const rolGlobal = null;
-    const rolEnEmpresa = 'admin';
+    const rolGlobal: string | null = null;
+    const rolEnEmpresa: string | null = 'admin';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('sin rol global + rol editor en empresa → puedeEditar = true', () => {
-    const rolGlobal = null;
-    const rolEnEmpresa = 'editor';
+    const rolGlobal: string | null = null;
+    const rolEnEmpresa: string | null = 'editor';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(true);
   });
 
   it('sin rol global + rol viewer en empresa → puedeEditar = false', () => {
-    const rolGlobal = null;
-    const rolEnEmpresa = 'viewer';
+    const rolGlobal: string | null = null;
+    const rolEnEmpresa: string | null = 'viewer';
     const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
     expect(puedeEditar).toBe(false);
   });

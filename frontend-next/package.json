@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:ui": "vitest --ui"
+    "typecheck": "tsc --noEmit",
+    "prebuild": "npm run typecheck"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
