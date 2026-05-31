@@ -1,8 +1,12 @@
-from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from app.routes.deps import get_current_user
+from sqlalchemy.orm import Session
+from app.routes.deps import get_current_user, get_client_ip
 from app.core.config import settings
+from app.core.limiter import limiter
+from app.services.audit_service import log_audit
+from app.database.database import get_db
+from typing import Optional
 
 router = APIRouter(prefix="/ai", tags=["Asistente IA"])
 
@@ -32,7 +36,8 @@ class AskResponse(BaseModel):
 
 
 @router.post("/ask", response_model=AskResponse)
-async def ask_ai(req: AskRequest, current_user = Depends(get_current_user)):
+@limiter.limit("10/minute")
+async def ask_ai(request: Request, req: AskRequest, current_user = Depends(get_current_user), db=Depends(get_db)):
     """
     Asistente IA sobre Ley 21.719 de Chile.
     Usa MiniMax M2.7 si hay MINIMAX_API_KEY, si no OpenAI si hay OPENAI_API_KEY.
@@ -51,6 +56,8 @@ async def ask_ai(req: AskRequest, current_user = Depends(get_current_user)):
     if req.context:
         messages.append({"role": "user", "content": f"Contexto actual del sistema:\n{req.context}"})
     messages.append({"role": "user", "content": req.question})
+
+    provider = "minimax" if settings.MINIMAX_API_KEY else "openai"
 
     if settings.MINIMAX_API_KEY:
         payload = {
@@ -90,5 +97,16 @@ async def ask_ai(req: AskRequest, current_user = Depends(get_current_user)):
         except Exception as e:
             from fastapi import HTTPException as HTTPExc, status
             raise HTTPExc(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Error al consultar OpenAI: {str(e)}")
+
+    log_audit(
+        db=db,
+        entidad="ai",
+        entidad_id=0,
+        accion="consulta",
+        usuario=current_user.username,
+        detalle={"question": req.question[:500], "context": req.context[:500] if req.context else None, "provider": provider},
+        ip_origen=get_client_ip(request),
+    )
+    db.commit()
 
     return {"answer": answer}

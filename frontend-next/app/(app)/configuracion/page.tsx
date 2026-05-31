@@ -478,7 +478,7 @@ export default function ConfiguracionPage() {
                 <div className="flex items-center justify-between">
                   <span className={labelCls} style={{ color: '#6B7280' }}>Motor</span>
                   <span className={valueCls} style={{ color: '#059669' }}>
-                    {dbHealth.engine === 'postgresql' ? 'PostgreSQL (Neon)' : 'SQLite local'}
+                    {dbHealth.engine === 'postgresql' ? 'PostgreSQL (Neon)' : 'Otro'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

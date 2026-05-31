@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database.database import get_db
-from app.schemas.user import LoginRequest, PasswordChange, Token, UserCreate, UserOut
+from app.schemas.user import LoginRequest, PasswordChange, PasswordChangeOther, Token, UserCreate, UserOut, UserUpdate
 from app.services.user_service import (
     authenticate_user, change_password, create_user, get_users,
     update_user, delete_user, change_password_other,
 )
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user, require_admin
+from app.core.security import revoke_token
 from app.core.config import settings
 from app.core.limiter import limiter
 
@@ -47,8 +48,16 @@ async def login(request: Request, data: LoginRequest, db: Session = Depends(get_
 
 
 @router.post("/logout", summary="Cerrar sesión")
-async def logout(response: Response = None):
-    """Elimina la cookie de sesión."""
+@limiter.limit("10/minute")
+async def logout(request: Request, response: Response = None, db: Session = Depends(get_db)):
+    """Revoca el token y elimina la cookie de sesión."""
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if token:
+        revoke_token(token, db)
     if response is not None:
         response.delete_cookie(COOKIE_NAME, path="/")
     return {"message": "Sesión cerrada correctamente."}
@@ -72,11 +81,11 @@ async def crear_usuario(
 @router.put("/users/{user_id}", response_model=UserOut, summary="Actualizar usuario (solo admin)")
 async def actualizar_usuario(
     user_id: int,
-    data: dict,
+    data: UserUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
-    return update_user(db, user_id, data)
+    return update_user(db, user_id, data.model_dump(exclude_none=True))
 
 
 @router.delete("/users/{user_id}", summary="Eliminar usuario (solo admin)")
@@ -92,19 +101,20 @@ async def eliminar_usuario(
 @router.put("/users/{user_id}/password", summary="Cambiar contraseña de otro usuario (solo admin)")
 async def cambiar_password_otro(
     user_id: int,
-    data: dict,
+    data: PasswordChangeOther,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
-    new_password = data.get("new_password")
-    if not new_password or len(new_password) < 6:
+    if len(data.new_password) < 6:
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres.")
-    change_password_other(db, user_id, new_password)
+    change_password_other(db, user_id, data.new_password)
     return {"message": "Contraseña actualizada correctamente."}
 
 
 @router.put("/me/password", response_model=UserOut, summary="Cambiar contraseña del usuario actual")
+@limiter.limit("5/minute")
 async def cambiar_password(
+    request: Request,
     data: PasswordChange,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -113,8 +123,13 @@ async def cambiar_password(
 
 
 @router.get("/users", summary="Listar usuarios (solo admin)")
-async def listar_usuarios(db: Session = Depends(get_db), current_user=Depends(require_admin)):
-    users = get_users(db)
+async def listar_usuarios(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
+):
+    users, total = get_users(db, skip=skip, limit=limit)
     result = []
     for u in users:
         empresas = get_empresas_usuario(db, u.id)
@@ -137,4 +152,4 @@ async def listar_usuarios(db: Session = Depends(get_db), current_user=Depends(re
             "empresa_id": empresa_id,
             "empresa_nombre": empresa_nombre,
         })
-    return result
+    return {"usuarios": result, "total": total, "skip": skip, "limit": limit}

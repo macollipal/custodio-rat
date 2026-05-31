@@ -61,7 +61,8 @@ export async function logout(): Promise<void> {
 
 export async function listarEmpresas(): Promise<Company[]> {
   const res = await fetch(`${API_BASE}/companies/`, { headers: authHeaders() });
-  return handle<Company[]>(res);
+  const data = await handle<{ empresas: Company[]; total: number; skip: number; limit: number }>(res);
+  return data.empresas;
 }
 
 export async function crearEmpresa(data: Partial<Company>): Promise<Company> {
@@ -328,7 +329,8 @@ export async function aprobarRat(ratId: number): Promise<RAT> {
 
 export async function listarBrechas(companyId: number): Promise<SecurityBreach[]> {
   const res = await fetch(`${API_BASE}/brechas/?company_id=${companyId}`, { headers: authHeaders() });
-  return handle<SecurityBreach[]>(res);
+  const data = await handle<{ brechas: SecurityBreach[]; total: number; skip: number; limit: number }>(res);
+  return data.brechas;
 }
 
 export async function crearBrecha(data: Partial<SecurityBreach>): Promise<SecurityBreach> {
@@ -405,7 +407,8 @@ export async function removerAcceso(companyId: number, userId: number): Promise<
 
 export async function listarUsuarios(): Promise<User[]> {
   const res = await fetch(`${API_BASE}/auth/users`, { headers: authHeaders() });
-  return handle<User[]>(res);
+  const data = await handle<{ usuarios: User[]; total: number; skip: number; limit: number }>(res);
+  return data.usuarios;
 }
 
 export async function crearUsuario(data: {
@@ -486,7 +489,8 @@ export async function listarSolicitudesDerecho(companyId: number, estado?: strin
   const params = new URLSearchParams({ company_id: String(companyId) });
   if (estado) params.set('estado', estado);
   const res = await fetch(`${API_BASE}/solicitudes-derecho/?${params}`, { headers: authHeaders() });
-  return handle<unknown[]>(res);
+  const data = await handle<{ solicitudes: unknown[]; total: number; skip: number; limit: number }>(res);
+  return data.solicitudes;
 }
 
 export async function actualizarSolicitudDerecho(

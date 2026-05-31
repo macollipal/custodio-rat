@@ -3,7 +3,6 @@ Lógica de negocio para el Registro de Actividades de Tratamiento (RAT).
 Incluye validaciones de auditoría conforme a la Ley 21.719.
 """
 
-import json
 import base64
 import hashlib
 from typing import Optional
@@ -13,6 +12,7 @@ from fastapi import HTTPException, status
 from app.models.rat import RAT, EstadoRAT
 from app.models.audit_log import AuditLog
 from app.schemas.rat import RATCreate, RATUpdate
+from app.services.audit_service import log_audit
 
 # Campos obligatorios para marcar un RAT como "completo"
 # Debe coincidir con campos_obligatorios en RAT.calcular_completitud()
@@ -116,7 +116,7 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
     }
 
 
-def create_rat(db: Session, data: RATCreate, usuario: str) -> RAT:
+def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     from app.models.company import Company
     if not db.query(Company).filter(Company.id == data.company_id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
@@ -141,13 +141,13 @@ def create_rat(db: Session, data: RATCreate, usuario: str) -> RAT:
 
     db.add(rat)
     db.flush()
-    _log_audit(db, rat.id, "crear", usuario, datos)
+    log_audit(db, "rat", rat.id, "crear", usuario, datos, ip_origen)
     db.commit()
     db.refresh(rat)
     return rat
 
 
-def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str) -> RAT:
+def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     rat = get_rat(db, rat_id)
     cambios = data.model_dump(exclude_none=True)
 
@@ -167,16 +167,16 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str) -> RAT:
     if "estado" not in cambios:
         rat.estado = _calcular_estado(rat_dict)
 
-    _log_audit(db, rat_id, "editar", usuario, cambios)
+    log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
     db.commit()
     db.refresh(rat)
     return rat
 
 
-def delete_rat(db: Session, rat_id: int, usuario: str) -> dict:
+def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
     rat = get_rat(db, rat_id)
     nombre = rat.nombre_proceso
-    _log_audit(db, rat_id, "eliminar", usuario, {"nombre_proceso": nombre})
+    log_audit(db, "rat", rat_id, "eliminar", usuario, {"nombre_proceso": nombre}, ip_origen)
     db.delete(rat)
     db.commit()
     return {"message": f"Registro '{nombre}' eliminado del RAT."}
@@ -223,7 +223,6 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         1 for r in rats if r.nombre_encargado and not r.tiene_contrato_encargado
     )
 
-    # RATs sin documento de base legal (cuando base legal != "Otra")
     rats_sin_doc = sum(
         1 for r in rats
         if r.base_legal and r.base_legal.strip().lower() != "otra"
@@ -277,7 +276,10 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
 # ── Funciones internas ──────────────────────────────────────────────────────
 
 def _calcular_estado(data: dict) -> EstadoRAT:
-    """Determina automáticamente el estado del RAT según completitud."""
+    """
+    Determina automáticamente el estado del RAT según completitud.
+    Usa el mismo cálculo de campos que RAT.calcular_completitud().
+    """
     todos_completos = all(data.get(campo) and str(data[campo]).strip() for campo in CAMPOS_OBLIGATORIOS_COMPLETO)
     if todos_completos:
         return EstadoRAT.COMPLETO
@@ -319,7 +321,6 @@ def _generar_alertas_auditoria(data: dict) -> str:
     if data.get("evaluacion_impacto") and (data.get("estado_eipd") or "pendiente") not in ("completada",):
         alertas.append(ALERTAS_AUDITORIA["eipd_pendiente"])
 
-    # Alerta si falta documento de base legal (pero no bloquea)
     base_legal_raw = data.get("base_legal") or ""
     if base_legal_raw.strip().lower() != "otra" and not data.get("archivo_base_legal_datos"):
         alertas.append(ALERTAS_AUDITORIA["falta_doc_base_legal"])
@@ -327,25 +328,24 @@ def _generar_alertas_auditoria(data: dict) -> str:
     return "\n".join(alertas)
 
 
-def marcar_revisado(db: Session, rat_id: int, usuario: str) -> AuditLog:
+def marcar_revisado(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> AuditLog:
     rat = get_rat(db, rat_id)
     from datetime import datetime, timezone
     rat.updated_at = datetime.now(timezone.utc)
     rat.updated_by = usuario
-    log = AuditLog(
-        entidad="rat",
-        entidad_id=rat_id,
-        accion="revisado",
-        usuario=usuario,
-        detalle=json.dumps({"nota": "Revisión periódica del RAT confirmada"}, ensure_ascii=False),
-    )
-    db.add(log)
+
+    log_audit(db, "rat", rat_id, "revisado", usuario, {"nota": "Revisión periódica del RAT confirmada"}, ip_origen)
     db.commit()
-    db.refresh(log)
-    return log
+
+    log_entry = db.query(AuditLog).filter(
+        AuditLog.entidad == "rat",
+        AuditLog.entidad_id == rat_id,
+        AuditLog.accion == "revisado",
+    ).order_by(AuditLog.timestamp.desc()).first()
+    return log_entry
 
 
-def aprobar_rat(db: Session, rat_id: int, usuario: str) -> RAT:
+def aprobar_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     """
     Aprueba un RAT registrando el DPO que lo aprueba y la fecha.
     El RAT debe tener 100% de completitud (incluyendo documento de base legal si aplica).
@@ -366,30 +366,10 @@ def aprobar_rat(db: Session, rat_id: int, usuario: str) -> RAT:
     rat.updated_at = datetime.now(timezone.utc)
     rat.updated_by = usuario
 
-    log = AuditLog(
-        entidad="rat",
-        entidad_id=rat_id,
-        accion="aprobar",
-        usuario=usuario,
-        detalle=json.dumps({
-            "nota": f"RAT aprobado por {usuario}",
-            "fecha_aprobacion": rat.fecha_aprobacion.isoformat(),
-        }, ensure_ascii=False),
-    )
-    db.add(log)
+    log_audit(db, "rat", rat_id, "aprobar", usuario, {
+        "nota": f"RAT aprobado por {usuario}",
+        "fecha_aprobacion": rat.fecha_aprobacion.isoformat(),
+    }, ip_origen)
     db.commit()
     db.refresh(rat)
     return rat
-
-
-def _log_audit(db: Session, rat_id: int, accion: str, usuario: str, detalle: dict):
-    log = AuditLog(
-        entidad="rat",
-        entidad_id=rat_id,
-        accion=accion,
-        usuario=usuario,
-        detalle=json.dumps(detalle, ensure_ascii=False, default=str),
-    )
-    db.add(log)
-    db.flush()
-    db.commit()

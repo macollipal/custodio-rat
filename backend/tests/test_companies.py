@@ -53,18 +53,23 @@ class TestListarEmpresas:
     def test_listar_vacio(self, client, auth_headers):
         resp = client.get("/companies/", headers=auth_headers)
         assert resp.status_code == 200
-        assert isinstance(resp.json(), list)
+        data = resp.json()
+        assert isinstance(data, dict)
+        assert "empresas" in data
+        assert isinstance(data["empresas"], list)
 
     def test_listar_con_empresa(self, client, auth_headers, empresa):
         resp = client.get("/companies/", headers=auth_headers)
         assert resp.status_code == 200
-        ids = [e["id"] for e in resp.json()]
+        data = resp.json()
+        ids = [e["id"] for e in data["empresas"]]
         assert empresa["id"] in ids
 
     def test_listar_contiene_total_rats(self, client, auth_headers, empresa):
         resp = client.get("/companies/", headers=auth_headers)
         assert resp.status_code == 200
-        found = next((e for e in resp.json() if e["id"] == empresa["id"]), None)
+        data = resp.json()
+        found = next((e for e in data["empresas"] if e["id"] == empresa["id"]), None)
         assert found is not None
         assert "total_rats" in found
 

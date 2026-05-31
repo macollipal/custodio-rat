@@ -368,7 +368,7 @@ Los 7 campos mínimos obligatorios:
 ### Tecnologías
 
 - **Frontend**: Next.js 16 + React 19 + TypeScript + Tailwind CSS v4
-- **Backend**: FastAPI + SQLAlchemy + SQLite
+- **Backend**: FastAPI + SQLAlchemy + PostgreSQL (Neon)
 - **Auth**: JWT + Bcrypt
 - **Validación**: Zod + Pydantic
 - **Exportación**: jsPDF + jspdf-autotable (CSV/PDF)

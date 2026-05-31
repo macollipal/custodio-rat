@@ -35,6 +35,18 @@ git push
 
 **Síntoma:** `CORS policy: No 'Access-Control-Allow-Origin' header`
 
+**Causa:** `ENVIRONMENT=production` no está seteado en el proyecto backend de Vercel, o el dominio del frontend preview no está en `ALLOWED_ORIGINS_PROD`.
+
+**Solución:** En Vercel → proyecto backend → Settings → Environment Variables:
+```
+ENVIRONMENT = production
+```
+
+**Importante:** El CORS en producción usa **dominios explícitos** (no regex). Cada nuevo dominio de preview del frontend debe agregarse a la lista `ALLOWED_ORIGINS_PROD` en `backend/app/core/config.py`.
+
+---
+
+
 **Causa:** `ENVIRONMENT=production` no está seteado en el proyecto backend de Vercel.
 
 **Solución:** En Vercel → proyecto backend → Settings → Environment Variables:
@@ -42,7 +54,7 @@ git push
 ENVIRONMENT = production
 ```
 
-**Importante:** Esta variable activa el `allow_origin_regex` que acepta cualquier subdomain de Vercel.
+**Importante:** Esta variable activa CORS con dominios **explícitos** (no regex). Los dominios permitidos están en `ALLOWED_ORIGINS_PROD` en `config.py`. Agregar el nuevo dominio de preview de frontend a esa lista antes de deployar.
 
 ---
 
@@ -118,11 +130,70 @@ git push
 
 1. [ ] `main` está actualizado con `develop`
 2. [ ] `ENVIRONMENT=production` seteado en proyecto backend
-3. [ ] `NEXT_PUBLIC_API_BASE` seteado en proyecto frontend
-4. [ ] `vercel.json` eliminado si se usan proyectos separados
-5. [ ] No hay `__pycache__` ni `.pyc` en el repo
-6. [ ] Branch correcta configurada en Vercel (develop o main según corresponda)
-7. [ ] Build settings correctOS (Next.js detected o manual si es proyecto nuevo)
+3. [ ] `NEXT_PUBLIC_API_BASE` seteado en proyecto frontend apuntando al backend correcto
+4. [ ] Nuevo dominio de preview de frontend agregado a `ALLOWED_ORIGINS_PROD` en `config.py`
+5. [ ] `vercel.json` eliminado si se usan proyectos separados
+6. [ ] No hay `__pycache__` ni `.pyc` en el repo
+7. [ ] Branch correcta configurada en Vercel (qa para preview, main para producción)
+8. [ ] Build settings correctos (Next.js detected o manual si es proyecto nuevo)
+9. [ ] `SECRET_KEY` de producción configurada en Vercel (no en filesystem)
+
+---
+
+---
+
+### 9. Secuencias de PostgreSQL desincronizadas con Neon (connection pooler)
+
+**Síntoma:** `IntegrityError: duplicate key value violates unique constraint "audit_logs_pkey" DETAIL: Key (id)=(X) already exists.`
+
+**Causa:** El connection pooler de Neon cachea valores de secuencia. Cuando se importa datos de SQLite a Neon, las secuencias se reinician correctamente, pero el pooler puede servir IDs antiguos a nuevas conexiones.
+
+**Impacto:** Operaciones `INSERT` en tablas con secuencias (audit_logs, companies, rats, etc.) fallan con unique violation aunque la secuencia en PostgreSQL muestra valores altos.
+
+**Diagnóstico:**
+```python
+import sqlalchemy as sa
+engine = sa.create_engine('postgresql://...')
+with engine.connect() as conn:
+    seq_name = conn.execute(sa.text("SELECT pg_get_serial_sequence('audit_logs', 'id')")).scalar()
+    seq_val = conn.execute(sa.text(f"SELECT last_value FROM {seq_name}")).scalar()
+    ids = conn.execute(sa.text('SELECT id FROM audit_logs ORDER BY id')).fetchall()
+    print(f'Secuencia: {seq_val}, IDs reales: {[r[0] for r in ids]}')
+```
+
+**Solución temporal — TRUNCATE:**
+```sql
+TRUNCATE TABLE audit_logs RESTART IDENTITY CASCADE;
+```
+Esto limpia la tabla y reinicia la secuencia a 1. Advertencia: perder todos los datos de auditoría.
+
+**Solución preventiva — forzar secuencias altas:**
+```python
+sequences = {
+    'users': 10000, 'companies': 10000, 'rats': 10000,
+    'audit_logs': 100000, 'token_blacklist': 100000,
+}
+for table, val in sequences.items():
+    seq_name = conn.execute(sa.text(f"SELECT pg_get_serial_sequence('{table}', 'id')")).scalar()
+    conn.execute(sa.text(f"SELECT setval('{seq_name}', {val}, true)"))
+```
+
+**Nota:** Este es un problema conocido de Neon con connection pooler y PostgreSQL SERIAL. El cacheo de secuencias puede persistir incluso después de reiniciar el backend.
+
+---
+
+### 10. TokenBlacklist falla en desarrollo (tabla no existe)
+
+**Síntoma:** `ProgrammingError: relation "token_blacklist" does not exist`
+
+**Causa:** El modelo `TokenBlacklist` se creó después de que las tablas ya estaban creadas en Neon.
+
+**Solución:** Recrear la tabla ejecutando `migrate_to_neon.py init` o crear la tabla manualmente:
+```python
+from app.database.database import Base
+from app.models.token_blacklist import TokenBlacklist
+Base.metadata.create_all(bind=engine)  # solo crea lo que falta
+```
 
 ---
 
@@ -133,3 +204,18 @@ git push
 | Frontend | custodio-indol.vercel.app |
 | Backend API | custodio-api.vercel.app |
 | Repo | github.com/macollipal/custodio-rat |
+
+---
+
+## Entornos Vercel
+
+| Entorno | Rama Git | Base de datos Neon | Secret Key |
+|---------|---------|-------------------|------------|
+| Producción | `main` | Custodio_dev (Neon) | `SECRET_KEY` en Vercel env |
+| QA | `qa` | Custodio_QA (Neon) | `SECRET_KEY` en Vercel env |
+
+⚠️ **NUNCA** poner secrets en el filesystem del repo. Usar siempre Environment Variables en Vercel.
+
+## Desarrollo local
+
+⚠️ El `.env` local apunta a **Neon Custodio_dev** (no SQLite). Trabajar localmente = trabajar directo en la base de desarrollo. La `DEV_SECRET_KEY` es obligatoria en desarrollo (sin fallback hardcodeado).

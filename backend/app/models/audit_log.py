@@ -4,7 +4,7 @@ Permite cumplir con el principio de responsabilidad proactiva (Art. 14 Ley 21.71
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, Integer, String, Text, ForeignKey
+from sqlalchemy import DateTime, Index, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.database import Base
@@ -12,6 +12,9 @@ from app.database.database import Base
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
+    __table_args__ = (
+        Index("ix_audit_logs_entidad_entidad_id", "entidad", "entidad_id"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     entidad: Mapped[str] = mapped_column(String(50), nullable=False)   # "rat", "company", "user"

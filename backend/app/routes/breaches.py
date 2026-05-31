@@ -31,14 +31,17 @@ def _out(b) -> BreachOut:
     return out
 
 
-@router.get("/", response_model=list[BreachOut], summary="Listar brechas de seguridad")
+@router.get("/", summary="Listar brechas de seguridad")
 async def listar(
     company_id: int = Query(..., description="ID de la empresa"),
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     _check_company_access(current_user, company_id, db)
-    return [_out(b) for b in listar_brechas(db, company_id)]
+    brechas, total = listar_brechas(db, company_id, skip=skip, limit=limit)
+    return {"brechas": [_out(b) for b in brechas], "total": total, "skip": skip, "limit": limit}
 
 
 @router.get("/{breach_id}", response_model=BreachOut, summary="Obtener brecha por ID")

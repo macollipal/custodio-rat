@@ -34,8 +34,8 @@ def create_user(db: Session, data: UserCreate) -> User:
     if data.rol_global not in [r.value for r in RolGlobal]:
         raise HTTPException(status_code=400, detail="Rol global inválido.")
 
-    if data.rol_global in ("admin_empresa", "usuario") and not data.company_id:
-        raise HTTPException(status_code=400, detail="Debes asignar una empresa a este usuario.")
+    if data.rol_global in ("admin_empresa", "usuario") and not data.company_ids:
+        raise HTTPException(status_code=400, detail="Debes asignar al menos una empresa a este usuario.")
 
     user = User(
         username=data.username,
@@ -50,14 +50,15 @@ def create_user(db: Session, data: UserCreate) -> User:
     db.commit()
     db.refresh(user)
 
-    if data.company_id:
+    if data.company_ids:
         from app.models.user_company import UserCompany, RolEmpresa
-        uc = UserCompany(
-            user_id=user.id,
-            company_id=data.company_id,
-            rol=RolEmpresa.ADMIN if data.rol_global == "admin_empresa" else RolEmpresa.EDITOR,
-        )
-        db.add(uc)
+        for cid in data.company_ids:
+            uc = UserCompany(
+                user_id=user.id,
+                company_id=cid,
+                rol=RolEmpresa.ADMIN if data.rol_global == "admin_empresa" else RolEmpresa.EDITOR,
+            )
+            db.add(uc)
         db.commit()
 
     return user
@@ -73,7 +74,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Token:
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Usuario inactivo. Contacte al administrador.")
 
-    token = create_access_token({"sub": user.username, "rol_global": user.rol_global})
+    token, _ = create_access_token({"sub": user.username, "rol_global": user.rol_global})
     return Token(
         access_token=token,
         token_type="bearer",
@@ -89,8 +90,10 @@ def get_current_user(db: Session, token_data: dict) -> User:
     return user
 
 
-def get_users(db: Session) -> list[User]:
-    return db.query(User).all()
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> tuple[list[User], int]:
+    total = db.query(User).count()
+    users = db.query(User).offset(skip).limit(limit).all()
+    return users, total
 
 
 def update_user(db: Session, user_id: int, data: dict) -> User:

@@ -1,9 +1,12 @@
 """
 Fixtures compartidas para toda la suite de tests.
-- BD SQLite en memoria (aislada por sesión de test)
+- BD en memoria (aislada por sesión de test)
 - TestClient con autenticación JWT real
 - Helpers para crear entidades de prueba
 """
+
+import os
+os.environ["ENV"] = "test"
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,7 +31,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     """Crea todas las tablas en la BD de test una sola vez por sesión."""
-    from app.models import company, rat, user, audit_log  # noqa
+    from app.models import company, rat, user, audit_log, token_blacklist  # noqa
     Base.metadata.create_all(bind=engine_test)
     yield
     Base.metadata.drop_all(bind=engine_test)
@@ -71,6 +74,7 @@ def admin_user(db):
         hashed_password=get_password_hash("admin1234"),
         is_active=True,
         is_admin=True,
+        rol_global="superadmin",
     )
     db.add(user)
     db.commit()

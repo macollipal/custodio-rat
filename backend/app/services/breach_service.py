@@ -4,6 +4,7 @@ Plazos legales: notificación APDC en 72 horas; titulares sin dilación en datos
 """
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -13,14 +14,20 @@ from sqlalchemy.orm import Session
 from app.models.breach import SecurityBreach
 from app.schemas.breach import BreachCreate, BreachUpdate
 
+logger = logging.getLogger(__name__)
 
-def listar_brechas(db: Session, company_id: int) -> list[SecurityBreach]:
-    return (
+
+def listar_brechas(db: Session, company_id: int, skip: int = 0, limit: int = 100) -> tuple[list[SecurityBreach], int]:
+    total = db.query(SecurityBreach).filter(SecurityBreach.company_id == company_id).count()
+    breaches = (
         db.query(SecurityBreach)
         .filter(SecurityBreach.company_id == company_id)
         .order_by(SecurityBreach.fecha_deteccion.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
+    return breaches, total
 
 
 def get_breach(db: Session, breach_id: int) -> SecurityBreach:
@@ -52,8 +59,8 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
                 descripcion=breach.descripcion or "Sin descripción",
                 fecha_deteccion=fecha_str,
             )
-        except EmailError:
-            pass
+        except EmailError as e:
+            logger.error(f"Brecha {breach.id}: fallo enviando notificación al DPO {empresa.email_dpo}: {e}")
 
     return breach
 

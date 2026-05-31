@@ -1,7 +1,7 @@
 # Custodio RAT Manager — Flujo de Datos
 
 > Generado: 2026-04-24 · Actualizado: 2026-05-12 (Módulo Onboarding, validación de sesión con /auth/me, redirect 401 automático)  
-> Stack: FastAPI + SQLAlchemy + SQLite · Next.js 16 + TypeScript + Tailwind v4
+> Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) · Next.js 16 + TypeScript + Tailwind v4
 
 ---
 
@@ -84,7 +84,7 @@ graph TB
         MDL["SQLAlchemy Models\nUser · Company · RAT · UserCompany · AuditLog"]
     end
 
-    subgraph DB["🗄️  SQLite — rat.db"]
+    subgraph DB["🗄️  PostgreSQL — Neon (Custodio_dev)"]
         T_U[users]
         T_C[companies]
         T_UC[user_companies]
@@ -187,7 +187,7 @@ sequenceDiagram
     participant FE as 🖥️ Frontend
     participant CTX as AppContext
     participant API as ⚙️ Backend
-    participant DB as 🗄️ SQLite
+    participant DB as 🗄️ PostgreSQL
 
     rect rgb(219,234,254)
         Note over U,DB: ── AUTENTICACIÓN ──
