@@ -74,7 +74,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Token:
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Usuario inactivo. Contacte al administrador.")
 
-    token, _ = create_access_token({"sub": user.username, "rol_global": user.rol_global})
+    token = create_access_token({"sub": user.username, "rol_global": user.rol_global})
     return Token(
         access_token=token,
         token_type="bearer",
