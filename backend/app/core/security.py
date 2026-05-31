@@ -36,3 +36,35 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+def revoke_token(token: str, db) -> bool:
+    from app.models.token_blacklist import TokenBlacklist
+    try:
+        payload = jwt.decode(token, settings.resolved_secret_key, algorithms=[settings.ALGORITHM], options={"verify_exp": False})
+    except JWTError:
+        return False
+    jti = payload.get("jti")
+    if not jti:
+        return False
+    exp = payload.get("exp")
+    if not exp:
+        return False
+    expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+    existing = db.query(TokenBlacklist).filter(TokenBlacklist.jti == jti).first()
+    if existing:
+        return True
+    entry = TokenBlacklist(jti=jti, expires_at=expires_at)
+    db.add(entry)
+    db.commit()
+    return True
+
+
+def cleanup_expired_tokens(db) -> int:
+    from app.models.token_blacklist import TokenBlacklist
+    from sqlalchemy import delete
+    now = datetime.now(timezone.utc)
+    result = db.execute(delete(TokenBlacklist).where(TokenBlacklist.expires_at < now))
+    db.commit()
+    count = result.rowcount if hasattr(result, 'rowcount') else 0
+    return count
