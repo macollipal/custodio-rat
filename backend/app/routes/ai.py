@@ -98,15 +98,19 @@ async def ask_ai(request: Request, req: AskRequest, current_user = Depends(get_c
             from fastapi import HTTPException as HTTPExc, status
             raise HTTPExc(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Error al consultar OpenAI: {str(e)}")
 
-    log_audit(
-        db=db,
-        entidad="ai",
-        entidad_id=0,
-        accion="consulta",
-        usuario=current_user.username,
-        detalle={"question": req.question[:500], "context": req.context[:500] if req.context else None, "provider": provider},
-        ip_origen=get_client_ip(request),
-    )
-    db.commit()
+    try:
+        log_audit(
+            db=db,
+            entidad="ai",
+            entidad_id=0,
+            accion="consulta",
+            usuario=current_user.username,
+            detalle={"question": req.question[:500], "context": req.context[:500] if req.context else None, "provider": provider},
+            ip_origen=get_client_ip(request),
+        )
+        db.commit()
+    except Exception as audit_err:
+        import logging
+        logging.getLogger(__name__).warning(f"Audit log failed: {audit_err}")
 
     return {"answer": answer}
