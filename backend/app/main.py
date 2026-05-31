@@ -167,22 +167,13 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
 import os
-if os.getenv("ENVIRONMENT") in ("production", "qa", "staging"):
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r"https://.*\.vercel\.app",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.resolved_allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth.router)
 app.include_router(companies.router)
