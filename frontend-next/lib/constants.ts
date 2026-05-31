@@ -1,3 +1,4 @@
+// QA v3 - hardcoded API base for testing
 export const API_BASE = 'https://custodio-api-git-qa-marcelos-projects-3cc299e0.vercel.app';
 export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
