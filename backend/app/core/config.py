@@ -59,6 +59,7 @@ class Settings(BaseSettings):
         "https://custodio-indol.vercel.app",
         "https://custodio-b5o2s7ily-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-2a6ifunvu-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-f0p0m9vfs-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-api-git-qa-marcelos-projects-3cc299e0.vercel.app",
     ]
     VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
@@ -77,7 +78,7 @@ class Settings(BaseSettings):
 
     @property
     def resolved_allowed_origins(self) -> list[str]:
-        if self.ENVIRONMENT == "production":
+        if self.ENVIRONMENT in ("production", "qa", "staging"):
             if self.VERCEL_URL and not self.ALLOWED_ORIGINS_PROD:
                 return [f"https://{self.VERCEL_URL}"]
             return self.ALLOWED_ORIGINS_PROD
