@@ -42,3 +42,7 @@ class LoginRequest(BaseModel):
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
+
+
+class PasswordChangeOther(BaseModel):
+    new_password: str
