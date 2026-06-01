@@ -17,8 +17,8 @@ class Settings(BaseSettings):
         "conforme a la Ley 21.719 de Protección de Datos Personales de Chile."
     )
 
-    # Base de datos (Neon PostgreSQL)
-    DATABASE_URL: str = "postgresql://neondb_owner:npg_Rem3X0tGwUxv@ep-flat-rice-aaqay71bf-pooler.c-8.us-east-1.aws.neon.tech/Custodio_dev?sslmode=require&channel_binding=require"
+    # Base de datos (Neon PostgreSQL) - REQUIERE variable de entorno DATABASE_URL
+    DATABASE_URL: str = ""
 
     # Seguridad JWT
     SECRET_KEY: str = "cambia-esta-clave-en-produccion-por-una-de-256-bits"
