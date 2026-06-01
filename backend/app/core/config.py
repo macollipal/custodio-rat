@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     # Base de datos (Neon PostgreSQL) - REQUIERE variable de entorno DATABASE_URL
     DATABASE_URL: str = ""
 
-    # Seguridad JWT
-    SECRET_KEY: str = "cambia-esta-clave-en-produccion-por-una-de-256-bits"
+    # Seguridad JWT - REQUIERE variable de entorno SECRET_KEY
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 horas
 
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Desarrollo: clave por defecto (NO usar en producción)
-    _dev_secret: str = "cambia-esta-clave-en-produccion-por-una-de-256-bits"
+    _dev_secret: str = "dev-secret-never-use-in-production"
 
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
 
     @property
     def resolved_secret_key(self) -> str:
-        if self.ENVIRONMENT == "production":
+        if self.ENVIRONMENT in ("production", "qa", "staging"):
             if not self.SECRET_KEY:
                 raise ValueError("SECRET_KEY es obligatoria en producción. Genera una clave con: openssl rand -hex 64")
             return self.SECRET_KEY
