@@ -1,4 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '';
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://custodio-api-qa-git-qa-marcelos-projects-3cc299e0.vercel.app';
 export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
   USER: 'custodio_user',
