@@ -17,8 +17,8 @@ class Settings(BaseSettings):
         "conforme a la Ley 21.719 de Protección de Datos Personales de Chile."
     )
 
-    # Base de datos (Neon PostgreSQL)
-    DATABASE_URL: str = "***REMOVED***"
+    # Base de datos (Neon PostgreSQL) - REQUIERE variable de entorno DATABASE_URL
+    DATABASE_URL: str = ""
 
     # Seguridad JWT
     SECRET_KEY: str = "cambia-esta-clave-en-produccion-por-una-de-256-bits"
