@@ -7,26 +7,24 @@ import sys
 import os
 from pathlib import Path
 
-print(f"[DEBUG] __file__ = {__file__}")
-print(f"[DEBUG] CWD = {os.getcwd()}")
-print(f"[DEBUG] listdir = {os.listdir('.')}")
-
 BASE = Path(__file__).resolve().parent
 print(f"[DEBUG] BASE = {BASE}")
+print(f"[DEBUG] CWD = {os.getcwd()}")
+print(f"[DEBUG] files = {os.listdir('.')[:20]}")
 
-# Try multiple paths
+# Root Directory puede ser:
+# - "/" (root) → BASE/backend existe directamente
+# - "api" → BASE/backend no existe, necesito BASE.parent
+# - "." → BASE/backend existe
 for candidate in [
-    BASE / "backend",
-    BASE.parent / "backend",
+    BASE / "backend",           # root deployment: /var/task/backend
+    BASE.parent / "backend",   # api/ deployment: /var/task/backend
     Path("/var/task/backend"),
-    Path("/var/task"),
 ]:
     if candidate.exists():
         sys.path.insert(0, str(candidate))
-        print(f"[DEBUG] Using backend path: {candidate}")
+        print(f"[DEBUG] Using: {candidate}")
         break
-
-print(f"[DEBUG] sys.path = {sys.path}")
 
 from app.main import app
 __all__ = ["app"]
