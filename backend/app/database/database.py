@@ -3,14 +3,24 @@ Configuración de SQLAlchemy: engine, sesión y función de inicialización de t
 PostgreSQL/Neon en producción.
 """
 
+import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from app.core.config import settings
 
+
+DATABASE_URL = os.getenv("DATABASE_URL") or settings.DATABASE_URL
+
+if not DATABASE_URL:
+    raise ValueError(
+        "DATABASE_URL environment variable is not set. "
+        "Please configure it in Vercel project settings."
+    )
+
 engine = create_engine(
-    settings.DATABASE_URL,
+    DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
     poolclass=QueuePool,
