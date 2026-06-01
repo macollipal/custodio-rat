@@ -166,7 +166,6 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Demasiados intentos. Intente nuevamente en un minuto."},
     )
 
-import os
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"https://.*\.vercel\.app",
