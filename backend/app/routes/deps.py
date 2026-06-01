@@ -49,7 +49,7 @@ def get_current_user(
             detail="No autenticado. Inicie sesión.",
         )
 
-    payload = decode_access_token(token, db)
+    payload = decode_access_token(token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
