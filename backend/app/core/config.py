@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     # Base de datos (Neon PostgreSQL)
-    DATABASE_URL: str = "postgresql://neondb_owner:npg_AucohCmFHI31@ep-fragrant-wildflower-apeqosx9-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    DATABASE_URL: str = "postgresql://neondb_owner:npg_Rem3X0tGwUxv@ep-flat-rice-aaqay71bf-pooler.c-8.us-east-1.aws.neon.tech/Custodio_dev?sslmode=require&channel_binding=require"
 
     # Seguridad JWT
     SECRET_KEY: str = "cambia-esta-clave-en-produccion-por-una-de-256-bits"
