@@ -1,6 +1,8 @@
 import type { AuthResponse, Company, RAT, DashboardStats, AuditLog, User, UserCompany, RolEmpresa, SecurityBreach, Rubro, RATSugerido } from '@/types';
 import { API_BASE } from './constants';
 
+console.log('[DEBUG] API_BASE =', API_BASE);
+
 function getToken(): string {
   if (typeof window === 'undefined') return '';
   return localStorage.getItem('custodio_token') || '';
