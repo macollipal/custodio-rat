@@ -195,9 +195,16 @@ async def root():
     }
 
 
-@app.get("/health", tags=["Sistema"])
-async def health():
-    return {"status": "ok"}
+@app.get("/debug/env", tags=["Sistema"])
+async def debug_env():
+    """Debug endpoint - muestra vars de entorno (sin passwords)."""
+    from app.core.config import settings
+    return {
+        "DATABASE_URL_set": bool(settings.DATABASE_URL),
+        "DATABASE_URL_host": settings.DATABASE_URL.split("@")[1] if "@" in settings.DATABASE_URL else "EMPTY",
+        "SECRET_KEY_set": bool(settings.SECRET_KEY),
+        "ENVIRONMENT": settings.ENVIRONMENT,
+    }
 
 
 @app.get("/health/db", tags=["Sistema"])
