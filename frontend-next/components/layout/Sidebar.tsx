@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho';
 
 interface SidebarProps {
   currentPage: Page;
@@ -28,6 +28,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
     { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    { key: 'tkt_solicitud_derecho', label: 'Solicitudes ARCO', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
     { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
