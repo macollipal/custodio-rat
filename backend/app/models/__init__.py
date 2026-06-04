@@ -9,7 +9,7 @@ from app.models.rats_sugerido import RATSugerido
 from app.models.solicitud_derecho import SolicitudDerecho, TipoSolicitud, EstadoSolicitud
 from app.models.solicitud_historial import SolicitudHistorial
 from app.models.solicitud_token import SolicitudToken
-from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, TipoSolicitud as TktTipo, EstadoTicket, PrioridadTicket, OrigenTicket
+from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, TktTipo, EstadoTicket, PrioridadTicket, OrigenTicket
 from app.models.tkt_nota import TktNota
 from app.models.tkt_adjunto import TktAdjunto
 from app.models.tkt_historial import TktHistorial
