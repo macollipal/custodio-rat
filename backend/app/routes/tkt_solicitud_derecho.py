@@ -2,111 +2,37 @@
 Endpoints CRUD para el módulo de ticketing TKT.
 Ruta: /tkt-solicitud-derecho/
 """
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime, timezone
 from app.database.database import get_db
 from app.routes.deps import get_current_user
-from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, EstadoTicket, PrioridadTicket, OrigenTicket
+from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
 from app.models.tkt_nota import TktNota
-from app.models.tkt_adjunto import TktAdjunto
 from app.models.tkt_historial import TktHistorial
 from app.models.company import Company
 from app.services.user_company_service import get_empresas_usuario
 from app.services.ticket_service import (
     crear_ticket_desde_solicitud,
+    crear_ticket,
     cambiar_estado_ticket,
     get_dashboard_stats,
     calcular_dias_restantes,
     get_sla_color,
 )
-from app.core.limiter import limiter
+from app.schemas.tkt_solicitud_derecho import (
+    TktTicketCreate,
+    TktTicketUpdate,
+    TktNotaCreate,
+    TktTicketResponse,
+    TktListResponse,
+    TktDashboardResponse,
+)
 import logging
 
 router = APIRouter(prefix="/tkt-solicitud-derecho", tags=["TKT - Solicitudes ARCO"])
 logger = logging.getLogger(__name__)
-
-
-class TktCreate(BaseModel):
-    company_id: int
-    tipo: str
-    titular_nombre: str
-    titular_email: EmailStr
-    titular_rut: Optional[str] = None
-    descripcion: Optional[str] = None
-    prioridad: str = "normal"
-    origen: str = "web"
-
-    @field_validator('prioridad')
-    @classmethod
-    def validate_prioridad(cls, v):
-        valid = [e.value for e in PrioridadTicket]
-        if v not in valid:
-            raise ValueError(f"prioridad debe ser uno de: {valid}")
-        return v
-
-    @field_validator('origen')
-    @classmethod
-    def validate_origen(cls, v):
-        valid = [e.value for e in OrigenTicket]
-        if v not in valid:
-            raise ValueError(f"origen debe ser uno de: {valid}")
-        return v
-
-
-class TktUpdate(BaseModel):
-    estado: Optional[str] = None
-    prioridad: Optional[str] = None
-    responsable_id: Optional[int] = None
-    respuesta_texto: Optional[str] = None
-
-
-class TktNotaCreate(BaseModel):
-    nota: str
-
-
-class TktResponse(BaseModel):
-    id: int
-    company_id: int
-    tipo: str
-    estado: str
-    prioridad: str
-    origen: str
-    titular_nombre: str
-    titular_email: str
-    titular_rut: Optional[str]
-    descripcion: Optional[str]
-    fecha_recepcion: Optional[str]
-    fecha_vencimiento: Optional[str]
-    responsable_id: Optional[int]
-    respuesta_texto: Optional[str]
-    respuesta_fecha: Optional[str]
-    created_by: Optional[str]
-    created_at: Optional[str]
-    dias_restantes: Optional[int] = None
-    sla_color: Optional[str] = None
-    estado_sla: Optional[str] = None
-
-
-class TktListResponse(BaseModel):
-    tickets: list[TktResponse]
-    total: int
-    skip: int
-    limit: int
-    stats: Optional[dict] = None
-
-
-class DashboardResponse(BaseModel):
-    total: int
-    abiertos: int
-    en_proceso: int
-    pendientes: int
-    resueltos: int
-    vencidos: int
-    cumplimiento_sla: float
-    tiempo_promedio_horas: float
 
 
 def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
@@ -114,7 +40,7 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
     sla_color = get_sla_color(dias_rest) if dias_rest is not None else None
     estado_sla = "cumplido" if ticket.estado == "resuelto" else ("vencido" if dias_rest and dias_rest < 0 else "activo")
 
-    return TktResponse(
+    return TktTicketResponse(
         id=ticket.id,
         company_id=ticket.company_id,
         tipo=ticket.tipo,
@@ -125,20 +51,20 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         titular_email=ticket.titular_email,
         titular_rut=ticket.titular_rut,
         descripcion=ticket.descripcion,
-        fecha_recepcion=ticket.fecha_recepcion.isoformat() if ticket.fecha_recepcion else None,
-        fecha_vencimiento=ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        fecha_recepcion=ticket.fecha_recepcion,
+        fecha_vencimiento=ticket.fecha_vencimiento,
         responsable_id=ticket.responsable_id,
         respuesta_texto=ticket.respuesta_texto,
-        respuesta_fecha=ticket.respuesta_fecha.isoformat() if ticket.respuesta_fecha else None,
+        respuesta_fecha=ticket.respuesta_fecha,
         created_by=ticket.created_by,
-        created_at=ticket.created_at.isoformat() if ticket.created_at else None,
+        created_at=ticket.created_at,
         dias_restantes=dias_rest,
         sla_color=sla_color,
         estado_sla=estado_sla,
     ).model_dump()
 
 
-@router.get("/dashboard", response_model=DashboardResponse)
+@router.get("/dashboard", response_model=TktDashboardResponse)
 def dashboard(
     company_id: Optional[int] = None,
     db: Session = Depends(get_db),
@@ -147,12 +73,55 @@ def dashboard(
     """Dashboard KPIs de tickets TKT."""
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
+        if not empresas:
+            return TktDashboardResponse(
+                total=0, abiertos=0, en_proceso=0, pendientes=0,
+                resueltos=0, vencidos=0, cumplimiento_sla=100.0, tiempo_promedio_horas=0
+            )
         if company_id and company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
-        if not company_id and empresas:
+        if not company_id:
             company_id = empresas[0]
+
     stats = get_dashboard_stats(db, company_id)
     return stats
+
+
+@router.post("/", response_model=TktTicketResponse)
+def crear_ticket_endpoint(
+    data: TktTicketCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Crea un ticket TKT manualmente (solo admin_empresa y superadmin)."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden crear tickets")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if data.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
+
+    company = db.query(Company).filter(Company.id == data.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    ticket = crear_ticket(
+        db=db,
+        company_id=data.company_id,
+        tipo=data.tipo,
+        prioridad=data.prioridad,
+        origen=data.origen,
+        titular_nombre=data.titular_nombre,
+        titular_email=data.titular_email,
+        titular_rut=data.titular_rut,
+        descripcion=data.descripcion,
+        created_by=current_user.username,
+    )
+    return _ticket_to_response(ticket)
+
+
+MAX_TKT_LIMIT = 100
 
 
 @router.get("/", response_model=TktListResponse)
@@ -166,10 +135,12 @@ def listar_tickets(
     current_user=Depends(get_current_user),
 ):
     """Lista tickets con filtros."""
+    limit = min(limit, MAX_TKT_LIMIT)
+
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
         if not empresas:
-            return TktListResponse(tickets=[], total=0, skip=skip, limit=limit)
+            return TktListResponse(tickets=[], total=0, skip=skip, limit=limit, stats=None)
         if company_id and company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
         if not company_id:
@@ -196,7 +167,7 @@ def listar_tickets(
     )
 
 
-@router.get("/{ticket_id}", response_model=TktResponse)
+@router.get("/{ticket_id}", response_model=TktTicketResponse)
 def obtener_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
@@ -215,15 +186,18 @@ def obtener_ticket(
     return _ticket_to_response(ticket)
 
 
-@router.patch("/{ticket_id}", response_model=TktResponse)
+@router.patch("/{ticket_id}", response_model=TktTicketResponse)
 def actualizar_ticket(
     ticket_id: int,
-    data: TktUpdate,
+    data: TktTicketUpdate,
     request: Request,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """Actualiza ticket (estado, prioridad, responsable, respuesta)."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden editar tickets")
+
     ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado")
@@ -233,21 +207,48 @@ def actualizar_ticket(
         if ticket.company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
 
-    if data.estado:
-        ticket.estado = data.estado
-        if data.estado == "resuelto" and not ticket.respuesta_fecha:
-            ticket.respuesta_fecha = datetime.now(timezone.utc)
+    if data.responsable_id is not None:
+        from app.models.user import User
+        if data.responsable_id > 0:
+            user_exists = db.query(User).filter(User.id == data.responsable_id).first()
+            if not user_exists:
+                raise HTTPException(status_code=400, detail="El usuario responsable no existe")
+            ticket.responsable_id = data.responsable_id
+        else:
+            ticket.responsable_id = None
 
     if data.prioridad:
         ticket.prioridad = data.prioridad
-    if data.responsable_id:
-        ticket.responsable_id = data.responsable_id
+
+    if data.estado and data.estado != ticket.estado:
+        ticket, error = cambiar_estado_ticket(
+            db=db,
+            ticket_id=ticket_id,
+            nuevo_estado=data.estado,
+            user_id=current_user.id,
+            descripcion=f"Estado cambiado a {data.estado}",
+            auto_commit=False,
+        )
+        if error:
+            raise HTTPException(status_code=400, detail=error)
+        if data.estado == "resuelto" and not ticket.respuesta_fecha:
+            ticket.respuesta_fecha = datetime.now(timezone.utc)
+
     if data.respuesta_texto:
         ticket.respuesta_texto = data.respuesta_texto
         if not ticket.respuesta_fecha:
             ticket.respuesta_fecha = datetime.now(timezone.utc)
         if ticket.estado != "resuelto":
-            ticket.estado = "resuelto"
+            ticket, error = cambiar_estado_ticket(
+                db=db,
+                ticket_id=ticket_id,
+                nuevo_estado="resuelto",
+                user_id=current_user.id,
+                descripcion="Estado cambiado a resuelto (por respuesta)",
+                auto_commit=False,
+            )
+            if error:
+                raise HTTPException(status_code=400, detail=error)
 
     db.commit()
     db.refresh(ticket)

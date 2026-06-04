@@ -2,21 +2,22 @@
 Servicio de negocio para módulos TKT (ticketing).
 Maneja lógica de SLA, estados, y estadísticas.
 """
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, date, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
 
-def calcular_dias_habiles(fecha_inicio: datetime, dias: int) -> datetime:
+def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int] = None) -> datetime:
     """Calcula fecha de vencimiento sumando días hábiles (lunes a viernes, excluye feriados Chile)."""
+    if anio is None:
+        anio = fecha_inicio.year
+
     dias_restantes = dias
     fecha_actual = fecha_inicio.replace(hour=23, minute=59, second=59)
 
-    # Feriados fijos Chile (año, mes, día)
-    feriados = [
+    # Feriados fijos Chile (mes, día) - sin año
+    feriados_fijos = [
         (1, 1),   # Año Nuevo
-        (4, 11),  # Viernes Santo
-        (4, 12),  # Sábado Santo
         (5, 1),   # Día del Trabajo
         (5, 21),  # Glorias Navales
         (6, 29),  # San Pedro y San Pablo
@@ -24,13 +25,32 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int) -> datetime:
         (8, 15),  # Asunción
         (9, 18),  # Independencia
         (9, 19),  # Día de las Glorias del Ejército
-        (9, 20),  # Plebiscito (adjustable)
         (10, 12), # Encuentro de Dos Mundos
         (10, 31), # Día de las Iglesias Evangélicas
         (11, 1),  # Día de Todos los Santos
         (12, 8),  # Inmaculada Concepción
         (12, 25), # Navidad
     ]
+
+    # Semana Santa 2025-2030 (algoritmo de Gauss simplificado)
+    # 2025: Abril 17-18
+    # 2026: Abril 3-4
+    # 2027: Marzo 26-27
+    # 2028: Abril 14-15
+    # 2029: Marzo 30-31
+    # 2030: Abril 18-19
+    feriados_semana_santa = {
+        2025: [(4, 17), (4, 18)],
+        2026: [(4, 3), (4, 4)],
+        2027: [(3, 26), (3, 27)],
+        2028: [(4, 14), (4, 15)],
+        2029: [(3, 30), (3, 31)],
+        2030: [(4, 18), (4, 19)],
+    }
+
+    feriados = feriados_fijos.copy()
+    if anio in feriados_semana_santa:
+        feriados.extend(feriados_semana_santa[anio])
 
     def es_feriado(dt: datetime) -> bool:
         for mes, dia in feriados:
@@ -40,7 +60,6 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int) -> datetime:
 
     while dias_restantes > 0:
         fecha_actual += timedelta(days=1)
-        # Normalize to midnight for comparison
         check_date = fecha_actual.replace(hour=0, minute=0, second=0, microsecond=0)
         dia_semana = check_date.weekday()
         if dia_semana < 5 and not es_feriado(check_date):
@@ -124,12 +143,61 @@ def crear_ticket_desde_solicitud(
     return ticket
 
 
+def crear_ticket(
+    db: Session,
+    company_id: int,
+    tipo: str,
+    titular_nombre: str,
+    titular_email: str,
+    prioridad: str = "normal",
+    origen: str = "web",
+    titular_rut: Optional[str] = None,
+    descripcion: Optional[str] = None,
+    created_by: Optional[str] = None,
+) -> "TktSolicitudDerecho":
+    """Crea un ticket TKT (para uso interno/admin)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ahora = datetime.now(timezone.utc)
+    fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+
+    ticket = TktSolicitudDerecho(
+        company_id=company_id,
+        tipo=tipo,
+        estado="abierto",
+        prioridad=prioridad,
+        origen=origen,
+        titular_nombre=titular_nombre,
+        titular_email=titular_email,
+        titular_rut=titular_rut,
+        descripcion=descripcion,
+        fecha_recepcion=ahora,
+        fecha_vencimiento=fecha_vencimiento,
+        created_by=created_by,
+    )
+    db.add(ticket)
+    db.flush()
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=None,
+        estado_nuevo="abierto",
+        descripcion="Ticket creado",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket
+
+
 def cambiar_estado_ticket(
     db: Session,
     ticket_id: int,
     nuevo_estado: str,
     user_id: Optional[int] = None,
     descripcion: Optional[str] = None,
+    auto_commit: bool = True,
 ) -> tuple:
     """Cambia estado de ticket y registra historial."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -150,7 +218,10 @@ def cambiar_estado_ticket(
         descripcion=descripcion or f"Estado cambiado a {nuevo_estado}",
     )
     db.add(historial)
-    db.commit()
+    if auto_commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(ticket)
     return ticket, None
 
