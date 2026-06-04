@@ -327,7 +327,6 @@ export default function SolicitudDerechoPage() {
                   className="flex-1 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   style={{ backgroundColor: '#059669' }}
                 >
-                >
                   {submitting ? 'Enviando...' : 'Enviar solicitud'}
                 </button>
               </div>
