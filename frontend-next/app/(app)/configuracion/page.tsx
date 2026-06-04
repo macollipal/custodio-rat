@@ -383,7 +383,7 @@ export default function ConfiguracionPage() {
         headers: { Authorization: `Bearer ${localStorage.getItem('custodio_token')}` },
       });
       const data = await res.json();
-      setSolicitudes(Array.isArray(data) ? data : []);
+      setSolicitudes(Array.isArray(data) ? data : (data.solicitudes || []));
     } catch {
       toast.error('No se pudieron cargar las solicitudes.');
     } finally {
