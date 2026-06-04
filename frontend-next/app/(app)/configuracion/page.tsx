@@ -34,7 +34,6 @@ interface SolicitudDerecho {
 const TABS = [
   { key: 'sistema', label: 'Sistema' },
   { key: 'registros', label: 'Último log' },
-  { key: 'solicitudes', label: 'Solicitudes ARCO', legacy: true },
   { key: 'exportacion', label: 'Exportación' },
 ];
 
@@ -339,10 +338,6 @@ export default function ConfiguracionPage() {
   const [loadingDb, setLoadingDb] = useState(true);
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
-  const [solicitudes, setSolicitudes] = useState<SolicitudDerecho[]>([]);
-  const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
-  const [solicitudFiltro, setSolicitudFiltro] = useState<string>('');
-  const [page, setPage] = useState(1);
   const [exportConfig, setExportConfig] = useState<ExportConfig>(() => {
     if (typeof window === 'undefined') return { formatoPredeterminado: 'pdf', incluirAuditoria: true, nombreConRut: true };
     const saved = localStorage.getItem(EXPORT_KEY);
@@ -373,24 +368,6 @@ export default function ConfiguracionPage() {
     }
   }, [company?.id]);
 
-  const fetchSolicitudes = useCallback(async () => {
-    if (!company?.id) return;
-    setLoadingSolicitudes(true);
-    try {
-      const params = new URLSearchParams({ company_id: String(company.id) });
-      if (solicitudFiltro) params.set('estado', solicitudFiltro);
-      const res = await fetch(`${API_BASE}/solicitudes-derecho/?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('custodio_token')}` },
-      });
-      const data = await res.json();
-      setSolicitudes(Array.isArray(data) ? data : (data.solicitudes || []));
-    } catch {
-      toast.error('No se pudieron cargar las solicitudes.');
-    } finally {
-      setLoadingSolicitudes(false);
-    }
-  }, [company?.id, solicitudFiltro]);
-
   function formatoAccion(accion: string) {
     const map: Record<string, { label: string; color: string }> = {
       crear: { label: 'Crear', color: '#059669' },
@@ -410,8 +387,7 @@ export default function ConfiguracionPage() {
   useEffect(() => {
     if (tab === 'sistema') fetchDbHealth();
     if (tab === 'registros') fetchAuditLogs();
-    if (tab === 'solicitudes' && company?.id) fetchSolicitudes();
-  }, [tab, company?.id, fetchAuditLogs, fetchSolicitudes, fetchDbHealth]);
+  }, [tab, company?.id, fetchAuditLogs, fetchDbHealth]);
 
   useEffect(() => {
     localStorage.setItem(EXPORT_KEY, JSON.stringify(exportConfig));
@@ -433,11 +409,7 @@ export default function ConfiguracionPage() {
     });
     if (!res.ok) throw new Error('Error');
     toast.success('Solicitud actualizada.');
-    fetchSolicitudes();
   }
-
-  const totalPages = Math.ceil(solicitudes.length / PAGE_SIZE);
-  const paginatedSolicitudes = solicitudes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const cardCls = 'bg-white rounded-xl p-6 shadow-sm';
   const labelCls = 'text-sm font-medium';
@@ -462,7 +434,7 @@ export default function ConfiguracionPage() {
             }}
           >
             {t.label}
-            {'legacy' in t && t.legacy && (
+            {'legacy' in t && !!(t as { legacy?: boolean }).legacy && (
               <span
                 className="px-1.5 py-0.5 rounded text-xs font-medium"
                 style={{ background: '#FEE2E2', color: '#DC2626' }}
@@ -639,138 +611,7 @@ export default function ConfiguracionPage() {
         </div>
       )}
 
-      {/* TAB 3: Solicitudes ARCO */}
-      {tab === 'solicitudes' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <h2 className="text-base font-semibold" style={{ color: '#111827' }}>Solicitudes ARCO</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>
-                {solicitudes.length > 0 ? `${solicitudes.length} total` : 'Acceso, Rectificación, Cancelación, Oposición'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={solicitudFiltro}
-                onChange={e => { setSolicitudFiltro(e.target.value); setPage(1); }}
-                className="px-3 py-1.5 rounded-lg text-xs border"
-                style={{ borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}
-              >
-                <option value="">Todas</option>
-                <option value="pendiente">Pendientes</option>
-                <option value="en_proceso">En proceso</option>
-                <option value="resuelto">Resueltas</option>
-                <option value="rechazada">Rechazadas</option>
-              </select>
-              <button
-                onClick={fetchSolicitudes}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                style={{ borderColor: '#E5E7EB', color: '#374151' }}
-              >
-                🔄
-              </button>
-            </div>
-          </div>
-
-          {loadingSolicitudes ? (
-            <p className="text-sm text-center py-8" style={{ color: '#9CA3AF' }}>Cargando...</p>
-          ) : solicitudes.length === 0 ? (
-            <div className="text-center py-12 rounded-xl" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-              <p className="text-4xl mb-2">📭</p>
-              <p className="text-sm font-medium" style={{ color: '#374151' }}>No hay solicitudes</p>
-              <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-                Las solicitudes que envíen los titulares aparecerán aquí.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
-                      <th className="py-2.5 pl-3 pr-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Tipo</th>
-                      <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Titular</th>
-                      <th className="py-2.5 px-2 text-left text-xs font-semibold hidden md:table-cell" style={{ color: '#6B7280' }}>Email</th>
-                      <th className="py-2.5 px-2 text-left text-xs font-semibold hidden lg:table-cell" style={{ color: '#6B7280' }}>Respuesta</th>
-                      <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Estado</th>
-                      <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Fecha</th>
-                      <th className="py-2.5 pr-3 pl-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedSolicitudes.map(sol => (
-                      <SolicitudRow key={sol.id} sol={sol} onResponder={responderSolicitud} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 flex-wrap">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-40"
-                    style={{ borderColor: '#E5E7EB', color: '#374151' }}
-                  >
-                    ← Anterior
-                  </button>
-                  {(() => {
-                    const pages: (number | '...')[] = [];
-                    const maxVisible = 7;
-                    let start = Math.max(1, page - 3);
-                    let end = Math.min(totalPages, page + 3);
-                    if (end - start < maxVisible - 1) {
-                      if (start === 1) end = Math.min(totalPages, start + maxVisible - 1);
-                      else start = Math.max(1, end - maxVisible + 1);
-                    }
-                    if (start > 1) { pages.push(1); if (start > 2) pages.push('...'); }
-                    for (let i = start; i <= end; i++) pages.push(i);
-                    if (end < totalPages) { if (end < totalPages - 1) pages.push('...'); pages.push(totalPages); }
-                    return pages.map((p, idx) =>
-                      p === '...' ? (
-                        <span key={`ellipsis-${idx}`} className="px-1 py-1.5 text-xs" style={{ color: '#9CA3AF' }}>…</span>
-                      ) : (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p as number)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium border"
-                          style={{
-                            borderColor: page === p ? '#2563EB' : '#E5E7EB',
-                            background: page === p ? '#2563EB' : 'transparent',
-                            color: page === p ? 'white' : '#374151',
-                          }}
-                        >
-                          {p}
-                        </button>
-                      )
-                    );
-                  })()}
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-40"
-                    style={{ borderColor: '#E5E7EB', color: '#374151' }}
-                  >
-                    Siguiente →
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          <div className="rounded-xl p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-            <p className="text-xs font-medium mb-1" style={{ color: '#374151' }}>¿Qué deben hacer los titulares?</p>
-            <p className="text-xs" style={{ color: '#6B7280' }}>
-              Pueden ejercer sus derechos ARCO visitando{' '}
-              <a href="/solicitud_derecho" className="underline" style={{ color: '#2563EB' }}>/solicitud_derecho</a>
-              {' '}o contactando directamente al DPO de la empresa.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: Exportación */}
+      {/* TAB 3: Exportación */}
       {tab === 'exportacion' && (
         <div className="space-y-6">
           <div className={cardCls} style={{ border: '1px solid #E5E7EB' }}>
