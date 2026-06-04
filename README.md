@@ -288,7 +288,7 @@ bun lint
 - Notificación a APDC y a los afectados
 
 ### Módulo ARCO — Solicitudes de Derecho (Art. 14 y 16 bis Ley 21.719)
-- **Formulario público** (`/ejercitar`): permite a cualquier persona ejercer sus derechos ARCO
+- **Formulario público** (`/solicitud_derecho`): permite a cualquier persona ejercer sus derechos ARCO
   - Tipos: Acceso, Rectificación, Cancelación, Oposición
   - Validación de RUT chileno, email, límite de 2000 caracteres en descripción
   - Creación de solicitud → registra `solicitud_fecha`

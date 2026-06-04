@@ -755,7 +755,7 @@ export default function ConfiguracionPage() {
             <p className="text-xs font-medium mb-1" style={{ color: '#374151' }}>¿Qué deben hacer los titulares?</p>
             <p className="text-xs" style={{ color: '#6B7280' }}>
               Pueden ejercer sus derechos ARCO visitando{' '}
-              <a href="/ejercitar" className="underline" style={{ color: '#2563EB' }}>/ejercitar</a>
+              <a href="/solicitud_derecho" className="underline" style={{ color: '#2563EB' }}>/solicitud_derecho</a>
               {' '}o contactando directamente al DPO de la empresa.
             </p>
           </div>
