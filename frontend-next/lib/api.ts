@@ -531,3 +531,94 @@ export async function getDbHealth(): Promise<DbHealth> {
   if (!res.ok) throw new Error('Error al obtener estado de BD');
   return res.json();
 }
+
+export interface TktTicket {
+  id: number;
+  company_id: number;
+  tipo: string;
+  estado: string;
+  prioridad: string;
+  origen: string;
+  titular_nombre: string;
+  titular_email: string;
+  titular_rut?: string;
+  descripcion?: string;
+  fecha_recepcion?: string;
+  fecha_vencimiento?: string;
+  responsable_id?: number;
+  respuesta_texto?: string;
+  respuesta_fecha?: string;
+  created_by?: string;
+  created_at?: string;
+  dias_restantes?: number;
+  sla_color?: string;
+  estado_sla?: string;
+}
+
+export interface TktDashboard {
+  total: number;
+  abiertos: number;
+  en_proceso: number;
+  pendientes: number;
+  resueltos: number;
+  vencidos: number;
+  cumplimiento_sla: number;
+  tiempo_promedio_horas: number;
+}
+
+export interface TktListResponse {
+  tickets: TktTicket[];
+  total: number;
+  skip: number;
+  limit: number;
+  stats?: TktDashboard;
+}
+
+export async function listarTktTickets(companyId: number, estado?: string, prioridad?: string): Promise<TktListResponse> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (estado) params.set('estado', estado);
+  if (prioridad) params.set('prioridad', prioridad);
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/?${params}`, { headers: authHeaders() });
+  const data = await handle<TktListResponse>(res);
+  return data;
+}
+
+export async function getTktDashboard(companyId?: number): Promise<TktDashboard> {
+  const params = new URLSearchParams();
+  if (companyId) params.set('company_id', String(companyId));
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/dashboard?${params}`, { headers: authHeaders() });
+  return handle<TktDashboard>(res);
+}
+
+export async function getTktTicket(id: number): Promise<TktTicket> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${id}`, { headers: authHeaders() });
+  return handle<TktTicket>(res);
+}
+
+export async function actualizarTktTicket(id: number, data: { estado?: string; prioridad?: string; responsable_id?: number; respuesta_texto?: string }): Promise<TktTicket> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${id}`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<TktTicket>(res);
+}
+
+export async function agregarTktNota(ticketId: number, nota: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${ticketId}/notas`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nota }),
+  });
+  return handle<void>(res);
+}
+
+export async function listarTktNotas(ticketId: number): Promise<{ id: number; nota: string; user_id: number; created_at: string }[]> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${ticketId}/notas`, { headers: authHeaders() });
+  return handle<{ id: number; nota: string; user_id: number; created_at: string }[]>(res);
+}
+
+export async function listarTktHistorial(ticketId: number): Promise<{ id: number; estado_anterior?: string; estado_nuevo: string; descripcion?: string; user_id: number; created_at: string }[]> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${ticketId}/historial`, { headers: authHeaders() });
+  return handle<{ id: number; estado_anterior?: string; estado_nuevo: string; descripcion?: string; user_id: number; created_at: string }[]>(res);
+}
