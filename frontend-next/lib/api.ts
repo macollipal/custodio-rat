@@ -590,6 +590,24 @@ export async function getTktDashboard(companyId?: number): Promise<TktDashboard>
   return handle<TktDashboard>(res);
 }
 
+export async function crearTktTicket(data: {
+  company_id: number;
+  tipo: string;
+  prioridad?: string;
+  origen?: string;
+  titular_nombre: string;
+  titular_email: string;
+  titular_rut?: string;
+  descripcion?: string;
+}): Promise<TktTicket> {
+  const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<TktTicket>(res);
+}
+
 export async function getTktTicket(id: number): Promise<TktTicket> {
   const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${id}`, { headers: authHeaders() });
   return handle<TktTicket>(res);

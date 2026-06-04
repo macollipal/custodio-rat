@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import {
@@ -11,6 +11,7 @@ import {
   agregarTktNota,
   listarTktNotas,
   listarTktHistorial,
+  crearTktTicket,
   type TktTicket,
   type TktDashboard,
 } from '@/lib/api';
@@ -117,6 +118,203 @@ function SlaBar({ cumplimiento }: SlaBarProps) {
         />
       </div>
     </div>
+  );
+}
+
+interface CreateTicketFormProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  companyId: number;
+  isAdmin: boolean;
+}
+
+function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: CreateTicketFormProps) {
+  const [tipo, setTipo] = useState('acceso');
+  const [prioridad, setPrioridad] = useState('normal');
+  const [origen, setOrigen] = useState('web');
+  const [titularNombre, setTitularNombre] = useState('');
+  const [titularEmail, setTitularEmail] = useState('');
+  const [titularRut, setTitularRut] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setTipo('acceso');
+      setPrioridad('normal');
+      setOrigen('web');
+      setTitularNombre('');
+      setTitularEmail('');
+      setTitularRut('');
+      setDescripcion('');
+    }
+  }, [open]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!titularNombre.trim() || !titularEmail.trim()) {
+      toast.error('Nombre y email del titular son obligatorios');
+      return;
+    }
+    setGuardando(true);
+    try {
+      await crearTktTicket({
+        company_id: companyId,
+        tipo,
+        prioridad,
+        origen,
+        titular_nombre: sanitize(titularNombre),
+        titular_email: sanitize(titularEmail),
+        titular_rut: titularRut ? sanitize(titularRut) : undefined,
+        descripcion: descripcion ? sanitize(descripcion) : undefined,
+      });
+      toast.success('Solicitud creada');
+      onSuccess();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al crear solicitud');
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <Drawer open={open} onClose={onClose} title="">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div
+          className="rounded-xl p-4 flex items-center gap-3"
+          style={{ background: 'linear-gradient(135deg, #1E40AF, #3730A3)' }}
+        >
+          <span
+            className="inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm"
+            style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
+          >
+            + NUEVA
+          </span>
+          <div>
+            <p className="font-semibold text-white text-sm">Nueva Solicitud ARCO</p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Complete los datos del titular</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Tipo *</label>
+            <select
+              value={tipo}
+              onChange={e => setTipo(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="acceso">Acceso</option>
+              <option value="rectificacion">Rectificación</option>
+              <option value="cancelacion">Cancelación</option>
+              <option value="oposicion">Oposición</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Prioridad</label>
+            <select
+              value={prioridad}
+              onChange={e => setPrioridad(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="alta">Alta</option>
+              <option value="normal">Normal</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Origen</label>
+          <select
+            value={origen}
+            onChange={e => setOrigen(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+          >
+            <option value="web">Web</option>
+            <option value="email">Email</option>
+            <option value="telefono">Teléfono</option>
+            <option value="presencial">Presencial</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre del titular *</label>
+          <input
+            type="text"
+            value={titularNombre}
+            onChange={e => setTitularNombre(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+            placeholder="Nombre completo"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Email del titular *</label>
+          <input
+            type="email"
+            value={titularEmail}
+            onChange={e => setTitularEmail(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+            placeholder="email@ejemplo.cl"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RUT del titular</label>
+          <input
+            type="text"
+            value={titularRut}
+            onChange={e => setTitularRut(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+            placeholder="12.345.678-9"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Descripción</label>
+          <textarea
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+            rows={3}
+            placeholder="Detalle de la solicitud..."
+          />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+            style={{ borderColor: '#E5E7EB', color: '#374151' }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={guardando}
+            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white transition"
+            style={{ background: '#2563EB' }}
+          >
+            {guardando ? 'Guardando...' : 'Crear Solicitud'}
+          </button>
+        </div>
+      </form>
+    </Drawer>
   );
 }
 
@@ -228,6 +426,14 @@ function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
           className="rounded-xl p-4 flex items-center gap-3"
           style={{ background: 'linear-gradient(135deg, #1E40AF, #3730A3)' }}
         >
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-white/20"
+            style={{ color: 'white' }}
+            aria-label="Cerrar"
+          >
+            ←
+          </button>
           <span
             className="inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm"
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
@@ -417,8 +623,16 @@ export default function TktSolicitudDerechoPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [ticketDetail, setTicketDetail] = useState<TktTicket | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const isAdmin = user?.rol_global === 'superadmin' || user?.rol_global === 'admin_empresa';
+
+  const ticketCounts = useMemo(() => {
+    return tickets.reduce<Record<string, number>>((acc, t) => {
+      acc[t.estado] = (acc[t.estado] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [tickets]);
 
   const fetchData = useCallback(async () => {
     if (!company?.id) return;
@@ -470,13 +684,24 @@ export default function TktSolicitudDerechoPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Solicitudes ARCO</h1>
-        <button
-          onClick={fetchData}
-          className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
-          style={{ borderColor: '#E5E7EB', color: '#374151' }}
-        >
-          🔄 Refrescar
-        </button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="px-3 py-2 rounded-lg text-sm font-medium text-white transition"
+              style={{ background: '#2563EB' }}
+            >
+              + Nueva Solicitud
+            </button>
+          )}
+          <button
+            onClick={fetchData}
+            className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+            style={{ borderColor: '#E5E7EB', color: '#374151' }}
+          >
+            🔄 Refrescar
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -511,12 +736,12 @@ export default function TktSolicitudDerechoPage() {
             }}
           >
             {t === 'todos' ? 'Todos' : t === 'en_proceso' ? 'En Proceso' : t.charAt(0).toUpperCase() + t.slice(1)}
-            {t !== 'todos' && tickets.filter(x => x.estado === t).length > 0 && (
+            {t !== 'todos' && (ticketCounts[t] ?? 0) > 0 && (
               <span
                 className="ml-2 px-1.5 py-0.5 rounded text-xs"
                 style={{ background: '#E5E7EB', color: '#6B7280' }}
               >
-                {tickets.filter(x => x.estado === t).length}
+                {ticketCounts[t]}
               </span>
             )}
           </button>
@@ -536,6 +761,15 @@ export default function TktSolicitudDerechoPage() {
           <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
             {tab === 'todos' ? 'No hay solicitudes ARCO registradas' : `No hay tickets en estado "${tab}"`}
           </p>
+          {isAdmin && (
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="mt-4 px-4 py-2 rounded-lg text-sm font-medium text-white transition"
+              style={{ background: '#2563EB' }}
+            >
+              + Nueva Solicitud
+            </button>
+          )}
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
@@ -640,6 +874,14 @@ export default function TktSolicitudDerechoPage() {
         ticket={ticketDetail}
         open={drawerOpen}
         onClose={() => { setDrawerOpen(false); fetchData(); }}
+        isAdmin={isAdmin}
+      />
+
+      <CreateTicketForm
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => { setCreateOpen(false); fetchData(); }}
+        companyId={company?.id ?? 0}
         isAdmin={isAdmin}
       />
     </div>

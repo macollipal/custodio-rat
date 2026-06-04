@@ -34,7 +34,7 @@ interface SolicitudDerecho {
 const TABS = [
   { key: 'sistema', label: 'Sistema' },
   { key: 'registros', label: 'Último log' },
-  { key: 'solicitudes', label: 'Solicitudes ARCO' },
+  { key: 'solicitudes', label: 'Solicitudes ARCO', legacy: true },
   { key: 'exportacion', label: 'Exportación' },
 ];
 
@@ -455,13 +455,21 @@ export default function ConfiguracionPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
+            className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5"
             style={{
               borderColor: tab === t.key ? '#2563EB' : 'transparent',
               color: tab === t.key ? '#2563EB' : '#6B7280',
             }}
           >
             {t.label}
+            {'legacy' in t && t.legacy && (
+              <span
+                className="px-1.5 py-0.5 rounded text-xs font-medium"
+                style={{ background: '#FEE2E2', color: '#DC2626' }}
+              >
+                Legacy
+              </span>
+            )}
           </button>
         ))}
       </div>
