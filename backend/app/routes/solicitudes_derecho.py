@@ -66,6 +66,21 @@ class TokenResponse(BaseModel):
     token: str
 
 
+class SolicitudResponse(BaseModel):
+    id: int
+    company_id: int
+    tipo: str
+    nombre_titular: str
+    rut_titular: Optional[str]
+    email_titular: str
+    descripcion: Optional[str]
+    estado: str
+    solicitud_fecha: Optional[str]
+    respuesta: Optional[str]
+    respuesta_fecha: Optional[str]
+    created_at: Optional[str]
+
+
 @router.get("/token", response_model=TokenResponse, summary="Obtener token para formulario público")
 @limiter.limit("5/minute")
 def obtener_token(request: Request, db: Session = Depends(get_db)):
