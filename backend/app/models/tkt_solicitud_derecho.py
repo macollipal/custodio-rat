@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.database import Base
@@ -35,6 +35,11 @@ class OrigenTicket(str, enum.Enum):
 
 class TktSolicitudDerecho(Base):
     __tablename__ = "tkt_solicitud_derecho"
+    __table_args__ = (
+        Index("idx_tkt_estado_company", "estado", "company_id"),
+        Index("idx_tkt_fecha_vencimiento", "fecha_vencimiento"),
+        Index("idx_tkt_estado_prioridad", "estado", "prioridad"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
