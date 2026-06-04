@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.database.database import init_db, SessionLocal
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho
 
 
 @asynccontextmanager
@@ -184,6 +184,7 @@ app.include_router(ai.router)
 app.include_router(rubros.router)
 app.include_router(rubros.router_sugeridos)
 app.include_router(solicitudes_derecho.router)
+app.include_router(tkt_solicitud_derecho.router)
 
 
 @app.get("/", tags=["Sistema"])

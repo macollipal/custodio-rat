@@ -11,6 +11,7 @@ from app.models.solicitud_historial import SolicitudHistorial
 from app.models.solicitud_token import SolicitudToken
 from app.models.company import Company
 from app.services.user_company_service import get_empresas_usuario
+from app.services.ticket_service import crear_ticket_desde_solicitud
 from app.core.limiter import limiter
 import uuid
 import logging
@@ -117,7 +118,19 @@ async def crear_solicitud(
     db.add(solicitud)
     db.commit()
     db.refresh(solicitud)
-    logger.info(f"Solicitud ARCO creada: id={solicitud.id} company={data.company_id} tipo={data.tipo} ip={request.client.host if request.client else 'unknown'}")
+
+    ticket = crear_ticket_desde_solicitud(
+        db=db,
+        company_id=data.company_id,
+        tipo=data.tipo,
+        titular_nombre=data.nombre_titular,
+        titular_email=data.email_titular,
+        descripcion=data.descripcion,
+        titular_rut=data.rut_titular,
+        origen="web",
+    )
+
+    logger.info(f"Solicitud ARCO creada: id={solicitud.id} company={data.company_id} tipo={data.tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
     return {
         "id": solicitud.id,
         "company_id": solicitud.company_id,

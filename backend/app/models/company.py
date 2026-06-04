@@ -40,3 +40,6 @@ class Company(Base):
     solicitudes_derecho: Mapped[list["SolicitudDerecho"]] = relationship(
         "SolicitudDerecho", back_populates="company", cascade="all, delete-orphan"
     )
+    tkt_solicitudes: Mapped[list["TktSolicitudDerecho"]] = relationship(
+        "TktSolicitudDerecho", back_populates="company", cascade="all, delete-orphan"
+    )
