@@ -12,6 +12,7 @@ import StatusChart from '@/components/dashboard/StatusChart';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Badge from '@/components/ui/Badge';
 import { SkeletonTable } from '@/components/ui/Skeleton';
+import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function DashboardPage() {
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
+  const [brechaCount, setBrechaCount] = useState(0);
+  const [hasPolitica, setHasPolitica] = useState(false);
 
   const hasCache = dashboardStats !== null;
 
@@ -60,9 +63,13 @@ export default function DashboardPage() {
     Promise.all([
       api.getDashboardStats(company.id),
       api.listarRats(company.id),
-    ]).then(([s, ratList]) => {
+      api.listarBrechas(company.id).catch(() => []),
+      api.getPoliticaTransparencia(company.id).then(p => !!p).catch(() => false),
+    ]).then(([s, ratList, breaches, hasPoliticaVal]) => {
       setDashboardStats(s);
       setRats(ratList);
+      setBrechaCount(Array.isArray(breaches) ? breaches.length : 0);
+      setHasPolitica(hasPoliticaVal);
       setLastSync(new Date());
     }).catch(() => {
       if (!hasCache) toast.error('No se pudieron cargar las estadísticas.');
@@ -168,6 +175,15 @@ export default function DashboardPage() {
           + Nuevo proceso
         </button>
       </div>
+
+      {/* Checklist de primeros pasos */}
+      <OnboardingChecklist
+        ratsCount={total_procesos}
+        hasDpo={Boolean(company?.contacto_dpo && company?.email_dpo)}
+        hasContratoEncargado={encargados_sin_contrato === 0 && total_procesos > 0}
+        hasBrechaRegistrada={brechaCount > 0}
+        hasPoliticaTransparencia={hasPolitica}
+      />
 
       {/* KPIs principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

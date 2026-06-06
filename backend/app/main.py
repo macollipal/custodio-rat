@@ -4,6 +4,7 @@ Registra routers, configura CORS e inicializa la base de datos.
 """
 
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,8 +12,13 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
+from app.middleware.request_id import RequestIdMiddleware
 from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho, encargados_contrato, politica_transparencia
+from app.services.scheduler import start_scheduler, stop_scheduler
+
+setup_logging()
 
 
 @asynccontextmanager
@@ -21,7 +27,9 @@ async def lifespan(app: FastAPI):
     init_db()
     _seed_admin()
     _seed_rubros()
+    start_scheduler()
     yield
+    stop_scheduler()
 
 
 def _seed_admin():
@@ -122,6 +130,63 @@ def _seed_rubros():
                 {"nombre_proceso": "Gestión de empleados tecnológicos", "categoria_datos": "Datos identificativos, Datos laborales", "categoria_titulares": "Empleados", "finalidad": "Gestión de recursos humanos", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
                 {"nombre_proceso": "Videovigilancia en data centers", "categoria_datos": "Datos biométricos (imagen)", "categoria_titulares": "Visitantes, empleados", "finalidad": "Seguridad física", "base_legal": "Interés legítimo", "plazo_retencion": "30 días", "datos_sensibles": True, "evaluacion_impacto": False},
             ],
+            "Construcción": [
+                {"nombre_proceso": "Gestión de trabajadores de obra", "categoria_datos": "Datos identificativos, Datos laborales, Datos de salud (examenes preocupacionales)", "categoria_titulares": "Trabajadores, contratistas", "finalidad": "Cumplimiento de obligaciones laborales y previsionales", "base_legal": "Obligación legal", "plazo_retencion": "5 años después del término de la relación laboral", "datos_sensibles": True, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de proveedores y subcontratistas", "categoria_datos": "Datos identificativos, Datos financieros", "categoria_titulares": "Proveedores", "finalidad": "Gestión de compras y pagos", "base_legal": "Ejecución de contrato", "plazo_retencion": "6 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Control de acceso a faenas", "categoria_datos": "Datos identificativos, Datos biométricos", "categoria_titulares": "Trabajadores, visitantes", "finalidad": "Seguridad en faenas", "base_legal": "Interés legítimo", "plazo_retencion": "30 días", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Transportes": [
+                {"nombre_proceso": "Gestión de pasajeros", "categoria_datos": "Datos identificativos, Datos de contacto, Datos de pago", "categoria_titulares": "Pasajeros, clientes", "finalidad": "Prestacion del servicio de transporte", "base_legal": "Ejecución de contrato", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Seguimiento GPS de vehículos", "categoria_datos": "Datos de geolocalización, Datos identificativos", "categoria_titulares": "Conductores", "finalidad": "Gestión de flotas y seguridad vial", "base_legal": "Interés legítimo", "plazo_retencion": "1 año", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de personal de transporte", "categoria_datos": "Datos identificativos, Datos laborales, Datos de salud (examenes)", "categoria_titulares": "Empleados", "finalidad": "Cumplimiento de obligaciones laborales", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Telecomunicaciones": [
+                {"nombre_proceso": "Gestión de suscriptores", "categoria_datos": "Datos identificativos, Datos de contacto, Datos de tráfico", "categoria_titulares": "Suscriptores, usuarios", "finalidad": "Provision del servicio de telecomunicaciones", "base_legal": "Ejecución de contrato", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Gestión de reclamos y soporte", "categoria_datos": "Datos identificativos, Datos de contacto, Grabaciones", "categoria_titulares": "Suscriptores", "finalidad": "Atencion al cliente", "base_legal": "Ejecución de contrato", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Facturación y cobranza", "categoria_datos": "Datos identificativos, Datos financieros, Datos de consumo", "categoria_titulares": "Suscriptores", "finalidad": "Cobro del servicio", "base_legal": "Ejecución de contrato", "plazo_retencion": "6 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Turismo": [
+                {"nombre_proceso": "Reservas y hospedaje", "categoria_datos": "Datos identificativos, Datos de contacto, Datos financieros", "categoria_titulares": "Huespedes, clientes", "finalidad": "Gestion de reservas y check-in", "base_legal": "Ejecución de contrato", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Registro de huespedes (obligación legal)", "categoria_datos": "Datos identificativos, Datos migratorios, Nacionalidad", "categoria_titulares": "Huespedes", "finalidad": "Cumplimiento de obligaciones de registro de huespedes", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Marketing turistico", "categoria_datos": "Datos identificativos, Datos de contacto, Preferencias", "categoria_titulares": "Clientes", "finalidad": "Promocion de destinos y paquetes", "base_legal": "Consentimiento del titular", "plazo_retencion": "3 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Agronomía": [
+                {"nombre_proceso": "Gestión de trabajadores agricolas", "categoria_datos": "Datos identificativos, Datos laborales", "categoria_titulares": "Trabajadores temporales", "finalidad": "Cumplimiento de obligaciones laborales", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Trazabilidad de productos agricolas", "categoria_datos": "Datos identificativos, Datos de producción, Geolocalización", "categoria_titulares": "Proveedores, productores", "finalidad": "Trazabilidad de la cadena alimentaria", "base_legal": "Obligación legal", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Minería": [
+                {"nombre_proceso": "Gestión de personal minero", "categoria_datos": "Datos identificativos, Datos laborales, Datos de salud", "categoria_titulares": "Empleados, contratistas", "finalidad": "Cumplimiento de obligaciones laborales y de seguridad minera", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Monitoreo de salud ocupacional", "categoria_datos": "Datos de salud, Datos biométricos, Datos identificativos", "categoria_titulares": "Trabajadores", "finalidad": "Vigilancia medica ocupacional", "base_legal": "Obligación legal", "plazo_retencion": "15 años", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Relación con comunidades", "categoria_datos": "Datos identificativos, Datos de contacto, Datos socioeconomicos", "categoria_titulares": "Comunidades locales", "finalidad": "Gestion de relacion comunitaria", "base_legal": "Consentimiento del titular", "plazo_retencion": "7 años", "datos_sensibles": True, "evaluacion_impacto": True},
+            ],
+            "Energía": [
+                {"nombre_proceso": "Gestión de clientes residenciales e industriales", "categoria_datos": "Datos identificativos, Datos de consumo, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Provision de servicio energetico y facturacion", "base_legal": "Ejecución de contrato", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Telemedición de consumo", "categoria_datos": "Datos de consumo energetico, Datos identificativos", "categoria_titulares": "Clientes", "finalidad": "Medicion inteligente del consumo", "base_legal": "Ejecución de contrato", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Atencion de emergencias y Cortes", "categoria_datos": "Datos identificativos, Datos de contacto, Geolocalizacion", "categoria_titulares": "Clientes", "finalidad": "Atencion de contingencias del servicio", "base_legal": "Interés legítimo", "plazo_retencion": "2 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Servicios profesionales": [
+                {"nombre_proceso": "Gestión de clientes y proyectos", "categoria_datos": "Datos identificativos, Datos de contacto, Datos financieros", "categoria_titulares": "Clientes", "finalidad": "Prestacion de servicios profesionales", "base_legal": "Ejecución de contrato", "plazo_retencion": "6 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Conflicto de intereses y compliance", "categoria_datos": "Datos identificativos, Datos profesionales", "categoria_titulares": "Clientes potenciales", "finalidad": "Prevencion de conflictos de interes", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+            ],
+            "Juegos de azar": [
+                {"nombre_proceso": "Registro de jugadores y autoexclusion", "categoria_datos": "Datos identificativos, Datos financieros, Datos socioeconomicos", "categoria_titulares": "Jugadores", "finalidad": "Cumplimiento de la Ley 19.995 y registro nacional de autoexclusion", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Prevención de lavado de activos", "categoria_datos": "Datos identificativos, Datos financieros, Datos transaccionales", "categoria_titulares": "Jugadores", "finalidad": "Cumplimiento AML/CFT", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Videovigilancia en casinos", "categoria_datos": "Datos biométricos (imagen), Datos identificativos", "categoria_titulares": "Jugadores, visitantes", "finalidad": "Seguridad y supervision de la Superintendencia", "base_legal": "Obligación legal", "plazo_retencion": "60 días", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Aseguradoras": [
+                {"nombre_proceso": "Emisión de pólizas y siniestros", "categoria_datos": "Datos identificativos, Datos financieros, Datos de salud", "categoria_titulares": "Asegurados, beneficiarios", "finalidad": "Emision de polizas y liquidacion de siniestros", "base_legal": "Ejecución de contrato", "plazo_retencion": "20 años", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Prevención de fraude", "categoria_datos": "Datos identificativos, Datos transaccionales, Datos biométricos", "categoria_titulares": "Asegurados, reclamantes", "finalidad": "Deteccion y prevencion de fraude en seguros", "base_legal": "Interés legítimo", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": False},
+                {"nombre_proceso": "Perfilamiento de riesgo", "categoria_datos": "Datos identificativos, Datos socioeconomicos, Datos de comportamiento", "categoria_titulares": "Asegurados", "finalidad": "Calculo de prima y perfilamiento actuarial", "base_legal": "Consentimiento del titular", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": True},
+            ],
+            "Administraciones públicas": [
+                {"nombre_proceso": "Atención al ciudadano", "categoria_datos": "Datos identificativos, Datos de contacto", "categoria_titulares": "Ciudadanos", "finalidad": "Tramitacion de servicios publicos", "base_legal": "Obligación legal", "plazo_retencion": "10 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Registro civil y administrativo", "categoria_datos": "Datos identificativos, Datos de estado civil, Datos biometricos", "categoria_titulares": "Ciudadanos", "finalidad": "Cumplimiento de funciones del Registro Civil", "base_legal": "Obligación legal", "plazo_retencion": "Permanente", "datos_sensibles": True, "evaluacion_impacto": True},
+                {"nombre_proceso": "Procedimientos administrativos sancionatorios", "categoria_datos": "Datos identificativos, Datos de infracciones, Datos socioeconomicos", "categoria_titulares": "Infractores, administrados", "finalidad": "Tramitacion de procedimientos administrativos", "base_legal": "Obligación legal", "plazo_retencion": "20 años", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
+            "Medios de comunicación": [
+                {"nombre_proceso": "Gestión de suscriptores y lectores", "categoria_datos": "Datos identificativos, Datos de contacto, Datos de pago", "categoria_titulares": "Suscriptores, lectores", "finalidad": "Gestion de suscripciones y envio de contenidos", "base_legal": "Ejecución de contrato", "plazo_retencion": "5 años", "datos_sensibles": False, "evaluacion_impacto": False},
+                {"nombre_proceso": "Periodismo y fuentes", "categoria_datos": "Datos identificativos, Datos de opinion, Datos de contacto", "categoria_titulares": "Fuentes, entrevistados", "finalidad": "Produccion de contenido informativo", "base_legal": "Consentimiento del titular", "plazo_retencion": "10 años", "datos_sensibles": True, "evaluacion_impacto": False},
+            ],
         }
 
         # Crear rubros
@@ -166,13 +231,29 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Demasiados intentos. Intente nuevamente en un minuto."},
     )
 
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+if not ALLOWED_ORIGINS and os.getenv("ENVIRONMENT") != "production":
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+    ]
+if not ALLOWED_ORIGINS and os.getenv("ENVIRONMENT") == "production":
+    raise RuntimeError(
+        "ALLOWED_ORIGINS env var is required in production. "
+        "Set a comma-separated list of allowed origins, e.g. "
+        "ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app"
+    )
+
+app.add_middleware(RequestIdMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 
 app.include_router(auth.router)
