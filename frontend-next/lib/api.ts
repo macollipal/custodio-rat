@@ -640,3 +640,153 @@ export async function listarTktHistorial(ticketId: number): Promise<{ id: number
   const res = await fetch(`${API_BASE}/tkt-solicitud-derecho/${ticketId}/historial`, { headers: authHeaders() });
   return handle<{ id: number; estado_anterior?: string; estado_nuevo: string; descripcion?: string; user_id: number; created_at: string }[]>(res);
 }
+
+// ── B-01: Bloqueo temporal ─────────────────────────────────────────────────────
+
+export async function bloquearSolicitud(solicitudId: number, ratId: number, plazoDias: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/bloquear`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rat_id: ratId, plazo_dias: plazoDias }),
+  });
+  return handle<void>(res);
+}
+
+export async function desbloquearSolicitud(solicitudId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/desbloquear`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+  });
+  return handle<void>(res);
+}
+
+// ── B-04: Portabilidad ─────────────────────────────────────────────────────────
+
+export async function exportarPortabilidad(solicitudId: number): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/portabilidad/export`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Error al exportar portabilidad');
+  return res.blob();
+}
+
+// ── B-05: Evaluacion de riesgo de brecha ───────────────────────────────────────
+
+export async function evaluarRiesgoBrecha(
+  breachId: number,
+  data: {
+    volumen_titulares_afectados: number;
+    incluye_datos_sensibles: boolean;
+    incluye_datos_nna: boolean;
+    incluye_datos_financieros: boolean;
+  }
+): Promise<SecurityBreach> {
+  const res = await fetch(`${API_BASE}/brechas/${breachId}/evaluar-riesgo`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<SecurityBreach>(res);
+}
+
+// ── B-06: Consentimientos ──────────────────────────────────────────────────────
+
+export interface ConsentimientoCreate {
+  rat_id: number;
+  nombre_titular: string;
+  email_titular: string;
+  canal: string;
+  texto_consentimiento: string;
+  datos_sensibles: boolean;
+}
+
+export async function registrarConsentimiento(data: ConsentimientoCreate): Promise<void> {
+  const res = await fetch(`${API_BASE}/rats/${data.rat_id}/consentimientos`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<void>(res);
+}
+
+// ── B-03: Contratos de Encargado ────────────────────────────────────────────────
+
+export interface EncargadoContrato {
+  id: number;
+  company_id: number;
+  rat_id?: number;
+  nombre_encargado: string;
+  objeto: string;
+  duracion_inicio: string;
+  duracion_fin?: string;
+  finalidad: string;
+  tipo_datos: string;
+  categorias_titulares: string;
+  derechos_obligaciones: string;
+  activo: boolean;
+  fecha_alerta_vencimiento?: string;
+  created_at?: string;
+}
+
+export async function listarEncargadosContrato(companyId: number): Promise<EncargadoContrato[]> {
+  const res = await fetch(`${API_BASE}/encargados-contrato/?company_id=${companyId}`, { headers: authHeaders() });
+  return handle<EncargadoContrato[]>(res);
+}
+
+export async function crearEncargadoContrato(data: Omit<EncargadoContrato, 'id' | 'created_at'>): Promise<EncargadoContrato> {
+  const res = await fetch(`${API_BASE}/encargados-contrato/`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<EncargadoContrato>(res);
+}
+
+export async function actualizarEncargadoContrato(id: number, data: Partial<EncargadoContrato>): Promise<EncargadoContrato> {
+  const res = await fetch(`${API_BASE}/encargados-contrato/${id}`, {
+    method: 'PUT',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handle<EncargadoContrato>(res);
+}
+
+export async function eliminarEncargadoContrato(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/encargados-contrato/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  return handle<void>(res);
+}
+
+// ── B-02: Politica de Transparencia ────────────────────────────────────────────
+
+export interface PoliticaTransparencia {
+  company_id: number;
+  nombre_empresa: string;
+  rut_empresa: string;
+  rubro?: string;
+  contacto_dpo: string;
+  email_dpo: string;
+  domicilio?: string;
+  version: string;
+  fecha_generacion: string;
+  hash_sha256: string;
+  item_a_politica: string;
+  item_b_responsable: string;
+  item_c_domicilio: string;
+  item_d_categorias: string;
+  item_e_medidas: string;
+  item_f_derechos_arco: string;
+  item_g_recurir_apdc: string;
+  item_h_transferencias: string;
+  item_i_conservacion: string;
+  item_j_fuente: string;
+  item_k_retirar_consentimiento: string;
+  item_l_decisiones_automatizadas: string;
+}
+
+export async function getPoliticaTransparencia(companyId: number): Promise<PoliticaTransparencia> {
+  const res = await fetch(`${API_BASE}/publico/transparencia/${companyId}`, { headers: authHeaders() });
+  return handle<PoliticaTransparencia>(res);
+}
