@@ -26,7 +26,7 @@ export default function RatPage() {
     if (!hasCache) setRefreshing(true);
     try {
       const list = await api.listarRats(company.id);
-      setRats(list);
+      setRats(Array.isArray(list) ? list : []);
     } catch {
       if (!hasCache) toast.error('No se pudieron cargar los procesos.');
     } finally {

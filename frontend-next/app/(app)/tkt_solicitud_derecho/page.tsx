@@ -361,7 +361,7 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
       setSelectedRatId(null);
       setPlazoDias(30);
       if ((ticket.tipo === 'bloqueo' || ticket.tipo === 'portabilidad') && companyId) {
-        listarRats(companyId).then(setRats).catch(() => setRats([]));
+        listarRats(companyId).then(r => setRats(Array.isArray(r) ? r : [])).catch(() => setRats([]));
       }
     }
   }, [open, ticket, companyId]);
@@ -371,7 +371,7 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
     setLoadingNotas(true);
     try {
       const data = await listarTktNotas(ticket.id);
-      setNotas(data);
+      setNotas(Array.isArray(data) ? data : []);
     } catch {
       toast.error('Error al cargar notas');
     } finally {
@@ -384,7 +384,7 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
     setLoadingHistorial(true);
     try {
       const data = await listarTktHistorial(ticket.id);
-      setHistorial(data);
+      setHistorial(Array.isArray(data) ? data : []);
     } catch {
       toast.error('Error al cargar historial');
     } finally {

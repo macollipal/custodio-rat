@@ -243,7 +243,7 @@ export default function ReportesPage() {
     if (!auditLogs[rat.id]) {
       try {
         const logs = await api.getAuditoria(rat.id);
-        setAuditLogs(l => ({ ...l, [rat.id]: logs }));
+        if (Array.isArray(logs)) { setAuditLogs(l => ({ ...l, [rat.id]: logs })); }
       } catch {}
     }
   }
