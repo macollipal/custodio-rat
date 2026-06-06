@@ -39,9 +39,16 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
   - `DATABASE_URL` → connection string de Neon
   - `SECRET_KEY` → generar con `openssl rand -hex 64` (requerida en producción)
   - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
-  - `ALLOWED_ORIGINS` → lista blanca de orígenes separados por coma (obligatorio en producción)
+  - `ALLOWED_ORIGINS` → lista blanca de orígenes separados por coma (obligatorio si no se usa VERCEL_URL)
     - Ejemplo: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app`
   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` → para envío de emails reales
+
+### Vercel (QA)
+
+- Para el backend de QA, setear `ENVIRONMENT=qa` (no `production`)
+  - Con `ENVIRONMENT=qa` y `VERCEL_URL` disponible (Vercel lo setea automáticamente), usa automáticamente `https://{VERCEL_URL}` como allowed origin
+  - Si `VERCEL_URL` apunta al frontend: la app será accesible desde el frontend correcto
+  - Para QA se recomienda setear `ALLOWED_ORIGINS=https://custodio-qa.vercel.app` explícitamente para evitar ambigüedad
 
 ### Migración SQLite → Neon
 
