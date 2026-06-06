@@ -10,6 +10,8 @@ const TIPOS_DERECHO = [
   { value: 'rectificacion', label: 'Rectificación', desc: 'Quiero corregir datos personales incorrectos o incompletos.' },
   { value: 'cancelacion', label: 'Cancelación', desc: 'Quiero que se eliminen mis datos personales.' },
   { value: 'oposicion', label: 'Oposición', desc: 'Me opongo al tratamiento de mis datos por un motivo legítimo.' },
+  { value: 'bloqueo', label: 'Bloqueo temporal', desc: 'Quiero suspender temporalmente el tratamiento de mis datos (Art. 8 ter).' },
+  { value: 'portabilidad', label: 'Portabilidad', desc: 'Quiero recibir mis datos en un formato estructurado y de uso común.' },
 ];
 
 interface Company {

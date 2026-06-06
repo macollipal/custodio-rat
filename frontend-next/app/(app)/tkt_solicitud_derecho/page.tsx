@@ -12,8 +12,13 @@ import {
   listarTktNotas,
   listarTktHistorial,
   crearTktTicket,
+  listarRats,
+  bloquearSolicitud,
+  desbloquearSolicitud,
+  exportarPortabilidad,
   type TktTicket,
   type TktDashboard,
+  type RAT,
 } from '@/lib/api';
 import Drawer from '@/components/ui/Drawer';
 
@@ -22,6 +27,8 @@ const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string 
   rectificacion: { label: 'Rectificación', color: '#7C3AED', abbr: 'RC' },
   cancelacion: { label: 'Cancelación', color: '#DC2626', abbr: 'CA' },
   oposicion: { label: 'Oposición', color: '#D97706', abbr: 'OP' },
+  bloqueo: { label: 'Bloqueo temporal', color: '#DC2626', abbr: 'BL' },
+  portabilidad: { label: 'Portabilidad', color: '#059669', abbr: 'PT' },
 };
 
 const TKT_PRIORIDAD_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -212,6 +219,8 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
               <option value="rectificacion">Rectificación</option>
               <option value="cancelacion">Cancelación</option>
               <option value="oposicion">Oposición</option>
+              <option value="bloqueo">Bloqueo temporal</option>
+              <option value="portabilidad">Portabilidad</option>
             </select>
           </div>
           <div>
@@ -323,9 +332,10 @@ interface TicketDrawerProps {
   open: boolean;
   onClose: () => void;
   isAdmin: boolean;
+  companyId: number;
 }
 
-function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
+function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawerProps) {
   const [notas, setNotas] = useState<{ id: number; nota: string; user_id: number; created_at: string }[]>([]);
   const [historial, setHistorial] = useState<{ id: number; estado_anterior?: string; estado_nuevo: string; descripcion?: string; user_id: number; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -333,9 +343,13 @@ function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [nuevaNota, setNuevaNota] = useState('');
   const [guardandoNota, setGuardandoNota] = useState(false);
-  const [respuesta, setRespuesta] = useState('');
+    const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [rats, setRats] = useState<RAT[]>([]);
+  const [selectedRatId, setSelectedRatId] = useState<number | null>(null);
+  const [plazoDias, setPlazoDias] = useState(30);
+  const [accionLoading, setAccionLoading] = useState(false);
 
   useEffect(() => {
     if (open && ticket) {
@@ -344,8 +358,13 @@ function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
       setNuevaNota('');
       setNotas([]);
       setHistorial([]);
+      setSelectedRatId(null);
+      setPlazoDias(30);
+      if ((ticket.tipo === 'bloqueo' || ticket.tipo === 'portabilidad') && companyId) {
+        listarRats(companyId).then(setRats).catch(() => setRats([]));
+      }
     }
-  }, [open, ticket]);
+  }, [open, ticket, companyId]);
 
   const fetchNotas = useCallback(async () => {
     if (!ticket?.id) return;
@@ -394,6 +413,51 @@ function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
       toast.error(e instanceof Error ? e.message : 'Error al guardar');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function handleBloquear() {
+    if (!ticket?.id || !selectedRatId) return;
+    setAccionLoading(true);
+    try {
+      await bloquearSolicitud(ticket.id, selectedRatId, plazoDias);
+      toast.success('RAT bloqueado exitosamente');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al bloquear');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
+  async function handleDesbloquear() {
+    if (!ticket?.id) return;
+    setAccionLoading(true);
+    try {
+      await desbloquearSolicitud(ticket.id);
+      toast.success('RAT desbloqueado');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al desbloquear');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
+  async function handleExportarPortabilidad() {
+    if (!ticket?.id) return;
+    setAccionLoading(true);
+    try {
+      const blob = await exportarPortabilidad(ticket.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `portabilidad_solicitud_${ticket.id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Portabilidad exportada');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al exportar');
+    } finally {
+      setAccionLoading(false);
     }
   }
 
@@ -524,6 +588,80 @@ function TicketDrawer({ ticket, open, onClose, isAdmin }: TicketDrawerProps) {
             </p>
           )}
         </div>
+
+        {/* B-01/B-04: Acciones especiales de Solicitud de Derecho */}
+        {(ticket.tipo === 'bloqueo' || ticket.tipo === 'portabilidad') && isAdmin && (
+          <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #86EFAC' }}>
+            <p className="text-xs font-semibold" style={{ color: '#166534' }}>
+              {ticket.tipo === 'bloqueo' ? 'Acciones de Bloqueo Temporal (Art. 8 ter)' : 'Acciones de Portabilidad (Art. 9)'}
+            </p>
+
+            {ticket.tipo === 'bloqueo' && (
+              <div className="space-y-2">
+                <p className="text-xs" style={{ color: '#166534' }}>
+                  Seleccioná el RAT asociado y el plazo de bloqueo en días.
+                </p>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedRatId ?? ''}
+                    onChange={e => setSelectedRatId(e.target.value ? Number(e.target.value) : null)}
+                    className="flex-1 px-3 py-2 rounded-lg text-sm border"
+                    style={{ borderColor: '#86EFAC' }}
+                  >
+                    <option value="">Seleccioná un RAT</option>
+                    {rats.map(r => (
+                      <option key={r.id} value={r.id}>{r.nombre_proceso}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={plazoDias}
+                    onChange={e => setPlazoDias(Number(e.target.value))}
+                    className="w-20 px-3 py-2 rounded-lg text-sm border"
+                    style={{ borderColor: '#86EFAC' }}
+                    placeholder="Días"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleBloquear}
+                    disabled={!selectedRatId || accionLoading}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: '#DC2626' }}
+                  >
+                    {accionLoading ? 'Bloqueando...' : 'Bloquear RAT'}
+                  </button>
+                  <button
+                    onClick={handleDesbloquear}
+                    disabled={accionLoading}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: '#059669' }}
+                  >
+                    {accionLoading ? 'Desbloqueando...' : 'Desbloquear'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ticket.tipo === 'portabilidad' && (
+              <div className="space-y-2">
+                <p className="text-xs" style={{ color: '#166534' }}>
+                  Exportá los datos del titular en formato JSON estructurado.
+                </p>
+                <button
+                  onClick={handleExportarPortabilidad}
+                  disabled={accionLoading}
+                  className="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                  style={{ background: '#059669' }}
+                >
+                  {accionLoading ? 'Exportando...' : 'Exportar Portabilidad (JSON)'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -875,6 +1013,7 @@ export default function TktSolicitudDerechoPage() {
         open={drawerOpen}
         onClose={() => { setDrawerOpen(false); fetchData(); }}
         isAdmin={isAdmin}
+        companyId={company?.id ?? 0}
       />
 
       <CreateTicketForm

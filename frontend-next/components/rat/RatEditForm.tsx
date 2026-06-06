@@ -48,6 +48,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     archivo_base_legal_base64:  '',
     archivo_base_legal_nombre:  '',
     archivo_base_legal_tipo:   '',
+    consentimiento_nombre:  '',
+    consentimiento_email:  '',
+    consentimiento_texto:  '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -64,6 +67,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         else payload[k] = v ?? null;
       }
       await api.actualizarRat(rat.id, payload as Partial<RAT>);
+      if (form.datos_sensibles && form.consentimiento_nombre && form.consentimiento_email) {
+        await api.registrarConsentimiento({
+          rat_id: rat.id,
+          nombre_titular: form.consentimiento_nombre,
+          email_titular: form.consentimiento_email,
+          canal: 'sistema',
+          texto_consentimiento: form.consentimiento_texto || 'Consentimiento expreso para tratamiento de datos sensibles.',
+          datos_sensibles: true,
+        });
+ }
       toast.success(`"${form.nombre_proceso}" actualizado correctamente.`);
       onDone();
     } catch (e: unknown) {
@@ -184,6 +197,15 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                       {TIPOS_DATO_SENSIBLE.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                     <AlertBanner message="Dato sensible: requiere base legal expresa y medidas de seguridad reforzadas." type="warning" />
+                    <div className="rounded-lg p-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: '#1E40AF' }}>B-06: Consentimiento Expreso (Art. 12)</p>
+                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registrá el consentimiento del titular.</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input type="text" value={form.consentimiento_nombre ?? ''} onChange={e => set('consentimiento_nombre', e.target.value)} placeholder="Nombre del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                        <input type="email" value={form.consentimiento_email ?? ''} onChange={e => set('consentimiento_email', e.target.value)} placeholder="Email del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                      </div>
+                      <textarea value={form.consentimiento_texto ?? ''} onChange={e => set('consentimiento_texto', e.target.value)} rows={2} placeholder="Texto del consentimiento expreso..." className="w-full mt-2 px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                    </div>
                   </div>
                 )}
               </div>

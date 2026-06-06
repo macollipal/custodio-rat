@@ -31,6 +31,10 @@ interface BreachFormData {
   medidas_adoptadas: string;
   notificado_apdc: boolean;
   notificado_titulares: boolean;
+  volumen_titulares_afectados: number;
+  incluye_datos_sensibles: boolean;
+  incluye_datos_nna: boolean;
+  incluye_datos_financieros: boolean;
 }
 
 function BreachForm({
@@ -52,6 +56,10 @@ function BreachForm({
     medidas_adoptadas: initial?.medidas_adoptadas ?? '',
     notificado_apdc: initial?.notificado_apdc ?? false,
     notificado_titulares: initial?.notificado_titulares ?? false,
+    volumen_titulares_afectados: initial?.volumen_titulares_afectados ?? 0,
+    incluye_datos_sensibles: initial?.incluye_datos_sensibles ?? false,
+    incluye_datos_nna: initial?.incluye_datos_nna ?? false,
+    incluye_datos_financieros: initial?.incluye_datos_financieros ?? false,
   });
 
   function set(k: keyof BreachFormData, v: string | boolean) {
@@ -165,6 +173,37 @@ function BreachForm({
         </div>
       </div>
 
+      {/* B-05: Filtro de riesgo razonable (Art. 14 sexies) */}
+      <div className="rounded-lg p-4 space-y-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
+        <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>Evaluación de Riesgo (Art. 14 sexies)</p>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Volumen de titulares afectados</label>
+          <input
+            type="number"
+            min={0}
+            value={form.volumen_titulares_afectados}
+            onChange={e => set('volumen_titulares_afectados', Number(e.target.value))}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+            placeholder="Ej: 150"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label className="flex items-center gap-2 text-sm" style={{ color: '#374151' }}>
+            <input type="checkbox" checked={form.incluye_datos_sensibles} onChange={e => set('incluye_datos_sensibles', e.target.checked)} className="rounded" />
+            Datos sensibles
+          </label>
+          <label className="flex items-center gap-2 text-sm" style={{ color: '#374151' }}>
+            <input type="checkbox" checked={form.incluye_datos_nna} onChange={e => set('incluye_datos_nna', e.target.checked)} className="rounded" />
+            Menores (NNA)
+          </label>
+          <label className="flex items-center gap-2 text-sm" style={{ color: '#374151' }}>
+            <input type="checkbox" checked={form.incluye_datos_financieros} onChange={e => set('incluye_datos_financieros', e.target.checked)} className="rounded" />
+            Datos financieros
+          </label>
+        </div>
+      </div>
+
       <div className="flex justify-between pt-2">
         <button
           onClick={onCancel}
@@ -223,13 +262,23 @@ export default function BreachesPage() {
         medidas_adoptadas: data.medidas_adoptadas || undefined,
         notificado_apdc: data.notificado_apdc,
         notificado_titulares: data.notificado_titulares,
+        volumen_titulares_afectados: data.volumen_titulares_afectados,
+        incluye_datos_sensibles: data.incluye_datos_sensibles,
+        incluye_datos_nna: data.incluye_datos_nna,
+        incluye_datos_financieros: data.incluye_datos_financieros,
       };
       if (editingBreach) {
         await api.actualizarBrecha(editingBreach.id, payload);
         toast.success('Brecha actualizada.');
       } else {
-        await api.crearBrecha({ ...payload, company_id: company!.id });
-        toast.success('Brecha registrada exitosamente.');
+        const nueva = await api.crearBrecha({ ...payload, company_id: company!.id });
+        await api.evaluarRiesgoBrecha(nueva.id, {
+          volumen_titulares_afectados: data.volumen_titulares_afectados,
+          incluye_datos_sensibles: data.incluye_datos_sensibles,
+          incluye_datos_nna: data.incluye_datos_nna,
+          incluye_datos_financieros: data.incluye_datos_financieros,
+        });
+        toast.success('Brecha registrada y evaluada exitosamente.');
       }
       setView('list');
       setEditingBreach(null);
@@ -318,6 +367,17 @@ export default function BreachesPage() {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <PlazoBadge hours={horas} />
+                        {b.nivel_riesgo && (
+                          <span
+                            className="text-xs font-bold px-2 py-0.5 rounded"
+                            style={{
+                              background: b.nivel_riesgo === 'critico' ? '#FEE2E2' : b.nivel_riesgo === 'alto' ? '#FEF3C7' : b.nivel_riesgo === 'medio' ? '#DBEAFE' : '#D1FAE5',
+                              color: b.nivel_riesgo === 'critico' ? '#991B1B' : b.nivel_riesgo === 'alto' ? '#92400E' : b.nivel_riesgo === 'medio' ? '#1E40AF' : '#065F46',
+                            }}
+                          >
+                            {b.nivel_riesgo.toUpperCase()}
+                          </span>
+                        )}
                       </div>
                     </div>
 

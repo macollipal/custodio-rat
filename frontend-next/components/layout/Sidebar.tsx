@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho' | 'transparencia' | 'encargados-contrato';
 
 interface SidebarProps {
   currentPage: Page;
@@ -29,6 +29,8 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
     { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     { key: 'tkt_solicitud_derecho', label: 'Solicitudes ARCO', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    { key: 'transparencia', label: 'Transparencia', icon: '📄', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    { key: 'encargados-contrato', label: 'Enc. Contrato', icon: '📝', roles: ['superadmin', 'admin_empresa'] },
     { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
     { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
     { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
