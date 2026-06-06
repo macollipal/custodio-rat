@@ -1026,3 +1026,14 @@ export default function TktSolicitudDerechoPage() {
     </div>
   );
 }
+i m p o r t 
+ 
+ t y p e 
+ 
+ R A T 
+ 
+ f r o m 
+ 
+ @ / t y p e s 
+ 
+ 

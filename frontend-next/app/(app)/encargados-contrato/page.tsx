@@ -10,7 +10,7 @@ import {
   eliminarEncargadoContrato,
   listarRats,
   type EncargadoContrato,
-  type RAT,
+
 } from '@/lib/api';
 import Drawer from '@/components/ui/Drawer';
 
@@ -275,3 +275,9 @@ export default function EncargadosContratoPage() {
     </div>
   );
 }
+i m p o r t  
+ t y p e  
+ R A T  
+ f r o m  
+ @ / t y p e s  
+ 
