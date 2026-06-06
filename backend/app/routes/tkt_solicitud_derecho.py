@@ -253,6 +253,25 @@ def actualizar_ticket(
     db.commit()
     db.refresh(ticket)
     logger.info(f"Ticket {ticket_id} actualizado por user {current_user.id}")
+
+    if data.respuesta_texto and ticket.titular_email:
+        from app.models.company import Company
+        from app.services.email_service import notificar_respuesta_arco
+        empresa = db.query(Company).filter(Company.id == ticket.company_id).first()
+        try:
+            notificar_respuesta_arco(
+                email_titular=ticket.titular_email,
+                nombre_titular=ticket.titular_nombre,
+                tipo_derecho=ticket.tipo,
+                respuesta=data.respuesta_texto,
+                empresa_nombre=empresa.nombre if empresa else "la empresa",
+            )
+        except Exception as e:
+            logger.error(
+                f"Ticket {ticket_id}: fallo enviando respuesta ARCO a "
+                f"{ticket.titular_email}: {e}"
+            )
+
     return _ticket_to_response(ticket)
 
 
