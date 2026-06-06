@@ -57,8 +57,8 @@ export default function EncargadosContratoPage() {
         listarEncargadosContrato(company.id),
         listarRats(company.id),
       ]);
-      setContratos(data);
-      setRats(ratsData);
+      setContratos(Array.isArray(data) ? data : []);
+      setRats(Array.isArray(ratsData) ? ratsData : []);
     } catch {
       toast.error('Error al cargar contratos');
     } finally {
