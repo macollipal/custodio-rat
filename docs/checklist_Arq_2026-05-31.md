@@ -1,9 +1,12 @@
 # Checklist Arquitectónico — Custodio RAT Manager
 
 **Fecha:** 2026-05-31
+**Última verificación:** [VERIFICAR]
 **Estado:** Producción Inicial / Beta
 
 ---
+
+> **Nota:** Este documento fue generado el 2026-05-31 y refleja el estado del proyecto en esa fecha. Los items marcados como completados pueden haber cambiado o revertido. Verificar contra el codebase actual antes de usar como referencia.
 
 ## 🔴 PRIORIDAD CRÍTICA (Esta semana)
 

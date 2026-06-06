@@ -31,30 +31,19 @@ git push
 
 ---
 
-### 3. CORS bloquea requests desde subdominios Vercel
+### 3. CORS bloquea requests
 
 **Síntoma:** `CORS policy: No 'Access-Control-Allow-Origin' header`
 
-**Causa:** `ENVIRONMENT=production` no está seteado en el proyecto backend de Vercel, o el dominio del frontend preview no está en `ALLOWED_ORIGINS_PROD`.
+**Causa:** `ALLOWED_ORIGINS` no está configurada correctamente en el proyecto backend de Vercel.
 
 **Solución:** En Vercel → proyecto backend → Settings → Environment Variables:
 ```
-ENVIRONMENT = production
+ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000  (QA)
+ALLOWED_ORIGINS=https://custodio-rat.vercel.app  (Producción)
 ```
 
-**Importante:** El CORS en producción usa **dominios explícitos** (no regex). Cada nuevo dominio de preview del frontend debe agregarse a la lista `ALLOWED_ORIGINS_PROD` en `backend/app/core/config.py`.
-
----
-
-
-**Causa:** `ENVIRONMENT=production` no está seteado en el proyecto backend de Vercel.
-
-**Solución:** En Vercel → proyecto backend → Settings → Environment Variables:
-```
-ENVIRONMENT = production
-```
-
-**Importante:** Esta variable activa CORS con dominios **explícitos** (no regex). Los dominios permitidos están en `ALLOWED_ORIGINS_PROD` en `config.py`. Agregar el nuevo dominio de preview de frontend a esa lista antes de deployar.
+**Importante:** `ALLOWED_ORIGINS` es la **única** variable que controla CORS. Sin ella, la app no levanta (fail loud). No usar `ENVIRONMENT` ni `VERCEL_URL` para CORS.
 
 ---
 
@@ -129,14 +118,13 @@ git push
 ## Checklist antes de deployar a Vercel
 
 1. [ ] `main` está actualizado con `develop`
-2. [ ] `ENVIRONMENT=production` seteado en proyecto backend
+2. [ ] `ALLOWED_ORIGINS` configurada correctamente en proyecto backend
 3. [ ] `NEXT_PUBLIC_API_BASE` seteado en proyecto frontend apuntando al backend correcto
-4. [ ] Nuevo dominio de preview de frontend agregado a `ALLOWED_ORIGINS_PROD` en `config.py`
+4. [ ] `SECRET_KEY` de producción configurada en Vercel (no en filesystem)
 5. [ ] `vercel.json` eliminado si se usan proyectos separados
 6. [ ] No hay `__pycache__` ni `.pyc` en el repo
 7. [ ] Branch correcta configurada en Vercel (qa para preview, main para producción)
 8. [ ] Build settings correctos (Next.js detected o manual si es proyecto nuevo)
-9. [ ] `SECRET_KEY` de producción configurada en Vercel (no en filesystem)
 
 ---
 
@@ -201,9 +189,29 @@ Base.metadata.create_all(bind=engine)  # solo crea lo que falta
 
 | Componente | URL |
 |-----------|-----|
-| Frontend | custodio-indol.vercel.app |
-| Backend API | custodio-api.vercel.app |
+| Frontend | https://custodio-rat.vercel.app |
+| Backend API | https://custodio-api-prod.vercel.app |
 | Repo | github.com/macollipal/custodio-rat |
+
+---
+
+## CORS — Solución Definitiva (Q3 2026)
+
+**PROBLEMA:** `No 'Access-Control-Allow-Origin' header is present`
+
+**SOLUCIÓN:** `ALLOWED_ORIGINS` es la **única** variable que controla CORS. Sin ella, la app **no levanta** (fail loud).
+
+### Configuración en Vercel (Backend)
+
+| Entorno | `ALLOWED_ORIGINS` |
+|---------|-------------------|
+| QA | `https://custodio-qa.vercel.app,http://localhost:3000` |
+| Producción | `https://custodio-rat.vercel.app` |
+
+### Reglas
+- Sin `ALLOWED_ORIGINS` → la app no levanta
+- Sin wildcards, sin `VERCEL_URL`, sin `ENVIRONMENT` para CORS
+- Cada nuevo dominio de preview debe agregarse a `ALLOWED_ORIGINS`
 
 ---
 

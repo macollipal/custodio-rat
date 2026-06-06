@@ -63,9 +63,9 @@ RAT_opencode/
 
 | Entorno | URL | Base de datos |
 |---------|-----|---------------|
-| **Backend API** | https://custodio-api.vercel.app | Neon PostgreSQL |
-| **Frontend** | https://custodio-indol.vercel.app | — |
-| **QA** | https://custodio-qa.vercel.app | Neon QA |
+| **Backend API** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
+| **Frontend Prod** | https://custodio-rat.vercel.app | — |
+| **QA (Frontend + API)** | https://custodio-qa.vercel.app | Neon QA |
 | **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
 
 ---
@@ -174,10 +174,8 @@ bun lint
 | Variable | Descripción | development | production |
 |----------|-------------|--------------|-------------|
 | `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
-| `ENVIRONMENT` | `development` \| `production` | `development` | `production` |
+| `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | `http://localhost:3000` | **Requerida en todos los ambientes** |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
-| `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | localhost | **Requerida en prod** |
-| `VERCEL_URL` | URL del frontend en Vercel | — | Se setea automáticamente en Vercel |
 | `MINIMAX_API_KEY` | IA chat | — | Opcional |
 | `OPENAI_API_KEY` | IA chat | — | Opcional |
 | `SMTP_HOST` | Servidor SMTP (ej. smtp.sendgrid.net) | — | Opcional |
@@ -187,7 +185,7 @@ bun lint
 | `SMTP_FROM_EMAIL` | Email remitente | — | Opcional |
 | `SMTP_FROM_NAME` | Nombre remitente | — | Opcional |
 
-> **Nota:** Si `SMTP_HOST` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está en producción, la app levanta con `RuntimeError`.
+> **Nota:** Si `SMTP_HOST` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
 
 ### Frontend (.env.local)
 
@@ -342,9 +340,10 @@ bun lint
 
 ## Próximas funcionalidades
 
-### Rubros + Sugerencias de RAT por Rubro (en desarrollo)
+### Rubros + Sugerencias de RAT por Rubro (V1-04)
 - Tabla `rubros`: id, nombre, orden (BD, ordenable por superadmin)
 - Tabla `rats_sugeridos`: id, rubro_id, campos pre-llenados de RAT
+- 13 rubros adicionales con plantillas pre-seedeadas
 - Wizard de RAT con Paso 0: muestra tarjetas de sugerencias según el rubro de la empresa
 - "Usar sugerencia" → wizard pre-llenado; "Crear personalizado" → wizard en blanco
 - Permisos: superadmin CRUD todos, admin_empresa CRUD solo de su rubro

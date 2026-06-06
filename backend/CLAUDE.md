@@ -26,8 +26,8 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 
 | Entorno | URL | Base de datos |
 |---------|-----|---------------|
-| **Producción** | https://custodio-rat.vercel.app | Neon PostgreSQL |
-| **QA** | https://custodio-api-qa-git-qa-... | Neon QA |
+| **Producción** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
+| **QA** | https://custodio-qa.vercel.app | Neon QA |
 | **Local** | http://localhost:8002 | SQLite (`data/database.db`) |
 
 ### Vercel (Producción)
