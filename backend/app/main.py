@@ -235,16 +235,18 @@ ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(","
 env = os.getenv("ENVIRONMENT", "development")
 vercel_url = os.getenv("VERCEL_URL", "")
 if not ALLOWED_ORIGINS:
-    if env == "production":
+    if env == "qa" and vercel_url:
+        ALLOWED_ORIGINS = [f"https://{vercel_url}"]
+    elif env == "qa":
+        ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:3001"]
+    elif env == "production" and vercel_url:
+        ALLOWED_ORIGINS = [f"https://{vercel_url}"]
+    elif env == "production":
         raise RuntimeError(
             "ALLOWED_ORIGINS env var is required in production. "
             "Set a comma-separated list of allowed origins, e.g. "
             "ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app"
         )
-    if env == "qa" and vercel_url:
-        ALLOWED_ORIGINS = [f"https://{vercel_url}"]
-    elif env == "qa":
-        ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:3001"]
     else:
         ALLOWED_ORIGINS = [
             "http://localhost:3000",
