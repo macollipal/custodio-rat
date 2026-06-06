@@ -105,6 +105,12 @@ export interface SecurityBreach {
   updated_at: string;
   horas_desde_deteccion?: number;
   plazo_apdc_vencido?: boolean;
+  nivel_riesgo?: string;
+  volumen_titulares_afectados?: number;
+  incluye_datos_sensibles?: boolean;
+  incluye_datos_nna?: boolean;
+  incluye_datos_financieros?: boolean;
+  reportable_apdc_calculado?: boolean;
 }
 
 export interface DashboardStats {

@@ -86,7 +86,7 @@ export default function TransparenciaPage() {
       <div className="grid gap-4">
         {itemKeys.map(key => {
           const label = ITEM_LABELS[key];
-          const value = (politica as Record<string, string>)[key];
+          const value = (politica as unknown as Record<string, string>)[key];
           return (
             <div
               key={key}

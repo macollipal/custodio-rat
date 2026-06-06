@@ -8,7 +8,7 @@ import Topbar from '@/components/layout/Topbar';
 import * as api from '@/lib/api';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho' | 'transparencia';
+type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho' | 'transparencia' | 'encargados-contrato';
 
 function pathToPage(pathname: string): Page {
   if (pathname.startsWith('/rat')) return 'rat';
