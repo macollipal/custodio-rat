@@ -252,6 +252,8 @@ export default function BreachesPage() {
   useEffect(() => { load(); }, [company?.id]);
 
   async function handleSave(data: BreachFormData) {
+    if (!data.descripcion.trim()) { toast.error('La descripcion de la brecha es obligatoria.'); return; }
+    if (!data.fecha_deteccion) { toast.error('La fecha de deteccion es obligatoria.'); return; }
     setSaving(true);
     try {
       const payload = {
