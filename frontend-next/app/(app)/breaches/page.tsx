@@ -62,7 +62,7 @@ function BreachForm({
     incluye_datos_financieros: initial?.incluye_datos_financieros ?? false,
   });
 
-  function set(k: keyof BreachFormData, v: string | boolean) {
+  function set(k: keyof BreachFormData, v: string | number | boolean) {
     setForm(f => ({ ...f, [k]: v }));
   }
 

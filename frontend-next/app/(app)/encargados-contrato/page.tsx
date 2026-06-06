@@ -12,6 +12,7 @@ import {
   type EncargadoContrato,
 
 } from '@/lib/api';
+import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
 
 function fmtDate(val: string | null | undefined): string {
@@ -275,9 +276,3 @@ export default function EncargadosContratoPage() {
     </div>
   );
 }
-i m p o r t  
- t y p e  
- R A T  
- f r o m  
- @ / t y p e s  
- 
