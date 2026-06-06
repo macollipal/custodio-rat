@@ -18,8 +18,8 @@ import {
   exportarPortabilidad,
   type TktTicket,
   type TktDashboard,
-  type RAT,
 } from '@/lib/api';
+import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
@@ -72,10 +72,10 @@ function fmtDateTime(val: string | null | undefined): string {
 function sanitize(text: string | null | undefined): string {
   if (!text) return '';
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
     .replace(/'/g, '&#039;');
 }
 
@@ -1026,14 +1026,3 @@ export default function TktSolicitudDerechoPage() {
     </div>
   );
 }
-i m p o r t 
- 
- t y p e 
- 
- R A T 
- 
- f r o m 
- 
- @ / t y p e s 
- 
- 
