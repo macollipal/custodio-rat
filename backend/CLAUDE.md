@@ -27,6 +27,7 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 | Entorno | URL | Base de datos |
 |---------|-----|---------------|
 | **Producción** | https://custodio-rat.vercel.app | Neon PostgreSQL |
+| **QA** | https://custodio-api-qa-git-qa-... | Neon QA |
 | **Local** | http://localhost:8002 | SQLite (`data/database.db`) |
 
 ### Vercel (Producción)
@@ -34,10 +35,13 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 - Entry point: `api/index.py` → importa de `backend/app/main.py`
 - Runtime: Python 3.9 (`@vercel/python` builder, auto-detectado)
 - Environment variables en Vercel:
-  - `ENVIRONMENT=production` → activa CORS con regex `https://.*\.vercel\.app` y rate limiting
+  - `ENVIRONMENT=production` → activa modo producción (logs JSON, rate limiting)
   - `DATABASE_URL` → connection string de Neon
   - `SECRET_KEY` → generar con `openssl rand -hex 64` (requerida en producción)
   - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
+  - `ALLOWED_ORIGINS` → lista blanca de orígenes separados por coma (obligatorio en producción)
+    - Ejemplo: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app`
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` → para envío de emails reales
 
 ### Migración SQLite → Neon
 
@@ -60,6 +64,39 @@ venv\Scripts\activate
 uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
 # API docs: http://localhost:8002/docs
 ```
+
+---
+
+## Middleware
+
+### RequestIdMiddleware (`app/middleware/request_id.py`)
+Genera o propaga `X-Request-ID` en cada request:
+- Si el cliente envía `X-Request-ID`, se respeta
+- Si no, se genera un UUID v4
+- Se inyecta en `contextvars` para que el logging lo lea
+- Se devuelve en la respuesta como header `X-Request-ID`
+
+### Logging estructurado (`app/core/logging_config.py`)
+- `setup_logging()` configura logger raíz con `JSONFormatter` en producción
+- `RequestIdFilter` inyecta `request_id` en cada `LogRecord`
+- El `request_id` se lee de `contextvars` en cada log
+
+---
+
+## Servicios
+
+### Email (`app/services/email_service.py`)
+Envío de emails transaccionales via SMTP:
+- `notificar_nueva_brecha()` → al DPO cuando se crea una brecha
+- `notificar_vencimiento_rat()` → al DPO cuando un RAT requiere revisión
+- `notificar_respuesta_arco()` → al titular cuando se responde su solicitud ARCO
+
+**Modo DRY_RUN:** si `SMTP_HOST` no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
+
+### Scheduler (`app/services/scheduler.py`)
+Tareas periódicas en thread daemon:
+- Revisión de RATs vencidos: cada 24h (umbral: DIAS_REVISION = 180 días)
+- Se activa en `lifespan` de FastAPI y se detiene al shutdown
 
 ---
 
@@ -185,9 +222,22 @@ completitud = round((completados / total) * 100)
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/brechas` | Lista brechas |
-| POST | `/brechas` | Crear brecha |
+| POST | `/brechas` | Crear brecha (dispara email al DPO si está configurado) |
 | PUT | `/brechas/{id}` | Editar brecha |
 | DELETE | `/brechas/{id}` | Eliminar brecha |
+
+### Encargados contrato
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/encargados-contrato/` | Lista contratos de encargado |
+| POST | `/encargados-contrato/` | Crear contrato |
+| PUT | `/encargados-contrato/{id}` | Editar contrato |
+| DELETE | `/encargados-contrato/{id}` | Eliminar contrato |
+
+### Transparencia
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/publico/transparencia/{company_id}` | Política de transparencia (Art. 14 ter) |
 
 ### AI
 | Método | Ruta | Descripción |
@@ -204,6 +254,9 @@ completitud = round((completados / total) * 100)
 - El usuario `admin` existente fue renombrado a `superadmin` y `jpe` a `admin_empresa`
 - Para queries que filtran por empresa sin ser superadmin: usar `get_empresas_usuario(db, user_id)` que retorna lista de `company_ids`
 - `get_current_user` en `routes/deps.py` extrae el usuario del token JWT
+- **CORS:** se usa `ALLOWED_ORIGINS` (env var, lista blanca). Si `ENVIRONMENT=production` y no está definida, la app levanta con `RuntimeError`
+- **Email:** si `SMTP_HOST` no está configurado, opera en modo DRY_RUN (loguea sin enviar)
+- **Logs:** en producción los logs son JSON con `request_id` para correlación de extremo a extremo
 
 ---
 

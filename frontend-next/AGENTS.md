@@ -28,27 +28,32 @@ Stack: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Sonne
 frontend-next/
 ├── app/
 │   ├── (app)/                 # Rutas autenticadas
-│   │   ├── dashboard/page.tsx
-│   │   ├── rat/page.tsx
-│   │   ├── companies/page.tsx
-│   │   ├── breaches/page.tsx
-│   │   ├── reportes/page.tsx  # Reportes avanzados + chat IA
-│   │   ├── usuarios/page.tsx   # Gestión de usuarios (superadmin)
-│   │   ├── conexion/page.tsx   # Diagnóstico de conexión
-│   │   └── rubros/page.tsx     # Gestión de rubros y sugerencias
+│   │   ├── dashboard/page.tsx        # Dashboard + OnboardingChecklist
+│   │   ├── rat/page.tsx             # RATs (wizard + tabla)
+│   │   ├── companies/page.tsx        # Empresas + accesos
+│   │   ├── breaches/page.tsx         # Brechas de seguridad
+│   │   ├── reportes/page.tsx         # Reportes avanzados + chat IA
+│   │   ├── usuarios/page.tsx         # Gestión de usuarios (superadmin)
+│   │   ├── conexion/page.tsx         # Diagnóstico de conexión
+│   │   ├── rubros/page.tsx           # Gestión de rubros y sugerencias
+│   │   ├── encargados-contrato/page.tsx  # CRUD contratos Art. 14 quater
+│   │   ├── transparencia/page.tsx     # Política de transparencia Art. 14 ter
+│   │   ├── tkt_solicitud_derecho/page.tsx  # Gestión tickets ARCO
+│   │   └── configuracion/page.tsx    # Configuración de cuenta
 │   ├── login/page.tsx
-│   ├── onboarding/page.tsx    # Primera empresa (onboarding)
+│   ├── solicitud_derecho/page.tsx   # Formulario público ARCO
+│   ├── onboarding/page.tsx          # Primera empresa (onboarding)
 │   ├── layout.tsx
-│   └── page.tsx               # Redirige a /login o /(app)/dashboard
+│   └── page.tsx                      # Redirige a /login o /(app)/dashboard
 │
 ├── components/
-│   ├── dashboard/             # KPICard, StatusChart, AlertBanner
-│   ├── layout/                # Sidebar (responsive overlay), Topbar (hamburger), PasswordModal
+│   ├── dashboard/             # KPICard, StatusChart, AlertBanner, OnboardingChecklist
+│   ├── layout/                # Sidebar, Topbar, PasswordModal
 │   ├── rat/                   # RatTable, RatWizard, RatEditForm
-│   └── ui/                    # Badge, CompletitudBar, Skeleton, Drawer (responsive), StepIndicator, validation
+│   └── ui/                    # Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
 │
 ├── context/
-│   └── AppContext.tsx          # Estado global: auth, empresa activa, rats, stats
+│   └── AppContext.tsx # Estado global: auth, empresa activa, rats, stats
 │
 ├── lib/
 │   ├── api.ts                 # Cliente HTTP — todos los llamados al backend
@@ -119,6 +124,13 @@ Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
   - System prompt sobre Ley 21.719 Chile
   - Pasa contexto de empresa + RATs activos
 
+### OnboardingChecklist — components/dashboard/OnboardingChecklist.tsx
+Checklist de primeros pasos que aparece en el dashboard para empresas nuevas:
+- Empresa creada, DPO definido, Primer RAT, Contrato de encargado, Política de transparencia, Procedimiento de brechas
+- Barra de progreso animada
+- Botones CTA a cada sección
+- Se oculta automáticamente cuando todos los items están completos
+
 ### Validadores — components/ui/validation.ts
 - `validarRUT(rut)` → `{ valido, mensaje }` — algoritmo dígito verificador chileno
 - `formatearRUT(rut)` → string formateado con puntos y guión
@@ -140,7 +152,7 @@ El `title=""` elimina el título del Drawer wrapper para evitar duplicación con
 
 ## Rutas y navegación
 
-La navegación se maneja con `router.push('/ruta')` desde Next.js. Sidebar tiene botones que llaman `onNavigate(page)` donde `page` es `'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes'`.
+La navegación se maneja con `router.push('/ruta')` desde Next.js. Sidebar tiene botones que llaman `onNavigate(page)` donde `page` es `'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'encargados-contrato' | 'transparencia' | 'tkt_solicitud_derecho'`.
 
 ---
 
@@ -157,10 +169,11 @@ La navegación se maneja con `router.push('/ruta')` desde Next.js. Sidebar tiene
 - AI Chat drawer (reportes): `width: 95vw` mobile, `maxWidth: 420px` desktop
 - Tablas: `overflow-x-auto` para scroll horizontal en mobile
 - **No hacer commits directos a `main` para cambios de features** — usar rama develop o feature branches
+- **Dark mode:** switch en Topbar (🌙/☀️), estado en `localStorage[custodio_dark_mode]`, clase `.dark` en `<html>`
 
 ---
 
-## Ley 21.719 — Conceptos clave
+## Ley21.719 — Conceptos clave
 
 **RAT (Registro de Actividades de Tratamiento)** — Art. 16
 9 campos mínimos obligatorios: nombre_proceso, categoria_titulares, categoria_datos, finalidad, base_legal, fuente_datos, plazo_retencion.
