@@ -9,6 +9,7 @@ from app.database.database import get_db
 from app.schemas.breach import BreachCreate, BreachOut, BreachUpdate
 from app.services.breach_service import (
     listar_brechas, get_breach, crear_brecha, actualizar_brecha, eliminar_brecha, _enriquecer,
+    evaluar_riesgo_brecha,
 )
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user
@@ -28,6 +29,7 @@ def _out(b) -> BreachOut:
     extra = _enriquecer(b)
     out.horas_desde_deteccion = extra["horas_desde_deteccion"]
     out.plazo_apdc_vencido = extra["plazo_apdc_vencido"]
+    out.reportable_apdc_calculado = extra["reportable_apdc_calculado"]
     return out
 
 
@@ -76,6 +78,18 @@ async def actualizar(
     b = get_breach(db, breach_id)
     _check_company_access(current_user, b.company_id, db)
     b = actualizar_brecha(db, breach_id, data)
+    return _out(b)
+
+
+@router.post("/{breach_id}/evaluar-riesgo", response_model=BreachOut, summary="Evaluar riesgo razonable de una brecha (REC-05)")
+async def evaluar_riesgo(
+    breach_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    b = get_breach(db, breach_id)
+    _check_company_access(current_user, b.company_id, db)
+    b = evaluar_riesgo_brecha(db, breach_id)
     return _out(b)
 
 

@@ -13,6 +13,11 @@ class BreachBase(BaseModel):
     fecha_notificacion_apdc: Optional[datetime] = None
     notificado_titulares: bool = False
     fecha_notificacion_titulares: Optional[datetime] = None
+    nivel_riesgo: Optional[str] = "bajo"
+    volumen_titulares_afectados: Optional[int] = 0
+    incluye_datos_sensibles: Optional[bool] = False
+    incluye_datos_nna: Optional[bool] = False
+    incluye_datos_financieros: Optional[bool] = False
 
 
 class BreachCreate(BreachBase):
@@ -29,6 +34,11 @@ class BreachUpdate(BaseModel):
     fecha_notificacion_apdc: Optional[datetime] = None
     notificado_titulares: Optional[bool] = None
     fecha_notificacion_titulares: Optional[datetime] = None
+    nivel_riesgo: Optional[str] = None
+    volumen_titulares_afectados: Optional[int] = None
+    incluye_datos_sensibles: Optional[bool] = None
+    incluye_datos_nna: Optional[bool] = None
+    incluye_datos_financieros: Optional[bool] = None
 
 
 class BreachOut(BreachBase):
@@ -39,5 +49,6 @@ class BreachOut(BreachBase):
     updated_at: datetime
     horas_desde_deteccion: Optional[float] = None
     plazo_apdc_vencido: Optional[bool] = None
+    reportable_apdc_calculado: Optional[bool] = None
 
     model_config = {"from_attributes": True}

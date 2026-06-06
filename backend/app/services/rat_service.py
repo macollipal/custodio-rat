@@ -5,9 +5,12 @@ Incluye validaciones de auditoría conforme a la Ley 21.719.
 
 import base64
 import hashlib
+import logging
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+
+logger = logging.getLogger(__name__)
 
 from app.models.rat import RAT, EstadoRAT
 from app.models.audit_log import AuditLog
@@ -116,6 +119,52 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
     }
 
 
+def _tiene_consentimiento_activo(db: Session, rat_id: int) -> bool:
+    """Retorna True si el RAT tiene al menos un consentimiento activo."""
+    from app.models.consentimiento import Consentimiento
+    return db.query(Consentimiento).filter(
+        Consentimiento.rat_id == rat_id,
+        Consentimiento.activo == True,  # noqa: E712
+    ).first() is not None
+
+
+def _validar_consentimiento_sensibles(db: Session, rat: RAT) -> None:
+    """Valida que si datos_sensibles=True, exista al menos un consentimiento activo (Art. 16 — REC-06)."""
+    if rat.datos_sensibles and not _tiene_consentimiento_activo(db, rat.id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Este RAT trata datos sensibles y no tiene consentimiento expreso activo. "
+                "Para tratar datos sensibles basados en consentimiento (Art. 16 Ley 21.719), "
+                "debe registrar primero el consentimiento del titular mediante "
+                "POST /rats/{rat_id}/consentimientos antes de guardar el RAT."
+            ),
+        )
+
+
+def _tiene_contrato_encargado_activo(db: Session, rat_id: int) -> bool:
+    """Retorna True si el RAT tiene al menos un contrato de encargado activo."""
+    from app.models.encargado_contrato import EncargadoContrato
+    return db.query(EncargadoContrato).filter(
+        EncargadoContrato.rat_id == rat_id,
+        EncargadoContrato.activo == True,  # noqa: E712
+    ).first() is not None
+
+
+def _validar_contrato_encargado(db: Session, rat: RAT) -> None:
+    """Valida que si nombre_encargado está definido, exista al menos un contrato activo (Art. 14 quater — REC-03)."""
+    if rat.nombre_encargado and not _tiene_contrato_encargado_activo(db, rat.id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Este RAT tiene un encargado del tratamiento registrado pero no tiene contrato de encargo activo. "
+                "Para registrar un encargado es obligatorio contar con un contrato que establezca las instrucciones "
+                "de tratamiento, confidencialidad y seguridad (Art. 14 quater Ley 21.719). "
+                "Cree el contrato mediante POST /encargados-contrato antes de guardar el RAT."
+            ),
+        )
+
+
 def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     from app.models.company import Company
     if not db.query(Company).filter(Company.id == data.company_id).first():
@@ -166,6 +215,12 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
 
     if "estado" not in cambios:
         rat.estado = _calcular_estado(rat_dict)
+
+    if cambios.get("datos_sensibles") == True and not _tiene_consentimiento_activo(db, rat_id):
+        _validar_consentimiento_sensibles(db, rat)
+
+    if cambios.get("nombre_encargado") and not _tiene_contrato_encargado_activo(db, rat_id):
+        _validar_contrato_encargado(db, rat)
 
     log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
     db.commit()

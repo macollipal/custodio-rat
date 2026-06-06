@@ -3,6 +3,9 @@ backend/venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/*.pyc
+*.pyc
+__pycache__/
+.pyc
 backend/.env
 backend/database.db
 data/
@@ -37,3 +40,6 @@ test_db_connection.py
 test_users.py
 reset_admin.py
 docs/RESUMEN_ERRORES_2026-06-01.md
+
+# Carpeta de scripts auxiliares (se eliminará después)
+paso/

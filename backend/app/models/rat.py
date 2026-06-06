@@ -60,6 +60,9 @@ class RAT(Base):
     nombre_encargado: Mapped[str] = mapped_column(String(500), nullable=True)
     tiene_contrato_encargado: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Bloqueo temporal (Art. 8 ter — REC-01)
+    bloqueado: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Test interés legítimo (Art. 16 — 3 pasos obligatorios)
     test_interes_legitimo: Mapped[str] = mapped_column(Text, nullable=True)
 
