@@ -84,3 +84,15 @@ Dejar configurada la empresa responsable del tratamiento para comenzar el cumpli
 | Campos obligatorios vacíos | Toast de error por campo |
 | Error de servidor | Toast con mensaje del servidor |
 | Sesión expirada | Redirige a `/login` automáticamente |
+
+## Checklist de primeros pasos (Q3 2026)
+
+Tras crear la empresa, el dashboard muestra el componente `OnboardingChecklist` con6 items:
+- Empresa creada
+- DPO definido (nombre + email)
+- Primer RAT creado
+- Contrato de encargado formalizado
+- Política de transparencia publicada
+- Procedimiento de brechas revisado
+
+Cada item tiene botón CTA que lleva a la sección correspondiente. La barra de progreso se calcula en tiempo real. El checklist se oculta automáticamente cuando todos los items están completados.

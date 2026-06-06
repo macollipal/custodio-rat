@@ -50,6 +50,7 @@ El usuario marca:
 3. **Mostró alertas de urgencia** → plazo APDC vs. tiempo transcurrido
 4. **Validó RATs afectados** → vinculados al proceso de tratamiento
 5. **Auditó cada cambio** → timestamps de notificación
+6. **Envió email al DPO** → `notificar_nueva_brecha()` vía `email_service.py` (si SMTP configurado)
 
 ## Obligaciones legales (Art. 14 bis Ley 21.719)
 

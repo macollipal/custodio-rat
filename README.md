@@ -1,6 +1,6 @@
 # Custodio — RAT Manager · Ley 21.719
 
-Sistema de gestión del **Registro de Actividades de Tratamiento (RAT)** 
+Sistema de gestión del **Registro de Actividades de Tratamiento (RAT)**
 conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
 
 ---
@@ -12,12 +12,15 @@ RAT_opencode/
 ├── api/                  Vercel Serverless handler (@vercel/python, entry point para backend)
 ├── backend/              FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt
 │   ├── app/
-│   │   ├── core/         Configuración y seguridad JWT
+│   │   ├── core/         Configuración, seguridad JWT, logging estructurado
 │   │   ├── database/     Engine y sesión SQLAlchemy
+│   │   ├── middleware/   RequestIdMiddleware (X-Request-ID + contextvars)
 │   │   ├── models/       Tablas: User, Company, RAT, AuditLog, SecurityBreach, EIPD, Consentimiento
 │   │   ├── schemas/      Validación Pydantic
-│   │   ├── routes/       Endpoints: /auth, /companies, /rats, /brechas, /ai, /rubros, /rats-sugeridos
-│   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro, rats_sugerido
+│   │   ├── routes/       Endpoints: /auth, /companies, /rats, /brechas, /ai, /rubros,
+│   │   │ /encargados-contrato, /politica-transparencia, /tkt-solicitud-derecho
+│   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro,
+│   │                      email (SMTP), scheduler (threading daemon)
 │   ├── tests/             95+ tests (pytest + httpx)
 │   ├── data/             SQLite local para desarrollo (git ignored)
 │   └── venv/             Entorno virtual Python
@@ -26,19 +29,24 @@ RAT_opencode/
 │   ├── app/
 │   │   ├── login/        Pantalla de autenticación
 │   │   ├── onboarding/   Configuración inicial (primera empresa)
+│   │   ├── solicitud_derecho/  Formulario público ARCO
 │   │   ├── (app)/
-│   │   │   ├── dashboard/   KPIs, gráfico, alertas de cumplimiento
+│   │   │   ├── dashboard/   KPIs, gráfico, alertas + OnboardingChecklist
 │   │   │   ├── rat/         CRUD procesos RAT + wizard 4 pasos + exportación
 │   │   │   ├── companies/   Gestión de empresas y usuarios por empresa
 │   │   │   ├── breaches/    Gestión de brechas de seguridad
 │   │   │   ├── reportes/    Reportes avanzados + drawer RAT + chat IA
 │   │   │   ├── usuarios/     Gestión de usuarios (superadmin)
 │   │   │   ├── conexion/     Diagnóstico de conexión
-│   │   │   └── rubros/       Gestión de rubros y sugerencias
+│   │   │   ├── rubros/       Gestión de rubros y sugerencias
+│   │   │   ├── encargados-contrato/  CRUD contratos Art. 14 quater
+│   │   │   ├── transparencia/   Política de transparencia Art. 14 ter
+│   │   │   ├── tkt_solicitud_derecho/  Gestión tickets ARCO
+│   │   │   └── configuracion/ Configuración de cuenta
 │   │   └── layout.tsx    Layout raíz + Toaster
 │   ├── components/
 │   │   ├── layout/       Sidebar + Topbar (responsive con hamburger) + PasswordModal
-│   │   ├── dashboard/    KPICard, StatusChart, AlertBanner
+│   │   ├── dashboard/    KPICard, StatusChart, AlertBanner, OnboardingChecklist
 │   │   ├── rat/          RatTable, RatWizard, RatEditForm
 │   │   └── ui/           Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
 │   ├── context/          AppContext (auth + empresa activa)
@@ -57,6 +65,7 @@ RAT_opencode/
 |---------|-----|---------------|
 | **Backend API** | https://custodio-api.vercel.app | Neon PostgreSQL |
 | **Frontend** | https://custodio-indol.vercel.app | — |
+| **QA** | https://custodio-qa.vercel.app | Neon QA |
 | **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
 
 ---
@@ -81,7 +90,7 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 
-# Frontend ( usa Bun)
+# Frontend (usa Bun)
 cd ..\frontend-next
 bun install
 ```
@@ -167,16 +176,24 @@ bun lint
 | `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
 | `ENVIRONMENT` | `development` \| `production` | `development` | `production` |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
-| `ALLOWED_ORIGINS_PROD` | CORS origins en producción | — | Lista de URLs de Vercel (o vacío si se usa `VERCEL_URL`) |
+| `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | localhost | **Requerida en prod** |
 | `VERCEL_URL` | URL del frontend en Vercel | — | Se setea automáticamente en Vercel |
 | `MINIMAX_API_KEY` | IA chat | — | Opcional |
 | `OPENAI_API_KEY` | IA chat | — | Opcional |
+| `SMTP_HOST` | Servidor SMTP (ej. smtp.sendgrid.net) | — | Opcional |
+| `SMTP_PORT` | Puerto SMTP (587 o465) | — | Opcional |
+| `SMTP_USERNAME` | Usuario SMTP | — | Opcional |
+| `SMTP_PASSWORD` | Password/API key SMTP | — | Opcional |
+| `SMTP_FROM_EMAIL` | Email remitente | — | Opcional |
+| `SMTP_FROM_NAME` | Nombre remitente | — | Opcional |
+
+> **Nota:** Si `SMTP_HOST` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está en producción, la app levanta con `RuntimeError`.
 
 ### Frontend (.env.local)
 
 | Variable | Descripción |
 |----------|-------------|
-| `NEXT_PUBLIC_API_BASE` | URL del backend FastAPI (local: `http://localhost:8002`, prod: `https://custodio-rat.vercel.app`) |
+| `NEXT_PUBLIC_API_BASE` | URL del backend FastAPI (local: `http://localhost:8002`, prod: URL de Vercel del backend) |
 
 ---
 
@@ -197,6 +214,7 @@ bun lint
 - Sonner (notificaciones)
 - React Hook Form + Zod
 - jsPDF + jspdf-autotable (exportación)
+- lucide-react (iconos)
 
 **Infraestructura:**
 - Vercel (serverless functions + hosting)
@@ -262,6 +280,7 @@ bun lint
 - Dashboard con KPIs y alertas de cumplimiento (Ley 21.719)
 - Alertas de expiración: rats por vencer (90 días antes del plazo) y rats vencidos
 - Filtros avanzados en tabla RAT: por estado, riesgo, datos sensibles, EIPD
+- **OnboardingChecklist**: checklist de primeros pasos con barra de progreso en el dashboard
 
 ### Reportes avanzados (reportes/page.tsx)
 - KPI cards y mini gráficos de barras (por estado, riesgo, base legal)
@@ -285,24 +304,39 @@ bun lint
 ### Módulo de Brechas de Seguridad (Art. 14 bis Ley 21.719)
 - Gestión de brechas con plazos legales obligatorios
 - Plazo APDC (72h) vencido + cálculo de horas desde detección
-- Notificación a APDC y a los afectados
+- Notificación automática al DPO por email (si SMTP configurado)
+
+### Módulo Encargados de Tratamiento (Art. 14 quater Ley 21.719)
+- CRUD de contratos de encargado (`/encargados-contrato`)
+- Vinculación de contratos a RATs específicos
+- Alertas de vencimiento de contratos
+
+### Módulo de Transparencia (Art. 14 ter Ley 21.719)
+- Política de transparencia pública generada dinámicamente desde los RATs
+- Versionado con hash SHA-256
+- Disponible en `/transparencia` para cada empresa
 
 ### Módulo ARCO — Solicitudes de Derecho (Art. 14 y 16 bis Ley 21.719)
 - **Formulario público** (`/solicitud_derecho`): permite a cualquier persona ejercer sus derechos ARCO
-  - Tipos: Acceso, Rectificación, Cancelación, Oposición
+  - Tipos: Acceso, Rectificación, Cancelación, Oposición, Bloqueo temporal, Portabilidad
   - Validación de RUT chileno, email, límite de 2000 caracteres en descripción
-  - Creación de solicitud → registra `solicitud_fecha`
-- **Panel admin** (`/configuracion`): gestión de solicitudes por empresa
-  - Tabla con paginación + ellipsis (max 7 páginas visibles)
-  - Filas expandibles mostrando historial de cambios (estado, fecha, usuario, descripción)
-  - Formulario de respuesta con transición de estado + registro en historial
-  - Filtro por estado (pendiente, en_proceso, resuelta, rechazada)
+  - Creación de ticket → registra `solicitud_fecha`
+- **Gestión tickets** (`/tkt_solicitud_derecho`): gestión completa de solicitudes ARCO
+  - Tabla con paginación
+  - Historial de cambios de estado
+  - Notas internas y adjuntos
+  - Respuesta al titular + notificación por email automática (si SMTP configurado)
 
 ### Exportación
 - CSV por empresa
 - PDF por empresa
 - PDF individual de RAT (`/rats/{id}/export/pdf`)
 - Formato CNI para presentación a la APDC (Ley 21.719)
+
+### Tema oscuro
+- Switch en Topbar (🌙/☀️)
+- Estado persistente en `localStorage[custodio_dark_mode]`
+- Clase `.dark` aplicada al `<html>`
 
 ---
 
@@ -326,6 +360,8 @@ bun lint
 | Consentimiento | `consentimientos` | Registro de consentimientos obtenidos: canal, texto, fecha, revocación (Art. 12) |
 | Rubro | `rubros` | Rubros de empresa ordenados por prioridad (ej: Salud, Retail, Educación) |
 | RAT Sugerido | `rats_sugeridos` | Plantillas de RAT pre-llenadas por rubro |
+| EncargadoContrato | `encargados_contrato` | Contratos de encargado (Art. 14 quater) |
+| TktSolicitudDerecho | `tkt_solicitud_derecho` | Tickets de solicitudes ARCO |
 
 ---
 
