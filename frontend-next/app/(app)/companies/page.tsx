@@ -30,7 +30,7 @@ function UserAccessPanel({ companyId }: { companyId: number }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setAccesos(await api.listarAccesos(companyId));
+      const accesses = await api.listarAccesos(companyId); setAccesos(Array.isArray(accesses) ? accesses : []);
     } catch {
       toast.error('No se pudieron cargar los accesos.');
     } finally {
@@ -653,7 +653,7 @@ function CompanyUsersModal({ companyId, onClose }: { companyId: number; onClose:
   useEffect(() => {
     setLoading(true);
     api.listarUsuarios().then(data => {
-      setUsuarios(data.filter((u: any) => u.empresa_id === companyId));
+      setUsuarios(Array.isArray(data) ? data.filter((u: any) => u.empresa_id === companyId) : []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [companyId]);
