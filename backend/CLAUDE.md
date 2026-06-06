@@ -39,16 +39,16 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
   - `DATABASE_URL` → connection string de Neon
   - `SECRET_KEY` → generar con `openssl rand -hex 64` (requerida en producción)
   - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
-  - `ALLOWED_ORIGINS` → lista blanca de orígenes separados por coma (obligatorio si no se usa VERCEL_URL)
-    - Ejemplo: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app`
+  - `ALLOWED_ORIGINS` → **único mecanismo de CORS** (OBLIGATORIO, sin fallback)
+    - QA: `ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000`
+    - Prod: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app`
   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` → para envío de emails reales
 
 ### Vercel (QA)
 
-- Para el backend de QA, setear `ENVIRONMENT=qa` (no `production`)
-  - Con `ENVIRONMENT=qa` y `VERCEL_URL` disponible (Vercel lo setea automáticamente), usa automáticamente `https://{VERCEL_URL}` como allowed origin
-  - Si `VERCEL_URL` apunta al frontend: la app será accesible desde el frontend correcto
-  - Para QA se recomienda setear `ALLOWED_ORIGINS=https://custodio-qa.vercel.app` explícitamente para evitar ambigüedad
+- `ALLOWED_ORIGINS` es la única variable que controla CORS — sin heurísticas, sin VERCEL_URL, sin ENVIRONMENT
+- Si no está seteada, la app no levanta (fail loud)
+- Recomendado: `ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000`
 
 ### Migración SQLite → Neon
 
@@ -261,7 +261,7 @@ completitud = round((completados / total) * 100)
 - El usuario `admin` existente fue renombrado a `superadmin` y `jpe` a `admin_empresa`
 - Para queries que filtran por empresa sin ser superadmin: usar `get_empresas_usuario(db, user_id)` que retorna lista de `company_ids`
 - `get_current_user` en `routes/deps.py` extrae el usuario del token JWT
-- **CORS:** se usa `ALLOWED_ORIGINS` (env var, lista blanca). Si `ENVIRONMENT=production` y no está definida, la app levanta con `RuntimeError`
+- **CORS:** se usa `ALLOWED_ORIGINS` (env var, lista blanca). Si no está definida, la app no levanta (fail loud)
 - **Email:** si `SMTP_HOST` no está configurado, opera en modo DRY_RUN (loguea sin enviar)
 - **Logs:** en producción los logs son JSON con `request_id` para correlación de extremo a extremo
 
