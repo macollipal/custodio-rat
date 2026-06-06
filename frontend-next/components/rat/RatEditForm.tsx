@@ -59,6 +59,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
   }
 
   async function handleSave() {
+    if (!form.nombre_proceso.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
+    if (!form.categoria_datos.trim()) { toast.error('La categoria de datos es obligatoria.'); return; }
+    if (!form.finalidad.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+    if (!form.base_legal.trim()) { toast.error('La base legal es obligatoria.'); return; }
+    if (!form.fuente_datos.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
+    if (!form.plazo_retencion.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {};
