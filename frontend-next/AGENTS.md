@@ -207,3 +207,52 @@ Evaluación de Impacto en Protección de Datos. Obligatoria cuando hay datos sen
 - Estados EIPD: `no_requerida` | `pendiente` | `en_proceso` | `completada`
 - Roles empresa: `admin` | `editor` | `viewer`
 - Roles globales: `superadmin` | `admin_empresa` | `usuario`
+
+---
+
+## Despliegue y ambientes
+
+### Variables de entorno (Vercel Frontend)
+
+| Variable | Descripción | QA | Producción |
+|----------|-------------|-----|------------|
+| `NEXT_PUBLIC_API_BASE` | URL del backend | `https://custodio-api-qa-git-qa-...vercel.app` | `https://custodio-api-prod.vercel.app` |
+| `NEXT_PUBLIC_DEPLOY_ENV` | Ambiente de despliegue | `qa` | `production` |
+
+### Arquitectura de ambientes
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  LOCAL DEV │
+│  Frontend: localhost:3000  →  API: localhost:8002         │
+│  .env: NEXT_PUBLIC_API_BASE=http://localhost:8002           │
+└─────────────────────────────────────────────────────────────┘
+ │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  QA                                                        │
+│  Frontend: custodiodio-qa.vercel.app                       │
+│  API: custodiodio-api-qa-git-qa-...vercel.app │
+│  Vercel: proyecto separado "custodio-qa"                  │
+│  .env: NEXT_PUBLIC_API_BASE=<QA API URL>                   │
+│         NEXT_PUBLIC_DEPLOY_ENV=qa                           │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  PRODUCTION                                                │
+│  Frontend: custodiodio-rat.vercel.app                      │
+│  API: custodiodio-api-prod.vercel.app                      │
+│  Vercel: proyecto separado "custodio-rat"                 │
+│  .env: NEXT_PUBLIC_API_BASE=https://custodio-api-prod...   │
+│         NEXT_PUBLIC_DEPLOY_ENV=production                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Reglas de CORS (Backend FastAPI)
+
+- `ALLOWED_ORIGINS` es la **única** fuente de verdad para CORS
+- Sin `ALLOWED_ORIGINS` → la app no levanta (fail loud)
+- Sin wildcards, sin VERCEL_URL, sin ENVIRONMENT para CORS
+- QA: `ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000`
+- Prod: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app`
