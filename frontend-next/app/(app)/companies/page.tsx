@@ -181,6 +181,10 @@ function CompanyForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =>
     if (!form.rut.trim()) { toast.error('El RUT es obligatorio.'); return; }
     const rutValid = validarRUT(form.rut);
     if (!rutValid.valido) { toast.error(rutValid.mensaje); return; }
+    if (form.email_dpo.trim()) {
+      const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(form.email_dpo.trim());
+      if (!emailValid) { toast.error('El email del DPO no es valido.'); return; }
+    }
     setSaving(true);
     try {
       const payload = Object.fromEntries(
@@ -356,6 +360,8 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
       return;
     }
     if (form.password.length < 6) { toast.error('La contraseña debe tener al menos 6 caracteres.'); return; }
+    const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(form.email.trim());
+    if (!emailValid) { toast.error('El email no es valido.'); return; }
     setSaving(true);
     try {
       await api.crearUsuario({ ...form, full_name: form.full_name.trim() || form.username });

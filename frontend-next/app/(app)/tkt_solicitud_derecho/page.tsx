@@ -164,6 +164,8 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
       toast.error('Nombre y email del titular son obligatorios');
       return;
     }
+    const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(titularEmail.trim());
+    if (!emailValid) { toast.error('El email del titular no es valido.'); return; }
     setGuardando(true);
     try {
       await crearTktTicket({
