@@ -231,28 +231,28 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Demasiados intentos. Intente nuevamente en un minuto."},
     )
 
-ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
-env = os.getenv("ENVIRONMENT", "development")
-vercel_url = os.getenv("VERCEL_URL", "")
-if not ALLOWED_ORIGINS:
-    if env == "qa" and vercel_url:
-        ALLOWED_ORIGINS = [f"https://{vercel_url}"]
-    elif env == "qa":
-        ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:3001"]
-    elif env == "production" and vercel_url:
-        ALLOWED_ORIGINS = [f"https://{vercel_url}"]
-    elif env == "production":
-        raise RuntimeError(
-            "ALLOWED_ORIGINS env var is required in production. "
-            "Set a comma-separated list of allowed origins, e.g. "
-            "ALLOWED_ORIGINS=https://custodio-rat.vercel.app,https://custodio-qa.vercel.app"
-        )
-    else:
-        ALLOWED_ORIGINS = [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://127.0.0.1:3000",
-        ]
+_explicit_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+_vercel_url = os.getenv("VERCEL_URL", "")
+_is_production = os.getenv("ENVIRONMENT") == "production"
+
+if _explicit_origins:
+    ALLOWED_ORIGINS = _explicit_origins
+elif _vercel_url:
+    ALLOWED_ORIGINS = [f"https://{_vercel_url}"]
+elif _is_production:
+    raise RuntimeError(
+        "ALLOWED_ORIGINS env var is required when ENVIRONMENT=production. "
+        "Set a comma-separated list of allowed origins, e.g.: "
+        "ALLOWED_ORIGINS=https://custodio-rat.vercel.app"
+    )
+else:
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://localhost:8002",
+        "http://127.0.0.1:8002",
+    ]
 
 app.add_middleware(RequestIdMiddleware)
 
