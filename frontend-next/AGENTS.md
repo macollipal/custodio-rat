@@ -216,7 +216,7 @@ Evaluación de Impacto en Protección de Datos. Obligatoria cuando hay datos sen
 
 | Variable | Descripción | QA | Producción |
 |----------|-------------|-----|------------|
-| `NEXT_PUBLIC_API_BASE` | URL del backend | `https://custodio-api-qa-git-qa-...vercel.app` | `https://custodio-api-prod.vercel.app` |
+| `NEXT_PUBLIC_API_BASE` | URL del backend | `https://custodio-qa.vercel.app` | `https://custodio-api-prod.vercel.app` |
 | `NEXT_PUBLIC_DEPLOY_ENV` | Ambiente de despliegue | `qa` | `production` |
 
 ### Arquitectura de ambientes
@@ -227,22 +227,22 @@ Evaluación de Impacto en Protección de Datos. Obligatoria cuando hay datos sen
 │  Frontend: localhost:3000  →  API: localhost:8002         │
 │  .env: NEXT_PUBLIC_API_BASE=http://localhost:8002           │
 └─────────────────────────────────────────────────────────────┘
- │
+  │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  QA                                                        │
-│  Frontend: custodiodio-qa.vercel.app                       │
-│  API: custodiodio-api-qa-git-qa-...vercel.app │
+│  Frontend: https://custodio-qa.vercel.app                   │
+│  API: https://custodio-qa.vercel.app (mismo dominio)        │
 │  Vercel: proyecto separado "custodio-qa"                  │
-│  .env: NEXT_PUBLIC_API_BASE=<QA API URL>                   │
+│  .env: NEXT_PUBLIC_API_BASE=https://custodio-qa.vercel.app  │
 │         NEXT_PUBLIC_DEPLOY_ENV=qa                           │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  PRODUCTION                                                │
-│  Frontend: custodiodio-rat.vercel.app                      │
-│  API: custodiodio-api-prod.vercel.app                      │
+│  Frontend: https://custodio-rat.vercel.app                  │
+│  API: https://custodio-api-prod.vercel.app                  │
 │  Vercel: proyecto separado "custodio-rat"                 │
 │  .env: NEXT_PUBLIC_API_BASE=https://custodio-api-prod...   │
 │         NEXT_PUBLIC_DEPLOY_ENV=production                  │

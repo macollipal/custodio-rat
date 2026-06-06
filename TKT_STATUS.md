@@ -102,7 +102,7 @@ Abiertos | En Proceso | Pendientes | Resueltos | Vencidos | Todos
 ---
 
 ## Deploy y Test QA
-- QA Backend: `https://custodio-api-qa-git-qa-marcelos-projects-3cc299e0.vercel.app`
+- QA Backend: `https://custodio-qa.vercel.app`
 - QA Frontend: `https://custodio-qa.vercel.app`
 - Login QA: `admin` / `Admin1234!`
 - DB QA: `ep-fragrant-wildflower-apeqosx9-pooler.c-7.us-east-1.aws.neon.tech/neondb`
