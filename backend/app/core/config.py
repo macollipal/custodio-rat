@@ -43,7 +43,28 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
 
-
+    # CORS - en producción usar ALLOWED_ORIGINS desde .env
+    ALLOWED_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8002",
+        "http://127.0.0.1:8002",
+    ]
+    ALLOWED_ORIGINS_PROD: list[str] = [
+        "https://custodio-rat-iy24-iyhtfb8jm-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24-2grukh4cj-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24-nnmjz7ri6-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24-pjyrvtf4d-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-rat-iy24.vercel.app",
+        "https://custodio-indol.vercel.app",
+        "https://custodio-b5o2s7ily-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-2a6ifunvu-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-f0p0m9vfs-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-api-git-qa-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-qrdxqaap4-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-qa.vercel.app",
+    ]
+    VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
 
     class Config:
         env_file = ".env"
@@ -56,5 +77,13 @@ class Settings(BaseSettings):
                 raise ValueError("SECRET_KEY es obligatoria en producción. Genera una clave con: openssl rand -hex 64")
             return self.SECRET_KEY
         return self._dev_secret
+
+    @property
+    def resolved_allowed_origins(self) -> list[str]:
+        if self.ENVIRONMENT in ("production", "qa", "staging"):
+            if self.VERCEL_URL and not self.ALLOWED_ORIGINS_PROD:
+                return [f"https://{self.VERCEL_URL}"]
+            return self.ALLOWED_ORIGINS_PROD
+        return self.ALLOWED_ORIGINS
 
 settings = Settings()
