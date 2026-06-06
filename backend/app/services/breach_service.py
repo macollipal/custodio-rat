@@ -1,6 +1,7 @@
 """
 Lógica de negocio para Brechas de Seguridad (Art. 14 bis Ley 21.719).
 Plazos legales: notificación APDC en 72 horas; titulares sin dilación en datos sensibles/menores/financieros.
+Filtro de riesgo razonable (Art. 14 sexies — REC-05).
 """
 
 import json
@@ -11,7 +12,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.models.breach import SecurityBreach
+from app.models.breach import SecurityBreach, NivelRiesgo
 from app.schemas.breach import BreachCreate, BreachUpdate
 
 logger = logging.getLogger(__name__)
@@ -91,4 +92,30 @@ def _enriquecer(breach: SecurityBreach) -> dict:
     return {
         "horas_desde_deteccion": round(horas, 1),
         "plazo_apdc_vencido": horas > 72 and not breach.notificado_apdc,
+        "reportable_apdc_calculado": _calcular_reportable(breach),
     }
+
+
+def _calcular_reportable(breach: SecurityBreach) -> bool:
+    """Calcula si la brecha debe ser notificada a APDC según Art. 14 sexies (REC-05).
+
+    Es reportable si:
+    - nivel_riesgo es ALTO o CRÍTICO, O
+    - incluye datos sensibles, O
+    - incluye datos de menores de edad, O
+    - incluye datos financieros.
+    """
+    if breach.nivel_riesgo in (NivelRiesgo.ALTO, NivelRiesgo.CRITICO):
+        return True
+    if breach.incluye_datos_sensibles or breach.incluye_datos_nna or breach.incluye_datos_financieros:
+        return True
+    return False
+
+
+def evaluar_riesgo_brecha(db: Session, breach_id: int) -> SecurityBreach:
+    """Recalcula el nivel de riesgo y reportabilidad de una brecha existente."""
+    breach = get_breach(db, breach_id)
+    breach.reportable_apdc_calculado = _calcular_reportable(breach)
+    db.commit()
+    db.refresh(breach)
+    return breach

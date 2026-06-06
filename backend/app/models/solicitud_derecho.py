@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.database import Base
@@ -10,6 +10,8 @@ class TipoSolicitud(str, enum.Enum):
     RECTIFICACION = "rectificacion"
     CANCELACION = "cancelacion"
     OPOSICION = "oposicion"
+    BLOQUEO = "bloqueo"
+    PORTABILIDAD = "portabilidad"
 
 
 class EstadoSolicitud(str, enum.Enum):
@@ -17,6 +19,7 @@ class EstadoSolicitud(str, enum.Enum):
     EN_PROCESO = "en_proceso"
     RESUELTO = "resuelto"
     RECHAZADO = "rechazada"
+    BLOQUEADO = "bloqueado"
 
 
 class SolicitudDerecho(Base):
@@ -36,4 +39,8 @@ class SolicitudDerecho(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
+    rat_id = Column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
+    plazo_bloqueo_vencimiento = Column(DateTime, nullable=True)
+
     company = relationship("Company", back_populates="solicitudes_derecho")
+    rat = relationship("RAT")

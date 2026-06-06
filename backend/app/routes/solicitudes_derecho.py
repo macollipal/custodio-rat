@@ -63,6 +63,29 @@ class SolicitudCreate(BaseModel):
         return v
 
 
+class BloquearRequest(BaseModel):
+    rat_id: int
+    dias_bloqueo: int = 2
+
+
+class PortabilidadResponse(BaseModel):
+    id: int
+    company_id: int
+    tipo: str
+    nombre_titular: str
+    rut_titular: Optional[str]
+    email_titular: str
+    descripcion: Optional[str]
+    estado: str
+    solicitud_fecha: Optional[str]
+    respuesta: Optional[str]
+    respuesta_fecha: Optional[str]
+    created_at: Optional[str]
+    rat_id: Optional[int]
+    plazo_bloqueo_vencimiento: Optional[str]
+    exportado_en: Optional[str]
+
+
 class TokenResponse(BaseModel):
     token: str
 
@@ -301,3 +324,139 @@ def responder_solicitud(
     s.respuesta_fecha = datetime.now(timezone.utc)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/{solicitud_id}/bloquear", summary="Bloquear temporalmente un RAT (Art. 8 ter — REC-01)")
+def bloquear_rat(
+    solicitud_id: int,
+    data: BloquearRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    from app.models.rat import RAT as RATModel
+
+    s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
+
+    rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado")
+    if rat.company_id != s.company_id:
+        raise HTTPException(status_code=400, detail="El RAT no pertenece a la empresa de la solicitud")
+
+    historial = SolicitudHistorial(
+        solicitud_id=s.id,
+        estado_anterior=s.estado,
+        estado_nuevo=EstadoSolicitud.BLOQUEADO.value,
+        descripcion=f"Bloqueo temporal del RAT id={rat.id} por {data.dias_bloqueo} días hábiles",
+        usuario_nombre=current_user.username,
+    )
+    db.add(historial)
+
+    s.estado = EstadoSolicitud.BLOQUEADO.value
+    s.rat_id = data.rat_id
+    s.plazo_bloqueo_vencimiento = _calcular_fecha_vencimiento(data.dias_bloqueo)
+    rat.bloqueado = True
+    db.commit()
+    return {
+        "ok": True,
+        "rat_id": rat.id,
+        "bloqueado": True,
+        "plazo_vencimiento": s.plazo_bloqueo_vencimiento.isoformat() if s.plazo_bloqueo_vencimiento else None,
+    }
+
+
+@router.post("/{solicitud_id}/desbloquear", summary="Desbloquear un RAT antes del vencimiento (REC-01)")
+def desbloquear_rat(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
+
+    if s.estado != EstadoSolicitud.BLOQUEADO.value:
+        raise HTTPException(status_code=400, detail="Esta solicitud no está en estado bloqueado")
+
+    rat_id = s.rat_id
+    if rat_id:
+        from app.models.rat import RAT as RATModel
+        rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+        if rat:
+            rat.bloqueado = False
+
+    historial = SolicitudHistorial(
+        solicitud_id=s.id,
+        estado_anterior=s.estado,
+        estado_nuevo=EstadoSolicitud.EN_PROCESO.value,
+        descripcion="Desbloqueo anticipado del RAT",
+        usuario_nombre=current_user.username,
+    )
+    db.add(historial)
+
+    s.estado = EstadoSolicitud.EN_PROCESO.value
+    s.plazo_bloqueo_vencimiento = None
+    db.commit()
+    return {"ok": True, "rat_id": rat_id, "bloqueado": False}
+
+
+@router.get("/{solicitud_id}/portabilidad/export", summary="Exportar datos de portabilidad en JSON (Art. 9 — REC-04)")
+def exportar_portabilidad(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if s.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
+
+    if s.tipo != TipoSolicitud.PORTABILIDAD.value:
+        raise HTTPException(status_code=400, detail="Esta solicitud no es de portabilidad")
+
+    from datetime import datetime, timezone
+    exportado_en = datetime.now(timezone.utc)
+
+    return PortabilidadResponse(
+        id=s.id,
+        company_id=s.company_id,
+        tipo=s.tipo,
+        nombre_titular=s.nombre_titular,
+        rut_titular=s.rut_titular,
+        email_titular=s.email_titular,
+        descripcion=s.descripcion,
+        estado=s.estado,
+        solicitud_fecha=s.solicitud_fecha.isoformat() if s.solicitud_fecha else None,
+        respuesta=s.respuesta,
+        respuesta_fecha=s.respuesta_fecha.isoformat() if s.respuesta_fecha else None,
+        created_at=s.created_at.isoformat() if s.created_at else None,
+        rat_id=s.rat_id,
+        plazo_bloqueo_vencimiento=s.plazo_bloqueo_vencimiento.isoformat() if s.plazo_bloqueo_vencimiento else None,
+        exportado_en=exportado_en.isoformat(),
+    )
+
+
+def _calcular_fecha_vencimiento(dias: int) -> datetime:
+    """Calcula la fecha de vencimiento del bloqueo sumando días hábiles (lunes a viernes)."""
+    from datetime import datetime, timezone, timedelta
+    hoy = datetime.now(timezone.utc)
+    dias_habiles = 0
+    dia_actual = hoy
+    while dias_habiles < dias:
+        dia_actual += timedelta(days=1)
+        if dia_actual.weekday() < 5:
+            dias_habiles += 1
+    return dia_actual

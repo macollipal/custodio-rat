@@ -12,6 +12,7 @@ from app.database.database import get_db
 from app.routes.deps import get_current_user, require_editor_or_admin_empresa
 from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse
 from app.schemas.audit_log import AuditLogOut
+from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
     create_rat, delete_rat, get_audit_logs, get_dashboard_stats,
     get_rat, get_rats, update_rat, marcar_revisado, aprobar_rat,
@@ -215,6 +216,43 @@ async def crear(
     out.nivel_riesgo = r.calcular_nivel_riesgo()
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
+
+
+@router.post("/{rat_id}/consentimientos", response_model=ConsentimientoOut, status_code=201, summary="Registrar consentimiento expreso para datos sensibles (REC-06)")
+async def crear_consentimiento(
+    request: Request,
+    rat_id: int,
+    data: ConsentimientoCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Registra un consentimiento expreso del titular para un RAT que trata datos sensibles (Art. 16 Ley 21.719)."""
+    from app.models.rat import RAT as RATModel
+    from app.models.consentimiento import Consentimiento
+
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+
+    if data.rat_id != rat_id:
+        raise HTTPException(status_code=400, detail="El rat_id del consentimiento no coincide con la URL.")
+
+    consentimiento = Consentimiento(
+        company_id=rat.company_id,
+        rat_id=rat_id,
+        nombre_titular=data.nombre_titular,
+        email_titular=data.email_titular,
+        canal=data.canal,
+        texto_consentimiento=data.texto_consentimiento,
+        fecha_obtencion=data.fecha_obtencion,
+        ip_origen=data.ip_origen or get_client_ip(request),
+        activo=True,
+    )
+    db.add(consentimiento)
+    db.commit()
+    db.refresh(consentimiento)
+    return consentimiento
 
 
 @router.put("/{rat_id}", response_model=RATOut, summary="Actualizar registro RAT")

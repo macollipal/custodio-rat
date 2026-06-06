@@ -4,10 +4,18 @@ Plazos: notificación APDC en 72 horas; titulares sin dilación si son datos sen
 """
 
 from datetime import datetime, timezone
+from enum import Enum as PyEnum
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+
+
+class NivelRiesgo(str, PyEnum):
+    BAJO = "bajo"
+    MEDIO = "medio"
+    ALTO = "alto"
+    CRITICO = "critico"
 
 
 class SecurityBreach(Base):
@@ -29,6 +37,14 @@ class SecurityBreach(Base):
     # Notificación a titulares (sin dilación cuando hay datos sensibles/menores/financieros)
     notificado_titulares: Mapped[bool] = mapped_column(Boolean, default=False)
     fecha_notificacion_titulares: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Filtro de riesgo razonable (Art. 14 sexies — REC-05)
+    nivel_riesgo: Mapped[NivelRiesgo] = mapped_column(String(20), default=NivelRiesgo.BAJO, nullable=False)
+    volumen_titulares_afectados: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    incluye_datos_sensibles: Mapped[bool] = mapped_column(Boolean, default=False)
+    incluye_datos_nna: Mapped[bool] = mapped_column(Boolean, default=False)
+    incluye_datos_financieros: Mapped[bool] = mapped_column(Boolean, default=False)
+    reportable_apdc_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
 
     creado_por: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
