@@ -14,10 +14,50 @@ const TIPOS_DERECHO = [
   { value: 'portabilidad', label: 'Portabilidad', desc: 'Quiero recibir mis datos en un formato estructurado y de uso común.' },
 ];
 
+const VALID_TIPOS = ['acceso', 'rectificacion', 'cancelacion', 'oposicion', 'bloqueo', 'portabilidad'];
+
 interface Company {
   id: number;
   nombre: string;
   rut: string;
+}
+
+interface FormErrors {
+  companyId?: string;
+  tipo?: string;
+  nombre_titular?: string;
+  rut_titular?: string;
+  email_titular?: string;
+  descripcion?: string;
+}
+
+function validarEmail(email: string): boolean {
+  return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+}
+
+function validarNombre(nombre: string): string | undefined {
+  if (!nombre.trim()) return 'El nombre es obligatorio.';
+  if (nombre.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres.';
+  if (nombre.trim().length > 100) return 'El nombre no puede superar los 100 caracteres.';
+  return undefined;
+}
+
+function validarEmailField(email: string): string | undefined {
+  if (!email.trim()) return 'El email es obligatorio.';
+  if (!validarEmail(email)) return 'El email no es válido. Ej: nombre@empresa.com';
+  return undefined;
+}
+
+function validarCompanyId(id: string): string | undefined {
+  if (!id) return 'Seleccioná una empresa.';
+  if (Number(id) <= 0) return 'Empresa inválida.';
+  return undefined;
+}
+
+function validarTipo(tipo: string): string | undefined {
+  if (!tipo) return 'Seleccioná el tipo de solicitud.';
+  if (!VALID_TIPOS.includes(tipo)) return 'Tipo de solicitud inválido.';
+  return undefined;
 }
 
 export default function SolicitudDerechoPage() {
@@ -29,6 +69,8 @@ export default function SolicitudDerechoPage() {
   const [rutError, setRutError] = useState('');
   const [token, setToken] = useState('');
   const [tokenError, setTokenError] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [form, setForm] = useState({
     companyId: '',
     tipo: '',
@@ -62,31 +104,60 @@ export default function SolicitudDerechoPage() {
       .finally(() => setTokenLoading(false));
   }, [step]);
 
+  useEffect(() => {
+    if (touched.companyId) setErrors(e => ({ ...e, companyId: validarCompanyId(form.companyId) }));
+  }, [form.companyId, touched.companyId]);
+
+  useEffect(() => {
+    if (touched.nombre_titular) setErrors(e => ({ ...e, nombre_titular: validarNombre(form.nombre_titular) }));
+  }, [form.nombre_titular, touched.nombre_titular]);
+
+  useEffect(() => {
+    if (touched.email_titular) setErrors(e => ({ ...e, email_titular: validarEmailField(form.email_titular) }));
+  }, [form.email_titular, touched.email_titular]);
+
+  useEffect(() => {
+    if (touched.descripcion) {
+      const msg = form.descripcion.length > 2000 ? 'La descripción no puede superar los 2000 caracteres.' : undefined;
+      setErrors(e => ({ ...e, descripcion: msg }));
+    }
+  }, [form.descripcion, touched.descripcion]);
+
   const selectedTipo = TIPOS_DERECHO.find(t => t.value === form.tipo);
+
+  function validateAll(): FormErrors {
+    return {
+      companyId: validarCompanyId(form.companyId),
+      tipo: validarTipo(form.tipo),
+      nombre_titular: validarNombre(form.nombre_titular),
+      rut_titular: form.rut_titular && form.rut_titular.length >= 8
+        ? (validarRUT(form.rut_titular).valido ? undefined : 'El RUT no es válido.')
+        : undefined,
+      email_titular: validarEmailField(form.email_titular),
+      descripcion: form.descripcion.length > 2000 ? 'La descripción no puede superar los 2000 caracteres.' : undefined,
+    };
+  }
+
+  function handleBlur(field: string) {
+    setTouched(t => ({ ...t, [field]: true }));
+    if (field === 'rut_titular' && form.rut_titular && form.rut_titular.length >= 8) {
+      const result = validarRUT(form.rut_titular);
+      setRutError(result.valido ? '' : result.mensaje);
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setTouched({ companyId: true, tipo: true, nombre_titular: true, rut_titular: true, email_titular: true, descripcion: true });
+    const allErrors = validateAll();
+    setErrors(allErrors);
     if (tokenLoading || !token) {
       toast.error('Esperá el token de seguridad antes de enviar.');
       return;
     }
-    if (!form.companyId || !form.tipo || !form.nombre_titular || !form.email_titular) {
-      toast.error('Completá todos los campos obligatorios.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email_titular)) {
-      toast.error('Ingresá un email válido.');
-      return;
-    }
-    if (form.rut_titular && form.rut_titular.length >= 8) {
-      const result = validarRUT(form.rut_titular);
-      if (!result.valido) {
-        toast.error('El RUT no es válido: ' + result.mensaje);
-        return;
-      }
-    }
-    if (form.descripcion && form.descripcion.length > 2000) {
-      toast.error('La descripción no puede superar los 2000 caracteres.');
+    const hasErrors = Object.values(allErrors).some(e => e !== undefined);
+    if (hasErrors) {
+      toast.error('Completá todos los campos obligatorios correctamente.');
       return;
     }
     setSubmitting(true);
@@ -96,9 +167,9 @@ export default function SolicitudDerechoPage() {
       body: JSON.stringify({
         company_id: Number(form.companyId),
         tipo: form.tipo,
-        nombre_titular: form.nombre_titular,
+        nombre_titular: form.nombre_titular.trim(),
         rut_titular: form.rut_titular || undefined,
-        email_titular: form.email_titular,
+        email_titular: form.email_titular.trim().toLowerCase(),
         descripcion: form.descripcion || undefined,
         token: token,
       }),
@@ -190,10 +261,19 @@ export default function SolicitudDerechoPage() {
                   </button>
                 ))}
               </div>
+              {touched.tipo && errors.tipo && (
+                <p className="text-sm" style={{ color: '#DC2626' }}>{errors.tipo}</p>
+              )}
               <button
                 type="button"
-                onClick={() => form.tipo && setStep(2)}
-                disabled={!form.tipo}
+                onClick={() => {
+                  if (!form.tipo) {
+                    setTouched(t => ({ ...t, tipo: true }));
+                    setErrors(e => ({ ...e, tipo: validarTipo(form.tipo) }));
+                    return;
+                  }
+                  setStep(2);
+                }}
                 className="w-full py-3 rounded-lg text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: form.tipo ? '#2563EB' : '#9CA3AF' }}
               >
@@ -221,16 +301,21 @@ export default function SolicitudDerechoPage() {
                     id="company-select"
                     value={form.companyId}
                     onChange={e => setForm(f => ({ ...f, companyId: e.target.value }))}
+                    onBlur={() => handleBlur('companyId')}
                     className="w-full p-3 rounded-lg border"
-                    style={{ borderColor: '#E5E7EB', outline: 'none' }}
+                    style={{ borderColor: touched.companyId && errors.companyId ? '#DC2626' : '#E5E7EB', outline: 'none' }}
                     required
                     aria-required="true"
+                    aria-describedby={touched.companyId && errors.companyId ? 'company-error' : undefined}
                   >
                     <option value="">Seleccioná la empresa</option>
                     {companies.map(c => (
                       <option key={c.id} value={c.id}>{c.nombre} ({c.rut})</option>
                     ))}
                   </select>
+                )}
+                {touched.companyId && errors.companyId && (
+                  <p id="company-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.companyId}</p>
                 )}
               </div>
 
@@ -241,12 +326,17 @@ export default function SolicitudDerechoPage() {
                   type="text"
                   value={form.nombre_titular}
                   onChange={e => setForm(f => ({ ...f, nombre_titular: e.target.value }))}
+                  onBlur={() => handleBlur('nombre_titular')}
                   placeholder="Ej: Juan Pérez González"
                   className="w-full p-3 rounded-lg border"
-                  style={{ borderColor: '#E5E7EB', outline: 'none' }}
+                  style={{ borderColor: touched.nombre_titular && errors.nombre_titular ? '#DC2626' : '#E5E7EB', outline: 'none' }}
                   required
                   aria-required="true"
+                  aria-describedby={touched.nombre_titular && errors.nombre_titular ? 'nombre-error' : undefined}
                 />
+                {touched.nombre_titular && errors.nombre_titular && (
+                  <p id="nombre-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.nombre_titular}</p>
+                )}
               </div>
 
               <div>
@@ -265,12 +355,7 @@ export default function SolicitudDerechoPage() {
                       setRutError('');
                     }
                   }}
-                  onBlur={() => {
-                    if (form.rut_titular && form.rut_titular.length >= 8) {
-                      const result = validarRUT(form.rut_titular);
-                      setRutError(result.valido ? '' : result.mensaje);
-                    }
-                  }}
+                  onBlur={() => handleBlur('rut_titular')}
                   placeholder="Ej: 12.345.678-5"
                   className="w-full p-3 rounded-lg border"
                   style={{ borderColor: rutError ? '#DC2626' : '#E5E7EB', outline: 'none' }}
@@ -286,12 +371,17 @@ export default function SolicitudDerechoPage() {
                   type="email"
                   value={form.email_titular}
                   onChange={e => setForm(f => ({ ...f, email_titular: e.target.value }))}
+                  onBlur={() => handleBlur('email_titular')}
                   placeholder="Ej: juan@mail.com"
                   className="w-full p-3 rounded-lg border"
-                  style={{ borderColor: '#E5E7EB', outline: 'none' }}
+                  style={{ borderColor: touched.email_titular && errors.email_titular ? '#DC2626' : '#E5E7EB', outline: 'none' }}
                   required
                   aria-required="true"
+                  aria-describedby={touched.email_titular && errors.email_titular ? 'email-error' : undefined}
                 />
+                {touched.email_titular && errors.email_titular && (
+                  <p id="email-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.email_titular}</p>
+                )}
               </div>
 
               <div>
@@ -302,16 +392,21 @@ export default function SolicitudDerechoPage() {
                   id="descripcion"
                   value={form.descripcion}
                   onChange={e => setForm(f => ({ ...f, descripcion: e.target.value.slice(0, 2000) }))}
+                  onBlur={() => handleBlur('descripcion')}
                   maxLength={2000}
                   placeholder="Ej: Quiero saber qué datos personales tienen sobre mí, en particular los relacionados con..."
                   rows={4}
                   className="w-full p-3 rounded-lg border resize-none"
-                  style={{ borderColor: '#E5E7EB', outline: 'none' }}
-                  aria-describedby="descripcion-hint"
+                  style={{ borderColor: touched.descripcion && errors.descripcion ? '#DC2626' : '#E5E7EB', outline: 'none' }}
+                  aria-describedby={touched.descripcion && errors.descripcion ? 'descripcion-error' : 'descripcion-hint'}
                 />
-                <p id="descripcion-hint" className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-                  Opcional pero recomendable. ({form.descripcion.length}/2000)
-                </p>
+                {touched.descripcion && errors.descripcion ? (
+                  <p id="descripcion-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.descripcion}</p>
+                ) : (
+                  <p id="descripcion-hint" className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                    Opcional pero recomendable. ({form.descripcion.length}/2000)
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3">
