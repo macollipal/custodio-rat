@@ -61,6 +61,7 @@ class Settings(BaseSettings):
         "https://custodio-2a6ifunvu-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-f0p0m9vfs-marcelos-projects-3cc299e0.vercel.app",
         "https://custodio-api-git-qa-marcelos-projects-3cc299e0.vercel.app",
+        "https://custodio-qrdxqaap4-marcelos-projects-3cc299e0.vercel.app",
     ]
     VERCEL_URL: str = ""  # URL del frontend en Vercel (ej: custodiokey.vercel.app)
 
