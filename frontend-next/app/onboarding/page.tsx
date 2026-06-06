@@ -51,6 +51,8 @@ export default function OnboardingPage() {
     const rutValid = validarRUT(form.rut);
     if (!rutValid.valido) { toast.error(rutValid.mensaje); return; }
     if (!form.email_dpo.trim()) { toast.error('El email del DPO es obligatorio.'); return; }
+    const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(form.email_dpo.trim());
+    if (!emailValid) { toast.error('El email del DPO no es valido.'); return; }
 
     setSaving(true);
     try {

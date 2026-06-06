@@ -96,10 +96,13 @@ export default function EncargadosContratoPage() {
   }
 
   async function handleSave() {
-    if (!form.nombre_encargado.trim() || !form.objeto.trim() || !form.duracion_inicio) {
-      toast.error('Nombre del encargado, objeto y fecha de inicio son obligatorios.');
-      return;
-    }
+    if (!form.nombre_encargado.trim()) { toast.error('El nombre del encargado es obligatorio.'); return; }
+    if (!form.objeto.trim()) { toast.error('El objeto del contrato es obligatorio.'); return; }
+    if (!form.duracion_inicio) { toast.error('La fecha de inicio es obligatoria.'); return; }
+    if (!form.finalidad.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+    if (!form.tipo_datos.trim()) { toast.error('El tipo de datos es obligatorio.'); return; }
+    if (!form.categorias_titulares.trim()) { toast.error('Las categorias de titulares son obligatorias.'); return; }
+    if (!form.derechos_obligaciones.trim()) { toast.error('Los derechos y obligaciones son obligatorios.'); return; }
     setSaving(true);
     try {
       const payload = {
