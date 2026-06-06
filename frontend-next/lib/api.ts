@@ -100,7 +100,12 @@ export async function listarRats(companyId?: number): Promise<RAT[]> {
     ? `${API_BASE}/rats/?company_id=${companyId}`
     : `${API_BASE}/rats/`;
   const res = await fetch(url, { headers: authHeaders() });
-  return handle<RAT[]>(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al listar RATs');
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.rats || []);
 }
 
 export interface ReportesResponse {
@@ -730,7 +735,12 @@ export interface EncargadoContrato {
 
 export async function listarEncargadosContrato(companyId: number): Promise<EncargadoContrato[]> {
   const res = await fetch(`${API_BASE}/encargados-contrato/?company_id=${companyId}`, { headers: authHeaders() });
-  return handle<EncargadoContrato[]>(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al listar contratos');
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.contratos || []);
 }
 
 export async function crearEncargadoContrato(data: Omit<EncargadoContrato, 'id' | 'created_at'>): Promise<EncargadoContrato> {
