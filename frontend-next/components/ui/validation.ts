@@ -1,3 +1,10 @@
+export function validarEmail(email: string): { valido: boolean; mensaje: string } {
+  if (!email.trim()) return { valido: false, mensaje: 'El email es obligatorio.' };
+  const regex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  if (!regex.test(email.trim())) return { valido: false, mensaje: 'El email no es valido. Ej: nombre@empresa.com' };
+  return { valido: true, mensaje: 'Email valido.' };
+}
+
 export function validarRUT(rut: string): { valido: boolean; mensaje: string } {
   const limpio = rut.replace(/[^0-9kK]/gi, '').toUpperCase();
   if (limpio.length < 8) {
@@ -8,7 +15,7 @@ export function validarRUT(rut: string): { valido: boolean; mensaje: string } {
   const dv = limpio.slice(-1);
 
   if (!/^\d+$/.test(cuerpo)) {
-    return { valido: false, mensaje: 'El cuerpo del RUT debe contener solo números.' };
+    return { valido: false, mensaje: 'El cuerpo del RUT debe contener solo numeros.' };
   }
 
   let suma = 0;
@@ -22,10 +29,10 @@ export function validarRUT(rut: string): { valido: boolean; mensaje: string } {
   const dvEsperado = resto === 0 ? '0' : resto === 1 ? 'K' : String(11 - resto);
 
   if (dv !== dvEsperado) {
-    return { valido: false, mensaje: `El dígito verificador no corresponde. RUT inválido (esperado: ${dvEsperado}).` };
+    return { valido: false, mensaje: `El digito verificador no corresponde. RUT invalido (esperado: ${dvEsperado}).` };
   }
 
-  return { valido: true, mensaje: 'RUT válido.' };
+  return { valido: true, mensaje: 'RUT valido.' };
 }
 
 export function formatearRUT(rut: string): string {

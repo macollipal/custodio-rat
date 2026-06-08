@@ -1,6 +1,6 @@
-const _apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://custodio-api-prod.vercel.app';
+const _apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8002';
 export const API_BASE = _apiBase.startsWith('http') ? _apiBase : `https://${_apiBase}`;
-export const DEPLOY_ENV = process.env.NEXT_PUBLIC_DEPLOY_ENV || 'production';
+export const DEPLOY_ENV = process.env.NEXT_PUBLIC_DEPLOY_ENV || 'local';
 export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
   USER: 'custodio_user',

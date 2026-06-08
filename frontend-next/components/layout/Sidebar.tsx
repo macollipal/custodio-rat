@@ -5,7 +5,61 @@ import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
 import type { Company } from '@/types';
 
-type Page = 'dashboard' | 'rat' | 'companies' | 'breaches' | 'reportes' | 'usuarios' | 'rubros' | 'configuracion' | 'tkt_solicitud_derecho' | 'transparencia' | 'encargados-contrato';
+type Page =
+  | 'dashboard'
+  | 'rat'
+  | 'companies'
+  | 'breaches'
+  | 'reportes'
+  | 'usuarios'
+  | 'rubros'
+  | 'configuracion'
+  | 'tkt_solicitud_derecho'
+  | 'transparencia'
+  | 'encargados-contrato'
+  | 'consentimientos'
+  | 'eipd'
+  | 'asistente-ia';
+
+type NavItem = { key: Page; label: string; icon: string; roles: string[] };
+type NavGroup = { title: string; items: NavItem[] };
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: 'Operaciones',
+    items: [
+      { key: 'dashboard', label: 'Dashboard', icon: '▣', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'tkt_solicitud_derecho', label: 'Tickets ARCO', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    ],
+  },
+  {
+    title: 'Cumplimiento',
+    items: [
+      { key: 'transparencia', label: 'Transparencia', icon: '📄', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'encargados-contrato', label: 'Enc. Contrato', icon: '📝', roles: ['superadmin', 'admin_empresa'] },
+      { key: 'consentimientos', label: 'Consentimientos', icon: '✅', roles: ['superadmin', 'admin_empresa'] },
+      { key: 'eipd', label: 'EIPD', icon: '📑', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    ],
+  },
+  {
+    title: 'Análisis',
+    items: [
+      { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'asistente-ia', label: 'Asistente IA', icon: '🤖', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    ],
+  },
+  {
+    title: 'Administración',
+    items: [
+      { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
+      { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
+      { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
+      { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+    ],
+  },
+];
 
 interface SidebarProps {
   currentPage: Page;
@@ -23,19 +77,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
   const nombre = user?.full_name ?? 'Usuario';
   const rolLabel = user?.rol_global === 'superadmin' ? 'Superadmin' : user?.rol_global === 'admin_empresa' ? 'Admin empresa' : 'Usuario';
 
-  const allNavItems: { key: Page; label: string; icon: string; roles: string[] }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: '▣', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'tkt_solicitud_derecho', label: 'Solicitudes ARCO', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'transparencia', label: 'Transparencia', icon: '📄', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-    { key: 'encargados-contrato', label: 'Enc. Contrato', icon: '📝', roles: ['superadmin', 'admin_empresa'] },
-    { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
-    { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
-    { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
-    { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-  ];
+  const allNavItems: { key: Page; label: string; icon: string; roles: string[] }[] = NAV_GROUPS.flatMap(g => g.items);
 
   return (
     <aside
@@ -98,34 +140,49 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
         )}
       </div>
 
-      {/* Navegación */}
+      {/* Navegación agrupada */}
       <div className="px-4 pt-3 pb-2 flex-1">
-        <div className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-2 px-1">
-          Navegación
-        </div>
-        <nav className="space-y-0.5">
-          {allNavItems.filter(item => item.roles.includes(user?.rol_global ?? '')).map(item => {
-            const active = currentPage === item.key;
+        <nav className="space-y-3">
+          {NAV_GROUPS.map((group) => {
+            const visibleItems = group.items.filter(item =>
+              item.roles.includes(user?.rol_global ?? '')
+            );
+            if (visibleItems.length === 0) return null;
             return (
-              <button
-                key={item.key}
-                onClick={() => onNavigate(item.key)}
-                aria-current={active ? 'page' : undefined}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left"
-                style={{
-                  background: active ? '#2563EB' : 'transparent',
-                  color: active ? 'white' : '#9CA3AF',
-                }}
-                onMouseEnter={e => {
-                  if (!active) (e.currentTarget as HTMLElement).style.background = '#1F2937';
-                }}
-                onMouseLeave={e => {
-                  if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
-                }}
-              >
-                <span aria-hidden="true" className="text-base w-5 text-center">{item.icon}</span>
-                {item.label}
-              </button>
+              <div key={group.title}>
+                <div
+                  className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1.5 px-3"
+                  style={{ letterSpacing: '0.08em' }}
+                >
+                  {group.title}
+                </div>
+                <div className="space-y-0.5">
+                  {visibleItems.map(item => {
+                    const active = currentPage === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => onNavigate(item.key)}
+                        aria-current={active ? 'page' : undefined}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left"
+                        style={{
+                          background: active ? '#2563EB' : 'transparent',
+                          color: active ? 'white' : '#9CA3AF',
+                        }}
+                        onMouseEnter={e => {
+                          if (!active) (e.currentTarget as HTMLElement).style.background = '#1F2937';
+                        }}
+                        onMouseLeave={e => {
+                          if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        }}
+                      >
+                        <span aria-hidden="true" className="text-base w-5 text-center">{item.icon}</span>
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
