@@ -32,13 +32,11 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int]
         (12, 25), # Navidad
     ]
 
-    # Semana Santa 2025-2030 (algoritmo de Gauss simplificado)
-    # 2025: Abril 17-18
-    # 2026: Abril 3-4
-    # 2027: Marzo 26-27
-    # 2028: Abril 14-15
-    # 2029: Marzo 30-31
-    # 2030: Abril 18-19
+    # Semana Santa 2025-2040 (algoritmo de Gauss simplificado)
+    # 2025: Abril 17-18 | 2026: Abril 3-4 | 2027: Marzo 26-27 | 2028: Abril 14-15
+    # 2029: Marzo 30-31 | 2030: Abril 18-19 | 2031: Abril 10-11 | 2032: Marzo 26-27
+    # 2033: Abril 15-16 | 2034: Abril 7-8 | 2035: Marzo 23-24 | 2036: Abril 12-13
+    # 2037: Abril 3-4 | 2038: Abril 16-17 | 2039: Abril 8-9 | 2040: Marzo 30-31
     feriados_semana_santa = {
         2025: [(4, 17), (4, 18)],
         2026: [(4, 3), (4, 4)],
@@ -46,6 +44,16 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int]
         2028: [(4, 14), (4, 15)],
         2029: [(3, 30), (3, 31)],
         2030: [(4, 18), (4, 19)],
+        2031: [(4, 10), (4, 11)],
+        2032: [(3, 26), (3, 27)],
+        2033: [(4, 15), (4, 16)],
+        2034: [(4, 7), (4, 8)],
+        2035: [(3, 23), (3, 24)],
+        2036: [(4, 12), (4, 13)],
+        2037: [(4, 3), (4, 4)],
+        2038: [(4, 16), (4, 17)],
+        2039: [(4, 8), (4, 9)],
+        2040: [(3, 30), (3, 31)],
     }
 
     feriados = feriados_fijos.copy()
