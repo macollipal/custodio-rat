@@ -17,26 +17,20 @@ class Settings(BaseSettings):
         "conforme a la Ley 21.719 de Protección de Datos Personales de Chile."
     )
 
-    # Base de datos (Neon PostgreSQL) - REQUIERE variable de entorno DATABASE_URL
     DATABASE_URL: str = ""
-
-    # Seguridad JWT - REQUIERE variable de entorno SECRET_KEY
     SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 horas
-
-    # Ambiente: development | production
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     ENVIRONMENT: str = "development"
-
-    # Desarrollo: clave por defecto (NO usar en producción)
     _dev_secret: str = "dev-secret-never-use-in-production"
+    ALLOWED_ORIGINS: str = ""
 
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
     MINIMAX_API_KEY: str = ""
     MINIMAX_MODEL: str = "MiniMax-M2.7"
 
-    # SMTP para envío de correos
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
@@ -46,6 +40,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        case_sensitive = False
 
     @property
     def resolved_secret_key(self) -> str:
