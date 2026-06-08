@@ -12,15 +12,16 @@ from app.services.company_service import (
     create_company, delete_company, get_companies, get_company, update_company
 )
 from app.services.user_company_service import get_empresas_usuario, get_rol_usuario
-from app.routes.deps import get_current_user, require_admin, get_client_ip
+from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
 from app.models.rat import RAT as RATModel
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
 
-@router.get("/publico", response_model=list[CompanyPublicOut], summary="Listar empresas públicas (para formulario de derechos)")
+@router.get("/publico", response_model=list[CompanyPublicOut], summary="Listar empresas públicas (requiere autenticación)")
 async def listar_publico(
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     from app.models.company import Company
     companies = db.query(Company).order_by(Company.nombre).all()
@@ -67,6 +68,7 @@ async def obtener(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    check_company_access(current_user, company_id, db)
     c = get_company(db, company_id)
     out = CompanyOut.model_validate(c)
     out.total_rats = len(c.rats)
@@ -94,12 +96,7 @@ async def actualizar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    if current_user.rol_global not in ("superadmin", "admin_empresa"):
-        from app.models.user_company import RolEmpresa
-        rol = get_rol_usuario(db, current_user.id, company_id)
-        if rol != RolEmpresa.ADMIN:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="Se requiere rol administrador en esta empresa.")
+    check_company_access(current_user, company_id, db)
     return update_company(db, company_id, data, current_user.username, get_client_ip(request))
 
 
@@ -110,4 +107,5 @@ async def eliminar(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
+    check_company_access(current_user, company_id, db)
     return delete_company(db, company_id, current_user.username, get_client_ip(request))

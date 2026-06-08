@@ -40,43 +40,69 @@ def get_breach(db: Session, breach_id: int) -> SecurityBreach:
 
 def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreach:
     from app.models.company import Company
+    from app.services.audit_service import log_audit
     empresa = db.query(Company).filter(Company.id == data.company_id).first()
     if not empresa:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
     breach = SecurityBreach(**data.model_dump(), creado_por=usuario)
     db.add(breach)
+    db.flush()
+    log_audit(
+        db=db,
+        entidad="brecha",
+        entidad_id=breach.id,
+        accion="create",
+        usuario=usuario,
+        detalle={"company_id": data.company_id, "nivel_riesgo": str(getattr(breach, "nivel_riesgo", ""))},
+    )
     db.commit()
     db.refresh(breach)
 
     if empresa.email_dpo:
-        from app.services.email_service import notificar_nueva_brecha, EmailError
-        fecha_str = breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M")
+        from app.services.task_service import enqueue_task
         try:
-            notificar_nueva_brecha(
-                email_dpo=empresa.email_dpo,
-                nombre_dpo=empresa.contacto_dpo or "",
-                nombre_empresa=empresa.nombre,
-                descripcion=breach.descripcion or "Sin descripción",
-                fecha_deteccion=fecha_str,
+            enqueue_task(
+                db,
+                "notificar_brecha_dpo",
+                payload={"breach_id": breach.id},
             )
-        except EmailError as e:
-            logger.error(f"Brecha {breach.id}: fallo enviando notificación al DPO {empresa.email_dpo}: {e}")
+        except Exception as e:
+            logger.error(f"Brecha {breach.id}: fallo encolando notificación: {e}")
 
     return breach
 
 
-def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate) -> SecurityBreach:
+def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: Optional[str] = None) -> SecurityBreach:
+    from app.services.audit_service import log_audit
     breach = get_breach(db, breach_id)
-    for field, value in data.model_dump(exclude_none=True).items():
+    cambios = data.model_dump(exclude_none=True)
+    for field, value in cambios.items():
         setattr(breach, field, value)
+    log_audit(
+        db=db,
+        entidad="brecha",
+        entidad_id=breach_id,
+        accion="update",
+        usuario=usuario or "system",
+        detalle={"campos_modificados": list(cambios.keys())},
+    )
     db.commit()
     db.refresh(breach)
     return breach
 
 
-def eliminar_brecha(db: Session, breach_id: int) -> dict:
+def eliminar_brecha(db: Session, breach_id: int, usuario: Optional[str] = None) -> dict:
+    from app.services.audit_service import log_audit
     breach = get_breach(db, breach_id)
+    log_audit(
+        db=db,
+        entidad="brecha",
+        entidad_id=breach_id,
+        accion="delete",
+        usuario=usuario or "system",
+        detalle={"company_id": breach.company_id},
+    )
     db.delete(breach)
     db.commit()
     return {"message": "Brecha eliminada."}

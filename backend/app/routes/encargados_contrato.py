@@ -13,18 +13,9 @@ from app.models.encargado_contrato import EncargadoContrato
 from app.schemas.encargado_contrato import (
     EncargadoContratoCreate, EncargadoContratoUpdate, EncargadoContratoOut,
 )
-from app.services.user_company_service import get_empresas_usuario
-from app.routes.deps import get_current_user
+from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/encargados-contrato", tags=["Contratos de Encargado"])
-
-
-def _check_access(current_user, company_id: int, db: Session):
-    if current_user.rol_global == "superadmin":
-        return
-    empresas = get_empresas_usuario(db, current_user.id)
-    if company_id not in empresas:
-        raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
 
 
 def _procesar_archivo(data: dict) -> dict:
@@ -53,7 +44,7 @@ async def listar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    _check_access(current_user, company_id, db)
+    check_company_access(current_user, company_id, db)
     q = db.query(EncargadoContrato).filter(EncargadoContrato.company_id == company_id)
     if rat_id is not None:
         q = q.filter(EncargadoContrato.rat_id == rat_id)
@@ -76,7 +67,7 @@ async def obtener(
     c = db.query(EncargadoContrato).filter(EncargadoContrato.id == contrato_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
-    _check_access(current_user, c.company_id, db)
+    check_company_access(current_user, c.company_id, db)
     return _out(c)
 
 
@@ -86,7 +77,7 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    _check_access(current_user, data.company_id, db)
+    check_company_access(current_user, data.company_id, db)
     datos = data.model_dump()
     archivo_fields = _procesar_archivo(datos)
     datos.update(archivo_fields)
@@ -123,7 +114,7 @@ async def actualizar(
     c = db.query(EncargadoContrato).filter(EncargadoContrato.id == contrato_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
-    _check_access(current_user, c.company_id, db)
+    check_company_access(current_user, c.company_id, db)
 
     cambios = data.model_dump(exclude_none=True)
     archivo_fields = _procesar_archivo(cambios)
@@ -147,7 +138,7 @@ async def eliminar(
     c = db.query(EncargadoContrato).filter(EncargadoContrato.id == contrato_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
-    _check_access(current_user, c.company_id, db)
+    check_company_access(current_user, c.company_id, db)
     db.delete(c)
     db.commit()
     return {"message": "Contrato eliminado correctamente."}

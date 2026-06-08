@@ -6,7 +6,11 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.user import User, RolGlobal
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.config import settings
+from app.core.security import (
+    get_password_hash, verify_password,
+    create_access_token, create_refresh_token,
+)
 from app.schemas.user import UserCreate, Token, UserOut
 
 
@@ -64,6 +68,19 @@ def create_user(db: Session, data: UserCreate) -> User:
     return user
 
 
+def create_token_response(db: Session, user: User) -> Token:
+    """Genera access token + refresh token para un usuario."""
+    access = create_access_token({"sub": user.username, "rol_global": user.rol_global})
+    refresh = create_refresh_token({"sub": user.username, "rol_global": user.rol_global})
+    return Token(
+        access_token=access,
+        refresh_token=refresh,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user=UserOut.model_validate(user),
+    )
+
+
 def authenticate_user(db: Session, username: str, password: str) -> Token:
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
@@ -74,12 +91,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Token:
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Usuario inactivo. Contacte al administrador.")
 
-    token = create_access_token({"sub": user.username, "rol_global": user.rol_global})
-    return Token(
-        access_token=token,
-        token_type="bearer",
-        user=UserOut.model_validate(user),
-    )
+    return create_token_response(db, user)
 
 
 def get_current_user(db: Session, token_data: dict) -> User:

@@ -14,19 +14,23 @@ from app.services.user_service import (
 )
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user, require_admin
-from app.core.security import revoke_token
+from app.core.security import (
+    revoke_token, create_refresh_token, decode_refresh_token,
+)
 from app.core.config import settings
 from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 COOKIE_NAME = "custodio_token"
+REFRESH_COOKIE_NAME = "custodio_refresh"
 COOKIE_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+REFRESH_COOKIE_MAX_AGE = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 
-def _cookie_options() -> dict:
+def _cookie_options(max_age: int = None) -> dict:
     return {
-        "max_age": COOKIE_MAX_AGE,
+        "max_age": max_age or COOKIE_MAX_AGE,
         "httponly": True,
         "secure": True,
         "samesite": "none" if settings.ENVIRONMENT == "production" else "lax",
@@ -38,29 +42,80 @@ def _cookie_options() -> dict:
 @limiter.limit("5/minute")
 async def login(request: Request, data: LoginRequest, db: Session = Depends(get_db), response: Response = None):
     """
-    Autentica un usuario, retorna el token y setea una cookie httpOnly.
-    El token tiene validez de 8 horas.
+    Autentica un usuario, retorna access token (8h) + refresh token (30d) y setea cookies httpOnly.
+    El access token se renueva automaticamente con el refresh token.
     """
     result = authenticate_user(db, data.username, data.password)
     if response is not None:
         response.set_cookie(COOKIE_NAME, result.access_token, **_cookie_options())
+        if result.refresh_token:
+            response.set_cookie(REFRESH_COOKIE_NAME, result.refresh_token, **_cookie_options(REFRESH_COOKIE_MAX_AGE))
+    return result
+
+
+@router.post("/refresh", response_model=Token, summary="Refrescar access token")
+@limiter.limit("30/minute")
+async def refresh_token(request: Request, db: Session = Depends(get_db), response: Response = None):
+    """
+    Intercambia un refresh token valido por un nuevo access token + refresh token.
+    Implementa rotacion de refresh tokens: el antiguo se revoca y se emite uno nuevo.
+    """
+    token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        raise HTTPException(status_code=401, detail="No se proporciono refresh token.")
+
+    payload = decode_refresh_token(token, db)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Refresh token invalido o expirado.")
+
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(status_code=401, detail="Refresh token invalido.")
+
+    from app.models.user import User
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo.")
+
+    # Revocar el refresh token antiguo (rotacion)
+    revoke_token(token, db)
+
+    # Emitir nuevos tokens
+    from app.services.user_service import create_token_response
+    result = create_token_response(db, user)
+
+    if response is not None:
+        response.set_cookie(COOKIE_NAME, result.access_token, **_cookie_options())
+        if result.refresh_token:
+            response.set_cookie(REFRESH_COOKIE_NAME, result.refresh_token, **_cookie_options(REFRESH_COOKIE_MAX_AGE))
+
     return result
 
 
 @router.post("/logout", summary="Cerrar sesión")
 @limiter.limit("10/minute")
 async def logout(request: Request, response: Response = None, db: Session = Depends(get_db)):
-    """Revoca el token y elimina la cookie de sesión."""
-    token = request.cookies.get(COOKIE_NAME)
-    if not token:
+    """Revoca ambos tokens (access + refresh) y elimina las cookies de sesion."""
+    access_token = request.cookies.get(COOKIE_NAME)
+    if not access_token:
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
-    if token:
-        revoke_token(token, db)
+            access_token = auth_header[7:]
+    if access_token:
+        revoke_token(access_token, db)
+
+    refresh_tok = request.cookies.get(REFRESH_COOKIE_NAME)
+    if refresh_tok:
+        revoke_token(refresh_tok, db)
+
     if response is not None:
         response.delete_cookie(COOKIE_NAME, path="/")
-    return {"message": "Sesión cerrada correctamente."}
+        response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
+    return {"message": "Sesion cerrada correctamente."}
 
 
 @router.get("/me", response_model=UserOut, summary="Perfil del usuario actual")

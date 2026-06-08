@@ -11,17 +11,9 @@ from app.services.breach_service import (
     listar_brechas, get_breach, crear_brecha, actualizar_brecha, eliminar_brecha, _enriquecer,
     evaluar_riesgo_brecha,
 )
-from app.services.user_company_service import get_empresas_usuario
-from app.routes.deps import get_current_user
+from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/brechas", tags=["Brechas de Seguridad"])
-
-
-def _check_company_access(current_user, company_id: int, db: Session):
-    if current_user.rol_global == "superadmin":
-        return
-    if company_id not in get_empresas_usuario(db, current_user.id):
-        raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
 
 
 def _out(b) -> BreachOut:
@@ -41,7 +33,7 @@ async def listar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    _check_company_access(current_user, company_id, db)
+    check_company_access(current_user, company_id, db)
     brechas, total = listar_brechas(db, company_id, skip=skip, limit=limit)
     return {"brechas": [_out(b) for b in brechas], "total": total, "skip": skip, "limit": limit}
 
@@ -53,7 +45,7 @@ async def obtener(
     current_user=Depends(get_current_user),
 ):
     b = get_breach(db, breach_id)
-    _check_company_access(current_user, b.company_id, db)
+    check_company_access(current_user, b.company_id, db)
     return _out(b)
 
 
@@ -63,7 +55,7 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    _check_company_access(current_user, data.company_id, db)
+    check_company_access(current_user, data.company_id, db)
     b = crear_brecha(db, data, current_user.username)
     return _out(b)
 
@@ -76,8 +68,8 @@ async def actualizar(
     current_user=Depends(get_current_user),
 ):
     b = get_breach(db, breach_id)
-    _check_company_access(current_user, b.company_id, db)
-    b = actualizar_brecha(db, breach_id, data)
+    check_company_access(current_user, b.company_id, db)
+    b = actualizar_brecha(db, breach_id, data, usuario=current_user.username)
     return _out(b)
 
 
@@ -88,7 +80,7 @@ async def evaluar_riesgo(
     current_user=Depends(get_current_user),
 ):
     b = get_breach(db, breach_id)
-    _check_company_access(current_user, b.company_id, db)
+    check_company_access(current_user, b.company_id, db)
     b = evaluar_riesgo_brecha(db, breach_id)
     return _out(b)
 
@@ -100,6 +92,6 @@ async def eliminar(
     current_user=Depends(get_current_user),
 ):
     b = get_breach(db, breach_id)
-    _check_company_access(current_user, b.company_id, db)
-    eliminar_brecha(db, breach_id)
+    check_company_access(current_user, b.company_id, db)
+    eliminar_brecha(db, breach_id, usuario=current_user.username)
     return {"message": "Brecha eliminada correctamente."}
