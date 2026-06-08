@@ -11,9 +11,13 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.models.task import TaskQueue, TaskStatus
 from app.services.task_service import process_pending_tasks, enqueue_task
-from app.routes.deps import get_current_user
 
 router = APIRouter(prefix="/admin/tasks", tags=["Admin - Tareas Asíncronas"])
+
+
+def _get_user():
+    from app.routes.deps import get_current_user as _u
+    return _u()
 
 
 class EnqueueRequest(BaseModel):
@@ -28,7 +32,7 @@ async def listar_tareas(
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(_get_user),
 ):
     """Lista las tareas en la cola. Solo para diagnostico."""
     if current_user.rol_global != "superadmin":
@@ -64,7 +68,7 @@ async def listar_tareas(
 @router.get("/stats", summary="Estadísticas de la cola")
 async def stats(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(_get_user),
 ):
     if current_user.rol_global != "superadmin":
         raise HTTPException(status_code=403, detail="Solo superadmin puede ver estadísticas")
@@ -89,7 +93,7 @@ async def stats(
 async def run_tasks(
     max_tasks: int = 20,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(_get_user),
 ):
     """Procesa las tareas pendientes. Pensado para ser llamado por un cron externo
     (Vercel Cron, GitHub Actions, EasyCron, etc.) cada 1-5 minutos.
@@ -110,7 +114,7 @@ async def run_tasks(
 async def enqueue(
     data: EnqueueRequest,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(_get_user),
 ):
     if current_user.rol_global != "superadmin":
         raise HTTPException(status_code=403, detail="Solo superadmin puede encolar tareas")
