@@ -396,6 +396,22 @@ async def auditoria_global(
     return [{"id": log.id, "rat_id": log.entidad_id, "accion": log.accion, "usuario": log.usuario, "timestamp": log.timestamp, "detalle": log.detalle} for log in logs]
 
 
+@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditoría")
+async def verificar_cadena_auditoria(
+    limit: int = Query(1000, description="Límite de registros a verificar"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Verifica la integridad de la cadena de hashes de auditoría.
+    Retorna estado de validación y el ID del primer registro roto (si hay).
+    """
+    from app.services.audit_service import verify_audit_chain
+
+    result = verify_audit_chain(db, limit=limit)
+    return result
+
+
 # ── Exportación ─────────────────────────────────────────────────────────────
 
 @router.get("/export/csv", summary="Exportar RAT a CSV")
