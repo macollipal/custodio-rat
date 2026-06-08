@@ -1,13 +1,12 @@
 """
 Scheduler ligero (basado en threading) para tareas periódicas en background.
 
-Por qué no APScheduler: para mantener el bundle de Vercel liviano y no
-agregar dependencias. Este scheduler corre en un thread daemon dentro del
-proceso del backend; suficiente para periodicidades diarias/horarias.
+En Vercel serverless, este scheduler NO se ejecuta (los threads daemon mueren
+con el proceso). Por eso las tareas se encolan en task_queue y se procesan
+desde el endpoint /admin/tasks/run que un cron externo (Vercel Cron, etc.)
+debe llamar periódicamente.
 
-Tareas registradas:
-  - revisión de RATs vencidos: cada 24h
-  - (se pueden agregar más en _JOBS)
+Aqui solo encolamos la tarea; el procesamiento lo hace el worker.
 """
 
 import logging
@@ -25,62 +24,40 @@ logger = logging.getLogger(__name__)
 DIAS_REVISION = 180  # debe coincidir con frontend/lib/constants.ts
 
 
-def _job_revisar_rats_vencidos() -> None:
-    """
-    Revisa todos los RATs de todas las empresas y notifica al DPO
-    cuando un RAT supera el umbral de revisión periódica.
-    """
-    from app.models.rat import RAT
-    from app.models.company import Company
-    from app.services.email_service import notificar_vencimiento_rat
-
+def _job_enqueue_revisar_rats_vencidos() -> None:
+    """Encola la tarea de revisión de RATs vencidos en la cola persistente."""
+    from app.services.task_service import enqueue_task
     db = SessionLocal()
     try:
-        umbral = datetime.now(timezone.utc) - timedelta(days=DIAS_REVISION)
-        rats = (
-            db.query(RAT)
-            .filter(RAT.updated_at < umbral)
-            .filter(RAT.estado.in_(["completo", "en_revision", "aprobado"]))
-            .all()
-        )
-        logger.info(f"Scheduler: {len(rats)} RAT(s) requieren revisión")
-
-        for rat in rats:
-            empresa = db.query(Company).filter(Company.id == rat.company_id).first()
-            if not empresa or not empresa.email_dpo:
-                continue
-            dias_remanente = int(
-                (datetime.now(timezone.utc) - rat.updated_at).total_seconds() / 86400
-            ) - DIAS_REVISION
-            try:
-                notificar_vencimiento_rat(
-                    email_dpo=empresa.email_dpo,
-                    nombre_dpo=empresa.contacto_dpo or "",
-                    nombre_empresa=empresa.nombre,
-                    nombre_proceso=rat.nombre_proceso or f"RAT #{rat.id}",
-                    rat_id=rat.id,
-                    dias_remanente=-dias_remanente,  # negativo = vencido
-                )
-            except Exception as e:
-                logger.error(
-                    f"Scheduler: fallo enviando notificación RAT #{rat.id} "
-                    f"a {empresa.email_dpo}: {e}"
-                )
+        enqueue_task(db, "revisar_rats_vencidos")
+        logger.info("Scheduler: tarea 'revisar_rats_vencidos' encolada")
     finally:
         db.close()
 
 
-_JOBS: list[tuple[Callable[[], None], int]] = [
-    (_job_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
-]
+def _job_enqueue_cleanup_tokens() -> None:
+    """Encola limpieza de tokens expirados."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "cleanup_tokens")
+        logger.info("Scheduler: tarea 'cleanup_tokens' encolada")
+    finally:
+        db.close()
 
 
-_scheduler_thread: threading.Thread | None = None
+_JOBS = [
+    (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
+]  # type: ignore
+
+
+_scheduler_thread = None  # type: ignore
 _stop_event = threading.Event()
 
 
 def _run_scheduler() -> None:
-    logger.info("Scheduler iniciado")
+    logger.info("Scheduler iniciado (modo enqueue)")
     next_runs = {job: time.time() + interval for job, interval in _JOBS}
     while not _stop_event.is_set():
         now = time.time()
@@ -98,7 +75,7 @@ def _run_scheduler() -> None:
 def start_scheduler() -> None:
     """Arranca el scheduler en un thread daemon. Idempotente."""
     global _scheduler_thread
-    if _scheduler_thread and _scheduler_thread.is_alive():
+    if _scheduler_thread is not None and _scheduler_thread.is_alive():
         return
     if settings.ENVIRONMENT == "test":
         logger.info("Scheduler omitido (ENVIRONMENT=test)")

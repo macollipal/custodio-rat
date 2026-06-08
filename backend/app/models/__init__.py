@@ -13,10 +13,14 @@ from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, TktTipo, Estad
 from app.models.tkt_nota import TktNota
 from app.models.tkt_adjunto import TktAdjunto
 from app.models.tkt_historial import TktHistorial
+from app.models.feriado import Feriado
+from app.models.task import TaskQueue, TaskStatus, TaskType
 
 __all__ = [
     "User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido",
     "SolicitudDerecho", "TipoSolicitud", "EstadoSolicitud", "SolicitudHistorial", "SolicitudToken",
     "TktSolicitudDerecho", "TktTipo", "EstadoTicket", "PrioridadTicket", "OrigenTicket",
     "TktNota", "TktAdjunto", "TktHistorial",
+    "Feriado",
+    "TaskQueue", "TaskStatus", "TaskType",
 ]
