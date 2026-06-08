@@ -7,7 +7,7 @@ import base64
 import hashlib
 import logging
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,10 @@ ALERTAS_AUDITORIA = {
 
 
 def get_rats(db: Session, company_id: Optional[int] = None, skip: int = 0, limit: int = 200) -> list[RAT]:
-    query = db.query(RAT)
+    query = db.query(RAT).options(
+        selectinload(RAT.company),
+        selectinload(RAT.consentimientos),
+    )
     if company_id:
         query = query.filter(RAT.company_id == company_id)
     return query.offset(skip).limit(limit).all()

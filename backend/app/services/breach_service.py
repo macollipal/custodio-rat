@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.breach import SecurityBreach, NivelRiesgo
 from app.schemas.breach import BreachCreate, BreachUpdate
@@ -22,6 +22,7 @@ def listar_brechas(db: Session, company_id: int, skip: int = 0, limit: int = 100
     total = db.query(SecurityBreach).filter(SecurityBreach.company_id == company_id).count()
     breaches = (
         db.query(SecurityBreach)
+        .options(joinedload(SecurityBreach.company))
         .filter(SecurityBreach.company_id == company_id)
         .order_by(SecurityBreach.fecha_deteccion.desc())
         .offset(skip)
