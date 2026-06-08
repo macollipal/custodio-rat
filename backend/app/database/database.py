@@ -65,6 +65,8 @@ def get_db():
 
 def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
+    if os.getenv("ENV") == "test":
+        return
     from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, solicitud_derecho, token_blacklist, solicitud_token  # noqa: F401
     from app.models import tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial  # noqa: F401
     Base.metadata.create_all(bind=engine)

@@ -32,7 +32,7 @@ class AuditLog(Base):
     detalle: Mapped[str] = mapped_column(Text, nullable=True)
     ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     prev_hash: Mapped[str] = mapped_column(String(64), nullable=False, default=GENESIS_HASH)
     hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)

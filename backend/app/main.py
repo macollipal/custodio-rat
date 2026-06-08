@@ -24,12 +24,14 @@ setup_logging()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Crea las tablas e inserta el usuario admin por defecto si no existe."""
-    init_db()
-    _seed_admin()
-    _seed_rubros()
-    start_scheduler()
+    if os.getenv("ENV") != "test":
+        init_db()
+        _seed_admin()
+        _seed_rubros()
+        start_scheduler()
     yield
-    stop_scheduler()
+    if os.getenv("ENV") != "test":
+        stop_scheduler()
 
 
 def _seed_admin():
