@@ -19,6 +19,7 @@ export default function UsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState<User | null>(null);
   const [confirmDel, setConfirmDel] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,6 +34,14 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const filtered = users.filter(u => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return u.username.toLowerCase().includes(q)
+      || u.full_name.toLowerCase().includes(q)
+      || u.email.toLowerCase().includes(q);
+  });
 
   async function handleCreate(form: { username: string; email: string; full_name: string; password: string; rol_global: string; empresa_id?: number }) {
     try {
@@ -109,15 +118,28 @@ export default function UsersPage() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Gestión de usuarios</h1>
-          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>{users.length} usuario(s) registrado(s)</p>
+          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>{filtered.length} de {users.length} usuario(s)</p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-          style={{ background: '#2563EB' }}
-        >
-          + Nuevo usuario
-        </button>
+        <div className="flex gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar usuario..."
+              className="pl-9 pr-4 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 220 }}
+            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
+            style={{ background: '#2563EB' }}
+          >
+            + Nuevo usuario
+          </button>
+        </div>
       </div>
 
       {loading ? (
