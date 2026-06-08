@@ -5,7 +5,7 @@ Basado en los requisitos del Art. 16 de la Ley 21.719 de Chile.
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import DateTime, Date, Enum, ForeignKey, Integer, String, Text, Boolean, LargeBinary
+from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String, Text, Boolean, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -27,6 +27,9 @@ class EstadoEIPD(str, PyEnum):
 
 class RAT(Base):
     __tablename__ = "rats"
+    __table_args__ = (
+        Index("ix_rats_company_estado", "company_id", "estado"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
