@@ -5,7 +5,7 @@ Plazos: notificación APDC en 72 horas; titulares sin dilación si son datos sen
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -20,6 +20,9 @@ class NivelRiesgo(str, PyEnum):
 
 class SecurityBreach(Base):
     __tablename__ = "security_breaches"
+    __table_args__ = (
+        Index("ix_security_breaches_company_fecha", "company_id", "fecha_deteccion"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)

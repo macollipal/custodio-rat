@@ -1,8 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum, Index
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from app.database.database import Base
 import enum
+from datetime import datetime, timezone
+
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.database import Base
 
 
 class TktTipo(str, enum.Enum):
@@ -41,35 +43,27 @@ class TktSolicitudDerecho(Base):
         Index("idx_tkt_estado_prioridad", "estado", "prioridad"),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
-    tipo = Column(String(50), nullable=False)
-    estado = Column(String(50), default=EstadoTicket.ABIERTO.value)
-    prioridad = Column(String(20), default=PrioridadTicket.NORMAL.value, nullable=False)
-    origen = Column(String(20), default=OrigenTicket.WEB.value, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False)
+    estado: Mapped[str] = mapped_column(String(50), default=EstadoTicket.ABIERTO.value)
+    prioridad: Mapped[str] = mapped_column(String(20), default=PrioridadTicket.NORMAL.value, nullable=False)
+    origen: Mapped[str] = mapped_column(String(20), default=OrigenTicket.WEB.value, nullable=False)
+    titular_nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    titular_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    titular_rut: Mapped[str] = mapped_column(String(20), nullable=True)
+    descripcion: Mapped[str] = mapped_column(String(2000), nullable=True)
+    fecha_recepcion: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    fecha_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    responsable_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    respuesta_texto: Mapped[str] = mapped_column(String(1000), nullable=True)
+    respuesta_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[str] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    titular_nombre = Column(String(255), nullable=False)
-    titular_email = Column(String(255), nullable=False)
-    titular_rut = Column(String(20), nullable=True)
-
-    descripcion = Column(String(2000), nullable=True)
-
-    fecha_recepcion = Column(DateTime, default=func.now(), nullable=False)
-    fecha_vencimiento = Column(DateTime, nullable=False)
-
-    responsable_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    respuesta_texto = Column(String(1000), nullable=True)
-    respuesta_fecha = Column(DateTime, nullable=True)
-
-    created_by = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    company = relationship("Company", back_populates="tkt_solicitudes")
-    responsable = relationship("User", foreign_keys=[responsable_id])
-    notas = relationship("TktNota", back_populates="ticket", cascade="all, delete-orphan")
-    adjuntos = relationship("TktAdjunto", back_populates="ticket", cascade="all, delete-orphan")
-    historial = relationship("TktHistorial", back_populates="ticket", cascade="all, delete-orphan")
-
-    class Meta:
-        table_name = "tkt_solicitud_derecho"
+    company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
+    responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821
+    notas: Mapped[list["TktNota"]] = relationship("TktNota", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
+    adjuntos: Mapped[list["TktAdjunto"]] = relationship("TktAdjunto", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
+    historial: Mapped[list["TktHistorial"]] = relationship("TktHistorial", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
