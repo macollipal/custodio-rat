@@ -322,6 +322,15 @@ def responder_solicitud(
     s.estado = data.estado
     s.respuesta = data.respuesta
     s.respuesta_fecha = datetime.now(timezone.utc)
+    from app.services.audit_service import log_audit
+    log_audit(
+        db=db,
+        entidad="solicitud_derecho",
+        entidad_id=solicitud_id,
+        accion="responder",
+        usuario=current_user.username,
+        detalle={"estado_anterior": s.estado, "estado_nuevo": data.estado},
+    )
     db.commit()
     return {"ok": True}
 

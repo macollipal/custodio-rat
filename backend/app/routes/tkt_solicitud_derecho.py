@@ -21,6 +21,7 @@ from app.services.ticket_service import (
     calcular_dias_restantes,
     get_sla_color,
 )
+from app.services.audit_service import log_audit
 from app.schemas.tkt_solicitud_derecho import (
     TktTicketCreate,
     TktTicketUpdate,
@@ -117,6 +118,14 @@ def crear_ticket_endpoint(
         titular_rut=data.titular_rut,
         descripcion=data.descripcion,
         created_by=current_user.username,
+    )
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="create",
+        usuario=current_user.username,
+        detalle={"tipo": data.tipo, "titular": data.titular_nombre, "origen": data.origen},
     )
     return _ticket_to_response(ticket)
 
@@ -252,6 +261,19 @@ def actualizar_ticket(
 
     db.commit()
     db.refresh(ticket)
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="update",
+        usuario=current_user.username,
+        detalle={
+            "estado": data.estado,
+            "prioridad": data.prioridad,
+            "responsable_id": data.responsable_id,
+            "con_respuesta": bool(data.respuesta_texto),
+        },
+    )
     logger.info(f"Ticket {ticket_id} actualizado por user {current_user.id}")
 
     if data.respuesta_texto and ticket.titular_email:
@@ -300,6 +322,14 @@ def agregar_nota(
     db.add(nota)
     db.commit()
     db.refresh(nota)
+    log_audit(
+        db=db,
+        entidad="tkt_nota",
+        entidad_id=nota.id,
+        accion="create",
+        usuario=current_user.username,
+        detalle={"ticket_id": ticket_id},
+    )
     return {"id": nota.id, "created_at": nota.created_at.isoformat()}
 
 

@@ -250,6 +250,16 @@ async def crear_consentimiento(
         activo=True,
     )
     db.add(consentimiento)
+    db.flush()
+    from app.services.audit_service import log_audit
+    log_audit(
+        db=db,
+        entidad="consentimiento",
+        entidad_id=consentimiento.id,
+        accion="create",
+        usuario=current_user.username,
+        detalle={"rat_id": rat_id, "titular": data.nombre_titular, "canal": data.canal},
+    )
     db.commit()
     db.refresh(consentimiento)
     return consentimiento
