@@ -49,7 +49,7 @@ def get_current_user(
             detail="No autenticado. Inicie sesión.",
         )
 
-    payload = decode_access_token(token)
+    payload = decode_access_token(token, db)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,3 +105,16 @@ def require_company_admin(company_id: int, db: Session = Depends(get_db), curren
             detail="Se requiere rol administrador en esta empresa.",
         )
     return current_user
+
+
+def check_company_access(current_user, company_id: int, db: Session):
+    """
+    Verifica que el usuario tenga acceso a la empresa.
+    Superadmin pasa siempre.
+    Others deben tener company_id en su lista de empresas asignadas.
+    """
+    if current_user.rol_global == "superadmin":
+        return
+    from app.services.user_company_service import get_empresas_usuario
+    if company_id not in get_empresas_usuario(db, current_user.id):
+        raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")

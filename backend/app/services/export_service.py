@@ -10,7 +10,6 @@ try:
     from zoneinfo import ZoneInfo as _ZoneInfo
     _ZONA_CHILE = _ZoneInfo("America/Santiago")
 except Exception:
-    # Windows sin tzdata instalado: usar offset fijo CLT (UTC-4)
     _ZONA_CHILE = timezone(timedelta(hours=-4))
 from typing import IO
 
@@ -25,6 +24,18 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 from app.models.rat import RAT
 from app.models.company import Company
+
+
+_DANGEROUS_CSV_PREFIXES = ("=", "+", "-", "\t", "\r")
+
+
+def sanitize_csv_value(value: str) -> str:
+    """Previene CSV injection prefijando con ' si el valor parece una fórmula."""
+    if not isinstance(value, str):
+        value = str(value) if value is not None else ""
+    if value.startswith(_DANGEROUS_CSV_PREFIXES):
+        return "'" + value
+    return value
 
 
 CAMPOS_RAT = [
@@ -59,12 +70,12 @@ CAMPOS_RAT = [
 
 
 def exportar_csv(rats: list[RAT]) -> bytes:
-    """Genera un CSV UTF-8 con BOM para compatibilidad con Excel."""
+    """Genera un CSV UTF-8 con BOM para compatibilidad con Excel. Previene CSV injection."""
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_ALL)
 
-    # Encabezado
-    writer.writerow([label for label, _ in CAMPOS_RAT])
+    # Encabezado — sanitizado contra injection
+    writer.writerow([sanitize_csv_value(label) for label, _ in CAMPOS_RAT])
 
     for rat in rats:
         fila = []
@@ -76,7 +87,8 @@ def exportar_csv(rats: list[RAT]) -> bytes:
                 value = value.strftime("%d/%m/%Y %H:%M")
             elif hasattr(value, "value"):  # Enum
                 value = value.value
-            fila.append(value or "")
+            value = sanitize_csv_value(value or "")
+            fila.append(value)
         writer.writerow(fila)
 
     return ("\ufeff" + output.getvalue()).encode("utf-8")
