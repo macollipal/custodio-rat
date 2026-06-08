@@ -7,6 +7,7 @@ Fixtures compartidas para toda la suite de tests.
 
 import os
 os.environ["ENV"] = "test"
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 import pytest
 from fastapi.testclient import TestClient

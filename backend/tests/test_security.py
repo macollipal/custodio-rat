@@ -157,3 +157,174 @@ class TestSecurityHeaders:
 
         resp = client.get("/rats/", params={"search": "'; DROP TABLE rats; --"}, headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 200
+
+
+class TestIDORProtection:
+    """TC-061: IDOR en /companies/{id} — un usuario no debe acceder a datos de otra empresa."""
+
+    def test_idor_get_company_forbidden(self, client, db, admin_user):
+        """Usuario no puede leer empresa a la que no pertenece."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A", "rut": "76.000.002-K", "rubro": "A", "contacto_dpo": "A", "email_dpo": "a@a.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B", "rut": "76.000.003-7", "rubro": "B", "contacto_dpo": "B", "email_dpo": "b@b.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        assert emp_a.status_code == 201 and emp_b.status_code == 201
+        company_b_id = emp_b.json()["id"]
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        user = User(
+            username="user_companies", email="user@comp.cl", full_name="User Companies",
+            hashed_password=get_password_hash("pass123"), is_active=True, rol_global=RolGlobal.USUARIO.value
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        uc = UserCompany(user_id=user.id, company_id=emp_a.json()["id"], rol=RolEmpresa.VIEWER)
+        db.add(uc)
+        db.commit()
+
+        user_login = client.post("/auth/login", json={"username": "user_companies", "password": "pass123"})
+        user_token = user_login.json()["access_token"]
+
+        resp = client.get(f"/companies/{company_b_id}", headers={"Authorization": f"Bearer {user_token}"})
+        assert resp.status_code == 403, f"IDOR: usuario debería obtener 403 al acceder a empresa ajena, pero obtuvo {resp.status_code}"
+
+    def test_idor_update_company_forbidden(self, client, db, admin_user):
+        """Usuario no puede editar empresa a la que no pertenece."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A2", "rut": "76.000.004-5", "rubro": "A", "contacto_dpo": "A", "email_dpo": "a2@a.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B2", "rut": "76.000.005-3", "rubro": "B", "contacto_dpo": "B", "email_dpo": "b2@b.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        assert emp_a.status_code == 201 and emp_b.status_code == 201
+        company_b_id = emp_b.json()["id"]
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        user = User(
+            username="user_companies2", email="user2@comp.cl", full_name="User Companies 2",
+            hashed_password=get_password_hash("pass123"), is_active=True, rol_global=RolGlobal.USUARIO.value
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        uc = UserCompany(user_id=user.id, company_id=emp_a.json()["id"], rol=RolEmpresa.VIEWER)
+        db.add(uc)
+        db.commit()
+
+        user_login = client.post("/auth/login", json={"username": "user_companies2", "password": "pass123"})
+        user_token = user_login.json()["access_token"]
+
+        resp = client.put(f"/companies/{company_b_id}", json={"nombre": "Hacked"}, headers={"Authorization": f"Bearer {user_token}"})
+        assert resp.status_code == 403, f"IDOR PUT: debería ser 403, pero obtuvo {resp.status_code}"
+
+    def test_idor_delete_company_forbidden(self, client, db, admin_user):
+        """Usuario no puede eliminar empresa a la que no pertenece."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A3", "rut": "76.000.006-1", "rubro": "A", "contacto_dpo": "A", "email_dpo": "a3@a.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B3", "rut": "76.000.007-K", "rubro": "B", "contacto_dpo": "B", "email_dpo": "b3@b.cl"
+        }, headers={"Authorization": f"Bearer {admin_token}"})
+        assert emp_a.status_code == 201 and emp_b.status_code == 201
+        company_b_id = emp_b.json()["id"]
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        user = User(
+            username="user_companies3", email="user3@comp.cl", full_name="User Companies 3",
+            hashed_password=get_password_hash("pass123"), is_active=True, rol_global=RolGlobal.USUARIO.value
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        uc = UserCompany(user_id=user.id, company_id=emp_a.json()["id"], rol=RolEmpresa.VIEWER)
+        db.add(uc)
+        db.commit()
+
+        user_login = client.post("/auth/login", json={"username": "user_companies3", "password": "pass123"})
+        user_token = user_login.json()["access_token"]
+
+        resp = client.delete(f"/companies/{company_b_id}", headers={"Authorization": f"Bearer {user_token}"})
+        assert resp.status_code == 403, f"IDOR DELETE: debería ser 403, pero obtuvo {resp.status_code}"
+
+
+class TestCompaniesPublico:
+    """TC-062: /companies/publico ahora requiere autenticación (antes era público)."""
+
+    def test_companies_publico_requires_auth(self, client):
+        """Acceso sin token debe retornar 401."""
+        resp = client.get("/companies/publico")
+        assert resp.status_code == 401, f"/companies/publico debería requerir auth (401), pero obtuvo {resp.status_code}"
+
+    def test_companies_publico_accessible_with_auth(self, client, admin_user):
+        """Acceso con token válido debe retornar 200."""
+        login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        token = login.json()["access_token"]
+        resp = client.get("/companies/publico", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 200, f"/companies/publico con auth debería ser 200, pero obtuvo {resp.status_code}"
+
+
+class TestCSVInjection:
+    """TC-063: Verifica que la sanitización previene CSV injection."""
+
+    def test_sanitize_csv_value_prevents_formula_injection(self):
+        """Valores que empiezan con =,+,-,@,tab deben ser prefijados con '."""
+        from app.services.export_service import sanitize_csv_value
+        dangerous = ["=CMD|'/C calc'!A0", "+SUM(A1:A10)", "-HOLA", "\tTAB", "\rCR"]
+        for val in dangerous:
+            result = sanitize_csv_value(val)
+            assert result.startswith("'"), f"'{val}' debería ser sanitizado con prefijo ', pero quedó: {result}"
+
+    def test_sanitize_csv_value_preserves_normal_text(self):
+        """Textos normales no deben ser modificados."""
+        from app.services.export_service import sanitize_csv_value
+        normal = ["Hola mundo", "RUT 12.345.678-9", "año 2025", "data-with-dashes"]
+        for val in normal:
+            result = sanitize_csv_value(val)
+            assert result == val, f"'{val}' no debería ser sanitizado, pero quedó: {result}"
+
+    def test_csv_export_sanitizes_all_cells(self, client, admin_user, empresa):
+        """El CSV exportado no debe contener fórmulas inyectables."""
+        login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        token = login.json()["access_token"]
+
+        from app.models.rat import RAT
+        from app.models.company import Company
+        from app.database.database import Base, engine_test
+        Base.metadata.create_all(bind=engine_test)
+
+        rat_resp = client.post("/rats/", json={
+            "company_id": empresa["id"],
+            "nombre_proceso": "=CMD|'/C calc'!A0",
+            "categoria_datos": "Nombre, email",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test injection",
+            "base_legal": "Consentimiento",
+            "fuente_datos": "El titular",
+            "plazo_retencion": "1 año",
+        }, headers={"Authorization": f"Bearer {token}"})
+        if rat_resp.status_code != 201:
+            pytest.skip(f"No se pudo crear RAT para test CSV: {rat_resp.status_code} {rat_resp.text}")
+
+        export_resp = client.get("/rats/export/csv", headers={"Authorization": f"Bearer {token}"})
+        assert export_resp.status_code == 200
+        content = export_resp.content.decode("utf-8-sig")
+        assert "=CMD" not in content, "CSV injection detectada: fórmula =CMD presente en export"
+        assert "'=CMD" in content or content.count("CMD") == 0, "CSV injection no sanitizada: valor no prefijado con '"
