@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from app.database.database import Base
 import enum
+from datetime import datetime, timezone
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.database import Base
 
 
 class TipoSolicitud(str, enum.Enum):
@@ -25,22 +28,21 @@ class EstadoSolicitud(str, enum.Enum):
 class SolicitudDerecho(Base):
     __tablename__ = "solicitudes_derecho"
 
-    id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
-    tipo = Column(String(50), nullable=False)
-    nombre_titular = Column(String(255), nullable=False)
-    rut_titular = Column(String(20), nullable=True)
-    email_titular = Column(String(255), nullable=False)
-    descripcion = Column(String(2000), nullable=True)
-    estado = Column(String(50), default="pendiente")
-    solicitud_fecha = Column(DateTime, default=func.now())
-    respuesta_fecha = Column(DateTime, nullable=True)
-    respuesta = Column(String(1000), nullable=True)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False)
+    nombre_titular: Mapped[str] = mapped_column(String(255), nullable=False)
+    rut_titular: Mapped[str] = mapped_column(String(20), nullable=True)
+    email_titular: Mapped[str] = mapped_column(String(255), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(2000), nullable=True)
+    estado: Mapped[str] = mapped_column(String(50), default="pendiente")
+    solicitud_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    respuesta_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    respuesta: Mapped[str] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
+    plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    rat_id = Column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
-    plazo_bloqueo_vencimiento = Column(DateTime, nullable=True)
-
-    company = relationship("Company", back_populates="solicitudes_derecho")
-    rat = relationship("RAT")
+    company: Mapped["Company"] = relationship("Company", back_populates="solicitudes_derecho")  # noqa: F821
+    rat: Mapped["RAT"] = relationship("RAT")  # noqa: F821

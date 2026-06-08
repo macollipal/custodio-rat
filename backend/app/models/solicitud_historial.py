@@ -1,16 +1,18 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.database.database import Base
 
 
 class SolicitudHistorial(Base):
     __tablename__ = "solicitud_derecho_historial"
 
-    id = Column(Integer, primary_key=True, index=True)
-    solicitud_id = Column(Integer, ForeignKey("solicitudes_derecho.id"), nullable=False, index=True)
-    estado_anterior = Column(String(50), nullable=True)
-    estado_nuevo = Column(String(50), nullable=False)
-    descripcion = Column(Text, nullable=True)
-    fecha = Column(DateTime, default=func.now())
-    usuario_nombre = Column(String(255), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    solicitud_id: Mapped[int] = mapped_column(Integer, ForeignKey("solicitudes_derecho.id"), nullable=False, index=True)
+    estado_anterior: Mapped[str] = mapped_column(String(50), nullable=True)
+    estado_nuevo: Mapped[str] = mapped_column(String(50), nullable=False)
+    descripcion: Mapped[str] = mapped_column(Text, nullable=True)
+    fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    usuario_nombre: Mapped[str] = mapped_column(String(255), nullable=True)
