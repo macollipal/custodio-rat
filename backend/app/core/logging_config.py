@@ -9,6 +9,7 @@ de extremo a extremo entre logs y respuestas HTTP.
 import contextvars
 import json
 import logging
+import re
 import sys
 import os
 import uuid
@@ -27,6 +28,54 @@ def set_request_id(rid=None) -> str:
 
 def get_request_id() -> str:
     return request_id_var.get()
+
+
+class PIIMaskingFilter(logging.Filter):
+    """
+    Filtra y mascara PII en mensajes de log para cumplimiento Art. 46 y 47.
+    Campos sensibles: email, rut, ip, authorization, password, token.
+    """
+
+    _EMAIL_RE = __import__("re").compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+    _RUT_RE = __import__("re").compile(r"\b\d{1,2}\.\d{3}\.\d{3}[-][\dkK]\b")
+    _IP_RE = __import__("re").compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
+    _AUTH_RE = __import__("re").compile(r"(?i)(bearer\s+|token\s*[:=]\s*)[\w\.-]+")
+    _PASSWORD_RE = __import__("re").compile(r"(?i)(password\s*[:=]\s*)['\"]?[^\s'\"},]+")
+    _RUN_RE = __import__("re").compile(r"\b\d{7,8}-\d\b")
+
+    def _mask_email(self, m: "re.Match") -> str:
+        text = m.group(0)
+        user, domain = text.rsplit("@", 1)
+        return f"{user[0]}***@{domain}"
+
+    def _mask_rut(self, m: "re.Match") -> str:
+        text = m.group(0)
+        return text[:-2] + "-*"
+
+    def _mask_ip(self, m: "re.Match") -> str:
+        text = m.group(0)
+        parts = text.split(".")
+        return f"***.***.***.{parts[3]}"
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+
+        # Mask emails
+        msg = self._EMAIL_RE.sub(self._mask_email, msg)
+        # Mask RUTs (formato 12.345.678-5)
+        msg = self._RUT_RE.sub(self._mask_rut, msg)
+        # Mask RUNs sin formato (7894563-5)
+        msg = self._RUN_RE.sub(self._mask_rut, msg)
+        # Mask IPs
+        msg = self._IP_RE.sub(self._mask_ip, msg)
+        # Mask auth headers
+        msg = self._AUTH_RE.sub(r"\1[TOKEN REDACTED]", msg)
+        # Mask passwords
+        msg = self._PASSWORD_RE.sub(r"\1[PASSWORD REDACTED]", msg)
+
+        record.msg = msg
+        record.args = ()
+        return True
 
 
 class RequestIdFilter(logging.Filter):
@@ -70,6 +119,7 @@ def setup_logging() -> logging.Logger:
         root_logger.removeHandler(h)
 
     handler = logging.StreamHandler(sys.stdout)
+    handler.addFilter(PIIMaskingFilter())
     handler.addFilter(RequestIdFilter())
     if is_production:
         handler.setFormatter(JSONFormatter())
