@@ -15,16 +15,20 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.feriado import Feriado
-from app.routes.deps import require_admin
 
 router = APIRouter(prefix="/admin/feriados", tags=["Admin Feriados"])
+
+
+def _require_admin():
+    from app.routes.deps import require_admin as _ra
+    return _ra()
 
 
 @router.get("/", summary="Listar feriados de un año")
 async def listar_feriados(
     anio: int = Query(..., description="Año"),
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(_require_admin),
 ):
     """Retorna todos los feriados configurados para el año dado."""
     feriados = db.query(Feriado).filter(Feriado.anio == anio).order_by(Feriado.mes, Feriado.dia).all()
@@ -41,7 +45,7 @@ async def listar_feriados(
 @router.get("/years", summary="Años con feriados configurados")
 async def listar_anios(
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(_require_admin),
 ):
     """Retorna lista de años que tienen feriados cargados."""
     from sqlalchemy import func, distinct
@@ -58,7 +62,7 @@ async def upload_feriados(
     anio: int = Query(..., description="Año a reemplazar"),
     file: UploadFile = File(..., description="Archivo CSV (año,mes,día,nombre[,tipo])"),
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(_require_admin),
 ):
     """
     Reemplaza todos los feriados del año especificado con los del CSV.
@@ -147,7 +151,7 @@ async def download_example():
 async def eliminar_feriados(
     anio: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(_require_admin),
 ):
     """Elimina todos los feriados configurados para el año dado."""
     deleted = db.execute(delete(Feriado).where(Feriado.anio == anio)).rowcount
