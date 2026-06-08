@@ -24,9 +24,10 @@ def _compute_hash(prev_hash: str, timestamp: datetime, accion: str, entidad: str
     Computa el hash SHA-256 para el registro de auditoría.
     Fórmula: sha256(prev_hash + timestamp.isoformat() + accion + entidad + str(entidad_id) + usuario + detalle)
     """
+    ts_normalized = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
     data = (
         f"{prev_hash}"
-        f"{timestamp.isoformat()}"
+        f"{ts_normalized.isoformat()}"
         f"{accion}"
         f"{entidad}"
         f"{entidad_id}"

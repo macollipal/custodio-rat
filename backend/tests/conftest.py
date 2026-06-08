@@ -1,6 +1,6 @@
 """
 Fixtures compartidas para toda la suite de tests.
-- BD en memoria (aislada por sesión de test)
+- BD en memoria (aislada por test)
 - TestClient con autenticación JWT real
 - Helpers para crear entidades de prueba
 """
@@ -11,36 +11,27 @@ os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.database.database import Base, get_db
 from app.models.user import User
 from app.core.security import get_password_hash
 
-# ── BD en memoria ─────────────────────────────────────────────────────────────
 TEST_DB_URL = "sqlite:///:memory:"
 
 engine_test = create_engine(
     TEST_DB_URL,
     connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_db():
-    """Crea todas las tablas en la BD de test una sola vez por sesión."""
-    from app.models import company, rat, user, audit_log, token_blacklist  # noqa
-    Base.metadata.create_all(bind=engine_test)
-    yield
-    Base.metadata.drop_all(bind=engine_test)
-
-
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db():
-    """Sesión de BD aislada: hace rollback al terminar cada test."""
     connection = engine_test.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
@@ -50,9 +41,8 @@ def db():
     connection.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def client(db):
-    """TestClient con override de get_db → BD en memoria."""
     def override_get_db():
         try:
             yield db
@@ -60,14 +50,18 @@ def client(db):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app, raise_server_exceptions=True) as c:
+    with TestClient(app, raise_server_exceptions=False) as c:
         yield c
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def admin_user(db):
-    """Crea el usuario admin en la BD de test."""
+    from app.models import company, rat, user, audit_log, token_blacklist
+    Base.metadata.create_all(bind=engine_test)
+    existing = db.query(User).filter(User.username == "admin").first()
+    if existing:
+        return existing
     user = User(
         username="admin",
         email="admin@test.cl",
@@ -83,23 +77,23 @@ def admin_user(db):
     return user
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def token(client, admin_user):
-    """Obtiene JWT para el usuario admin."""
     resp = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
-    assert resp.status_code == 200, f"Login fallido: {resp.text}"
+    if resp.status_code != 200:
+        raise RuntimeError(f"Login fallido: {resp.status_code} {resp.text}")
     return resp.json()["access_token"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def auth_headers(token):
-    """Headers de autorización listos para usar."""
     return {"Authorization": f"Bearer {token}"}
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def empresa(client, auth_headers):
-    """Crea una empresa de prueba y retorna su JSON."""
+    from app.models import company, rat, user, audit_log, token_blacklist
+    Base.metadata.create_all(bind=engine_test)
     payload = {
         "nombre": "Empresa Test SpA",
         "rut": "76.000.001-1",
@@ -110,13 +104,13 @@ def empresa(client, auth_headers):
         "descripcion": "Empresa de prueba para tests.",
     }
     resp = client.post("/companies/", json=payload, headers=auth_headers)
-    assert resp.status_code == 201, f"No se pudo crear empresa: {resp.text}"
+    if resp.status_code != 201:
+        raise RuntimeError(f"No se pudo crear empresa: {resp.status_code} {resp.text}")
     return resp.json()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def rat_base(empresa):
-    """Payload base para crear un RAT."""
     return {
         "company_id": empresa["id"],
         "nombre_proceso": "Gestión de Clientes Web",
