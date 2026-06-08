@@ -100,9 +100,23 @@ Envío de emails transaccionales via SMTP:
 **Modo DRY_RUN:** si `SMTP_HOST` no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
 
 ### Scheduler (`app/services/scheduler.py`)
-Tareas periódicas en thread daemon:
-- Revisión de RATs vencidos: cada 24h (umbral: DIAS_REVISION = 180 días)
-- Se activa en `lifespan` de FastAPI y se detiene al shutdown
+Tareas periódicas en thread daemon. **Modo enqueue** (compatible con Vercel serverless):
+- Encola `revisar_rats_vencidos` cada 24h
+- Encola `cleanup_tokens` cada 6h
+- Las tareas se procesan desde el endpoint `/admin/tasks/run` (llamado por cron externo)
+
+### Task Service (`app/services/task_service.py`)
+Cola de tareas asincronas persistida en BD:
+- `enqueue_task(db, task_type, payload)` → encola tarea
+- `process_pending_tasks(db, max_tasks)` → ejecuta las pendientes
+- `run_task(db, task)` → ejecuta una tarea individual
+- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`
+- Reintentos automáticos con backoff (max 3 intentos)
+
+### Audit Service (`app/services/audit_service.py`)
+Registro transversal de operaciones:
+- `log_audit(db, entidad, entidad_id, accion, usuario, detalle, ip_origen)`
+- Se invoca desde: RAT (CRUD), Brechas (CUD), TKT (CUD), Consentimientos (CUD), EIPD (CUD), SolicitudesDerecho (responder)
 
 ---
 
@@ -197,7 +211,9 @@ completitud = round((completados / total) * 100)
 ### Auth
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/auth/login` | Login JWT |
+| POST | `/auth/login` | Login JWT (access 8h + refresh 30d) |
+| POST | `/auth/refresh` | Renovar access token (rotación) |
+| POST | `/auth/logout` | Revocar access + refresh tokens |
 | GET | `/auth/me` | Usuario actual |
 
 ### Companies
@@ -249,6 +265,30 @@ completitud = round((completados / total) * 100)
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/ai/ask` | Chat IA (requiere MINIMAX_API_KEY u OPENAI_API_KEY) |
+
+### Consentimientos (Art. 12)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/consentimientos/` | Lista consentimientos (filtros: company_id, rat_id, solo_activos) |
+| POST | `/consentimientos/` | Crea consentimiento vinculado a RAT |
+| GET | `/consentimientos/{id}` | Detalle de consentimiento |
+| POST | `/consentimientos/{id}/revocar` | Revoca consentimiento (Art. 12) |
+
+### EIPD (Art. 15 bis)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/eipd/` | Lista EIPDs (filtros: company_id, estado) |
+| GET | `/eipd/rat/{rat_id}` | EIPD de un RAT específico |
+| POST | `/eipd/` | Crea EIPD (1:1 con RAT) |
+| PUT | `/eipd/{id}` | Actualiza EIPD (workflow) |
+
+### Admin - Cola de Tareas
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/admin/tasks/` | Lista tareas de la cola |
+| GET | `/admin/tasks/stats` | Estadísticas (pending/running/done/failed) |
+| POST | `/admin/tasks/run` | Procesa tareas pendientes (llamado por cron) |
+| POST | `/admin/tasks/enqueue` | Encola tarea manualmente |
 
 ---
 

@@ -12,15 +12,21 @@ RAT_opencode/
 ├── api/                  Vercel Serverless handler (@vercel/python, entry point para backend)
 ├── backend/              FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt
 │   ├── app/
-│   │   ├── core/         Configuración, seguridad JWT, logging estructurado
+│   │   ├── core/         Configuración, seguridad JWT (access+refresh), logging estructurado
 │   │   ├── database/     Engine y sesión SQLAlchemy
 │   │   ├── middleware/   RequestIdMiddleware (X-Request-ID + contextvars)
-│   │   ├── models/       Tablas: User, Company, RAT, AuditLog, SecurityBreach, EIPD, Consentimiento
+│   │   ├── models/       Tablas: User, Company, RAT, AuditLog, SecurityBreach, EIPD,
+│   │   │                 Consentimiento, Rubro, RATSugerido, TktSolicitudDerecho,
+│   │   │                 TktNota, TktAdjunto, TktHistorial, EncargadoContrato,
+│   │   │                 PoliticaTransparencia, TaskQueue, TokenBlacklist
 │   │   ├── schemas/      Validación Pydantic
-│   │   ├── routes/       Endpoints: /auth, /companies, /rats, /brechas, /ai, /rubros,
-│   │   │ /encargados-contrato, /politica-transparencia, /tkt-solicitud-derecho
+│   │   ├── routes/       Endpoints: /auth, /auth/refresh, /companies, /rats, /brechas, /ai,
+│   │   │                 /rubros, /encargados-contrato, /politica-transparencia,
+│   │   │                 /tkt-solicitud-derecho, /consentimientos, /eipd,
+│   │   │                 /solicitudes-derecho, /admin/tasks
 │   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro,
-│   │                      email (SMTP), scheduler (threading daemon)
+│   │                      ticket, email (SMTP), scheduler (enqueue), task_service (cola),
+│   │                      audit (transversal), policy, eipd
 │   ├── tests/             95+ tests (pytest + httpx)
 │   ├── data/             SQLite local para desarrollo (git ignored)
 │   └── venv/             Entorno virtual Python
@@ -42,15 +48,19 @@ RAT_opencode/
 │   │   │   ├── encargados-contrato/  CRUD contratos Art. 14 quater
 │   │   │   ├── transparencia/   Política de transparencia Art. 14 ter
 │   │   │   ├── tkt_solicitud_derecho/  Gestión tickets ARCO
+│   │   │   ├── consentimientos/   Gestión de consentimientos (Art. 12)
+│   │   │   ├── eipd/            EIPD editable (Art. 15 bis)
 │   │   │   └── configuracion/ Configuración de cuenta
 │   │   └── layout.tsx    Layout raíz + Toaster
 │   ├── components/
-│   │   ├── layout/       Sidebar + Topbar (responsive con hamburger) + PasswordModal
+│   │   ├── layout/       Sidebar (4 grupos) + Topbar (responsive con hamburger) + PasswordModal
 │   │   ├── dashboard/    KPICard, StatusChart, AlertBanner, OnboardingChecklist
 │   │   ├── rat/          RatTable, RatWizard, RatEditForm
 │   │   └── ui/           Badge, CompletitudBar, Skeleton, Drawer, StepIndicator, validation
 │   ├── context/          AppContext (auth + empresa activa)
-│   ├── lib/api.ts        Cliente HTTP a FastAPI
+│   ├── lib/api.ts        Cliente HTTP a FastAPI (con auto-refresh en 401)
+│   ├── e2e/              Tests E2E con Playwright
+│   ├── playwright.config.ts
 │   └── types/index.ts    Tipos TypeScript
 │
 ├── docs/                 Documentación (casos de uso, flujos, manual de usuario, errores de deploy Vercel)
@@ -167,6 +177,44 @@ bun lint
 
 ---
 
+## Tests
+
+### Backend (pytest)
+```bash
+cd backend
+pytest tests/ -v
+```
+
+### Frontend E2E (Playwright)
+```bash
+cd frontend-next
+
+# Instalar Playwright (solo primera vez)
+npm install
+npm run test:e2e:install
+
+# Correr todos los tests E2E
+npm run test:e2e
+
+# Con interfaz headed (debug)
+npm run test:e2e:headed
+```
+
+**Variables de entorno para E2E:**
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `E2E_USERNAME` | `admin` | Usuario de prueba |
+| `E2E_PASSWORD` | `admin1234` | Contraseña |
+| `E2E_BASE_URL` | `http://localhost:3000` | URL del frontend |
+
+**Tests incluidos:**
+- `01-login.spec.ts`: carga página, login exitoso, error con credenciales inválidas
+- `02-sidebar.spec.ts`: 4 grupos, navegación entre páginas
+- `03-consentimientos.spec.ts`: KPIs, modal de creación, filtros
+- `04-eipd.spec.ts`: KPIs, alerta de pendientes
+
+---
+
 ## Variables de entorno
 
 ### Backend (.env)
@@ -264,11 +312,38 @@ bun lint
 ## Funcionalidades
 
 ### Autenticación y usuarios
+- **Refresh tokens JWT**: access token (8h) + refresh token (30 días) en cookies httpOnly
+- **Rotación automática**: cuando el access token expira, el frontend usa el refresh token para obtener uno nuevo sin interrumpir al usuario
+- **Auto-logout**: si el refresh también expira, redirige al login limpiando storage
 - Login JWT con roles (superadmin / admin_empresa / usuario)
 - Onboarding automático: si no hay empresas, redirige a pantalla de configuración inicial
-- Validación de sesión: si el token expira, redirige automáticamente al login
 - Gestión multi-empresa con usuarios por empresa (`user_companies`)
 - Topbar con nombre de usuario en negrita + badge de rol con colores diferenciados
+
+### Módulo de Consentimientos (Art. 12 Ley 21.719) — NUEVO
+- Página `/consentimientos` con tabla y KPIs (Total / Activos / Revocados)
+- Filtros: por RAT, solo activos
+- Modal de creación con campos: RAT, titular, email, canal (web/papel/firma_digital/verbal/otro), texto
+- Modal de detalle con texto completo del consentimiento
+- Endpoint `POST /consentimientos/{id}/revocar` para revocación (Art. 12)
+- Audit log automático en todas las operaciones
+
+### Módulo EIPD (Art. 15 bis Ley 21.719) — NUEVO
+- Página `/eipd` con tabla y KPIs (Total / En proceso / Completadas / Pendientes)
+- **Alerta de RATs pendientes**: detecta RATs con `evaluacion_impacto=true` sin EIPD registrada
+- Formulario completo: metodología, objetivos, necesidad/proporcionalidad, riesgos, medidas, parecer DPO
+- Workflow: en_proceso → completada (o no_requerida)
+- Fechas de elaboración y aprobación
+- Audit log automático en todas las operaciones
+
+### Cola de Tareas Asíncronas — NUEVO
+- Modelo `task_queue` persistente en BD
+- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`
+- Scheduler actualizado a **modo enqueue** (compatible con Vercel serverless)
+- Endpoint `POST /admin/tasks/run` para que un cron externo procese la cola
+- Dashboard de admin: `/admin/tasks/stats` y `/admin/tasks/` para listar
+- Reintentos automáticos con backoff (max 3 intentos)
+- Las notificaciones de brechas ahora son asíncronas (no bloquean la request)
 
 ### Gestión RAT
 - CRUD completo de procesos RAT con wizard de 4 pasos
