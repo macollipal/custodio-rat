@@ -38,7 +38,7 @@ def create_user(db: Session, data: UserCreate) -> User:
     if data.rol_global not in [r.value for r in RolGlobal]:
         raise HTTPException(status_code=400, detail="Rol global inválido.")
 
-    if data.rol_global in ("admin_empresa", "usuario") and not data.company_ids:
+    if data.rol_global in ("admin_empresa", "usuario") and not data.company_id:
         raise HTTPException(status_code=400, detail="Debes asignar al menos una empresa a este usuario.")
 
     user = User(
@@ -54,15 +54,14 @@ def create_user(db: Session, data: UserCreate) -> User:
     db.commit()
     db.refresh(user)
 
-    if data.company_ids:
+    if data.company_id:
         from app.models.user_company import UserCompany, RolEmpresa
-        for cid in data.company_ids:
-            uc = UserCompany(
-                user_id=user.id,
-                company_id=cid,
-                rol=RolEmpresa.ADMIN if data.rol_global == "admin_empresa" else RolEmpresa.EDITOR,
-            )
-            db.add(uc)
+        uc = UserCompany(
+            user_id=user.id,
+            company_id=data.company_id,
+            rol=RolEmpresa.ADMIN if data.rol_global == "admin_empresa" else RolEmpresa.EDITOR,
+        )
+        db.add(uc)
         db.commit()
 
     return user
