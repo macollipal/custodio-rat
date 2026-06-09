@@ -15,18 +15,9 @@ from app.schemas.consentimiento import (
     ConsentimientoCreate, ConsentimientoOut,
 )
 from app.services.audit_service import log_audit
+from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/consentimientos", tags=["Consentimientos"])
-
-
-def _get_user():
-    from app.routes.deps import get_current_user as _u
-    return _u()
-
-
-def _check_access(user, company_id, db):
-    from app.routes.deps import check_company_access as _ca
-    return _ca(user, company_id, db)
 
 
 
@@ -40,10 +31,10 @@ async def listar_consentimientos(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Lista todos los consentimientos registrados para una empresa."""
-    _check_access(current_user, company_id, db)
+    check_company_access(current_user, company_id, db)
 
     q = db.query(Consentimiento).filter(Consentimiento.company_id == company_id)
     if rat_id is not None:
@@ -66,12 +57,12 @@ async def listar_consentimientos(
 async def obtener_consentimiento(
     consentimiento_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     c = db.query(Consentimiento).filter(Consentimiento.id == consentimiento_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
-    _check_access(current_user, c.company_id, db)
+    check_company_access(current_user, c.company_id, db)
     return c
 
 
@@ -79,13 +70,13 @@ async def obtener_consentimiento(
 async def crear_consentimiento(
     data: ConsentimientoCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Crea un nuevo consentimiento. Valida que el RAT exista y pertenezca a la empresa del usuario."""
     rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    _check_access(current_user, rat.company_id, db)
+    check_company_access(current_user, rat.company_id, db)
 
     c = Consentimiento(
         company_id=rat.company_id,
@@ -117,13 +108,13 @@ async def crear_consentimiento(
 async def revocar_consentimiento(
     consentimiento_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Marca un consentimiento como revocado (Art. 12 Ley 21.719)."""
     c = db.query(Consentimiento).filter(Consentimiento.id == consentimiento_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
-    _check_access(current_user, c.company_id, db)
+    check_company_access(current_user, c.company_id, db)
     if c.fecha_revocacion:
         raise HTTPException(status_code=400, detail="El consentimiento ya fue revocado.")
 
