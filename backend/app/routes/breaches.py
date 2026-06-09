@@ -55,6 +55,8 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios no pueden registrar brechas de seguridad.")
     check_company_access(current_user, data.company_id, db)
     b = crear_brecha(db, data, current_user.username)
     return _out(b)
