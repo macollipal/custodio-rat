@@ -23,7 +23,7 @@ def _get_user():
 
 
 def _check_access(user, company_id, db):
-    from app.routes.deps import _check_access as _ca
+    from app.routes.deps import check_company_access as _ca
     return _ca(user, company_id, db)
 
 
@@ -67,7 +67,7 @@ async def obtener_eipd_por_rat(
     rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    __check_access(current_user, rat.company_id, db)
+    _check_access(current_user, rat.company_id, db)
 
     eipd = db.query(EIPD).filter(EIPD.rat_id == rat_id).first()
     if not eipd:
@@ -84,7 +84,7 @@ async def crear_eipd(
     rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    __check_access(current_user, rat.company_id, db)
+    _check_access(current_user, rat.company_id, db)
 
     existing = db.query(EIPD).filter(EIPD.rat_id == data.rat_id).first()
     if existing:
@@ -136,7 +136,7 @@ async def actualizar_eipd(
 
     rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
     if rat:
-        __check_access(current_user, rat.company_id, db)
+        _check_access(current_user, rat.company_id, db)
 
     cambios = data.model_dump(exclude_none=True)
     if "resultado" in cambios:

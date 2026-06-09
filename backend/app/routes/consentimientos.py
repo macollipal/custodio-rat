@@ -25,7 +25,7 @@ def _get_user():
 
 
 def _check_access(user, company_id, db):
-    from app.routes.deps import _check_access as _ca
+    from app.routes.deps import check_company_access as _ca
     return _ca(user, company_id, db)
 
 
