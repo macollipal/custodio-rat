@@ -4,7 +4,7 @@ Endpoints CRUD para el RAT, más exportación y sugerencias automáticas.
 
 import unicodedata
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
 from app.routes.deps import get_client_ip
 from sqlalchemy.orm import Session
 
@@ -209,7 +209,13 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    require_editor_or_admin_empresa(data.company_id, db, current_user)
+    if current_user.rol_global == "admin_empresa":
+        from app.services.user_company_service import get_empresas_usuario
+        empresas = get_empresas_usuario(db, current_user.id)
+        if data.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No puede crear RATs en empresas que no gestiona.")
+    else:
+        require_editor_or_admin_empresa(data.company_id, db, current_user)
     r = create_rat(db, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()

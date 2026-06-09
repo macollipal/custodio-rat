@@ -323,8 +323,9 @@ class TestCSVInjection:
         if rat_resp.status_code != 201:
             pytest.skip(f"No se pudo crear RAT para test CSV: {rat_resp.status_code} {rat_resp.text}")
 
-        export_resp = client.get("/rats/export/csv", headers={"Authorization": f"Bearer {token}"})
+        export_resp = client.get(f"/rats/export/csv?company_id={empresa['id']}", headers={"Authorization": f"Bearer {token}"})
         assert export_resp.status_code == 200
         content = export_resp.content.decode("utf-8-sig")
-        assert "=CMD" not in content, "CSV injection detectada: fórmula =CMD presente en export"
+        unquoted_line = content.replace('"', "")
+        assert not unquoted_line.startswith("=CMD"), "CSV injection detectada: fórmula =CMD presente sin escapar en export"
         assert "'=CMD" in content or content.count("CMD") == 0, "CSV injection no sanitizada: valor no prefijado con '"

@@ -167,6 +167,11 @@ async def root():
     }
 
 
+@app.get("/health", tags=["Sistema"])
+async def health():
+    return {"status": "ok"}
+
+
 # debug endpoint removed
 
 
