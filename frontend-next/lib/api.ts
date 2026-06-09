@@ -56,7 +56,7 @@ async function tryRefreshToken(): Promise<string | null> {
   }
 }
 
-async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = { ...(options.headers || {}), ...authHeaders() };
   const init: RequestInit = { ...options, headers, credentials: 'include' };
   let res = await fetch(url, init)  // internal use;
@@ -806,4 +806,116 @@ export interface PoliticaTransparencia {
 export async function getPoliticaTransparencia(companyId: number): Promise<PoliticaTransparencia> {
   const res = await apiFetch(`${API_BASE}/publico/transparencia/${companyId}`);
   return handle<PoliticaTransparencia>(res);
+}
+
+// ── Consentimientos ─────────────────────────────────────────────────────────────
+
+export interface ConsentimientoItem {
+  id: number;
+  company_id: number;
+  rat_id: number | null;
+  nombre_titular: string;
+  email_titular: string | null;
+  canal: string;
+  texto_consentimiento: string;
+  fecha_obtencion: string;
+  fecha_revocacion: string | null;
+  activo: boolean;
+  ip_origen: string | null;
+  created_at: string;
+}
+
+export interface ConsentimientoListResponse {
+  consentimientos: ConsentimientoItem[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export async function listarConsentimientos(companyId: number, ratId?: number, soloActivos?: boolean): Promise<ConsentimientoItem[]> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (ratId) params.set('rat_id', String(ratId));
+  if (soloActivos) params.set('solo_activos', 'true');
+  const res = await apiFetch(`${API_BASE}/consentimientos/?${params}`);
+  const data = await handle<ConsentimientoListResponse>(res);
+  return data.consentimientos || [];
+}
+
+export async function crearConsentimiento(data: {
+  rat_id: number;
+  nombre_titular: string;
+  email_titular?: string;
+  canal: string;
+  texto_consentimiento: string;
+  fecha_obtencion: string;
+}): Promise<ConsentimientoItem> {
+  const res = await apiFetch(`${API_BASE}/consentimientos/`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return handle<ConsentimientoItem>(res);
+}
+
+export async function revocarConsentimiento(id: number): Promise<ConsentimientoItem> {
+  const res = await apiFetch(`${API_BASE}/consentimientos/${id}/revocar`, { method: 'POST' });
+  return handle<ConsentimientoItem>(res);
+}
+
+// ── EIPD ────────────────────────────────────────────────────────────────────────
+
+export interface EIPDItem {
+  id: number;
+  rat_id: number;
+  metodologia: string | null;
+  objetivos: string | null;
+  necesidad_proporcionalidad: string | null;
+  riesgos_identificados: string | null;
+  medidas_propuestas: string | null;
+  parecer_dpo: string | null;
+  fecha_elaboracion: string | null;
+  fecha_aprobacion: string | null;
+  resultado: 'completada' | 'no_requerida' | 'en_proceso';
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EIPDListResponse {
+  eipds: EIPDItem[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export async function listarEipds(companyId: number): Promise<EIPDItem[]> {
+  const res = await apiFetch(`${API_BASE}/eipd/?company_id=${companyId}`);
+  const data = await handle<EIPDListResponse>(res);
+  return data.eipds || [];
+}
+
+export async function crearEipd(data: {
+  rat_id: number;
+  metodologia?: string;
+  objetivos?: string;
+  necesidad_proporcionalidad?: string;
+  riesgos_identificados?: string;
+  medidas_propuestas?: string;
+  parecer_dpo?: string;
+  fecha_elaboracion?: string;
+  fecha_aprobacion?: string;
+  resultado: string;
+}): Promise<EIPDItem> {
+  const res = await apiFetch(`${API_BASE}/eipd/`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return handle<EIPDItem>(res);
+}
+
+export async function actualizarEipd(id: number, data: Partial<EIPDItem>): Promise<EIPDItem> {
+  const res = await apiFetch(`${API_BASE}/eipd/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  return handle<EIPDItem>(res);
 }
