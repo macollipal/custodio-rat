@@ -13,18 +13,9 @@ from app.models.eipd import EIPD, ResultadoEIPD
 from app.models.rat import RAT as RATModel
 from app.schemas.eipd import EIPDCreate, EIPDOut, EIPDUpdate
 from app.services.audit_service import log_audit
+from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/eipd", tags=["EIPD"])
-
-
-def _get_user():
-    from app.routes.deps import get_current_user as _u
-    return _u()
-
-
-def _check_access(user, company_id, db):
-    from app.routes.deps import check_company_access as _ca
-    return _ca(user, company_id, db)
 
 
 @router.get("/", summary="Listar EIPDs de la empresa")
@@ -34,10 +25,10 @@ async def listar_eipds(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Lista todos los EIPDs registrados para RATs de la empresa."""
-    _check_access(current_user, company_id, db)
+    check_company_access(current_user, company_id, db)
 
     q = (
         db.query(EIPD)
@@ -62,12 +53,12 @@ async def listar_eipds(
 async def obtener_eipd_por_rat(
     rat_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    _check_access(current_user, rat.company_id, db)
+    check_company_access(current_user, rat.company_id, db)
 
     eipd = db.query(EIPD).filter(EIPD.rat_id == rat_id).first()
     if not eipd:
@@ -79,12 +70,12 @@ async def obtener_eipd_por_rat(
 async def crear_eipd(
     data: EIPDCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    _check_access(current_user, rat.company_id, db)
+    check_company_access(current_user, rat.company_id, db)
 
     existing = db.query(EIPD).filter(EIPD.rat_id == data.rat_id).first()
     if existing:
@@ -128,7 +119,7 @@ async def actualizar_eipd(
     eipd_id: int,
     data: EIPDUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     eipd = db.query(EIPD).filter(EIPD.id == eipd_id).first()
     if not eipd:
@@ -136,7 +127,7 @@ async def actualizar_eipd(
 
     rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
     if rat:
-        _check_access(current_user, rat.company_id, db)
+        check_company_access(current_user, rat.company_id, db)
 
     cambios = data.model_dump(exclude_none=True)
     if "resultado" in cambios:
