@@ -112,7 +112,7 @@ slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_rect(slide, 0, 0, SLIDE_W / Inches(1), 0.9, DARK_BLUE)
 header_bar(slide, "Marco Legal — Ley 21.719")
 bullet_block(slide, [
-    "Ley 21.719 (feb. 2023):取代 la antigua Ley 19.628 sobre protecci\u00f3n de datos personales en Chile.",
+    "Ley 21.719 (feb. 2023): reemplaza la antigua Ley 19.628 sobre protecci\u00f3n de datos personales en Chile.",
     "Art. 15: Toda empresa que trate datos personales debe mantener un RAT actualizado.",
     "Art. 16: Datos sensibles requieren consentimiento expreso e informaci\u00f3n adicional.",
     "Art. 14 bis: Brechas de seguridad deben notificarse a la APDP en 72 horas.",
