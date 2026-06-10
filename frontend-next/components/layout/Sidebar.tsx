@@ -19,7 +19,7 @@ type Page =
   | 'encargados-contrato'
   | 'consentimientos'
   | 'eipd'
-  | 'asesor';
+  ;
 
 type NavItem = { key: Page; label: string; icon: string; roles: string[] };
 type NavGroup = { title: string; items: NavItem[] };

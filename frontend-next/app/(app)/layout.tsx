@@ -22,7 +22,7 @@ type Page =
   | 'encargados-contrato'
   | 'consentimientos'
   | 'eipd'
-  | 'asistente-ia';
+  ;
 
 function pathToPage(pathname: string): Page {
   if (pathname.startsWith('/rat')) return 'rat';
@@ -37,7 +37,7 @@ function pathToPage(pathname: string): Page {
   if (pathname.startsWith('/encargados-contrato')) return 'encargados-contrato';
   if (pathname.startsWith('/consentimientos')) return 'consentimientos';
   if (pathname.startsWith('/eipd')) return 'eipd';
-  if (pathname.startsWith('/asistente-ia')) return 'asistente-ia';
+  
   return 'dashboard';
 }
 
