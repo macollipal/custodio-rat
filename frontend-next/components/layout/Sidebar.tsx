@@ -19,7 +19,7 @@ type Page =
   | 'encargados-contrato'
   | 'consentimientos'
   | 'eipd'
-  | 'asistente-ia';
+  | 'asesor';
 
 type NavItem = { key: Page; label: string; icon: string; roles: string[] };
 type NavGroup = { title: string; items: NavItem[] };
@@ -47,7 +47,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Análisis',
     items: [
       { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'asistente-ia', label: 'Asistente IA', icon: '🤖', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      // { key: 'asesor', label: 'Asesor', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     ],
   },
   {
