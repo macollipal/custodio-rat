@@ -919,7 +919,7 @@ export default function TktSolicitudDerechoPage() {
                 <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
                   <th className="py-2.5 pl-3 pr-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Tipo</th>
                   <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Titular</th>
-                  <th className="py-2.5 px-2 text-left text-xs font-semibold hidden md:table-cell" style={{ color: '#6B7280' }}>Email</th>
+                  <th className="py-2.5 px-2 text-left text-xs font-semibold hidden md:table-cell" style={{ color: '#6B7280' }}>Descripción</th>
                   <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>Prioridad</th>
                   <th className="py-2.5 px-2 text-left text-xs font-semibold hidden lg:table-cell" style={{ color: '#6B7280' }}>Estado</th>
                   <th className="py-2.5 px-2 text-left text-xs font-semibold" style={{ color: '#6B7280' }}>SLA</th>
@@ -952,16 +952,12 @@ export default function TktSolicitudDerechoPage() {
                       <td className="py-2.5 px-2">
                         <p className="text-xs font-medium" style={{ color: '#111827' }}>{sanitize(ticket.titular_nombre)}</p>
                         <p className="text-xs" style={{ color: '#9CA3AF' }}>{sanitize(ticket.titular_rut) || '—'}</p>
+                        <p className="text-xs truncate" style={{ color: '#6B7280' }}>{sanitize(ticket.titular_email)}</p>
                       </td>
                       <td className="py-2.5 px-2 hidden md:table-cell">
-                        <a
-                          href={`mailto:${encodeURIComponent(ticket.titular_email)}`}
-                          className="text-xs underline"
-                          style={{ color: '#2563EB' }}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          {sanitize(ticket.titular_email)}
-                        </a>
+                        <p className="text-xs line-clamp-2" style={{ color: '#374151' }} title={ticket.descripcion || ''}>
+                          {sanitize(ticket.descripcion) || '—'}
+                        </p>
                       </td>
                       <td className="py-2.5 px-2">
                         <span
