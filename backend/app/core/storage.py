@@ -99,8 +99,8 @@ class OCISigner:
         date_str = email.utils.formatdate(usegmt=True)
 
         headers = {
-            "host": host,
-            "date": date_str,
+            "Host": host,
+            "Date": date_str,
         }
 
         signing_headers = ["(request-target)", "date", "host"]
@@ -114,9 +114,9 @@ class OCISigner:
             m = hashlib.sha256()
             m.update(body)
             sha256_digest = base64.b64encode(m.digest()).decode("ascii")
-            headers["content-length"] = str(len(body))
-            headers["content-type"] = "application/octet-stream"
-            headers["x-content-sha256"] = sha256_digest
+            headers["Content-Length"] = str(len(body))
+            headers["Content-Type"] = "application/octet-stream"
+            headers["X-Content-Sha256"] = sha256_digest
             signing_headers.extend(["content-length", "content-type", "x-content-sha256"])
             signing_values["content-length"] = str(len(body))
             signing_values["content-type"] = "application/octet-stream"
