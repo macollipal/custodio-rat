@@ -131,7 +131,7 @@ class OCISigner:
 
         auth = (
             f'Signature version="1",'
-            f'algorithm="rsa-sha256",'
+            f'algorithm="SHA256withRSA",'
             f'keyId="{self.key_id}",'
             f'signature="{signature}"'
         )
