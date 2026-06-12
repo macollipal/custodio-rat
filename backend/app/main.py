@@ -227,9 +227,10 @@ async def debug_oci_test():
         auth_header = signed.get("Authorization", "")
 
         # Build signing string for debugging
+        date_value = signed.get("Date") or signed.get("date") or ""
         signing_string = "\n".join([
             f"(request-target): {method.lower()} {path}",
-            f"date: {signed.get('date', '')}",
+            f"date: {date_value}",
             f"host: {host}",
         ])
 
@@ -248,7 +249,7 @@ async def debug_oci_test():
             "host": host,
             "path": path,
             "url": url,
-            "request_date": signed.get("date"),
+            "request_date": signed.get("Date") or signed.get("date"),
             "signing_string": signing_string,
             "authorization_first_120": auth_header[:120] + "...",
             "authorization_length": len(auth_header),
