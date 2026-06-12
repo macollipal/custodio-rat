@@ -175,23 +175,20 @@ async def health():
 @app.get("/debug/oci", tags=["Debug"], include_in_schema=False)
 async def debug_oci():
     from app.core.config import settings
-    import traceback
     try:
-        cfg = settings.oci
-        key_len = len(settings.OCI_KEY_CONTENT) if settings.OCI_KEY_CONTENT else 0
-        key_starts = settings.OCI_KEY_CONTENT[:30] if settings.OCI_KEY_CONTENT else None
-        key_has_real_newlines = "\n" in (settings.OCI_KEY_CONTENT or "")
-        key_has_literal_n = "\\n" in (settings.OCI_KEY_CONTENT or "")
+        raw = os.environ.get("OCI_CONFIG", "")
+        key_raw = os.environ.get("OCI_KEY_CONTENT", "")
         return {
-            "oci_config_parsed": cfg,
-            "oci_config_empty": not bool(cfg),
-            "key_length": key_len,
-            "key_starts": key_starts,
-            "key_has_real_newlines": key_has_real_newlines,
-            "key_has_literal_n": key_has_literal_n,
-            "storage_backend": "unknown",
+            "oci_config_raw": raw[:100] + "..." if len(raw) > 100 else raw,
+            "oci_config_empty": not bool(raw),
+            "oci_config_parsed": settings.oci,
+            "key_length": len(key_raw),
+            "key_starts": key_raw[:30] if key_raw else None,
+            "key_has_real_newlines": "\n" in key_raw,
+            "key_has_literal_n": "\\n" in key_raw,
         }
     except Exception as e:
+        import traceback
         return {"error": str(e), "traceback": traceback.format_exc()[:500]}
 
 
