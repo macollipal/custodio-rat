@@ -1,4 +1,4 @@
-from datetime import datetime, date
+﻿from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel, field_validator
 
@@ -32,7 +32,8 @@ class RATBase(BaseModel):
     # Documento de base legal (base64 para transporte; se almacena como binary en BD)
     archivo_base_legal_nombre: Optional[str] = None
     archivo_base_legal_tipo: Optional[str] = None
-    archivo_base_legal_base64: Optional[str] = None  # base64 encoded file content
+    archivo_base_legal_base64: Optional[str] = None
+    archivo_base_legal_storage_url: Optional[str] = None
 
     @field_validator('estado_eipd')
     @classmethod
@@ -50,7 +51,7 @@ class RATCreate(RATBase):
     @classmethod
     def nombre_no_vacio(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("El nombre del proceso no puede estar vacío.")
+            raise ValueError("El nombre del proceso no puede estar vac├¡o.")
         return v.strip()
 
     @field_validator("base_legal")
@@ -58,14 +59,14 @@ class RATCreate(RATBase):
     def base_legal_valida(cls, v: str) -> str:
         opciones_validas = [
             "Consentimiento del titular",
-            "Ejecución de contrato",
-            "Obligación legal",
-            "Interés legítimo",
-            "Interés vital del titular",
-            "Misión de interés público",
+            "Ejecuci├│n de contrato",
+            "Obligaci├│n legal",
+            "Inter├®s leg├¡timo",
+            "Inter├®s vital del titular",
+            "Misi├│n de inter├®s p├║blico",
             "Otra",
         ]
-        # Validación flexible: si no coincide exactamente, se acepta igual (puede ser texto libre)
+        # Validaci├│n flexible: si no coincide exactamente, se acepta igual (puede ser texto libre)
         return v.strip()
 
 

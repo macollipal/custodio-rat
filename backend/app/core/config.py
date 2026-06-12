@@ -1,5 +1,5 @@
-"""
-Configuración central de la aplicación.
+﻿"""
+Configuraci├│n central de la aplicaci├│n.
 Carga variables de entorno y expone un objeto Settings reutilizable.
 """
 
@@ -10,11 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "RAT Manager — Ley 21.719"
+    APP_NAME: str = "RAT Manager ÔÇö Ley 21.719"
     APP_VERSION: str = "1.0.0"
     APP_DESCRIPTION: str = (
-        "Sistema de gestión del Registro de Actividades de Tratamiento (RAT) "
-        "conforme a la Ley 21.719 de Protección de Datos Personales de Chile."
+        "Sistema de gesti├│n del Registro de Actividades de Tratamiento (RAT) "
+        "conforme a la Ley 21.719 de Protecci├│n de Datos Personales de Chile."
     )
 
     DATABASE_URL: str = ""
@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
 
+    STORAGE_BACKEND: str = "local"
+    OCI_CONFIG: str = ""
+    OCI_KEY_CONTENT: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -46,8 +50,16 @@ class Settings(BaseSettings):
     def resolved_secret_key(self) -> str:
         if self.ENVIRONMENT in ("production", "qa", "staging"):
             if not self.SECRET_KEY:
-                raise ValueError("SECRET_KEY es obligatoria en producción. Genera una clave con: openssl rand -hex 64")
+                raise ValueError("SECRET_KEY es obligatoria en producci├│n. Genera una clave con: openssl rand -hex 64")
             return self.SECRET_KEY
         return self._dev_secret
+
+    @property
+    def oci(self) -> dict:
+        """Parsea OCI_CONFIG como dict. Vac├¡o si no est├í configurado."""
+        if not self.OCI_CONFIG:
+            return {}
+        import json
+        return json.loads(self.OCI_CONFIG)
 
 settings = Settings()

@@ -1,6 +1,6 @@
-"""
-Lógica de negocio para el Registro de Actividades de Tratamiento (RAT).
-Incluye validaciones de auditoría conforme a la Ley 21.719.
+﻿"""
+L├│gica de negocio para el Registro de Actividades de Tratamiento (RAT).
+Incluye validaciones de auditor├¡a conforme a la Ley 21.719.
 """
 
 import base64
@@ -29,59 +29,59 @@ CAMPOS_OBLIGATORIOS_COMPLETO = [
     "plazo_retencion",
 ]
 
-# Alertas de auditoría automáticas
+# Alertas de auditor├¡a autom├íticas
 ALERTAS_AUDITORIA = {
     "datos_sensibles": (
-        "⚠️ Este proceso trata datos sensibles (Art. 2 letra g Ley 21.719). Verifique que cuenta con base legal "
-        "explícita y medidas de seguridad reforzadas. Documente el tipo específico de dato sensible."
+        "ÔÜá´©Å Este proceso trata datos sensibles (Art. 2 letra g Ley 21.719). Verifique que cuenta con base legal "
+        "expl├¡cita y medidas de seguridad reforzadas. Documente el tipo espec├¡fico de dato sensible."
     ),
     "datos_sensibles_consentimiento": (
-        "⚠️ BASE LEGAL: El tratamiento de datos sensibles basado en consentimiento requiere que sea EXPRESO "
-        "(no basta consentimiento implícito). Documente el mecanismo de obtención y revocación del consentimiento."
+        "ÔÜá´©Å BASE LEGAL: El tratamiento de datos sensibles basado en consentimiento requiere que sea EXPRESO "
+        "(no basta consentimiento impl├¡cito). Documente el mecanismo de obtenci├│n y revocaci├│n del consentimiento."
     ),
     "datos_sensibles_biometria": (
-        "🔐 BIOMETRÍA: Los datos biométricos destinados a identificar inequívocamente a una persona se rigen por "
-        "el Art. 16 BIS Ley 21.719. Requieren base legal específica y evaluación EIPD. En relaciones laborales, "
-        "el consentimiento del empleado NO es base legal válida (relación jerárquica asimétrica)."
+        "­ƒöÉ BIOMETR├ìA: Los datos biom├®tricos destinados a identificar inequ├¡vocamente a una persona se rigen por "
+        "el Art. 16 BIS Ley 21.719. Requieren base legal espec├¡fica y evaluaci├│n EIPD. En relaciones laborales, "
+        "el consentimiento del empleado NO es base legal v├ílida (relaci├│n jer├írquica asim├®trica)."
     ),
     "evaluacion_impacto": (
-        "📋 Se marcó que requiere Evaluación de Impacto en Protección de Datos (EIPD/DPIA). "
-        "Asegúrese de completarla y documentarla antes de iniciar el tratamiento (Art. 15 bis Ley 21.719)."
+        "­ƒôï Se marc├│ que requiere Evaluaci├│n de Impacto en Protecci├│n de Datos (EIPD/DPIA). "
+        "Aseg├║rese de completarla y documentarla antes de iniciar el tratamiento (Art. 15 bis Ley 21.719)."
     ),
     "transferencia_internacional": (
-        "🌐 Este proceso incluye transferencia internacional de datos. "
-        "Verifique que el país destinatario cuenta con nivel adecuado de protección o que se aplican "
-        "garantías apropiadas (SCC, BCR u otras). Chile NO está en la lista de adecuación de la UE. "
-        "Documente las garantías aplicadas en el campo correspondiente."
+        "­ƒîÉ Este proceso incluye transferencia internacional de datos. "
+        "Verifique que el pa├¡s destinatario cuenta con nivel adecuado de protecci├│n o que se aplican "
+        "garant├¡as apropiadas (SCC, BCR u otras). Chile NO est├í en la lista de adecuaci├│n de la UE. "
+        "Documente las garant├¡as aplicadas en el campo correspondiente."
     ),
     "transferencia_sin_garantias": (
-        "🌐 ATENCIÓN: Se registró transferencia internacional sin especificar las garantías aplicadas. "
-        "Documente si aplica nivel adecuado, SCC u otras garantías (Art. 28 Ley 21.719)."
+        "­ƒîÉ ATENCI├ôN: Se registr├│ transferencia internacional sin especificar las garant├¡as aplicadas. "
+        "Documente si aplica nivel adecuado, SCC u otras garant├¡as (Art. 28 Ley 21.719)."
     ),
     "decisiones_automatizadas": (
-        "🤖 Este proceso involucra decisiones automatizadas o perfilamiento. Los titulares tienen derecho a "
-        "solicitar intervención humana e impugnar la decisión (Art. 8 Ley 21.719). Documente la lógica del sistema "
-        "y el mecanismo de revisión humana disponible. Evalúe si requiere EIPD."
+        "­ƒñû Este proceso involucra decisiones automatizadas o perfilamiento. Los titulares tienen derecho a "
+        "solicitar intervenci├│n humana e impugnar la decisi├│n (Art. 8 Ley 21.719). Documente la l├│gica del sistema "
+        "y el mecanismo de revisi├│n humana disponible. Eval├║e si requiere EIPD."
     ),
     "interes_legitimo": (
-        "⚖️ Base legal: Interés legítimo. Debe documentar el test de 3 pasos: (1) ¿existe interés legítimo real? "
-        "(2) ¿el tratamiento es necesario para ese interés? (3) ¿prevalece sobre los derechos del titular? "
+        "ÔÜû´©Å Base legal: Inter├®s leg├¡timo. Debe documentar el test de 3 pasos: (1) ┬┐existe inter├®s leg├¡timo real? "
+        "(2) ┬┐el tratamiento es necesario para ese inter├®s? (3) ┬┐prevalece sobre los derechos del titular? "
         "Sin este test documentado, la base no sirve como defensa ante la APDC."
     ),
     "interes_legitimo_sin_test": (
-        "⚖️ PENDIENTE: Base legal Interés legítimo requiere documentar el test de 3 pasos en el campo correspondiente."
+        "ÔÜû´©Å PENDIENTE: Base legal Inter├®s leg├¡timo requiere documentar el test de 3 pasos en el campo correspondiente."
     ),
     "encargado_sin_contrato": (
-        "📄 ENCARGADO SIN CONTRATO: Se registro un encargado del tratamiento pero no se ha confirmado la existencia "
+        "­ƒôä ENCARGADO SIN CONTRATO: Se registro un encargado del tratamiento pero no se ha confirmado la existencia "
         "de un contrato de encargo que establezca las instrucciones de tratamiento, confidencialidad y seguridad "
         "(Art. 14 quater Ley 21.719)."
     ),
     "eipd_pendiente": (
-        "🔍 EIPD PENDIENTE: Este proceso requiere Evaluación de Impacto en Protección de Datos y aún no está completada. "
+        "­ƒöì EIPD PENDIENTE: Este proceso requiere Evaluaci├│n de Impacto en Protecci├│n de Datos y a├║n no est├í completada. "
         "No puede iniciarse el tratamiento hasta completar la EIPD (Art. 15 bis Ley 21.719)."
     ),
     "falta_doc_base_legal": (
-        "📄 SIN DOCUMENTO DE BASE LEGAL: La base legal seleccionada requiere un documento que la respalde "
+        "­ƒôä SIN DOCUMENTO DE BASE LEGAL: La base legal seleccionada requiere un documento que la respalde "
         "(consentimiento, contrato, norma legal, EIPD, etc.). Adjunte el documento correspondiente para alcanzar el 100% de completitud."
     ),
 }
@@ -105,7 +105,7 @@ def get_rat(db: Session, rat_id: int) -> RAT:
 
 
 def _procesar_archivo_base_legal(data: dict) -> dict:
-    """Convierte archivo_base_legal_base64 (string) a binario y hash. Retorna campos a escribir en el modelo."""
+    """Sube archivo_base_legal_base64 a OCI y retorna URL. Ca├¡da -> BYTEA como fallback."""
     base64_str = data.get("archivo_base_legal_base64")
     if not base64_str:
         return {}
@@ -114,12 +114,30 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
     except Exception:
         return {}
     hash_val = hashlib.sha256(datos).hexdigest()
-    return {
-        "archivo_base_legal_datos": datos,
-        "archivo_base_legal_hash": hash_val,
-        "archivo_base_legal_nombre": data.get("archivo_base_legal_nombre"),
-        "archivo_base_legal_tipo": data.get("archivo_base_legal_tipo"),
-    }
+    nombre = data.get("archivo_base_legal_nombre", "documento.pdf")
+    tipo = data.get("archivo_base_legal_tipo", "application/pdf")
+
+    try:
+        from app.core.storage import get_storage_backend, generate_object_name
+        backend = get_storage_backend()
+        object_name = generate_object_name("rats", nombre)
+        content_type = tipo or "application/octet-stream"
+        url = backend.upload(datos, object_name, content_type)
+        logger.info(f"Archivo RAT migrado a OCI: {object_name}")
+        return {
+            "archivo_base_legal_storage_url": url,
+            "archivo_base_legal_hash": hash_val,
+            "archivo_base_legal_nombre": nombre,
+            "archivo_base_legal_tipo": tipo,
+        }
+    except Exception as e:
+        logger.warning(f"OCI no disponible, guardando BYTEA: {e}")
+        return {
+            "archivo_base_legal_datos": datos,
+            "archivo_base_legal_hash": hash_val,
+            "archivo_base_legal_nombre": nombre,
+            "archivo_base_legal_tipo": tipo,
+        }
 
 
 def _tiene_consentimiento_activo(db: Session, rat_id: int) -> bool:
@@ -132,7 +150,7 @@ def _tiene_consentimiento_activo(db: Session, rat_id: int) -> bool:
 
 
 def _validar_consentimiento_sensibles(db: Session, rat: RAT) -> None:
-    """Valida que si datos_sensibles=True, exista al menos un consentimiento activo (Art. 16 — REC-06)."""
+    """Valida que si datos_sensibles=True, exista al menos un consentimiento activo (Art. 16 ÔÇö REC-06)."""
     if rat.datos_sensibles and not _tiene_consentimiento_activo(db, rat.id):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -155,7 +173,7 @@ def _tiene_contrato_encargado_activo(db: Session, rat_id: int) -> bool:
 
 
 def _validar_contrato_encargado(db: Session, rat: RAT) -> None:
-    """Valida que si nombre_encargado está definido, exista al menos un contrato activo (Art. 14 quater — REC-03)."""
+    """Valida que si nombre_encargado est├í definido, exista al menos un contrato activo (Art. 14 quater ÔÇö REC-03)."""
     if rat.nombre_encargado and not _tiene_contrato_encargado_activo(db, rat.id):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -274,7 +292,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     )
     interes_legitimo_sin_test = sum(
         1 for r in rats
-        if "interés legítimo" in (r.base_legal or "").lower() or "interes legitimo" in (r.base_legal or "").lower()
+        if "inter├®s leg├¡timo" in (r.base_legal or "").lower() or "interes legitimo" in (r.base_legal or "").lower()
         if not r.test_interes_legitimo
     )
     encargados_sin_contrato = sum(
@@ -294,7 +312,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     now = datetime.now(timezone.utc)
     for r in rats:
         plazo = r.plazo_retencion or ""
-        match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
+        match = re.search(r"(\d+)\s*(?:a├▒o|a├▒os)", plazo, re.IGNORECASE)
         if not match:
             continue
         years = int(match.group(1))
@@ -331,12 +349,12 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     }
 
 
-# ── Funciones internas ──────────────────────────────────────────────────────
+# ÔöÇÔöÇ Funciones internas ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 def _calcular_estado(data: dict) -> EstadoRAT:
     """
-    Determina automáticamente el estado del RAT según completitud.
-    Usa el mismo cálculo de campos que RAT.calcular_completitud().
+    Determina autom├íticamente el estado del RAT seg├║n completitud.
+    Usa el mismo c├ílculo de campos que RAT.calcular_completitud().
     """
     todos_completos = all(data.get(campo) and str(data[campo]).strip() for campo in CAMPOS_OBLIGATORIOS_COMPLETO)
     if todos_completos:
@@ -345,7 +363,7 @@ def _calcular_estado(data: dict) -> EstadoRAT:
 
 
 def _generar_alertas_auditoria(data: dict) -> str:
-    """Genera observaciones automáticas de auditoría según flags activados."""
+    """Genera observaciones autom├íticas de auditor├¡a seg├║n flags activados."""
     alertas = []
     base_legal = (data.get("base_legal") or "").lower()
     tipo_sensible = (data.get("tipo_dato_sensible") or "").lower()
@@ -354,7 +372,7 @@ def _generar_alertas_auditoria(data: dict) -> str:
         alertas.append(ALERTAS_AUDITORIA["datos_sensibles"])
         if "consentimiento" in base_legal:
             alertas.append(ALERTAS_AUDITORIA["datos_sensibles_consentimiento"])
-        if "biométrico" in tipo_sensible or "biometrico" in tipo_sensible:
+        if "biom├®trico" in tipo_sensible or "biometrico" in tipo_sensible:
             alertas.append(ALERTAS_AUDITORIA["datos_sensibles_biometria"])
 
     if data.get("evaluacion_impacto"):
@@ -368,7 +386,7 @@ def _generar_alertas_auditoria(data: dict) -> str:
     if data.get("decisiones_automatizadas"):
         alertas.append(ALERTAS_AUDITORIA["decisiones_automatizadas"])
 
-    if "interés legítimo" in base_legal or "interes legitimo" in base_legal:
+    if "inter├®s leg├¡timo" in base_legal or "interes legitimo" in base_legal:
         alertas.append(ALERTAS_AUDITORIA["interes_legitimo"])
         if not data.get("test_interes_legitimo"):
             alertas.append(ALERTAS_AUDITORIA["interes_legitimo_sin_test"])
@@ -392,7 +410,7 @@ def marcar_revisado(db: Session, rat_id: int, usuario: str, ip_origen: Optional[
     rat.updated_at = datetime.now(timezone.utc)
     rat.updated_by = usuario
 
-    log_audit(db, "rat", rat_id, "revisado", usuario, {"nota": "Revisión periódica del RAT confirmada"}, ip_origen)
+    log_audit(db, "rat", rat_id, "revisado", usuario, {"nota": "Revisi├│n peri├│dica del RAT confirmada"}, ip_origen)
     db.commit()
 
     log_entry = db.query(AuditLog).filter(
