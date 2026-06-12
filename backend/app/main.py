@@ -226,8 +226,21 @@ async def debug_oci_test():
         signed = backend.signer.sign_headers(method, path, host)
         auth_header = signed.get("Authorization", "")
 
+        # Build signing string for debugging
+        signing_string = "\n".join([
+            f"(request-target): {method.lower()} {path}",
+            f"date: {signed.get('date', '')}",
+            f"host: {host}",
+        ])
+
         url = f"{backend.base_url}{path}"
         import requests as r
+
+        # Use PreparedRequest to see exactly what requests sends
+        req = r.Request(method, url, headers=signed)
+        prepared = req.prepare()
+        actual_headers_sent = dict(prepared.headers)
+
         resp = r.get(url, headers=signed, timeout=10)
 
         return {
@@ -236,8 +249,12 @@ async def debug_oci_test():
             "path": path,
             "url": url,
             "request_date": signed.get("date"),
+            "signing_string": signing_string,
             "authorization_first_120": auth_header[:120] + "...",
             "authorization_length": len(auth_header),
+            "actual_headers_sent_host": actual_headers_sent.get("Host"),
+            "actual_headers_sent_date": actual_headers_sent.get("Date"),
+            "actual_headers_sent_authorization_first_80": actual_headers_sent.get("Authorization", "")[:80] + "...",
             "response_status": resp.status_code,
             "response_body_first_300": resp.text[:300],
         }
