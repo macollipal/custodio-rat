@@ -192,6 +192,50 @@ async def debug_oci():
         return {"error": str(e), "traceback": traceback.format_exc()[:500]}
 
 
+@app.get("/debug/oci/test", tags=["Debug"], include_in_schema=False)
+async def debug_oci_test():
+    from app.core.config import settings
+    from app.core.storage import OCIStorageBackend
+    import json
+    import base64
+    import time
+
+    cfg = settings.oci
+    if not cfg:
+        return {"error": "no oci config"}
+
+    try:
+        backend = OCIStorageBackend(cfg, settings.OCI_KEY_CONTENT)
+    except Exception as e:
+        import traceback
+        return {"error": f"backend init failed: {e}", "traceback": traceback.format_exc()[:500]}
+
+    method = "GET"
+    host = backend.host
+    ns = backend.namespace
+    bucket = backend.bucket
+    path = f"/n/{ns}/b/{bucket}/o"
+
+    signed = backend.signer.sign_headers(method, path, host)
+    auth_header = signed.get("Authorization", "")
+
+    url = f"{backend.base_url}{path}"
+    import requests as r
+    resp = r.get(url, headers=signed, timeout=10)
+
+    return {
+        "method": method,
+        "host": host,
+        "path": path,
+        "url": url,
+        "request_date": signed.get("date"),
+        "authorization_first_120": auth_header[:120] + "...",
+        "authorization_length": len(auth_header),
+        "response_status": resp.status_code,
+        "response_body_first_300": resp.text[:300],
+    }
+
+
 @app.get("/health/db", tags=["Sistema"])
 async def health_db():
     from app.core.config import settings
