@@ -81,33 +81,24 @@ class OCISigner:
         if "\\n" in key_content and "\n" not in key_content:
             key_content = key_content.replace("\\n", "\n")
 
-        from httpsig_cffi.sign import HeaderSigner
-        from httpsig_cffi.algorithms import HS2018
+        from httpsig_cffi.requests_auth import HeaderSigner
 
-        self.private_key_pem = key_content.encode()
-
-        signers = [
-            HeaderSigner(
-                key=self.private_key_pem,
-                key_id=self.key_id,
-                algorithm=HS2018,
-                headers=["(request-target)", "host", "date"],
-            )
-        ]
-        if body:
-            signers.append(
-                HeaderSigner(
-                    key=self.private_key_pem,
-                    key_id=self.key_id,
-                    algorithm=HS2018,
-                    headers=["(request-target)", "host", "date", "content-length", "content-type", "x-content-sha256"],
-                )
-            )
-        self._signers = signers
+        self._headers_no_body = ["(request-target)", "host", "date"]
+        self._headers_with_body = ["(request-target)", "host", "date", "content-length", "content-type", "x-content-sha256"]
+        self._signer_no_body = HeaderSigner(
+            key_id=self.key_id,
+            secret=key_content.encode(),
+            algorithm="rsa-sha256",
+            headers=self._headers_no_body,
+        )
+        self._signer_with_body = HeaderSigner(
+            key_id=self.key_id,
+            secret=key_content.encode(),
+            algorithm="rsa-sha256",
+            headers=self._headers_with_body,
+        )
 
     def sign_headers(self, method: str, path: str, host: str, body: bytes = None) -> dict:
-        from httpsig_cffi.utils import HTTPMessage
-
         date_str = email.utils.formatdate(usegmt=True)
 
         headers = {
@@ -122,12 +113,12 @@ class OCISigner:
             headers["Content-Length"] = str(len(body))
             headers["Content-Type"] = "application/octet-stream"
             headers["X-Content-Sha256"] = sha256_digest
+            signer = self._signer_with_body
+        else:
+            signer = self._signer_no_body
 
-        signer = self._signers[1] if body else self._signers[0]
-        msg = HTTPMessage(method=method, path=path, headers=headers)
-        signed = signer.sign(msg)
-
-        return signed.headers
+        signed_headers = signer.sign(headers, host=host, method=method, path=path)
+        return signed_headers
 
 
 class OCIStorageBackend(StorageBackend):
