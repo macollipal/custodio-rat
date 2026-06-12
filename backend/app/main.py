@@ -1,4 +1,4 @@
-"""
+﻿"""
 Punto de entrada de la API FastAPI.
 Registra routers, configura CORS e inicializa la base de datos.
 """
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 
 def _seed_admin():
-    """Crea el usuario superadmin inicial si la BD está vacía y SEED_ADMIN=true."""
+    """Crea el usuario superadmin inicial si la BD est├í vac├¡a y SEED_ADMIN=true."""
     import os
     if os.getenv("SEED_ADMIN", "").lower() != "true":
         return
@@ -44,7 +44,7 @@ def _seed_admin():
 
     secret = os.getenv("SEED_ADMIN_PASSWORD")
     if not secret:
-        print("⚠️ SEED_ADMIN=true pero no se definió SEED_ADMIN_PASSWORD — omitiendo seed")
+        print("ÔÜá´©Å SEED_ADMIN=true pero no se defini├│ SEED_ADMIN_PASSWORD ÔÇö omitiendo seed")
         return
 
     db = SessionLocal()
@@ -60,13 +60,13 @@ def _seed_admin():
             )
             db.add(admin)
             db.commit()
-            print(f"✅ Superadmin creado: admin / {secret[:4]}***")
+            print(f"Ô£à Superadmin creado: admin / {secret[:4]}***")
     finally:
         db.close()
 
 
 def _seed_rubros():
-    """Crea rubros y RATs sugeridos si la tabla está vacía."""
+    """Crea rubros y RATs sugeridos si la tabla est├í vac├¡a."""
     import json
     import os
     from app.models.rubro import Rubro
@@ -96,7 +96,7 @@ def _seed_rubros():
                 db.add(sugerencia)
 
         db.commit()
-        print(f"✅ {len(seed_data['rubros'])} rubros y sugerencias seedeados")
+        print(f"Ô£à {len(seed_data['rubros'])} rubros y sugerencias seedeados")
     finally:
         db.close()
 
@@ -172,7 +172,28 @@ async def health():
     return {"status": "ok"}
 
 
-# debug endpoint removed
+@app.get("/debug/oci", tags=["Debug"], include_in_schema=False)
+async def debug_oci():
+    from app.core.config import settings
+    from app.core.storage import get_storage_backend
+    import traceback
+    try:
+        cfg = settings.oci
+        key_len = len(settings.OCI_KEY_CONTENT) if settings.OCI_KEY_CONTENT else 0
+        key_starts = settings.OCI_KEY_CONTENT[:30] if settings.OCI_KEY_CONTENT else None
+        key_has_real_newlines = "\n" in (settings.OCI_KEY_CONTENT or "")
+        key_has_literal_n = "\\n" in (settings.OCI_KEY_CONTENT or "")
+        backend_name = type(get_storage_backend()).__name__
+        return {
+            "oci_config_parsed": cfg,
+            "key_length": key_len,
+            "key_starts": key_starts,
+            "key_has_real_newlines": key_has_real_newlines,
+            "key_has_literal_n": key_has_literal_n,
+            "backend": backend_name,
+        }
+    except Exception as e:
+        return {"error": str(e), "traceback": traceback.format_exc()}
 
 
 @app.get("/health/db", tags=["Sistema"])
