@@ -195,12 +195,18 @@ async def debug_oci():
 @app.get("/debug/oci/test", tags=["Debug"], include_in_schema=False)
 async def debug_oci_test():
     from app.core.config import settings
-    from app.core.storage import OCIStorageBackend
-    import json
-    import base64
-    import time
+    try:
+        from app.core.storage import OCIStorageBackend
+    except Exception as e:
+        import traceback
+        return {"error": f"import failed: {e}", "traceback": traceback.format_exc()[:500]}
 
-    cfg = settings.oci
+    try:
+        cfg = settings.oci
+    except Exception as e:
+        import traceback
+        return {"error": f"settings.oci failed: {e}", "traceback": traceback.format_exc()[:500]}
+
     if not cfg:
         return {"error": "no oci config"}
 
@@ -210,30 +216,34 @@ async def debug_oci_test():
         import traceback
         return {"error": f"backend init failed: {e}", "traceback": traceback.format_exc()[:500]}
 
-    method = "GET"
-    host = backend.host
-    ns = backend.namespace
-    bucket = backend.bucket
-    path = f"/n/{ns}/b/{bucket}/o"
+    try:
+        method = "GET"
+        host = backend.host
+        ns = backend.namespace
+        bucket = backend.bucket
+        path = f"/n/{ns}/b/{bucket}/o"
 
-    signed = backend.signer.sign_headers(method, path, host)
-    auth_header = signed.get("Authorization", "")
+        signed = backend.signer.sign_headers(method, path, host)
+        auth_header = signed.get("Authorization", "")
 
-    url = f"{backend.base_url}{path}"
-    import requests as r
-    resp = r.get(url, headers=signed, timeout=10)
+        url = f"{backend.base_url}{path}"
+        import requests as r
+        resp = r.get(url, headers=signed, timeout=10)
 
-    return {
-        "method": method,
-        "host": host,
-        "path": path,
-        "url": url,
-        "request_date": signed.get("date"),
-        "authorization_first_120": auth_header[:120] + "...",
-        "authorization_length": len(auth_header),
-        "response_status": resp.status_code,
-        "response_body_first_300": resp.text[:300],
-    }
+        return {
+            "method": method,
+            "host": host,
+            "path": path,
+            "url": url,
+            "request_date": signed.get("date"),
+            "authorization_first_120": auth_header[:120] + "...",
+            "authorization_length": len(auth_header),
+            "response_status": resp.status_code,
+            "response_body_first_300": resp.text[:300],
+        }
+    except Exception as e:
+        import traceback
+        return {"error": f"request failed: {e}", "traceback": traceback.format_exc()[:500]}
 
 
 @app.get("/health/db", tags=["Sistema"])
