@@ -78,6 +78,8 @@ class RAT(Base):
     archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
     # Hash SHA-256 para verificar integridad
     archivo_base_legal_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    # URL en OCI Object Storage (cuando se migra el archivo fuera de la BD)
+    archivo_base_legal_storage_url: Mapped[str] = mapped_column(String(1000), nullable=True)
 
     # Estado y auditoría
     estado: Mapped[EstadoRAT] = mapped_column(

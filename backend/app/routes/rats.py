@@ -2,9 +2,12 @@
 Endpoints CRUD para el RAT, más exportación y sugerencias automáticas.
 """
 
+import logging
 import unicodedata
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
+
+logger = logging.getLogger(__name__)
 from app.routes.deps import get_client_ip
 from sqlalchemy.orm import Session
 
@@ -343,11 +346,28 @@ async def descargar_archivo(
 ):
     """
     Retorna el documento que respalda la base legal del RAT.
+    Si existe storage_url (OCI), descarga desde OCI. Sinon, usa BYTEA.
     Requiere autenticacion. Descarga en nueva pesta\u00f1a del navegador.
     """
     r = get_rat(db, rat_id)
+    if r.archivo_base_legal_storage_url:
+        try:
+            from app.core.storage import get_storage_backend
+            from urllib.parse import unquote
+            backend = get_storage_backend()
+            object_name = unquote(r.archivo_base_legal_storage_url.split("/o/")[-1])
+            datos = backend.download(object_name)
+            return Response(
+                content=datos,
+                media_type=r.archivo_base_legal_tipo or "application/octet-stream",
+                headers={
+                    "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error descargando de OCI: {e}")
+            raise HTTPException(status_code=500, detail="Error descargando archivo de OCI.")
     if not r.archivo_base_legal_datos:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Este RAT no tiene documento de base legal adjunto.")
     return Response(
         content=r.archivo_base_legal_datos,

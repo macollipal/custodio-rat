@@ -32,7 +32,8 @@ class RATBase(BaseModel):
     # Documento de base legal (base64 para transporte; se almacena como binary en BD)
     archivo_base_legal_nombre: Optional[str] = None
     archivo_base_legal_tipo: Optional[str] = None
-    archivo_base_legal_base64: Optional[str] = None  # base64 encoded file content
+    archivo_base_legal_base64: Optional[str] = None
+    archivo_base_legal_storage_url: Optional[str] = None
 
     @field_validator('estado_eipd')
     @classmethod

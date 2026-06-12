@@ -105,7 +105,7 @@ def get_rat(db: Session, rat_id: int) -> RAT:
 
 
 def _procesar_archivo_base_legal(data: dict) -> dict:
-    """Convierte archivo_base_legal_base64 (string) a binario y hash. Retorna campos a escribir en el modelo."""
+    """Sube archivo_base_legal_base64 a OCI y retorna URL. Caída -> BYTEA como fallback."""
     base64_str = data.get("archivo_base_legal_base64")
     if not base64_str:
         return {}
@@ -114,12 +114,30 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
     except Exception:
         return {}
     hash_val = hashlib.sha256(datos).hexdigest()
-    return {
-        "archivo_base_legal_datos": datos,
-        "archivo_base_legal_hash": hash_val,
-        "archivo_base_legal_nombre": data.get("archivo_base_legal_nombre"),
-        "archivo_base_legal_tipo": data.get("archivo_base_legal_tipo"),
-    }
+    nombre = data.get("archivo_base_legal_nombre", "documento.pdf")
+    tipo = data.get("archivo_base_legal_tipo", "application/pdf")
+
+    try:
+        from app.core.storage import get_storage_backend, generate_object_name
+        backend = get_storage_backend()
+        object_name = generate_object_name("rats", nombre)
+        content_type = tipo or "application/octet-stream"
+        url = backend.upload(datos, object_name, content_type)
+        logger.info(f"Archivo RAT migrado a OCI: {object_name}")
+        return {
+            "archivo_base_legal_storage_url": url,
+            "archivo_base_legal_hash": hash_val,
+            "archivo_base_legal_nombre": nombre,
+            "archivo_base_legal_tipo": tipo,
+        }
+    except Exception as e:
+        logger.warning(f"OCI no disponible, guardando BYTEA: {e}")
+        return {
+            "archivo_base_legal_datos": datos,
+            "archivo_base_legal_hash": hash_val,
+            "archivo_base_legal_nombre": nombre,
+            "archivo_base_legal_tipo": tipo,
+        }
 
 
 def _tiene_consentimiento_activo(db: Session, rat_id: int) -> bool:

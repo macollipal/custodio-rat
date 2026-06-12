@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
 
+    STORAGE_BACKEND: str = "local"
+    OCI_CONFIG: str = ""
+    OCI_KEY_CONTENT: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -49,5 +53,13 @@ class Settings(BaseSettings):
                 raise ValueError("SECRET_KEY es obligatoria en producción. Genera una clave con: openssl rand -hex 64")
             return self.SECRET_KEY
         return self._dev_secret
+
+    @property
+    def oci(self) -> dict:
+        """Parsea OCI_CONFIG como dict. Vacío si no está configurado."""
+        if not self.OCI_CONFIG:
+            return {}
+        import json
+        return json.loads(self.OCI_CONFIG)
 
 settings = Settings()
