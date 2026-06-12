@@ -1,4 +1,4 @@
-"""
+﻿"""
 Modelo del Registro de Actividades de Tratamiento (RAT).
 Basado en los requisitos del Art. 16 de la Ley 21.719 de Chile.
 """
@@ -43,7 +43,7 @@ class RAT(Base):
     transferencia_datos: Mapped[str] = mapped_column(Text, nullable=True)
     plazo_retencion: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    # Categorías de titulares (Art. 16 Ley 21.719 — campo mínimo obligatorio)
+    # Categor├¡as de titulares (Art. 16 Ley 21.719 ÔÇö campo m├¡nimo obligatorio)
     categoria_titulares: Mapped[str] = mapped_column(String(500), nullable=True)
 
     # Campos adicionales de cumplimiento
@@ -63,10 +63,10 @@ class RAT(Base):
     nombre_encargado: Mapped[str] = mapped_column(String(500), nullable=True)
     tiene_contrato_encargado: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Bloqueo temporal (Art. 8 ter — REC-01)
+    # Bloqueo temporal (Art. 8 ter ÔÇö REC-01)
     bloqueado: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Test interés legítimo (Art. 16 — 3 pasos obligatorios)
+    # Test inter├®s leg├¡timo (Art. 16 ÔÇö 3 pasos obligatorios)
     test_interes_legitimo: Mapped[str] = mapped_column(Text, nullable=True)
 
     # Documento que respalda la base legal (MVP: almacena en la BD)
@@ -78,8 +78,10 @@ class RAT(Base):
     archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
     # Hash SHA-256 para verificar integridad
     archivo_base_legal_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    # URL en OCI Object Storage (cuando se migra el archivo fuera de la BD)
+    archivo_base_legal_storage_url: Mapped[str] = mapped_column(String(1000), nullable=True)
 
-    # Estado y auditoría
+    # Estado y auditor├¡a
     estado: Mapped[EstadoRAT] = mapped_column(
         Enum(EstadoRAT), default=EstadoRAT.BORRADOR, nullable=False
     )
@@ -121,7 +123,7 @@ class RAT(Base):
         total = len(campos_obligatorios) + len(campos_recomendados)
         completados = sum(1 for c in campos_obligatorios + campos_recomendados if c and str(c).strip())
 
-        # Penalización: si base legal ≠ "Otra" y no hay documento que la respalde
+        # Penalizaci├│n: si base legal Ôëá "Otra" y no hay documento que la respalde
         if self.base_legal and self.base_legal.strip().lower() != "otra":
             if not self.archivo_base_legal_datos:
                 completados = max(completados - 1, 0)
@@ -129,7 +131,7 @@ class RAT(Base):
         return round((completados / total) * 100)
 
     def calcular_nivel_riesgo(self) -> str:
-        """Calcula el nivel de riesgo del proceso según factores de la Ley 21.719."""
+        """Calcula el nivel de riesgo del proceso seg├║n factores de la Ley 21.719."""
         score = 0
         if self.datos_sensibles:
             score += 2
@@ -140,7 +142,7 @@ class RAT(Base):
         if self.transferencia_internacional and not self.garantias_transferencia_int:
             score += 1
         tipo = (self.tipo_dato_sensible or "").lower()
-        if "biométric" in tipo or "biometric" in tipo or "menor" in tipo:
+        if "biom├®tric" in tipo or "biometric" in tipo or "menor" in tipo:
             score += 1
         if self.nombre_encargado and not self.tiene_contrato_encargado:
             score += 1
