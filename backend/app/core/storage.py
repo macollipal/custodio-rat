@@ -133,7 +133,8 @@ class OCISigner:
             f'Signature version="1",'
             f'algorithm="SHA256withRSA",'
             f'keyId="{self.key_id}",'
-            f'signature="{signature}"'
+            f'signature="{signature}",'
+            f'headers="{" ".join(signing_headers)}"'
         )
         headers["Authorization"] = auth
         return headers
