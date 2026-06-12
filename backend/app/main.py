@@ -175,7 +175,6 @@ async def health():
 @app.get("/debug/oci", tags=["Debug"], include_in_schema=False)
 async def debug_oci():
     from app.core.config import settings
-    from app.core.storage import get_storage_backend
     import traceback
     try:
         cfg = settings.oci
@@ -183,17 +182,17 @@ async def debug_oci():
         key_starts = settings.OCI_KEY_CONTENT[:30] if settings.OCI_KEY_CONTENT else None
         key_has_real_newlines = "\n" in (settings.OCI_KEY_CONTENT or "")
         key_has_literal_n = "\\n" in (settings.OCI_KEY_CONTENT or "")
-        backend_name = type(get_storage_backend()).__name__
         return {
             "oci_config_parsed": cfg,
+            "oci_config_empty": not bool(cfg),
             "key_length": key_len,
             "key_starts": key_starts,
             "key_has_real_newlines": key_has_real_newlines,
             "key_has_literal_n": key_has_literal_n,
-            "backend": backend_name,
+            "storage_backend": "unknown",
         }
     except Exception as e:
-        return {"error": str(e), "traceback": traceback.format_exc()}
+        return {"error": str(e), "traceback": traceback.format_exc()[:500]}
 
 
 @app.get("/health/db", tags=["Sistema"])
