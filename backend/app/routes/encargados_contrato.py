@@ -28,9 +28,11 @@ def _procesar_archivo(data: dict) -> dict:
         datos = base64.b64decode(base64_str)
     except Exception:
         return {}
+    from app.core.crypto import encrypt
+    datos_cifrados = encrypt(datos)
     hash_val = hashlib.sha256(datos).hexdigest()
     return {
-        "archivo_pdf_datos": datos,
+        "archivo_pdf_datos": datos_cifrados,
         "archivo_pdf_hash": hash_val,
         "archivo_pdf_nombre": data.get("archivo_pdf_nombre"),
         "archivo_pdf_tipo": data.get("archivo_pdf_tipo"),

@@ -16,6 +16,7 @@ from app.models.rat import RAT, EstadoRAT
 from app.models.audit_log import AuditLog
 from app.schemas.rat import RATCreate, RATUpdate
 from app.services.audit_service import log_audit
+from app.core.crypto import encrypt, decrypt
 
 # Campos obligatorios para marcar un RAT como "completo"
 # Debe coincidir con campos_obligatorios en RAT.calcular_completitud()
@@ -105,7 +106,7 @@ def get_rat(db: Session, rat_id: int) -> RAT:
 
 
 def _procesar_archivo_base_legal(data: dict) -> dict:
-    """Sube archivo_base_legal_base64 a OCI y retorna URL. Ca├¡da -> BYTEA como fallback."""
+    """Sube archivo_base_legal_base64 a OCI y retorna URL. Ca├¡da -> BYTEA como fallback. BYTEA cifrado con Fernet."""
     base64_str = data.get("archivo_base_legal_base64")
     if not base64_str:
         return {}
@@ -123,7 +124,7 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
         object_name = generate_object_name("rats", nombre)
         content_type = tipo or "application/octet-stream"
         url = backend.upload(datos, object_name, content_type)
-        logger.info(f"Archivo RAT migrado a OCI: {object_name}")
+        logger.info(f"Archivo RAT migrado a OCI (sin cifrar — OCI usa su propia seguridad en esta fase): {object_name}")
         return {
             "archivo_base_legal_storage_url": url,
             "archivo_base_legal_hash": hash_val,
@@ -131,9 +132,10 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
             "archivo_base_legal_tipo": tipo,
         }
     except Exception as e:
-        logger.warning(f"OCI no disponible, guardando BYTEA: {e}")
+        logger.warning(f"OCI no disponible, guardando BYTEA cifrado: {e}")
+        datos_cifrados = encrypt(datos)
         return {
-            "archivo_base_legal_datos": datos,
+            "archivo_base_legal_datos": datos_cifrados,
             "archivo_base_legal_hash": hash_val,
             "archivo_base_legal_nombre": nombre,
             "archivo_base_legal_tipo": tipo,
@@ -321,11 +323,12 @@ def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optiona
         except Exception as e:
             logger.error(f"OCI direct download failed: {e}")
 
-        # Intento 3: Fallback final a BYTEA (PostgreSQL)
+        # Intento 3: Fallback final a BYTEA (PostgreSQL) — descifrar
         if datos:
+            datos_planos = decrypt(datos)
             return {
                 "type": "bytes",
-                "content": base64.b64encode(datos).decode(),
+                "content": base64.b64encode(datos_planos).decode(),
                 "nombre": nombre,
                 "content_type": rat.archivo_base_legal_tipo or "application/pdf",
             }
@@ -333,9 +336,10 @@ def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optiona
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Archivo no encontrado")
 
     elif datos:
+        datos_planos = decrypt(datos)
         return {
             "type": "bytes",
-            "content": base64.b64encode(datos).decode(),
+            "content": base64.b64encode(datos_planos).decode(),
             "nombre": nombre,
             "content_type": rat.archivo_base_legal_tipo or "application/pdf",
         }
