@@ -44,5 +44,12 @@ class EIPDUpdate(BaseModel):
     medidas_propuestas: Optional[str] = None
     parecer_dpo: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
-    fecha_aprobacion: Optional[date] = None
+    fecha_approbacion: Optional[date] = None
     resultado: Optional[str] = None
+
+
+class EIPDListResponse(BaseModel):
+    eipds: list[EIPDOut]
+    total: int
+    skip: int
+    limit: int

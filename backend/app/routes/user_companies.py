@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.schemas.user_company import UserCompanyCreate, UserCompanyOut, UserCompanyUpdate
+from app.schemas.common import MessageResponse
 from app.services.user_company_service import (
     agregar_acceso, actualizar_rol, listar_accesos, remover_acceso, get_rol_usuario,
 )
@@ -57,7 +58,7 @@ async def actualizar(
     return actualizar_rol(db, company_id, user_id, data)
 
 
-@router.delete("/{user_id}", summary="Remover acceso de un usuario")
+@router.delete("/{user_id}", response_model=MessageResponse, summary="Remover acceso de un usuario")
 async def remover(
     company_id: int,
     user_id: int,
@@ -65,4 +66,5 @@ async def remover(
     current_user=Depends(get_current_user),
 ):
     _require_company_admin(db, current_user, company_id)
-    return remover_acceso(db, company_id, user_id)
+    remover_acceso(db, company_id, user_id)
+    return MessageResponse(message=f"Acceso del usuario {user_id} removido de la empresa {company_id}.")

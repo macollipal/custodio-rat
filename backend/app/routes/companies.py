@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database.database import get_db
-from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate
+from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate, CompanyListResponse
 from app.services.company_service import (
     create_company, delete_company, get_companies, get_company, update_company
 )
@@ -28,7 +28,7 @@ async def listar_publico(
     return companies
 
 
-@router.get("/", summary="Listar empresas")
+@router.get("/", response_model=CompanyListResponse, summary="Listar empresas")
 async def listar(
     skip: int = 0,
     limit: int = 200,
@@ -59,7 +59,7 @@ async def listar(
             rol = get_rol_usuario(db, current_user.id, c.id)
             out.mi_rol = rol.value if rol else None
         result.append(out)
-    return {"empresas": result, "total": total, "skip": skip, "limit": limit}
+    return CompanyListResponse(empresas=result, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{company_id}", response_model=CompanyOut, summary="Obtener empresa por ID")

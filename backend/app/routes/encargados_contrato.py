@@ -12,7 +12,9 @@ from app.database.database import get_db
 from app.models.encargado_contrato import EncargadoContrato
 from app.schemas.encargado_contrato import (
     EncargadoContratoCreate, EncargadoContratoUpdate, EncargadoContratoOut,
+    EncargadoContratoListResponse,
 )
+from app.schemas.common import MessageResponse
 from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/encargados-contrato", tags=["Contratos de Encargado"])
@@ -35,7 +37,7 @@ def _procesar_archivo(data: dict) -> dict:
     }
 
 
-@router.get("/", summary="Listar contratos de encargado")
+@router.get("/", response_model=EncargadoContratoListResponse, summary="Listar contratos de encargado")
 async def listar(
     company_id: int,
     rat_id: Optional[int] = None,
@@ -50,12 +52,12 @@ async def listar(
         q = q.filter(EncargadoContrato.rat_id == rat_id)
     total = q.count()
     contratos = q.offset(skip).limit(limit).all()
-    return {
-        "contratos": [_out(c) for c in contratos],
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-    }
+    return EncargadoContratoListResponse(
+        contratos=[_out(c) for c in contratos],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.get("/{contrato_id}", response_model=EncargadoContratoOut, summary="Obtener contrato por ID")
@@ -129,7 +131,7 @@ async def actualizar(
     return _out(c)
 
 
-@router.delete("/{contrato_id}", summary="Eliminar contrato de encargado")
+@router.delete("/{contrato_id}", response_model=MessageResponse, summary="Eliminar contrato de encargado")
 async def eliminar(
     contrato_id: int,
     db: Session = Depends(get_db),
@@ -141,7 +143,7 @@ async def eliminar(
     check_company_access(current_user, c.company_id, db)
     db.delete(c)
     db.commit()
-    return {"message": "Contrato eliminado correctamente."}
+    return MessageResponse(message="Contrato eliminado correctamente.")
 
 
 def _out(c: EncargadoContrato) -> EncargadoContratoOut:

@@ -11,14 +11,14 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.models.eipd import EIPD, ResultadoEIPD
 from app.models.rat import RAT as RATModel
-from app.schemas.eipd import EIPDCreate, EIPDOut, EIPDUpdate
+from app.schemas.eipd import EIPDCreate, EIPDOut, EIPDUpdate, EIPDListResponse
 from app.services.audit_service import log_audit
 from app.routes.deps import get_current_user, check_company_access
 
 router = APIRouter(prefix="/eipd", tags=["EIPD"])
 
 
-@router.get("/", summary="Listar EIPDs de la empresa")
+@router.get("/", response_model=EIPDListResponse, summary="Listar EIPDs de la empresa")
 async def listar_eipds(
     company_id: int = Query(..., description="ID de la empresa"),
     estado: Optional[str] = None,
@@ -41,12 +41,12 @@ async def listar_eipds(
     total = q.count()
     items = q.order_by(EIPD.updated_at.desc()).offset(skip).limit(limit).all()
 
-    return {
-        "eipds": [EIPDOut.model_validate(e).model_dump() for e in items],
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-    }
+    return EIPDListResponse(
+        eipds=[EIPDOut.model_validate(e) for e in items],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.get("/rat/{rat_id}", response_model=EIPDOut, summary="Obtener EIPD de un RAT")

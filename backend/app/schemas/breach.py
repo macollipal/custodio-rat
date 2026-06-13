@@ -52,3 +52,10 @@ class BreachOut(BreachBase):
     reportable_apdc_calculado: Optional[bool] = None
 
     model_config = {"from_attributes": True}
+
+
+class BreachListResponse(BaseModel):
+    brechas: list[BreachOut]
+    total: int
+    skip: int
+    limit: int
