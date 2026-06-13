@@ -31,7 +31,6 @@ CSRF_SAFE_PATHS = {
     "/publico/",
     "/ai/ask",
     "/health",
-    "/",
 }
 
 
