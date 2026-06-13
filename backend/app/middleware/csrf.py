@@ -15,7 +15,7 @@ Uso: requests que incluyen la cookie custodio_token Y usan método mutante
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from app.routes.deps import COOKIE_NAME
 
@@ -36,7 +36,11 @@ CSRF_SAFE_PATHS = {
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        import logging
+        logger = logging.getLogger("csrf")
+        logger.warning(f"CSRF check: method={request.method} path={request.path} auth={bool('Authorization' in request.headers)} cookie={COOKIE_NAME in request.cookies}")
+
         if request.method in CSRF_SAFE_METHODS:
             return await call_next(request)
 
@@ -48,12 +52,14 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         cookie_token = request.cookies.get(COOKIE_NAME)
         if not cookie_token:
+            logger.warning(f"CSRF no cookie, passing through")
             return await call_next(request)
 
         x_requested_with = request.headers.get("X-Requested-With", "").lower()
         if x_requested_with == "xmlhttprequest":
             return await call_next(request)
 
+        logger.warning(f"CSRF blocked: method={request.method} path={request.path}")
         return JSONResponse(
             status_code=403,
             content={
