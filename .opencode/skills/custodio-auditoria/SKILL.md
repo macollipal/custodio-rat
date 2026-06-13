@@ -31,8 +31,9 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 3. **NO modificar `_theme_custodio.py`** — tema oficial de documentos
 4. **NO eliminar `.docx` v1.3** — mantener histórico
 5. **NO subrayar texto reorganizado** — solo contenido nuevo lleva `_subrayado_`
-6. **NO trabajar en `main`** — usar la rama actual
-7. **Regla divina**: regenerar `.docx` v1.4 es obligatorio si hay cambios en código
+6. **NO trabajar en `main`** — usar la rama actual (qa)
+7. **NO crear PR ni merge a `main`** — solo el humano decide el paso a `main`
+8. **Regla divina**: regenerar `.docx` v1.4 es obligatorio si hay cambios en código
 
 ---
 
@@ -224,6 +225,27 @@ PAR → backend.download() (signed GET) → BYTEA
 | Fecha | Versión | Score | Ubicación |
 |-------|---------|-------|-----------|
 | 2026-06-13 | v1.3 post-OCI | 7.6/10 | `docs/auditorias/` |
+
+---
+
+## Límites del Agente (Política de Merge)
+
+El agente **NO** debe:
+- Crear PRs hacia `main` (de ninguna rama)
+- Hacer merge a `main` por su cuenta
+- Asumir que "validar en qa" implica "desplegar a main"
+
+El agente **SI** debe:
+- Trabajar siempre sobre la rama actual (`qa`) — no crear ramas
+- Hacer commit y push de cambios a `qa`
+- Detenerse después de pushear a `qa` y esperar confirmación humana
+
+**Flujo correcto:**
+```
+código/auditoría (directo en qa)  →  push a qa  →  (humano valida)  →  PR a main (humano)
+                                       ↑                ↑
+                                  agente hace     humano decide
+```
 
 ---
 
