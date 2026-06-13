@@ -33,7 +33,7 @@ def _cookie_options(max_age: int = None) -> dict:
         "max_age": max_age or COOKIE_MAX_AGE,
         "httponly": True,
         "secure": True,
-        "samesite": "none" if settings.ENVIRONMENT == "production" else "lax",
+        "samesite": "lax",
         "path": "/",
     }
 
