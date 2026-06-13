@@ -9,9 +9,18 @@
 | 2026-06-09 | Beta Launch | ✅ Producción | 7.5/10 |
 | 2026-06-09 | AsesorGPT v1.0 | ✅ Cerrada | — |
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
+| 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
 
 ## Detalle de Auditorías
+
+### 2026-06-12 — Auditoría v1.4
+- **Estado:** ✅ Documentación generada
+- **Score:** 7.6/10
+- **Tema:** OCI Object Storage + Admin Asesor IA + documentación v1.4
+- **Commits:** `57cbffc` (OCI fallback), reorganización-carpetas
+- **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
+- **Carpeta:** `2026-06-12_auditoria_v1.4/`
 
 ### 2026-06-13 — Post-fix OCI Download
 - **Estado:** ✅ Activo
@@ -54,10 +63,13 @@
 
 ## Ver También
 
+- [AUDITORIA_V1.4.md](2026-06-12_auditoria_v1.4/AUDITORIA_V1.4.md)
+- [HALLAZGOS.md](2026-06-12_auditoria_v1.4/HALLAZGOS.md)
+- [diff_codigo_vs_docs.md](2026-06-12_auditoria_v1.4/diff_codigo_vs_docs.md)
 - [INFORME_BETA_LAUNCH.md](2026-06-09_BETA_LAUNCH/INFORME_BETA_LAUNCH.md)
 - [AUDITORIA_V1.3_BETA.md](2026-06-09_BETA_LAUNCH/AUDITORIA_V1.3_BETA.md)
 - [INCIDENTE.md](2026-06-11_INCIDENTE_ENV/INCIDENTE.md)
 
 ---
 
-*Última actualización: 2026-06-13*
+*Última actualización: 2026-06-12*
