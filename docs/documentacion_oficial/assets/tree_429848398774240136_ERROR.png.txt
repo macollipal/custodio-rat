@@ -1,0 +1,35 @@
+Error Mermaid: mermaid-cli falló: 
+Error: Evaluation failed: UnknownDiagramError: No diagram type detected matching given configuration for text: RAT_opencode/
+â”œâ”€â”€ api/                         Entry point serverless (Vercel)
+â”‚   â””â”€â”€ index.py                 Importa backend/app/main.py
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ app/
+â”‚   â”‚   â”œâ”€â”€ main.py              Punto de entrada FastAPI
+â”‚   â”‚   â”œâ”€â”€ core/                Config, seguridad, logging, rate limit
+â”‚   â”‚   â”œâ”€â”€ database/            Engine y sesiÃ³n SQLAlchemy
+â”‚   â”‚   â”œâ”€â”€ models/              17 entidades ORM
+â”‚   â”‚   â”œâ”€â”€ schemas/             ValidaciÃ³n Pydantic
+â”‚   â”‚   â”œâ”€â”€ routes/              10 routers de endpoints
+â”‚   â”‚   â””â”€â”€ services/            LÃ³gica de negocio
+â”‚   â”œâ”€â”€ tests/                   9 archivos pytest
+â”‚   â”œâ”€â”€ data/                    SQLite local (gitignored)
+â”‚   â”œâ”€â”€ venv/                    Entorno virtual (gitignored)
+â”‚   â”œâ”€â”€ .env                     Variables de entorno
+â”‚   â”œâ”€â”€ requirements.txt         Dependencias Python
+â”‚   â””â”€â”€ migrate_to_neon.py       Script de migraciÃ³n
+â”œâ”€â”€ frontend-next/
+â”‚   â”œâ”€â”€ app/                     App Router de Next.js
+â”‚   â”‚   â”œâ”€â”€ (app)/               Rutas autenticadas
+â”‚   â”‚   â”œâ”€â”€ login/
+â”‚   â”‚   â”œâ”€â”€ onboarding/
+â”‚   â”‚   â”œâ”€â”€ solicitud_derecho/   Formulario pÃºblico
+â”‚   â”‚   â””â”€â”€ layout.tsx
+â”‚   â”œâ”€â”€ components/              Componentes reutilizables
+â”‚   â”‚   â”œâ”€â”€ layout/              Sidebar, Topbar, PasswordModal
+â”‚   â”‚   â”œâ”€â”€ dashboard/           KPICard, StatusChart
+â”‚   â”‚   â”œâ”€â”€ rat/                 RatTable, RatWizard
+â”‚   â”‚   â””â”€â”€ ui/                  Badge, Skeleton, Drawer
+â”‚   â”œâ”€â”€ context/                 AppContext
+â”‚   â”œâ”€â”€ lib/api.ts               Cliente HTTP
+â”‚   â”œâ”€â”€ types/                   Tipos TypeScript
+â”‚   â”œâ”€â”€ public/        

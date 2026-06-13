@@ -346,36 +346,39 @@ async def descargar_archivo(
 ):
     """
     Retorna el documento que respalda la base legal del RAT.
-    Si existe storage_url (OCI), descarga desde OCI. Sinon, usa BYTEA.
-    Requiere autenticacion. Descarga en nueva pesta\u00f1a del navegador.
+    Si existe storage_url (OCI), genera pre-signed URL (5 min) para descarga directa.
+    Si está en BYTEA, retorna los bytes directamente.
+    Requiere autenticación. Descarga en nueva pestaña del navegador.
     """
-    r = get_rat(db, rat_id)
-    if r.archivo_base_legal_storage_url:
-        try:
-            from app.core.storage import get_storage_backend
-            from urllib.parse import unquote
-            backend = get_storage_backend()
-            object_name = unquote(r.archivo_base_legal_storage_url.split("/o/")[-1])
-            datos = backend.download(object_name)
-            return Response(
-                content=datos,
-                media_type=r.archivo_base_legal_tipo or "application/octet-stream",
-                headers={
-                    "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
-                },
-            )
-        except Exception as e:
-            logger.error(f"Error descargando de OCI: {e}")
-            raise HTTPException(status_code=500, detail="Error descargando archivo de OCI.")
-    if not r.archivo_base_legal_datos:
-        raise HTTPException(status_code=404, detail="Este RAT no tiene documento de base legal adjunto.")
-    return Response(
-        content=r.archivo_base_legal_datos,
-        media_type=r.archivo_base_legal_tipo or "application/octet-stream",
-        headers={
-            "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
-        },
+    from app.services.rat_service import download_rat_file
+    from app.core.deps import get_current_user
+
+    result = download_rat_file(
+        db, rat_id,
+        usuario=current_user.username,
+        ip_origen=None
     )
+
+    if result["type"] == "presigned_url":
+        return {
+            "url": result["url"],
+            "nombre": result["nombre"],
+            "content_type": result["content_type"],
+            "expires_in_seconds": 300,
+        }
+
+    elif result["type"] == "bytes":
+        import base64
+        datos = base64.b64decode(result["content"])
+        return Response(
+            content=datos,
+            media_type=result["content_type"],
+            headers={
+                "Content-Disposition": f'inline; filename="{result["nombre"]}"',
+            },
+        )
+
+    raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
 
 @router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditor├¡a de un RAT")

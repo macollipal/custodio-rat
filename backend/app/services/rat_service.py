@@ -250,12 +250,88 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
 
 
 def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
+    """Elimina un RAT: mueve archivo a archive bucket antes de borrar de DB."""
     rat = get_rat(db, rat_id)
     nombre = rat.nombre_proceso
+
+    storage_url = rat.archivo_base_legal_storage_url
+    if storage_url:
+        try:
+            from app.core.storage import get_storage_backend
+            backend = get_storage_backend()
+            if hasattr(backend, 'copy_to_archive'):
+                backend.copy_to_archive(storage_url, archive_prefix="rats")
+                logger.info(f"Archivo {storage_url} movido a archive bucket")
+            else:
+                logger.warning(f"Backend no soporta archive, eliminando directamente: {storage_url}")
+                backend.delete(storage_url)
+        except Exception as e:
+            logger.error(f"Error moviendo archivo a archive: {e}")
+            try:
+                from app.core.storage import get_storage_backend
+                get_storage_backend().delete(storage_url)
+            except Exception:
+                pass
+
     log_audit(db, "rat", rat_id, "eliminar", usuario, {"nombre_proceso": nombre}, ip_origen)
     db.delete(rat)
     db.commit()
     return {"message": f"Registro '{nombre}' eliminado del RAT."}
+
+
+def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
+    """Obtiene el archivo del RAT. Si está en OCI, genera pre-signed URL. Si está en BYTEA, retorna bytes."""
+    rat = get_rat(db, rat_id)
+
+    storage_url = rat.archivo_base_legal_storage_url
+    datos = rat.archivo_base_legal_datos
+    nombre = rat.archivo_base_legal_nombre or "documento.pdf"
+
+    log_audit(db, "rat", rat_id, "descargar", usuario, {
+        "nombre_archivo": nombre,
+        "formato": rat.archivo_base_legal_tipo or "application/pdf"
+    }, ip_origen)
+
+    if storage_url:
+        try:
+            from app.core.storage import get_storage_backend
+            backend = get_storage_backend()
+            if hasattr(backend, 'create_presigned_url'):
+                presigned_url = backend.create_presigned_url(storage_url, expires_in_seconds=300)
+                return {
+                    "type": "presigned_url",
+                    "url": presigned_url,
+                    "nombre": nombre,
+                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+                }
+            else:
+                content = backend.download(storage_url)
+                return {
+                    "type": "bytes",
+                    "content": base64.b64encode(content).decode(),
+                    "nombre": nombre,
+                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+                }
+        except Exception as e:
+            logger.error(f"Error descargando de OCI: {e}")
+            if datos:
+                return {
+                    "type": "bytes",
+                    "content": base64.b64encode(datos).decode(),
+                    "nombre": nombre,
+                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+                }
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Archivo no encontrado")
+
+    elif datos:
+        return {
+            "type": "bytes",
+            "content": base64.b64encode(datos).decode(),
+            "nombre": nombre,
+            "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+        }
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Archivo no encontrado")
 
 
 def get_audit_logs(db: Session, rat_id: int) -> list[AuditLog]:
