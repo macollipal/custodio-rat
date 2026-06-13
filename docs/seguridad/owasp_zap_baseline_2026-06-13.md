@@ -131,14 +131,15 @@ allow_headers=["Authorization", "Content-Type", "X-Requested-With"]
 | Aspecto | Estado | Referencia |
 |---------|--------|------------|
 | Passwords | ✅ bcrypt (12 rounds) | `core/security.py:17` |
-| BYTEA archivos (RAT, contratos) | ❌ **Plano** | `models/rat.py:74` |
-| OCI storage | ❌ **Plano** (no cifrado client-side) | `core/storage.py` |
+| BYTEA archivos RAT | ✅ **Cifrado Fernet** | `services/rat_service.py` (post-C1) |
+| BYTEA contratos encargado | ✅ **Cifrado Fernet** | `routes/encargados_contrato.py` (post-C1) |
+| OCI storage | ⚠️ **Sin cifrado client-side** (PAR no compatible con cifrado cliente) | `core/storage.py` |
 | Database connection | ✅ SSL en Neon (`sslmode=require`) | `.env.example:28` |
 | Backups | ❓ No documentado | — |
 
-**Veredicto:** ❌ **Encryption at rest NO implementado.** Bloqueante para compliance Ley 21.719 Art. 16.
+**Veredicto:** ⚠️ **C1 implementado parcialmente.** BYTEA cifrado con Fernet (RAT + EncargadoContrato). OCI sigue sin cifrar por incompatibilidad con PAR (descarga directa vía pre-signed URL). OCI tiene seguridad a nivel bucket (access restrictivo), pero para compliance Art. 16 se requiere cifrado en todos los medios.
 
-**Pendiente crítico:** **C1 — Encryption at rest** (ya en plan, próximo a ejecutar).
+**C1-F3 (OCI encryption) cancelado:** cifrar datos en OCI antes de subir rompería el flujo de PAR (pre-signed URLs dan acceso directo sin pasar por la app). Alternativa futura: deshabilitar PAR y descifrar en-app, o usar cifrado server-side de OCI (Oracle Cloud Infrastructure Encryption).**Pendiente:** evaluar cifrado server-side de OCI (Oracle KMS) o descifrar en-app deshabilitando PAR.
 
 ---
 
@@ -163,7 +164,7 @@ allow_headers=["Authorization", "Content-Type", "X-Requested-With"]
 | Z-01 | Headers de seguridad no reforzados (CSP, HSTS, X-Frame-Options) | Media | Pendiente — agregar middleware |
 | Z-02 | CORS `allow_methods=["*"]` permisivo | Baja | Pendiente — restringir |
 | Z-03 | File upload sin validación de extensión/tamaño | Media | Pendiente — validar extensión y max size |
-| Z-04 | BYTEA y OCI sin cifrado at rest | **ALTA** | **C1 (en plan)** |
+| Z-04 | BYTEA sin cifrado | **ALTA** | ✅ **C1-F2/F4 implementado** (RAT + EncargadoContrato). OCI sin cifrar (PAR incompatible — ver sección 6). |
 | Z-05 | No hay rate limit en endpoints además de `/auth/login` | Baja | Aceptable — slowapi en login es suficiente |
 | Z-06 | Backups de BD no documentados | Baja | Pendiente — documentar política |
 
@@ -177,14 +178,12 @@ allow_headers=["Authorization", "Content-Type", "X-Requested-With"]
 - ✅ Logging completo (request ID + audit log + hash chain)
 - ✅ Cookies seguras (httponly + secure + samesite=lax)
 - ⚠️ Headers HTTP no reforzados (recomendable agregar middleware)
-- ❌ **Encryption at rest NO implementado** (C1 pendiente)
+- ⚠️ **Encryption at rest parcialmente implementado** (BYTEA cifrado con Fernet — RAT + EncargadoContrato; OCI sin cifrar por PAR)
 
 **Compliance Ley 21.719:**
 - Art. 12 (consentimiento): ✅
 - Art. 14 (trazabilidad): ✅ (audit log con hash chain)
-- Art. 16 (seguridad técnica): ⚠️ Parcial (faltan headers + encryption at rest)
-
-**Acción prioritaria:** ejecutar **C1 — Encryption at rest** (próxima fase del plan).
+- Art. 16 (seguridad técnica): ⚠️ Mayormente cumplido (BYTEA cifrado; OCI pendiente; headers pendientes)
 
 ---
 

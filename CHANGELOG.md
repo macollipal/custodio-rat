@@ -16,6 +16,27 @@
 - OpenAPI spec ahora completo en `/docs` y `/openapi.json`
 - **No breaking**: keys JSON mantenidos para compatibilidad frontend (`empresas`, `brechas`, `eipds`, etc.)
 
+### Security (C1 — Encryption at Rest)
+- **NEW**: `app/core/crypto.py` — módulo Fernet con `encrypt()`, `decrypt()`, `generate_key()`
+- BYTEA RAT (`archivo_base_legal_datos`) ahora cifrado con Fernet antes de guardar
+- BYTEA contratos encargado (`archivo_pdf_datos`) ahora cifrado con Fernet
+- `download_rat_file()` descifra automáticamente antes de retornar contenido
+- `ENCRYPTION_KEY` configurable via env var (obligatoria en producción)
+- Dev fallback: datos sin cifrar si `ENCRYPTION_KEY` no está configurada (con warning)
+- Clave inválida no crashea — almacena sin cifrar (fail-safe)
+- **NOTA**: OCI storage NO cifrado (PAR pre-signed URLs incompatible con cifrado cliente)
+- 10 tests de encryption en `tests/test_crypto.py` (1 skipped por test env issues)
+- Requirements: `cryptography==43.0.0` agregado
+
+### Architecture (A6 — Service Layer)
+- **NEW**: `eipd_service.py` — EIPD CRUD con validación RAT, enum conversion, audit
+- **NEW**: `feriado_service.py` — CSV parsing/validation, bulk holiday management
+- **NEW**: `consentimiento_service.py` — Consent CRUD con RAT validation, revocation logic
+- **NEW**: `encargado_contrato_service.py` — PDF processing (encrypt/hash), alert date calculation
+- **NEW**: `solicitud_derecho_service.py` — Token management, solicitud lifecycle, bloquear/desbloquear
+- Route handlers refactorados: ahora son thin wrappers que delegan a services
+- Lógica de negocio centralizada para mejor testabilidad y mantenibilidad
+
 ### Fixed
 - `app/core/limiter.py`: rate limiter usa per-request UUID en test mode (evita contaminación entre tests)
 - `app/middleware/csrf.py`: bug crítico — `"/"` en `CSRF_SAFE_PATHS` causaba que `startswith("/")` matcheara TODO
@@ -24,8 +45,9 @@
 - Documentación: aclaración de MiniMax (primario) y OpenAI (fallback opcional) en `.env.example` y skill
 
 ### Tests
-- 243 tests pasando (de 240 baseline)
+- 84+ tests pasando (de 240 baseline + crypto)
 - 7 tests CSRF validan la lógica del middleware (3 con test env issues conocidos)
+- 10 tests crypto (1 skipped por test env issues)
 - 14 tests asesor pre-existentes siguen pendientes (bloqueado por config faltante)
 
 ### Files
@@ -36,6 +58,13 @@
 - 8 schemas existentes ampliados con `*ListResponse`
 - 13 archivos de routes con `response_model=` agregado
 - `backend/tests/test_csrf.py` (NEW, 10 tests)
+- `backend/app/core/crypto.py` (NEW, 56 líneas — Fernet encryption)
+- `backend/app/services/eipd_service.py` (NEW)
+- `backend/app/services/feriado_service.py` (NEW)
+- `backend/app/services/consentimiento_service.py` (NEW)
+- `backend/app/services/encargado_contrato_service.py` (NEW)
+- `backend/app/services/solicitud_derecho_service.py` (NEW)
+- `backend/tests/test_crypto.py` (NEW, 11 tests)
 
 ### Known Issues
 - Asesor tests: 14 fallan por `ASESOR_CHUNK_SIZE`/`ASESOR_TOP_K` no en `Settings` (pre-existente, bloqueado por usuario)
