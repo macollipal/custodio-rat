@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     OCI_CONFIG: str = ""
     OCI_KEY_CONTENT: str = ""
 
+    ENCRYPTION_KEY: str = ""
+    _dev_encryption_key: str = "dev-key-do-not-use-in-production-use-openssl-rand-hex-32"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -61,5 +64,13 @@ class Settings(BaseSettings):
             return {}
         import json
         return json.loads(self.OCI_CONFIG)
+
+    @property
+    def resolved_encryption_key(self) -> str:
+        if self.ENCRYPTION_KEY:
+            return self.ENCRYPTION_KEY
+        if self.ENVIRONMENT in ("production", "qa", "staging"):
+            raise ValueError("ENCRYPTION_KEY es obligatoria en producci├│n. Genera una clave con: python -c \"from app.core.crypto import generate_key; print(generate_key())\"")
+        return self._dev_encryption_key
 
 settings = Settings()
