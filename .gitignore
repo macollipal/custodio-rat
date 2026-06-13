@@ -11,35 +11,95 @@ backend/database.db
 data/
 data/database.db
 data/*.db
-backend/backend2.log
-backend/uvicorn_err.txt
-backend/uvicorn_out.txt
 backend/backup_data.json
 backend/export_sqlite.py
 backend/migrate_check.py
-check_backup.py
+backend/*.log
+backend/uvicorn_err.txt
+backend/uvicorn_out.txt
+backend/uv_local.out.log
+backend/uv_local.err.log
+backend/backend_err.log
+backend/backend_out.log
+backend/server.log
+backend/seed_claudio_corp.log
+backend/seed_claudio_corp_manifest.json
 
 # Node
 frontend-next/node_modules/
 frontend-next/.next/
+frontend-next/test-results/
+frontend-next/.last-run.json
+frontend-next/next_out.log
+frontend-next/next_err.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs (todos los logs, incluyendo raíz)
 *.log
+*.log.*
+server_out.log
+error.log
+uvicorn_out.txt
+uvicorn_err.txt
 
 # OpenCode
 .opencode/node_modules/
 .opencode/package-lock.json
 .opencode/package.json
+.opencode_backup/
 
 # Local test scripts (no-git)
 test_db_connection.py
 test_users.py
 reset_admin.py
-docs/RESUMEN_ERRORES_2026-06-01.md
+check_backup.py
+check_*.py
+test_*.py
+fix_*.py
+generate_*.py
+capture_*.py
+compare_*.py
+debug_*.py
+verify_*.py
+gen_curl.py
+full_compare.py
+direct_compare.py
+debug_headers.py
+check_fp.py
+check_oci_permissions.py
+sync_sequences.py
+seed_claudio_corp.py
+migrate_to_neon.py
 
-# Carpeta de scripts auxiliares (se eliminará después)
+# Documentación temporal Word
+~$*.docx
+~*.docx
+~$nual_Usuario_Custodio.docx
+
+# Archives (no versionar)
+archive/
 paso/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Scripts batch heredados (usar scripts/deploy/)
+*.bat
+*.cmd
+
+# Misc
+*.tmp
+*.bak
+*.swp
+*.swo
+*.so
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
