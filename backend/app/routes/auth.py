@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database.database import get_db
-from app.schemas.user import LoginRequest, PasswordChange, PasswordChangeOther, Token, UserCreate, UserOut, UserUpdate
+from app.schemas.user import (
+    LoginRequest, PasswordChange, PasswordChangeOther, Token, UserCreate,
+    UserOut, UserUpdate, UserListResponse,
+)
+from app.schemas.common import MessageResponse
 from app.services.user_service import (
     authenticate_user, change_password, create_user, get_users,
     update_user, delete_user, change_password_other,
@@ -96,7 +100,7 @@ async def refresh_token(request: Request, db: Session = Depends(get_db), respons
     return result
 
 
-@router.post("/logout", summary="Cerrar sesión")
+@router.post("/logout", response_model=MessageResponse, summary="Cerrar sesión")
 @limiter.limit("10/minute")
 async def logout(request: Request, response: Response = None, db: Session = Depends(get_db)):
     """Revoca ambos tokens (access + refresh) y elimina las cookies de sesion."""
@@ -115,7 +119,7 @@ async def logout(request: Request, response: Response = None, db: Session = Depe
     if response is not None:
         response.delete_cookie(COOKIE_NAME, path="/")
         response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
-    return {"message": "Sesion cerrada correctamente."}
+    return MessageResponse(message="Sesion cerrada correctamente.")
 
 
 @router.get("/me", response_model=UserOut, summary="Perfil del usuario actual")
@@ -143,17 +147,17 @@ async def actualizar_usuario(
     return update_user(db, user_id, data.model_dump(exclude_none=True))
 
 
-@router.delete("/users/{user_id}", summary="Eliminar usuario (solo admin)")
+@router.delete("/users/{user_id}", response_model=MessageResponse, summary="Eliminar usuario (solo admin)")
 async def eliminar_usuario(
     user_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
     delete_user(db, user_id)
-    return {"message": "Usuario eliminado correctamente."}
+    return MessageResponse(message="Usuario eliminado correctamente.")
 
 
-@router.put("/users/{user_id}/password", summary="Cambiar contraseña de otro usuario (solo admin)")
+@router.put("/users/{user_id}/password", response_model=MessageResponse, summary="Cambiar contraseña de otro usuario (solo admin)")
 async def cambiar_password_otro(
     user_id: int,
     data: PasswordChangeOther,
@@ -163,7 +167,7 @@ async def cambiar_password_otro(
     if len(data.new_password) < 6:
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres.")
     change_password_other(db, user_id, data.new_password)
-    return {"message": "Contraseña actualizada correctamente."}
+    return MessageResponse(message="Contraseña actualizada correctamente.")
 
 
 @router.put("/me/password", response_model=UserOut, summary="Cambiar contraseña del usuario actual")
@@ -177,7 +181,7 @@ async def cambiar_password(
     return change_password(db, current_user, data.current_password, data.new_password)
 
 
-@router.get("/users", summary="Listar usuarios (solo admin)")
+@router.get("/users", response_model=UserListResponse, summary="Listar usuarios (solo admin)")
 async def listar_usuarios(
     skip: int = 0,
     limit: int = 100,
@@ -207,4 +211,4 @@ async def listar_usuarios(
             "empresa_id": empresa_id,
             "empresa_nombre": empresa_nombre,
         })
-    return {"usuarios": result, "total": total, "skip": skip, "limit": limit}
+    return UserListResponse(usuarios=result, total=total, skip=skip, limit=limit)

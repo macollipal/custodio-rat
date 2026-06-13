@@ -64,3 +64,10 @@ class CompanyPublicOut(BaseModel):
     canal_ejercicio_derechos: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class CompanyListResponse(BaseModel):
+    empresas: list[CompanyOut]
+    total: int
+    skip: int
+    limit: int

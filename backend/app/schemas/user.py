@@ -54,3 +54,22 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     is_active: Optional[bool] = None
+
+
+class UserListItem(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str
+    is_active: bool
+    rol_global: str
+    created_at: datetime
+    empresa_id: Optional[int] = None
+    empresa_nombre: Optional[str] = None
+
+
+class UserListResponse(BaseModel):
+    usuarios: list[UserListItem]
+    total: int
+    skip: int
+    limit: int

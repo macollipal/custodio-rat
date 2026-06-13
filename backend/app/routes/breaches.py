@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.schemas.breach import BreachCreate, BreachOut, BreachUpdate
+from app.schemas.breach import BreachCreate, BreachOut, BreachUpdate, BreachListResponse
+from app.schemas.common import MessageResponse
 from app.services.breach_service import (
     listar_brechas, get_breach, crear_brecha, actualizar_brecha, eliminar_brecha, _enriquecer,
     evaluar_riesgo_brecha,
@@ -25,7 +26,7 @@ def _out(b) -> BreachOut:
     return out
 
 
-@router.get("/", summary="Listar brechas de seguridad")
+@router.get("/", response_model=BreachListResponse, summary="Listar brechas de seguridad")
 async def listar(
     company_id: int = Query(..., description="ID de la empresa"),
     skip: int = 0,
@@ -35,7 +36,7 @@ async def listar(
 ):
     check_company_access(current_user, company_id, db)
     brechas, total = listar_brechas(db, company_id, skip=skip, limit=limit)
-    return {"brechas": [_out(b) for b in brechas], "total": total, "skip": skip, "limit": limit}
+    return BreachListResponse(brechas=[_out(b) for b in brechas], total=total, skip=skip, limit=limit)
 
 
 @router.get("/{breach_id}", response_model=BreachOut, summary="Obtener brecha por ID")
@@ -87,7 +88,7 @@ async def evaluar_riesgo(
     return _out(b)
 
 
-@router.delete("/{breach_id}", summary="Eliminar brecha")
+@router.delete("/{breach_id}", response_model=MessageResponse, summary="Eliminar brecha")
 async def eliminar(
     breach_id: int,
     db: Session = Depends(get_db),
@@ -96,4 +97,4 @@ async def eliminar(
     b = get_breach(db, breach_id)
     check_company_access(current_user, b.company_id, db)
     eliminar_brecha(db, breach_id, usuario=current_user.username)
-    return {"message": "Brecha eliminada correctamente."}
+    return MessageResponse(message="Brecha eliminada correctamente.")

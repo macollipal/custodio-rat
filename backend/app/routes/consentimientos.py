@@ -12,7 +12,7 @@ from app.database.database import get_db
 from app.models.consentimiento import Consentimiento
 from app.models.rat import RAT as RATModel
 from app.schemas.consentimiento import (
-    ConsentimientoCreate, ConsentimientoOut,
+    ConsentimientoCreate, ConsentimientoOut, ConsentimientoListResponse,
 )
 from app.services.audit_service import log_audit
 from app.routes.deps import get_current_user, check_company_access
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/consentimientos", tags=["Consentimientos"])
 
 
 
-@router.get("/", summary="Listar consentimientos de la empresa")
+@router.get("/", response_model=ConsentimientoListResponse, summary="Listar consentimientos de la empresa")
 async def listar_consentimientos(
     company_id: int = Query(..., description="ID de la empresa"),
     rat_id: Optional[int] = None,
@@ -45,12 +45,12 @@ async def listar_consentimientos(
     total = q.count()
     items = q.order_by(Consentimiento.fecha_obtencion.desc()).offset(skip).limit(limit).all()
 
-    return {
-        "consentimientos": [ConsentimientoOut.model_validate(c).model_dump() for c in items],
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-    }
+    return ConsentimientoListResponse(
+        consentimientos=[ConsentimientoOut.model_validate(c) for c in items],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.get("/{consentimiento_id}", response_model=ConsentimientoOut, summary="Detalle de un consentimiento")

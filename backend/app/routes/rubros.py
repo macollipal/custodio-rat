@@ -12,6 +12,7 @@ from app.models.rubro import Rubro
 from app.models.rats_sugerido import RATSugerido
 from app.schemas.rubro import RubroCreate, RubroUpdate, RubroOut
 from app.schemas.rats_sugerido import RATSugeridoCreate, RATSugeridoUpdate, RATSugeridoOut
+from app.schemas.common import OkResponse
 
 router = APIRouter(prefix="/rubros", tags=["Rubros"])
 
@@ -58,7 +59,7 @@ def editar_rubro(rubro_id: int, payload: RubroUpdate, db: Session = Depends(get_
     return rubro
 
 
-@router.delete("/{rubro_id}", summary="Eliminar rubro (superadmin)")
+@router.delete("/{rubro_id}", response_model=OkResponse, summary="Eliminar rubro (superadmin)")
 def eliminar_rubro(rubro_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     if current_user.rol_global != "superadmin":
         raise HTTPException(status_code=403, detail="Solo superadmin puede eliminar rubros.")
@@ -67,7 +68,7 @@ def eliminar_rubro(rubro_id: int, db: Session = Depends(get_db), current_user=De
         raise HTTPException(status_code=404, detail="Rubro no encontrado.")
     db.delete(rubro)
     db.commit()
-    return {"ok": True}
+    return OkResponse(ok=True)
 
 
 @router.get("/{rubro_id}/sugerencias", response_model=list[RATSugeridoOut], summary="Sugerencias de RAT para un rubro")
@@ -128,7 +129,7 @@ def editar_sugerencia(sugerencia_id: int, payload: RATSugeridoUpdate, db: Sessio
     return sugerencia
 
 
-@router_sugeridos.delete("/{sugerencia_id}", summary="Eliminar sugerencia")
+@router_sugeridos.delete("/{sugerencia_id}", response_model=OkResponse, summary="Eliminar sugerencia")
 def eliminar_sugerencia(sugerencia_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     if current_user.rol_global not in ("superadmin", "admin_empresa"):
         raise HTTPException(status_code=403, detail="No tienes permisos.")
@@ -142,4 +143,4 @@ def eliminar_sugerencia(sugerencia_id: int, db: Session = Depends(get_db), curre
             raise HTTPException(status_code=403, detail="No puedes eliminar sugerencias de otros rubros.")
     db.delete(sugerencia)
     db.commit()
-    return {"ok": True}
+    return OkResponse(ok=True)

@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.feriado import Feriado
+from app.schemas.feriado import FeriadoListResponse, FeriadoYearsResponse, FeriadoUploadResponse
+from app.schemas.common import MessageResponse
 
 router = APIRouter(prefix="/admin/feriados", tags=["Admin Feriados"])
 
@@ -24,7 +26,7 @@ def _require_admin():
     return _ra()
 
 
-@router.get("/", summary="Listar feriados de un año")
+@router.get("/", response_model=FeriadoListResponse, summary="Listar feriados de un año")
 async def listar_feriados(
     anio: int = Query(..., description="Año"),
     db: Session = Depends(get_db),
@@ -32,17 +34,17 @@ async def listar_feriados(
 ):
     """Retorna todos los feriados configurados para el año dado."""
     feriados = db.query(Feriado).filter(Feriado.anio == anio).order_by(Feriado.mes, Feriado.dia).all()
-    return {
-        "anio": anio,
-        "feriados": [
+    return FeriadoListResponse(
+        anio=anio,
+        feriados=[
             {"id": f.id, "mes": f.mes, "dia": f.dia, "nombre": f.nombre, "tipo": f.tipo}
             for f in feriados
         ],
-        "total": len(feriados),
-    }
+        total=len(feriados),
+    )
 
 
-@router.get("/years", summary="Años con feriados configurados")
+@router.get("/years", response_model=FeriadoYearsResponse, summary="Años con feriados configurados")
 async def listar_anios(
     db: Session = Depends(get_db),
     current_user=Depends(_require_admin),
@@ -54,7 +56,7 @@ async def listar_anios(
         .order_by(distinct(Feriado.anio).desc())
         .all()
     )
-    return {"anios": [a[0] for a in anios]}
+    return FeriadoYearsResponse(anios=[a[0] for a in anios])
 
 
 @router.post("/upload", summary="Subir feriados via CSV")
@@ -119,11 +121,11 @@ async def upload_feriados(
         db.add(f)
     db.commit()
 
-    return {
-        "mensaje": f"Feriados de {anio} actualizados",
-        "total_cargados": len(feriados_nuevos),
-        "errores": errores[:20] if errores else [],
-    }
+    return FeriadoUploadResponse(
+        mensaje=f"Feriados de {anio} actualizados",
+        total_cargados=len(feriados_nuevos),
+        errores=errores[:20] if errores else [],
+    )
 
 
 @router.get("/example", summary="Descargar CSV de ejemplo")
@@ -147,7 +149,7 @@ async def download_example():
     )
 
 
-@router.delete("/{anio}", summary="Eliminar feriados de un año")
+@router.delete("/{anio}", response_model=MessageResponse, summary="Eliminar feriados de un año")
 async def eliminar_feriados(
     anio: int,
     db: Session = Depends(get_db),
@@ -156,4 +158,4 @@ async def eliminar_feriados(
     """Elimina todos los feriados configurados para el año dado."""
     deleted = db.execute(delete(Feriado).where(Feriado.anio == anio)).rowcount
     db.commit()
-    return {"mensaje": f"{deleted} feriados de {anio} eliminados"}
+    return MessageResponse(message=f"{deleted} feriados de {anio} eliminados")

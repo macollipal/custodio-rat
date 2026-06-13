@@ -53,3 +53,10 @@ class EncargadoContratoOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class EncargadoContratoListResponse(BaseModel):
+    contratos: list[EncargadoContratoOut]
+    total: int
+    skip: int
+    limit: int
