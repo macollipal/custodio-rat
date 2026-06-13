@@ -1,5 +1,5 @@
 """
-Asesor Embedder: genera embeddings vía MiniMax con fallback automático a OpenAI.
+Asesor Embedder: genera embeddings vía MiniMax (primario) con fallback automático a OpenAI.
 
 Si MiniMax no expone endpoint de embeddings o falla, se cae transparentemente
 a OpenAI (text-embedding-3-small, 1536 dim).

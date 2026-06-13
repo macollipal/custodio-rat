@@ -198,6 +198,20 @@ RAT_opencode/
 
 ---
 
+## Reglas de AI Provider
+
+| Proveedor | Rol | Modelo por defecto |
+|-----------|-----|-------------------|
+| **MiniMax** | Primario | MiniMax-M2.7 (chat), embeddings del proveedor |
+| **OpenAI** | Fallback opcional | gpt-4o-mini (chat), text-embedding-3-small (embeddings, 1536 dim) |
+
+**En documentación, diagramas y código:**
+- Usar "MiniMax (primario), OpenAI (fallback opcional)"
+- En variables de entorno: `MINIMAX_API_KEY` y `OPENAI_API_KEY` (ambas opcionales, pero al menos una debe estar)
+- `OPENAI_API_KEY` es **legítimo y se mantiene** — es fallback real, no error
+
+---
+
 ## Implementación OCI Object Storage
 
 ### Cadena de Fallback (Implementada)
