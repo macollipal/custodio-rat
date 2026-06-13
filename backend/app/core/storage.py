@@ -97,7 +97,7 @@ class OCISigner:
         )
         return base64.b64encode(signature).decode("ascii")
 
-    def sign_headers(self, method: str, path: str, host: str, body: bytes = None) -> dict:
+    def sign_headers(self, method: str, path: str, host: str, body: bytes = None, content_type: str = None) -> dict:
         date_str = email.utils.formatdate(usegmt=True)
 
         headers = {
@@ -116,12 +116,13 @@ class OCISigner:
             m = hashlib.sha256()
             m.update(body)
             sha256_digest = base64.b64encode(m.digest()).decode("ascii")
+            actual_content_type = content_type or "application/octet-stream"
             headers["Content-Length"] = str(len(body))
-            headers["Content-Type"] = "application/octet-stream"
+            headers["Content-Type"] = actual_content_type
             headers["X-Content-Sha256"] = sha256_digest
             signing_headers.extend(["content-length", "content-type", "x-content-sha256"])
             signing_values["content-length"] = str(len(body))
-            signing_values["content-type"] = "application/octet-stream"
+            signing_values["content-type"] = actual_content_type
             signing_values["x-content-sha256"] = sha256_digest
 
         signing_string = "\n".join([
@@ -160,7 +161,7 @@ class OCIStorageBackend(StorageBackend):
         )
 
     def _request(self, method: str, path: str, data: bytes = None, content_type: str = None) -> dict:
-        signed_headers = self.signer.sign_headers(method, path, self.host, data)
+        signed_headers = self.signer.sign_headers(method, path, self.host, data, content_type)
         url = f"{self.base_url}{path}"
         resp = requests.request(
             method,
@@ -228,19 +229,17 @@ class OCIStorageBackend(StorageBackend):
         Returns:
             URL pre-firmada para descarga directa
         """
-        import json
-        from datetime import datetime, timezone, timedelta
-
-        if not self.archive_bucket:
-            target_bucket = self.bucket
-        else:
-            target_bucket = self.bucket
+        target_bucket = self.bucket
 
         path = f"/n/{self.namespace}/b/{target_bucket}/p"
-        time_expires = (datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        time_expires = (datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+
+        import uuid
+        par_name = f"par-{uuid.uuid4().hex[:12]}"
 
         payload = json.dumps({
             "objectName": object_name,
+            "name": par_name,
             "accessType": "ObjectRead",
             "timeExpires": time_expires
         })
