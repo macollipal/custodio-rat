@@ -16,7 +16,6 @@ from app.models.rat import RAT, EstadoRAT
 from app.models.audit_log import AuditLog
 from app.schemas.rat import RATCreate, RATUpdate
 from app.services.audit_service import log_audit
-from app.core.crypto import encrypt, decrypt
 
 # Campos obligatorios para marcar un RAT como "completo"
 # Debe coincidir con campos_obligatorios en RAT.calcular_completitud()
@@ -133,6 +132,7 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
         }
     except Exception as e:
         logger.warning(f"OCI no disponible, guardando BYTEA cifrado: {e}")
+        from app.core.crypto import encrypt
         datos_cifrados = encrypt(datos)
         return {
             "archivo_base_legal_datos": datos_cifrados,
@@ -283,6 +283,7 @@ def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] 
 
 def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
     """Obtiene el archivo del RAT. Si está en OCI, genera pre-signed URL. Si está en BYTEA, retorna bytes."""
+    from app.core.crypto import decrypt
     rat = get_rat(db, rat_id)
 
     storage_url = rat.archivo_base_legal_storage_url
