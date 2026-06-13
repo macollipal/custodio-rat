@@ -7,11 +7,13 @@ Usa cryptography (ya instalada) + requests (ya instalada). Sin SDK Oracle.
 import base64
 import email.utils
 import hashlib
+import json
 import logging
 import os
 import time
 import uuid
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
@@ -145,6 +147,7 @@ class OCIStorageBackend(StorageBackend):
         self.namespace = config["namespace"]
         self.region = config["region"]
         self.bucket = config["bucket"]
+        self.archive_bucket = config.get("archive_bucket", "")
         self.host = f"objectstorage.{self.region}.oraclecloud.com"
         self.base_url = f"https://{self.host}"
 
@@ -213,6 +216,124 @@ class OCIStorageBackend(StorageBackend):
             name = obj.text
             if name:
                 objects.append(name)
+        return objects
+
+    def create_presigned_url(self, object_name: str, expires_in_seconds: int = 300) -> str:
+        """Genera una pre-signed URL para descarga directa desde OCI.
+
+        Args:
+            object_name: Nombre del objeto en el bucket
+            expires_in_seconds: Tiempo de expiración (default 5 minutos)
+
+        Returns:
+            URL pre-firmada para descarga directa
+        """
+        import json
+        from datetime import datetime, timezone, timedelta
+
+        if not self.archive_bucket:
+            target_bucket = self.bucket
+        else:
+            target_bucket = self.bucket
+
+        path = f"/n/{self.namespace}/b/{target_bucket}/p"
+        time_expires = (datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+        payload = json.dumps({
+            "objectName": object_name,
+            "accessType": "ObjectRead",
+            "timeExpires": time_expires
+        })
+
+        resp = self._request("POST", path, payload.encode(), "application/json")
+        if resp.status_code not in (200, 201):
+            logger.error(f"OCI presigned URL failed: {resp.status_code} {resp.text}")
+            raise Exception(f"OCI presigned URL failed: {resp.status_code}")
+
+        result = resp.json()
+        return result.get("accessUri", "")
+
+    def copy_to_archive(self, object_name: str, archive_prefix: str = "archived") -> str:
+        """Copia un objeto al bucket de archive.
+
+        Args:
+            object_name: Nombre del objeto en el bucket activo
+            archive_prefix: Prefijo para el objeto en archive (default 'archived')
+
+        Returns:
+            Nombre del objeto en el bucket archive
+        """
+        if not self.archive_bucket:
+            logger.warning("No archive_bucket configured, skipping archive copy")
+            return object_name
+
+        archive_object_name = f"{archive_prefix}/{object_name}"
+
+        source_path = f"/n/{self.namespace}/b/{self.bucket}/o/{quote(object_name, safe='')}"
+        dest_path = f"/n/{self.namespace}/b/{self.archive_bucket}/o/{quote(archive_object_name, safe='')}"
+
+        copy_payload = json.dumps({
+            "destination": dest_path,
+            "metadata": {
+                "copied-from": object_name,
+                "archived-at": datetime.now(timezone.utc).isoformat()
+            }
+        })
+
+        resp = self._request("POST", source_path + "/actions/copy", copy_payload.encode(), "application/json")
+        if resp.status_code not in (200, 201):
+            logger.error(f"OCI copy to archive failed: {resp.status_code} {resp.text}")
+            raise Exception(f"OCI copy to archive failed: {resp.status_code}")
+
+        logger.info(f"Copied {object_name} to archive bucket as {archive_object_name}")
+        return archive_object_name
+
+    def delete_from_archive(self, archive_object_name: str) -> None:
+        """Elimina un objeto del bucket de archive.
+
+        Args:
+            archive_object_name: Nombre del objeto en el bucket archive
+        """
+        if not self.archive_bucket:
+            raise ValueError("No archive_bucket configured")
+
+        path = f"/n/{self.namespace}/b/{self.archive_bucket}/o/{quote(archive_object_name, safe='')}"
+        resp = self._request("DELETE", path)
+        if resp.status_code not in (204, 404):
+            logger.error(f"OCI delete from archive failed: {resp.status_code} {resp.text}")
+            raise Exception(f"OCI delete from archive failed: {resp.status_code}")
+        logger.info(f"Deleted {archive_object_name} from archive bucket")
+
+    def list_archive_objects(self, prefix: str = "") -> list[dict]:
+        """Lista objetos en el bucket de archive.
+
+        Returns:
+            Lista de diccionarios con name, size, created_time, etc.
+        """
+        if not self.archive_bucket:
+            return []
+
+        path = f"/n/{self.namespace}/b/{self.archive_bucket}/o/"
+        if prefix:
+            path += f"?prefix={quote(prefix, safe='')}"
+
+        resp = self._request("GET", path)
+        if resp.status_code != 200:
+            logger.error(f"OCI list archive failed: {resp.status_code} {resp.text}")
+            return []
+
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(resp.content)
+        objects = []
+        for obj in root.findall(".//object"):
+            name = obj.find("name")
+            size = obj.find("size")
+            created = obj.find("timeCreated")
+            objects.append({
+                "name": name.text if name is not None else "",
+                "size": int(size.text) if size is not None and size.text else 0,
+                "created": created.text if created is not None else ""
+            })
         return objects
 
 

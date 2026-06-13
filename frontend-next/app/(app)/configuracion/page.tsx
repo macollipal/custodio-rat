@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { API_BASE } from '@/lib/constants';
 import { getDbHealth, getAuditoriaGlobal, type DbHealth } from '@/lib/api';
 import { getToken } from '@/lib/api';
+import StorageTab from '@/components/configuracion/StorageTab';
 
 interface AuditEntry {
   id: number;
@@ -36,6 +37,7 @@ const TABS = [
   { key: 'sistema', label: 'Sistema' },
   { key: 'registros', label: 'Último log' },
   { key: 'exportacion', label: 'Exportación' },
+  { key: 'almacenamiento', label: 'Almacenamiento' },
   { key: 'feriados', label: 'Feriados' },
 ];
 
@@ -707,7 +709,11 @@ export default function ConfiguracionPage() {
           </div>
         </div>
       )}
-    {/* TAB 4: Feriados */}
+      {/* TAB 4: Almacenamiento */}
+      {tab === 'almacenamiento' && (
+        <StorageTab />
+      )}
+      {/* TAB 5: Feriados */}
       {tab === 'feriados' && (
         <FeriadosTab currentTab={tab} />
       )}
