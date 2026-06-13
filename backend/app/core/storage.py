@@ -103,7 +103,7 @@ class OCISigner:
             "Date": date_str,
         }
 
-        signing_headers = ["(request-target)", "date", "host"]
+        signing_headers = ["date", "(request-target)", "host"]
         signing_values = {
             "(request-target)": f"{method.lower()} {path}",
             "date": date_str,
@@ -130,11 +130,11 @@ class OCISigner:
         signature = self._sign(signing_string)
 
         auth = (
-            f'Signature version="1",'
-            f'algorithm="SHA256withRSA",'
+            f'Signature algorithm="rsa-sha256",'
+            f'headers="{" ".join(signing_headers)}",'
             f'keyId="{self.key_id}",'
             f'signature="{signature}",'
-            f'headers="{" ".join(signing_headers)}"'
+            f'version="1"'
         )
         headers["Authorization"] = auth
         return headers
