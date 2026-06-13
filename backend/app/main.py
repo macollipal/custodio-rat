@@ -15,6 +15,7 @@ from app.core.limiter import limiter
 from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
 from app.middleware.request_id import RequestIdMiddleware
+from app.middleware.csrf import CSRFMiddleware
 from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados
 from app.services.scheduler import start_scheduler, stop_scheduler
 
@@ -129,6 +130,7 @@ if not ALLOWED_ORIGINS:
     )
 
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(CSRFMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
