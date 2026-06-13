@@ -293,10 +293,12 @@ def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optiona
     }, ip_origen)
 
     if storage_url:
-        try:
-            from app.core.storage import get_storage_backend
-            backend = get_storage_backend()
-            if hasattr(backend, 'create_presigned_url'):
+        from app.core.storage import get_storage_backend
+        backend = get_storage_backend()
+
+        # Intento 1: PAR (pre-signed URL pública)
+        if hasattr(backend, 'create_presigned_url'):
+            try:
                 presigned_url = backend.create_presigned_url(storage_url, expires_in_seconds=300)
                 return {
                     "type": "presigned_url",
@@ -304,24 +306,31 @@ def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optiona
                     "nombre": nombre,
                     "content_type": rat.archivo_base_legal_tipo or "application/pdf",
                 }
-            else:
-                content = backend.download(storage_url)
-                return {
-                    "type": "bytes",
-                    "content": base64.b64encode(content).decode(),
-                    "nombre": nombre,
-                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
-                }
+            except Exception as e:
+                logger.warning(f"PAR generation failed, trying direct download: {e}")
+
+        # Intento 2: Download directo desde OCI (request firmado con API key)
+        try:
+            content = backend.download(storage_url)
+            return {
+                "type": "bytes",
+                "content": base64.b64encode(content).decode(),
+                "nombre": nombre,
+                "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+            }
         except Exception as e:
-            logger.error(f"Error descargando de OCI: {e}")
-            if datos:
-                return {
-                    "type": "bytes",
-                    "content": base64.b64encode(datos).decode(),
-                    "nombre": nombre,
-                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
-                }
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Archivo no encontrado")
+            logger.error(f"OCI direct download failed: {e}")
+
+        # Intento 3: Fallback final a BYTEA (PostgreSQL)
+        if datos:
+            return {
+                "type": "bytes",
+                "content": base64.b64encode(datos).decode(),
+                "nombre": nombre,
+                "content_type": rat.archivo_base_legal_tipo or "application/pdf",
+            }
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Archivo no encontrado")
 
     elif datos:
         return {
