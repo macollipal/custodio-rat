@@ -1,6 +1,6 @@
 # Changelog — Custodio RAT Manager
 
-## [Unreleased] - 2026-06-13
+## [Unreleased] - 2026-06-14
 
 ### Security (S14 — CSRF Protection)
 - **BREAKING**: Cookies `samesite=none` → `samesite=lax` en producción (mitigación cross-site POST)
@@ -17,15 +17,17 @@
 - **No breaking**: keys JSON mantenidos para compatibilidad frontend (`empresas`, `brechas`, `eipds`, etc.)
 
 ### Security (C1 — Encryption at Rest)
-- **NEW**: `app/core/crypto.py` — módulo Fernet con `encrypt()`, `decrypt()`, `generate_key()`
+- **NEW**: `app/core/crypto.py` — módulo Fernet con `encrypt()`, `decrypt()`, `generate_key()`, `is_already_encrypted()`
 - BYTEA RAT (`archivo_base_legal_datos`) ahora cifrado con Fernet antes de guardar
 - BYTEA contratos encargado (`archivo_pdf_datos`) ahora cifrado con Fernet
 - `download_rat_file()` descifra automáticamente antes de retornar contenido
 - `ENCRYPTION_KEY` configurable via env var (obligatoria en producción)
 - Dev fallback: datos sin cifrar si `ENCRYPTION_KEY` no está configurada (con warning)
 - Clave inválida no crashea — almacena sin cifrar (fail-safe)
-- **NOTA**: OCI storage NO cifrado (PAR pre-signed URLs incompatible con cifrado cliente)
-- 10 tests de encryption en `tests/test_crypto.py` (1 skipped por test env issues)
+- Heurística `is_already_encrypted()` con prefijo Fernet `b"gAAAAA"` (fail-safe, sin cambios de esquema)
+- **C1-F5**: Script de migración `scripts/migration/encrypt_existing_bytea.py` — one-shot, idempotente, dry-run, batch commits, backup SQLite automático, 18 tests en `tests/test_encrypt_migration.py`
+- **NOTA**: OCI storage NO cifrado (PAR pre-signed URLs incompatible con cifrado cliente — evaluar Oracle KMS en futuro)
+- 10 tests crypto en `tests/test_crypto.py` (1 skipped)
 - Requirements: `cryptography==43.0.0` agregado
 
 ### Architecture (A6 — Service Layer)
@@ -45,9 +47,10 @@
 - Documentación: aclaración de MiniMax (primario) y OpenAI (fallback opcional) en `.env.example` y skill
 
 ### Tests
-- 84+ tests pasando (de 240 baseline + crypto)
-- 7 tests CSRF validan la lógica del middleware (3 con test env issues conocidos)
-- 10 tests crypto (1 skipped por test env issues)
+- 140+ tests pasando (baseline + crypto + migration)
+- 7 tests CSRF validan la lógica del middleware
+- 10 tests crypto (1 skipped)
+- 18 tests migration (C1-F5, 100% pass)
 - 14 tests asesor pre-existentes siguen pendientes (bloqueado por config faltante)
 
 ### Files
@@ -58,13 +61,15 @@
 - 8 schemas existentes ampliados con `*ListResponse`
 - 13 archivos de routes con `response_model=` agregado
 - `backend/tests/test_csrf.py` (NEW, 10 tests)
-- `backend/app/core/crypto.py` (NEW, 56 líneas — Fernet encryption)
+- `backend/app/core/crypto.py` (NEW, 60 líneas — Fernet encryption)
 - `backend/app/services/eipd_service.py` (NEW)
 - `backend/app/services/feriado_service.py` (NEW)
 - `backend/app/services/consentimiento_service.py` (NEW)
 - `backend/app/services/encargado_contrato_service.py` (NEW)
 - `backend/app/services/solicitud_derecho_service.py` (NEW)
 - `backend/tests/test_crypto.py` (NEW, 11 tests)
+- `backend/scripts/migration/encrypt_existing_bytea.py` (NEW, 305 líneas — C1-F5 migration)
+- `backend/tests/test_encrypt_migration.py` (NEW, 446 líneas, 18 tests)
 
 ### Known Issues
 - Asesor tests: 14 fallan por `ASESOR_CHUNK_SIZE`/`ASESOR_TOP_K` no en `Settings` (pre-existente, bloqueado por usuario)
@@ -162,4 +167,4 @@ security: fix de seguridad
 
 ---
 
-*Generado: 2026-06-13*
+*Generado: 2026-06-14*

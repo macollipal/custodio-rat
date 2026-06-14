@@ -11,8 +11,15 @@
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
 | 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
+| 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
 
-## Detalle de Auditorías
+### 2026-06-14 — Auditoría v1.5
+- **Estado:** ✅ Documentación generada
+- **Score:** 8.3/10 (7.6/10 → 8.3/10)
+- **Tema:** S14 CSRF + C1 BYTEA Encryption + A6 Service Layer + A10 Schemas Pydantic
+- **Commits:** `7ef3d78` (ZAP+CHANGELOG), `82d5723` (A6), `9f50f04` (C1 crypto), `1328001` (C1 initial)
+- **Docs generados:** 02, 03, 04, 06, 09, 10, 12, MTX (8 documentos)
+- **Carpeta:** `2026-06-14_auditoria_v1.5/`
 
 ### 2026-06-12 — Auditoría v1.4
 - **Estado:** ✅ Documentación generada
@@ -55,14 +62,16 @@
 
 | ID | Descripción | Prioridad | Estado |
 |----|-------------|-----------|--------|
-| S14 | CSRF protection | ALTA | ❌ PENDIENTE |
-| C1 | App-level encryption | ALTA | ❌ PENDIENTE |
-| A10 | Schemas inline | MEDIA | ❌ PENDIENTE |
-| DT-009 | Coverage 40% | MEDIA | 📋 Parcial |
-| DT-010 | E2E Playwright | MEDIA | 📋 Parcial |
+| Z-01 | Security headers (CSP, X-Frame-Options) | Media | ❌ PENDIENTE |
+| Z-02 | CORS restrictivo | Baja | ❌ PENDIENTE |
+| Z-03 | File upload validation | Media | ❌ PENDIENTE |
+| Z-06 | Backups documentados | Baja | ❌ PENDIENTE |
+| DT-009 | Coverage 40% | Media | 📋 Parcial |
+| DT-010 | E2E Playwright | Media | 📋 Parcial |
 
 ## Ver También
 
+- [AUDITORIA_V1.5.md](2026-06-14_auditoria_v1.5/AUDITORIA_V1.5.md)
 - [AUDITORIA_V1.4.md](2026-06-12_auditoria_v1.4/AUDITORIA_V1.4.md)
 - [HALLAZGOS.md](2026-06-12_auditoria_v1.4/HALLAZGOS.md)
 - [diff_codigo_vs_docs.md](2026-06-12_auditoria_v1.4/diff_codigo_vs_docs.md)
@@ -72,4 +81,4 @@
 
 ---
 
-*Última actualización: 2026-06-12*
+*Última actualización: 2026-06-14*
