@@ -316,6 +316,12 @@ export async function exportarRatPdf(ratId: number): Promise<Blob> {
   return res.blob();
 }
 
+export async function descargarArchivoRAT(ratId: number): Promise<Blob> {
+  const res = await apiFetch(`${API_BASE}/rats/${ratId}/archivo`);
+  if (!res.ok) throw new Error('Error al descargar el documento');
+  return res.blob();
+}
+
 export async function exportarCni(companyId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/export/cni?company_id=${companyId}`);
   if (!res.ok) throw new Error('Error al exportar CNI');
