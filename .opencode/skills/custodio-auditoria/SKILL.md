@@ -1,10 +1,10 @@
 ---
 name: custodio-auditoria
-description: Especialista en auditorías arquitectónicas de Custodio RAT. Metodología basada en AUDIT_GUIDE.md para regenerar documentación v1.4 y validar compliance Ley 21.719.
+description: Especialista en auditorías arquitectónicas de Custodio RAT. Metodología basada en AUDIT_GUIDE.md para regenerar documentación v1.6 y validar compliance Ley 21.719.
 ---
 # Custodio RAT - Auditoría Arquitectónica
 
-Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo de auditoría: desde el análisis de código hasta la generación de documentación oficial `.docx` v1.4.
+Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo de auditoría: desde el análisis de código hasta la generación de documentación oficial `.docx` v1.6-BETA.
 
 ---
 
@@ -29,11 +29,11 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 1. **NO crear ramas nuevas** — trabajar en rama actual
 2. **NO modificar `paso/`** — carpeta histórica, no tocar
 3. **NO modificar `_theme_custodio.py`** — tema oficial de documentos
-4. **NO eliminar `.docx` v1.3** — mantener histórico
+4. **NO eliminar `.docx` v1.5** — mantener histórico
 5. **NO subrayar texto reorganizado** — solo contenido nuevo lleva `_subrayado_`
 6. **NO trabajar en `main`** — usar la rama actual (qa)
 7. **NO crear PR ni merge a `main`** — solo el humano decide el paso a `main`
-8. **Regla divina**: regenerar `.docx` v1.4 es obligatorio si hay cambios en código
+8. **Regla divina**: regenerar `.docx` v1.6 es obligatorio si hay cambios en código
 
 ---
 
@@ -87,8 +87,8 @@ RAT_opencode/
 - `HALLAZGOS.md` — Detalle de hallazgos por severidad
 - `diff_codigo_vs_docs.md` — Comparativa código vs docs
 
-### Fase 4: Generar Scripts de Build v1.4
-1. Copiar scripts v1.3 de `paso/desarrollo_de_software_estandar/_build/`
+### Fase 4: Generar Scripts de Build v1.6
+1. Copiar scripts v1.5 de `docs/auditorias/2026-06-14_auditoria_v1.5/_scripts/`
 2. Renombrar a `build_XX_v1_4.py`
 3. Ubicar en `docs/auditorias/YYYY-MM-DD_auditoria_vX.Y/_scripts/`
 4. Adaptar referencias de versión
@@ -140,7 +140,7 @@ RAT_opencode/
 ### Estructura Obligatoria
 
 ```markdown
-# Auditoría v1.4 — YYYY-MM-DD
+# Auditoría v1.6-BETA — 2026-06-15
 
 ## Resumen Ejecutivo
 [Breve resumen de la auditoría]
@@ -238,6 +238,8 @@ PAR → backend.download() (signed GET) → BYTEA
 
 | Fecha | Versión | Score | Ubicación |
 |-------|---------|-------|-----------|
+| 2026-06-15 | v1.6-BETA | 8.7/10 | `docs/auditorias/2026-06-15_cierre_sesion_v1.6-BETA/` |
+| 2026-06-14 | v1.5 | 8.3/10 | `docs/auditorias/2026-06-14_auditoria_v1.5/` |
 | 2026-06-13 | v1.3 post-OCI | 7.6/10 | `docs/auditorias/` |
 
 ---
@@ -266,9 +268,9 @@ código/auditoría (directo en qa)  →  push a qa  →  (humano valida)  →  P
 ## Cómo Invocar este Skill
 
 ```
-"Ejecuta auditoría v1.4"
+"Ejecuta auditoría v1.6"
 "Audita código y compara con docs"
-"Genera documentación v1.4"
+"Genera documentación v1.6"
 "Actualiza docs a versión actual"
 ```
 
@@ -277,12 +279,13 @@ código/auditoría (directo en qa)  →  push a qa  →  (humano valida)  →  P
 ## Formato de Commit
 
 ```
-feat(auditoria): auditoría v1.4 completa
+feat(auditoria): cierre sesión v1.6-BETA
 
-- Auditoría de código vs docs v1.3
-- 9 documentos regenerados (02, 03, 04, 06, 08, 09, 10, 12, MTX)
-- Score: 7.6/10
-- Madurez: Beta → Producción Inicial
+- RatDetailModal tabs + Drawer responsive 5-size + Dashboard clickable
+- Fix IDOR /archivo + Sort estable (toSorted → spread+sort)
+- 8 documentos regenerados (02, 03, 04, 06, 09, 10, 12, MTX)
+- Score: 8.3/10 → 8.7/10
+- Madurez: Producción (Z-01/Z-02/Z-03/Z-06 pendientes)
 ```
 
 ---

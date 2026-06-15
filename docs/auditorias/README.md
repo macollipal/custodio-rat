@@ -11,7 +11,16 @@
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
 | 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
+| 2026-06-15 | Cierre sesión v1.6-BETA | ✅ Activo | 8.7/10 |
 | 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
+
+### 2026-06-15 — Cierre sesión v1.6-BETA
+- **Estado:** ✅ Documentación generada
+- **Score:** 8.7/10 (8.3/10 → 8.7/10)
+- **Tema:** RatDetailModal tabs + Drawer responsive 5-size + Dashboard clickable + IDOR fix + Sort estable
+- **Commits:** `72dfe77` (modal), `2865481` (rediseño), `bcfd77c` (Drawer), `96ec9e2` (useMemo), `40c7826` (useRef+duplicar), `f5d830d` (sort+KPI), `1fb186b` (IDOR fix)
+- **Docs generados:** 02, 03, 04, 06, 09, 10, 12, MTX (8 documentos)
+- **Carpeta:** `2026-06-15_cierre_sesion_v1.6-BETA/`
 
 ### 2026-06-14 — Auditoría v1.5
 - **Estado:** ✅ Documentación generada
@@ -68,6 +77,8 @@
 | Z-06 | Backups documentados | Baja | ❌ PENDIENTE |
 | DT-009 | Coverage 40% | Media | 📋 Parcial |
 | DT-010 | E2E Playwright | Media | 📋 Parcial |
+| N-01 | Asesor module: 9 constantes faltantes + routers sin montar | ALTA | ❌ PENDIENTE |
+| N-02 | Feature gates por módulo (RAT/ARCO/Brechas) | MEDIA | ❌ PENDIENTE |
 
 ## Ver También
 
@@ -81,4 +92,4 @@
 
 ---
 
-*Última actualización: 2026-06-14*
+*Última actualización: 2026-06-15*

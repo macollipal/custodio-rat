@@ -37,7 +37,7 @@ Ver: [auditorias/README.md](auditorias/README.md)
 
 ### Cumplimiento Legal (Ley 21.719 Chile)
 - [Ley 21.719](cumplimiento/ley_21719.txt)
-- [Matriz de Trazabilidad](../documentacion_oficial/Matriz_Trazabilidad_Custodio_RAT_Manager_v1.3.docx)
+- [Matriz de Trazabilidad v1.6](../documentacion_oficial/Matriz_Trazabilidad_Custodio_RAT_Manager_v1.6.docx)
 - [Checklist Compliance](cumplimiento/CHECKLIST_LEY_21719.md) *(por crear)*
 
 ### Despliegue
@@ -65,9 +65,12 @@ Ver: [auditorias/README.md](auditorias/README.md)
 - [Caso de Estudio](manuales/CASO_ESTUDIO.md)
 
 ### Documentación Oficial (.docx)
-- [Versión v1.3](../documentacion_oficial/) (actual)
-- [Versión v1.2](../documentacion_oficial/)
-- [Versión v1.1](../documentacion_oficial/)
+- [Versión v1.6-BETA](../documentacion_oficial/) (actual — 15-Jun-2026)
+- [Versión v1.5](../documentacion_oficial/) (14-Jun-2026)
+- [Versión v1.4](../documentacion_oficial/) (12-Jun-2026)
+- [Versión v1.3](../documentacion_oficial/) (09-Jun-2026)
+- [Versión v1.2](../documentacion_oficial/) (08-Jun-2026)
+- [Versión v1.1](../documentacion_oficial/) (31-May-2026)
 - [Versión v1.0](../documentacion_oficial/)
 
 ## Scripts Disponibles

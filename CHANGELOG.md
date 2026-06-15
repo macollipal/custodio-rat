@@ -1,6 +1,52 @@
 # Changelog — Custodio RAT Manager
 
-## [Unreleased] - 2026-06-14
+## [Unreleased] - 2026-06-15
+
+### Security
+- (N-01) **PENDIENTE**: Asesor module — 9 constantes `ASESOR_*` faltantes en `backend/app/core/config.py` bloquean 14 tests y generan riesgo de crash en producción
+
+### Features
+- (N-02) **PENDIENTE**: Feature gates por módulo (RAT/ARCO/Brechas) — tabla `module_permissions` + endpoints + UI superadmin en `/configuracion`
+
+### Pending (from v1.5 audit — Z-01/Z-02/Z-03/Z-06)
+- (Z-01) Security headers: CSP, X-Frame-Options, X-Content-Type-Options
+- (Z-02) CORS restrictivo: `allow_methods` y `allow_headers` específicos
+- (Z-03) File upload validation: extensión y max size
+- (Z-06) Backups documentados
+
+---
+
+## [1.6.0-beta] - 2026-06-15
+
+### Features (UI/UX — RatDetailModal + Drawer)
+- **NEW**: `RatDetailModal` con tabs Ver/Editar — componente React con `useReducer` para modo, `PdfPreview` integrado para archivo base legal
+- **NEW**: `PdfPreview` — visor de PDF con fallback link a nueva pestaña
+- **NEW**: `Drawer` responsive con 5 size variants (`sm/md/lg/xl/full`) — `sm:` 400px, `lg:` 55vw, `xl:` 70vw, maxHeight 92vh, `hasHeader` conditional, `aria-label` fallback
+- **NEW**: Dashboard clickable — tarjetas "recientes" abren RAT en modal in-page (misma ruta), sin navegación
+
+### Security
+- **FIX**: `/rats/{id}/archivo` — IDOR cerrado: `get_rat()` + `require_editor_or_admin_empresa()` antes de servir archivo
+- **FIX**: HTTPException propagation — `try/except` envuelve `download_rat_file()` para propagar 404/403/500 correctos (no más 500 silencioso)
+
+### Performance
+- **NEW**: `AppContext.Provider` envuelto en `useMemo` — elimina re-renders innecesarios de toda la app
+- **NEW**: `GroupedRows` hoisted a nivel de módulo en `reportes/page.tsx` — evita remount de `<tbody>` completo en cada keystroke
+- **NEW**: Conditional mount ARCO: `TicketDrawer` y `CreateTicketForm` montados solo cuando `open=true` — ahorra 22 hook allocations
+- **NEW**: `useMemo` para `recientes`, `sinRevisionCount`, `alertas` en dashboard — orden correcto (antes de early returns)
+- **NEW**: `useRef(Date.now())` para capturar timestamp una sola vez — cumple regla "no impure calls in render"
+- **NEW**: `openDrawer` useCallback estable con `auditLogsRef.current` — sin deps en estado
+
+### Fixes (UI)
+- **FIX**: Sort stable — `[...arr].sort()` reemplaza `toSorted()` (ES2024 → ES2019) en RAT, ARCO, Brechas, Encargados, Usuarios, Dashboard
+- **FIX**: Rules of Hooks — `useMemo` de `recientes`/`sinRevisionCount`/`alertas` movidos antes de `if (!company)` y `if (!hasCache)` en dashboard
+- **FIX**: ARCO KPI grid — `lg:grid-cols-6` (6 cards en laptop), `p-3`, `w-8 h-8`, `gap-2.5` en lugar de 3-wide desktop
+- **FIX**: Drawer title no duplicado — `Drawer title=""` ahora collapsible, tabs movidas dentro del gradient header
+- **FIX**: ARCO badges colapsables — secondary badges agrupados en `<details>` con `+N más` en RatDetailView
+- **FIX**: Audit timeline estructurado en RatDetailView — dots + timestamps + color-coded actions
+
+### Changed
+- RatDetailView: 4 secciones con blue uppercase headers, table-layout fields, deletion confirmation en caja roja
+- Duplicar RAT: `onDuplicate` en dashboard ahora llama `api.duplicarRat()` + refresh stats+lista (no más navigate vacío)
 
 ### Security (S14 — CSRF Protection)
 - **BREAKING**: Cookies `samesite=none` → `samesite=lax` en producción (mitigación cross-site POST)
