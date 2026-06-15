@@ -350,14 +350,21 @@ async def descargar_archivo(
     Si está en BYTEA, retorna los bytes directamente.
     Requiere autenticación. Descarga en nueva pestaña del navegador.
     """
-    from app.services.rat_service import download_rat_file
-    from app.core.deps import get_current_user
+    from app.services.rat_service import download_rat_file, get_rat
 
-    result = download_rat_file(
-        db, rat_id,
-        usuario=current_user.username,
-        ip_origen=None
-    )
+    rat = get_rat(db, rat_id)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+
+    try:
+        result = download_rat_file(
+            db, rat_id,
+            usuario=current_user.username,
+            ip_origen=None
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error al obtener el archivo")
 
     if result["type"] == "presigned_url":
         return {
