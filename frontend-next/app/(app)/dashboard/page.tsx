@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
@@ -13,18 +13,74 @@ import CompletitudBar from '@/components/ui/CompletitudBar';
 import Badge from '@/components/ui/Badge';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
+import RatDetailModal from '@/components/rat/RatDetailModal';
+import type { RAT } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { company, rats, dashboardStats, setRats, setDashboardStats, actualizarStatsEnCache } = useApp();
+  const { user, company, rats, dashboardStats, setRats, setDashboardStats } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
   const [brechaCount, setBrechaCount] = useState(0);
   const [hasPolitica, setHasPolitica] = useState(false);
+  const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
+  const now = Date.now();
 
   const hasCache = dashboardStats !== null;
+
+  const recientes = useMemo(() =>
+    rats
+      .toSorted((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 6),
+    [rats]
+  );
+
+  const sinRevisionCount = useMemo(() =>
+    rats.filter(r => {
+      const dias = (now - new Date(r.updated_at).getTime()) / 86_400_000;
+      return dias > DIAS_REVISION;
+    }).length,
+    [rats, now]
+  );
+
+  const alertas = useMemo((): { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] => {
+    if (!dashboardStats) return [];
+    const {
+      procesos_con_datos_sensibles,
+      requieren_eipd,
+      transferencias_internacionales,
+      completitud_promedio,
+      eipd_pendientes = 0,
+      transferencias_sin_garantias = 0,
+      interes_legitimo_sin_test = 0,
+      encargados_sin_contrato = 0,
+      rats_sin_doc_base_legal = 0,
+    } = dashboardStats;
+    const a: { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] = [];
+    if (procesos_con_datos_sensibles > 0)
+      a.push({ type: 'warning', message: `<strong>${procesos_con_datos_sensibles} proceso(s)</strong> tratan datos sensibles. Verifique base legal expresa y medidas de seguridad reforzadas.` });
+    if (requieren_eipd > 0)
+      a.push({ type: 'danger', message: `<strong>${requieren_eipd} proceso(s)</strong> requieren EIPD. No pueden iniciarse sin completar la evaluación.` });
+    if (transferencias_internacionales > 0)
+      a.push({ type: 'info', message: `<strong>${transferencias_internacionales}</strong> transferencia(s) internacional(es). Verifique las garantías del Art. 28 Ley 21.719.` });
+    if (sinRevisionCount > 0)
+      a.push({ type: 'warning', message: `<strong>${sinRevisionCount} proceso(s)</strong> sin actualización hace más de 6 meses. La Ley 21.719 exige revisión periódica del RAT.` });
+    if (completitud_promedio < 60)
+      a.push({ type: 'warning', message: `Completitud del RAT en <strong>${completitud_promedio}%</strong>. Complete los campos obligatorios para estar preparado ante fiscalización.` });
+    if (eipd_pendientes > 0)
+      a.push({ type: 'danger', message: `<strong>${eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 bis).` });
+    if (transferencias_sin_garantias > 0)
+      a.push({ type: 'warning', message: `<strong>${transferencias_sin_garantias} transferencia(s)</strong> internacional(es) sin garantías documentadas. Documente SCC, BCR u otras garantías (Art. 28).` });
+    if (interes_legitimo_sin_test > 0)
+      a.push({ type: 'warning', message: `<strong>${interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.` });
+    if (encargados_sin_contrato > 0)
+      a.push({ type: 'info', message: `<strong>${encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).` });
+    if (rats_sin_doc_base_legal > 0)
+      a.push({ type: 'warning', message: `<strong>${rats_sin_doc_base_legal} proceso(s)</strong> sin documento de base legal adjunto. Para alcanzar el 100% de completitud, adjunte el documento que respalda la base legal.` });
+    return a;
+  }, [dashboardStats, sinRevisionCount]);
 
   useEffect(() => {
     const tourDone = localStorage.getItem('custodio_tour_completed');
@@ -117,37 +173,6 @@ export default function DashboardPage() {
   } = dashboardStats;
   const completos  = por_estado?.completo  ?? 0;
   const borradores = por_estado?.borrador  ?? 0;
-
-  const recientes = rats
-    .toSorted((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 6);
-
-  const sinRevision = rats.filter(r => {
-    const dias = (Date.now() - new Date(r.updated_at).getTime()) / 86_400_000;
-    return dias > DIAS_REVISION;
-  }).length;
-
-  const alertas: { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] = [];
-  if (procesos_con_datos_sensibles > 0)
-    alertas.push({ type: 'warning', message: `<strong>${procesos_con_datos_sensibles} proceso(s)</strong> tratan datos sensibles. Verifique base legal expresa y medidas de seguridad reforzadas.` });
-  if (requieren_eipd > 0)
-    alertas.push({ type: 'danger', message: `<strong>${requieren_eipd} proceso(s)</strong> requieren EIPD. No pueden iniciarse sin completar la evaluación.` });
-  if (transferencias_internacionales > 0)
-    alertas.push({ type: 'info', message: `<strong>${transferencias_internacionales}</strong> transferencia(s) internacional(es). Verifique las garantías del Art. 28 Ley 21.719.` });
-  if (sinRevision > 0)
-    alertas.push({ type: 'warning', message: `<strong>${sinRevision} proceso(s)</strong> sin actualización hace más de 6 meses. La Ley 21.719 exige revisión periódica del RAT.` });
-  if (completitud_promedio < 60)
-    alertas.push({ type: 'warning', message: `Completitud del RAT en <strong>${completitud_promedio}%</strong>. Complete los campos obligatorios para estar preparado ante fiscalización.` });
-  if (eipd_pendientes > 0)
-    alertas.push({ type: 'danger', message: `<strong>${eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 bis).` });
-  if (transferencias_sin_garantias > 0)
-    alertas.push({ type: 'warning', message: `<strong>${transferencias_sin_garantias} transferencia(s)</strong> internacional(es) sin garantías documentadas. Documente SCC, BCR u otras garantías (Art. 28).` });
-  if (interes_legitimo_sin_test > 0)
-    alertas.push({ type: 'warning', message: `<strong>${interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.` });
-  if (encargados_sin_contrato > 0)
-    alertas.push({ type: 'info', message: `<strong>${encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).` });
-  if (rats_sin_doc_base_legal > 0)
-    alertas.push({ type: 'warning', message: `<strong>${rats_sin_doc_base_legal} proceso(s)</strong> sin documento de base legal adjunto. Para alcanzar el 100% de completitud, adjunte el documento que respalda la base legal.` });
 
   const kpiColor = completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
 
@@ -308,9 +333,10 @@ export default function DashboardPage() {
             {/* Desktop rows */}
             <div className="hidden sm:block">
               {recientes.map((rat, i) => (
-                <div
+                <button
                   key={rat.id}
-                  className="grid items-center py-3 px-3 whitespace-nowrap"
+                  onClick={() => setSelectedRat(rat)}
+                  className="grid items-center py-3 px-3 whitespace-nowrap w-full text-left cursor-pointer transition-colors"
                   style={{
                     gridTemplateColumns: '3fr 2fr 1.5fr 120px',
                     background: i % 2 === 0 ? 'white' : '#FAFAFA',
@@ -320,18 +346,23 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
-                    <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
+                    <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.created_at?.slice(0, 10)}</div>
                   </div>
                   <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</div>
                   <div><Badge estado={rat.estado} /></div>
                   <div><CompletitudBar pct={rat.completitud ?? 0} /></div>
-                </div>
+                </button>
               ))}
             </div>
             {/* Mobile cards */}
             <div className="sm:hidden divide-y" style={{ border: '1px solid #E5E7EB', borderRadius: '0 0 8px 8px' }}>
               {recientes.map((rat, i) => (
-                <div key={rat.id} className="px-4 py-3 bg-white" style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                <button
+                  key={rat.id}
+                  onClick={() => setSelectedRat(rat)}
+                  className="px-4 py-3 w-full text-left cursor-pointer transition-colors"
+                  style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA' }}
+                >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
@@ -343,12 +374,50 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 40)}{rat.base_legal && rat.base_legal.length > 40 ? '...' : ''}</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {selectedRat && (
+        <RatDetailModal
+          rat={selectedRat}
+          mode="view"
+          onClose={() => setSelectedRat(null)}
+          onSwitchToEdit={() => router.push('/rat')}
+          onDuplicate={(rat) => {
+            setSelectedRat(null);
+            toast.success(`"${rat.nombre_proceso}" preparado para duplicar.`);
+            router.push('/rat');
+          }}
+          onDelete={async (id) => {
+            try {
+              await api.eliminarRat(id);
+              toast.success('RAT eliminado.');
+              setSelectedRat(null);
+              const [stats, ratList] = await Promise.all([
+                api.getDashboardStats(company!.id),
+                api.listarRats(company!.id),
+              ]);
+              setDashboardStats(stats);
+              setRats(ratList);
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : 'Error al eliminar.');
+            }
+          }}
+          onRefresh={async () => {
+            const [stats, ratList] = await Promise.all([
+              api.getDashboardStats(company!.id),
+              api.listarRats(company!.id),
+            ]);
+            setDashboardStats(stats);
+            setRats(ratList);
+          }}
+          puedeEditar={user?.rol_global !== 'usuario'}
+        />
+      )}
 
       {/* Tour guiado */}
       {showTour && (
