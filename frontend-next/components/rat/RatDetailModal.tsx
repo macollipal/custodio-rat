@@ -92,7 +92,8 @@ export default function RatDetailModal({
     <Drawer
       open={!!rat}
       onClose={handleClose}
-      title=""
+      title="RAT"
+      size="lg"
     >
       <div>
         <div

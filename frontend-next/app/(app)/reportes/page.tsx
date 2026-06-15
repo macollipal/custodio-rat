@@ -630,7 +630,8 @@ export default function ReportesPage() {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title=""
+        title="Detalle RAT"
+        size="lg"
         extraAction={
           <button
             onClick={async () => {

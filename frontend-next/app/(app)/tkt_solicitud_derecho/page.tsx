@@ -190,7 +190,7 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
   if (!open) return null;
 
   return (
-    <Drawer open={open} onClose={onClose} title="">
+    <Drawer open={open} onClose={onClose} title="Nueva Solicitud ARCO" size="md">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div
           className="rounded-xl p-4 flex items-center gap-3"
@@ -486,7 +486,7 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
   const sla = getSlaColor(ticket.dias_restantes);
 
   return (
-    <Drawer open={open} onClose={onClose} title="">
+    <Drawer open={open} onClose={onClose} title="Solicitud de Derecho" size="lg">
       <div className="space-y-4">
         <div
           className="rounded-2xl p-5"
