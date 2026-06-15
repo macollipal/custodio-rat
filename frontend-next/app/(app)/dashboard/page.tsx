@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
@@ -26,13 +26,14 @@ export default function DashboardPage() {
   const [brechaCount, setBrechaCount] = useState(0);
   const [hasPolitica, setHasPolitica] = useState(false);
   const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
-  const now = Date.now();
+  const nowRef = useRef(Date.now());
+  const now = nowRef.current;
 
   const hasCache = dashboardStats !== null;
 
   const recientes = useMemo(() =>
-    rats
-      .toSorted((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    [...rats]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 6),
     [rats]
   );
@@ -387,10 +388,20 @@ export default function DashboardPage() {
           mode="view"
           onClose={() => setSelectedRat(null)}
           onSwitchToEdit={() => router.push('/rat')}
-          onDuplicate={(rat) => {
-            setSelectedRat(null);
-            toast.success(`"${rat.nombre_proceso}" preparado para duplicar.`);
-            router.push('/rat');
+          onDuplicate={async (rat) => {
+            try {
+              await api.duplicarRat(rat);
+              toast.success(`"${rat.nombre_proceso}" duplicado correctamente.`);
+              const [newStats, ratList] = await Promise.all([
+                api.getDashboardStats(company!.id),
+                api.listarRats(company!.id),
+              ]);
+              setDashboardStats(newStats);
+              setRats(ratList);
+              setSelectedRat(null);
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : 'Error al duplicar.');
+            }
           }}
           onDelete={async (id) => {
             try {
