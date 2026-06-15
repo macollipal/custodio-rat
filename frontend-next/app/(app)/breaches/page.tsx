@@ -241,7 +241,12 @@ export default function BreachesPage() {
     if (!company) return;
     setLoading(true);
     try {
-      setBrechas(await api.listarBrechas(company.id));
+      const data = await api.listarBrechas(company.id);
+      setBrechas(
+        Array.isArray(data)
+          ? [...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          : []
+      );
     } catch {
       toast.error('No se pudieron cargar las brechas.');
     } finally {

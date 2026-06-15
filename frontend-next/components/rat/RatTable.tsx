@@ -9,6 +9,11 @@ import CompletitudBar from '@/components/ui/CompletitudBar';
 import type { RAT, Company } from '@/types';
 import { DIAS_REVISION, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
 
+function necesitaRevision(rat: RAT, now: number) {
+  const dias = (now - new Date(rat.updated_at).getTime()) / 86_400_000;
+  return dias > DIAS_REVISION;
+}
+
 interface RatTableProps {
   rats: RAT[];
   company: Company;
@@ -41,11 +46,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
   const [filtersActive, setFiltersActive] = useState(false);
   const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
   const [duplicating, setDuplicating] = useState<number | null>(null);
-
-  function necesitaRevision(rat: RAT) {
-    const dias = (Date.now() - new Date(rat.updated_at).getTime()) / 86_400_000;
-    return dias > DIAS_REVISION;
-  }
+  const now = Date.now();
 
   async function aplicarFiltros() {
     const estadoMap: Record<string, string> = { Todos: '', Borrador: 'borrador', Completo: 'completo', 'En revisión': 'en_revision', Aprobado: 'aprobado' };
@@ -78,7 +79,8 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
     setBuscar('');
   }
 
-  const displayRats = filtersActive && filteredRats ? filteredRats : rats;
+  const displayRats = [...(filtersActive && filteredRats ? filteredRats : rats)]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const filtrados = displayRats.filter(r => {
     if (filtroEstado !== 'Todos' && r.estado !== ESTADO_MAP[filtroEstado]) return false;
@@ -217,7 +219,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
                       <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#DC2626' }} />
                     </span>
                   )}
-                  {necesitaRevision(rat) && <span title="Sin actualizar hace +6 meses" className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>⏰ Revisar</span>}
+                  {necesitaRevision(rat, now) && <span title="Sin actualizar hace +6 meses" className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>⏰ Revisar</span>}
                   {rat.datos_sensibles && <span title={`Datos sensibles${rat.tipo_dato_sensible ? ': ' + rat.tipo_dato_sensible : ''}`}>⚠️</span>}
                   {rat.evaluacion_impacto && <span title="EIPD requerida">📋</span>}
                   {rat.transferencia_internacional && <span title={`Transfer. internacional${rat.pais_destino ? ' — ' + rat.pais_destino : ''}${rat.garantias_transferencia_int ? ' (' + rat.garantias_transferencia_int + ')' : ''}`}>🌐</span>}

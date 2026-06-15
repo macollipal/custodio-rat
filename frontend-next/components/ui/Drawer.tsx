@@ -6,10 +6,10 @@ export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
 const SIZE_CLASSES: Record<DrawerSize, string> = {
   sm:    'w-[95vw] max-w-[400px] sm:w-[40vw]',
-  md:    'w-[95vw] max-w-[540px] sm:w-[50vw]',
-  lg:    'w-[95vw] max-w-[720px] sm:w-[65vw]',
-  xl:    'w-[95vw] max-w-[900px] sm:w-[80vw]',
-  full:  'w-[100vw] max-w-[100vw] sm:w-[100vw] rounded-none',
+  md:    'w-[95vw] max-w-[540px] sm:w-[50vw] lg:w-[45vw]',
+  lg:    'w-[95vw] sm:w-[65vw] md:w-[60vw] lg:w-[55vw] xl:w-[50vw] 2xl:w-[45vw]',
+  xl:    'w-[95vw] sm:w-[80vw] md:w-[75vw] lg:w-[70vw] xl:w-[60vw]',
+  full:  'w-[100vw] rounded-none',
 };
 
 interface DrawerProps {

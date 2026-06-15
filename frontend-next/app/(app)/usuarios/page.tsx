@@ -35,7 +35,9 @@ export default function UsersPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = users.filter(u => {
+  const sortedUsers = [...users].sort((a, b) => b.id - a.id);
+
+  const filtered = sortedUsers.filter(u => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return u.username.toLowerCase().includes(q)

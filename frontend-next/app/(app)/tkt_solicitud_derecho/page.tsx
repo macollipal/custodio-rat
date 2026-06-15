@@ -89,18 +89,18 @@ interface KpiCardProps {
 function KpiCard({ label, value, color, icon }: KpiCardProps) {
   return (
     <div
-      className="rounded-xl p-4 flex items-center gap-3"
+      className="rounded-xl p-3 flex items-center gap-2.5"
       style={{ background: 'white', border: '1px solid #E5E7EB' }}
     >
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
         style={{ background: `${color}15` }}
       >
         <span style={{ color }}>{icon}</span>
       </div>
-      <div>
-        <p className="text-xs font-medium" style={{ color: '#6B7280' }}>{label}</p>
-        <p className="text-xl font-bold" style={{ color: '#111827' }}>{value}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium truncate" style={{ color: '#6B7280' }}>{label}</p>
+        <p className="text-base font-bold" style={{ color: '#111827' }}>{value}</p>
       </div>
     </div>
   );
@@ -847,13 +847,15 @@ export default function TktSolicitudDerechoPage() {
     }
   }
 
-  const filteredTickets = tickets.filter(t => {
-    if (tab === 'todos') return true;
-    if (tab === 'vencido') {
-      return t.estado !== 'resuelto' && (t.dias_restantes ?? 0) < 0;
-    }
-    return t.estado === tab;
-  });
+  const filteredTickets = [...tickets]
+    .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime())
+    .filter(t => {
+      if (tab === 'todos') return true;
+      if (tab === 'vencido') {
+        return t.estado !== 'resuelto' && (t.dias_restantes ?? 0) < 0;
+      }
+      return t.estado === tab;
+    });
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -887,7 +889,7 @@ export default function TktSolicitudDerechoPage() {
         </div>
       ) : dashboard ? (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <KpiCard label="Total" value={dashboard.total} color="#2563EB" icon="📋" />
             <KpiCard label="Abiertos" value={dashboard.abiertos} color="#2563EB" icon="📬" />
             <KpiCard label="En Proceso" value={dashboard.en_proceso} color="#7C3AED" icon="⚙️" />
@@ -1041,21 +1043,25 @@ export default function TktSolicitudDerechoPage() {
         </div>
       )}
 
-      <TicketDrawer
-        ticket={ticketDetail}
-        open={drawerOpen}
-        onClose={() => { setDrawerOpen(false); fetchData(); }}
-        isAdmin={isAdmin}
-        companyId={company?.id ?? 0}
-      />
+      {drawerOpen && ticketDetail && (
+        <TicketDrawer
+          ticket={ticketDetail}
+          open={drawerOpen}
+          onClose={() => { setDrawerOpen(false); fetchData(); }}
+          isAdmin={isAdmin}
+          companyId={company?.id ?? 0}
+        />
+      )}
 
-      <CreateTicketForm
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSuccess={() => { setCreateOpen(false); fetchData(); }}
-        companyId={company?.id ?? 0}
-        isAdmin={isAdmin}
-      />
+      {createOpen && (
+        <CreateTicketForm
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          onSuccess={() => { setCreateOpen(false); fetchData(); }}
+          companyId={company?.id ?? 0}
+          isAdmin={isAdmin}
+        />
+      )}
     </div>
   );
 }

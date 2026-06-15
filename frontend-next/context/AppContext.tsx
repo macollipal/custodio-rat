@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal, SecurityBreach } from '@/types';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '@/types';
 import { STORAGE_KEYS, API_BASE } from '@/lib/constants';
 
 interface AppState {
@@ -152,34 +152,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const rolGlobal = user?.rol_global ?? null;
   const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
 
+  const value = useMemo<AppState>(() => ({
+    token,
+    user,
+    company,
+    companies,
+    rats,
+    dashboardStats,
+    rolEnEmpresa,
+    puedeEditar,
+    rolGlobal,
+    darkMode,
+    toggleDarkMode,
+    setToken,
+    setUser,
+    setCompany,
+    setCompanies,
+    setRats,
+    setDashboardStats,
+    logout,
+    isAuthenticated: !!token,
+    actualizarRatEnCache,
+    agregarRatEnCache,
+    eliminarRatDeCache,
+    actualizarStatsEnCache,
+  }), [
+    token, user, company, companies, rats, dashboardStats, darkMode,
+    toggleDarkMode, setToken, setUser, setCompany, setCompanies,
+    setRats, setDashboardStats, logout,
+    actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        token,
-        user,
-        company,
-        companies,
-        rats,
-        dashboardStats,
-        rolEnEmpresa,
-        puedeEditar,
-        rolGlobal,
-        darkMode,
-        toggleDarkMode,
-        setToken,
-        setUser,
-        setCompany,
-        setCompanies,
-        setRats,
-        setDashboardStats,
-        logout,
-        isAuthenticated: !!token,
-        actualizarRatEnCache,
-        agregarRatEnCache,
-        eliminarRatDeCache,
-        actualizarStatsEnCache,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
