@@ -7,11 +7,10 @@ interface DrawerProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  width?: string;
   extraAction?: React.ReactNode;
 }
 
-export default function Drawer({ open, onClose, title, children, width = '640px', extraAction }: DrawerProps) {
+export default function Drawer({ open, onClose, title, children, extraAction }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,6 +55,8 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
 
   if (!open) return null;
 
+  const hasHeader = !!(title || extraAction);
+
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-6" onClick={onClose}>
       <div
@@ -67,7 +68,7 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'drawer-title' : undefined}
-        aria-label={title ? undefined : 'Diálogo'}
+        aria-label={title || 'Diálogo'}
         className="relative flex flex-col shadow-2xl overflow-hidden rounded-2xl w-[95vw] max-w-[640px] sm:w-[60vw]"
         style={{
           maxHeight: '90vh',
@@ -76,23 +77,25 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div
-          className="flex items-center justify-between px-6 py-4 flex-shrink-0 rounded-t-2xl"
-          style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}
-        >
-          <div className="flex items-center gap-3">
-            {title ? <h2 id="drawer-title" className="text-base font-semibold" style={{ color: '#111827' }}>{title}</h2> : <div id="drawer-title" />}
-            {extraAction}
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-gray-200 text-sm font-bold"
-            style={{ color: '#6B7280' }}
+        {hasHeader && (
+          <div
+            className="flex items-center justify-between px-6 py-4 flex-shrink-0 rounded-t-2xl"
+            style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}
           >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+            <div className="flex items-center gap-3">
+              {title ? <h2 id="drawer-title" className="text-base font-semibold" style={{ color: '#111827' }}>{title}</h2> : <div id="drawer-title" />}
+              {extraAction}
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-gray-200 text-sm font-bold"
+              style={{ color: '#6B7280' }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <div className={hasHeader ? 'flex-1 overflow-y-auto p-3 sm:p-6' : 'flex-1 overflow-y-auto p-4 sm:p-6'}>
           {children}
         </div>
       </div>

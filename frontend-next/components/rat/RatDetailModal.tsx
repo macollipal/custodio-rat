@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import Drawer from '@/components/ui/Drawer';
 import RatDetailView from './RatDetailView';
 import RatEditForm from './RatEditForm';
@@ -21,10 +21,18 @@ interface RatDetailModalProps {
 }
 
 type AuditAction = { type: 'SET'; logs: AuditLog[] } | { type: 'CLEAR' };
+type ModeAction = { type: 'SET_MODE'; mode: 'view' | 'edit' } | { type: 'RESET' };
 
 function auditReducer(_: AuditLog[], action: AuditAction): AuditLog[] {
   if (action.type === 'SET') return action.logs;
   return [];
+}
+
+function modeReducer(_: 'view' | 'edit', action: ModeAction): 'view' | 'edit' {
+  switch (action.type) {
+    case 'SET_MODE': return action.mode;
+    case 'RESET': return 'view';
+  }
 }
 
 export default function RatDetailModal({
@@ -37,10 +45,10 @@ export default function RatDetailModal({
   onRefresh,
   puedeEditar,
 }: RatDetailModalProps) {
-  const [currentMode, setCurrentMode] = useState<'view' | 'edit'>(mode);
+  const [currentMode, modeDispatch] = useReducer(modeReducer, mode);
   const [auditLogs, auditDispatch] = useReducer(auditReducer, []);
 
-  useEffect(() => { setCurrentMode(mode); }, [mode]);
+  useEffect(() => { modeDispatch({ type: 'SET_MODE', mode }); }, [mode]);
 
   useEffect(() => {
     if (!rat) {
@@ -52,84 +60,100 @@ export default function RatDetailModal({
       .then(logs => { if (!cancelled) auditDispatch({ type: 'SET', logs }); })
       .catch(() => { if (!cancelled) auditDispatch({ type: 'CLEAR' }); });
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rat?.id]);
 
   function handleClose() {
-    setCurrentMode('view');
+    modeDispatch({ type: 'RESET' });
     onClose();
   }
 
   function handleSwitchToEdit() {
-    setCurrentMode('edit');
+    modeDispatch({ type: 'SET_MODE', mode: 'edit' });
     onSwitchToEdit();
   }
 
   async function handleFormSaved() {
-    setCurrentMode('view');
+    modeDispatch({ type: 'SET_MODE', mode: 'view' });
     await onRefresh();
   }
 
   function handleCancel() {
-    setCurrentMode('view');
+    modeDispatch({ type: 'SET_MODE', mode: 'view' });
   }
 
   if (!rat) return null;
 
-  const tabsCls = 'px-4 py-2 text-sm font-medium rounded-lg transition';
+  const tabsCls = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition';
   const activeTabCls = tabsCls + ' text-white';
-  const inactiveTabCls = tabsCls + ' text-gray-500 hover:text-gray-700';
+  const inactiveTabCls = tabsCls + ' text-white/60 hover:text-white';
 
   return (
     <Drawer
       open={!!rat}
       onClose={handleClose}
-      title={`RAT #${rat.id} — ${rat.nombre_proceso}`}
-      extraAction={
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentMode('view')}
-            className={currentMode === 'view' ? activeTabCls : inactiveTabCls}
-            style={currentMode === 'view' ? { background: '#2563EB' } : {}}
-          >
-            Ver
-          </button>
-          {puedeEditar && (
-            <button
-              onClick={handleSwitchToEdit}
-              className={currentMode === 'edit' ? activeTabCls : inactiveTabCls}
-              style={currentMode === 'edit' ? { background: '#2563EB' } : {}}
-            >
-              Editar
-            </button>
-          )}
-        </div>
-      }
+      title=""
     >
       <div>
         <div
-          className="px-4 py-3 rounded-xl mb-4"
+          className="rounded-2xl p-5 mb-4"
           style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                RAT #{rat.id}
-              </p>
-              <h2 className="text-base font-bold text-white leading-tight">
-                {rat.nombre_proceso}
-              </h2>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
+              >
+                #{rat.id}
+              </div>
+              <div>
+                <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  RAT · {rat.estado === 'borrador' ? 'Borrador' : rat.estado === 'completo' ? 'Completo' : rat.estado === 'en_revision' ? 'En revisión' : 'Aprobado'}
+                </p>
+                <h2 className="text-base font-bold text-white leading-tight">
+                  {rat.nombre_proceso}
+                </h2>
+              </div>
             </div>
-            <span
-              className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5"
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                color: 'white',
-              }}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {rat.completitud > 0 && (
+                <div className="hidden sm:flex flex-col items-end gap-1">
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {rat.completitud}% completo
+                  </span>
+                  <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${rat.completitud}%`, background: rat.completitud >= 80 ? '#34D399' : rat.completitud >= 50 ? '#FBBF24' : '#F87171' }}
+                    />
+                  </div>
+                </div>
+              )}
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
+              >
+                {rat.estado === 'borrador' ? 'Borrador' : rat.estado === 'completo' ? 'Completo' : rat.estado === 'en_revision' ? 'En revisión' : 'Aprobado'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => modeDispatch({ type: 'SET_MODE', mode: 'view' })}
+              className={currentMode === 'view' ? activeTabCls : inactiveTabCls}
             >
-              {rat.estado === 'borrador' ? 'Borrador' :
-               rat.estado === 'completo' ? 'Completo' :
-               rat.estado === 'en_revision' ? 'En revisión' : 'Aprobado'}
-            </span>
+              Ver
+            </button>
+            {puedeEditar && (
+              <button
+                onClick={handleSwitchToEdit}
+                className={currentMode === 'edit' ? activeTabCls : inactiveTabCls}
+              >
+                Editar
+              </button>
+            )}
           </div>
         </div>
 

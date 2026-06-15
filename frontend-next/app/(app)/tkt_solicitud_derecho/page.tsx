@@ -487,44 +487,79 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
 
   return (
     <Drawer open={open} onClose={onClose} title="">
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div
-          className="rounded-xl p-4 flex items-center gap-3"
-          style={{ background: 'linear-gradient(135deg, #1E40AF, #3730A3)' }}
+          className="rounded-2xl p-5"
+          style={{ background: `linear-gradient(135deg, ${tipo.color}22, ${tipo.color}11)`, border: `1px solid ${tipo.color}33` }}
         >
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-white/20"
-            style={{ color: 'white' }}
-            aria-label="Cerrar"
-          >
-            ←
-          </button>
-          <span
-            className="inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm"
-            style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
-          >
-            {tipo.abbr}
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white text-sm truncate">{sanitize(ticket.titular_nombre)}</p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {sanitize(ticket.titular_rut) || 'Sin RUT'} · {sanitize(ticket.titular_email)}
+          <div className="flex items-center gap-3 mb-3">
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-black/10"
+              style={{ color: tipo.color }}
+              aria-label="Cerrar"
+            >
+              ←
+            </button>
+            <span
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl font-bold text-sm"
+              style={{ background: `${tipo.color}22`, color: tipo.color, border: `1px solid ${tipo.color}44` }}
+            >
+              {tipo.abbr}
+            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                style={{ background: `${tipo.color}22`, color: tipo.color }}
+              >
+                #{ticket.id}
+              </span>
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                style={{ background: `${tipo.color}15`, color: tipo.color }}
+              >
+                {tipo.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                style={{ background: estado.bg, color: estado.color }}
+              >
+                {estado.label}
+              </span>
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                style={{ background: prioridad.bg, color: prioridad.color }}
+              >
+                {prioridad.label}
+              </span>
+            </div>
+          </div>
+
+          <div className="pl-11">
+            <p className="font-bold text-sm mb-0.5" style={{ color: '#111827' }}>{sanitize(ticket.titular_nombre)}</p>
+            <p className="text-xs" style={{ color: '#6B7280' }}>
+              {sanitize(ticket.titular_rut) || 'Sin RUT'}
+              {ticket.titular_email && ` · ${sanitize(ticket.titular_email)}`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className="px-2 py-1 rounded-lg text-xs font-medium"
-              style={{ background: estado.bg, color: estado.color }}
-            >
-              {estado.label}
-            </span>
-            <span
-              className="px-2 py-1 rounded-lg text-xs font-medium"
-              style={{ background: prioridad.bg, color: prioridad.color }}
-            >
-              {prioridad.label}
-            </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl p-3" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+            <p className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Fecha recepción</p>
+            <p className="text-sm font-semibold" style={{ color: '#111827' }}>{fmtDate(ticket.fecha_recepcion ?? undefined)}</p>
+          </div>
+          <div
+            className="rounded-xl p-3"
+            style={{ background: sla.bg, border: `1px solid ${sla.color}55` }}
+          >
+            <p className="text-xs font-medium mb-1" style={{ color: sla.color }}>Vencimiento SLA</p>
+            <p className="text-sm font-bold" style={{ color: sla.color }}>
+              {ticket.fecha_vencimiento ? fmtDate(ticket.fecha_vencimiento) : '—'}
+              <span className="ml-1.5 text-xs font-medium">({sla.text})</span>
+            </p>
           </div>
         </div>
 

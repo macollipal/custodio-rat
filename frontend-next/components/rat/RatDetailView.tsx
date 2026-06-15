@@ -24,7 +24,10 @@ function necesitaRevision(rat: RAT) {
 }
 
 type LocalState = { confirmDel: boolean; approving: boolean };
-type LocalAction = { type: 'RESET' } | { type: 'SET_CONFIRM_DEL'; value: boolean } | { type: 'SET_APPROVING'; value: boolean };
+type LocalAction =
+  | { type: 'RESET' }
+  | { type: 'SET_CONFIRM_DEL'; value: boolean }
+  | { type: 'SET_APPROVING'; value: boolean };
 
 function localReducer(_: LocalState, action: LocalAction): LocalState {
   switch (action.type) {
@@ -32,6 +35,69 @@ function localReducer(_: LocalState, action: LocalAction): LocalState {
     case 'SET_CONFIRM_DEL': return { ..._, confirmDel: action.value };
     case 'SET_APPROVING': return { ..._, approving: action.value };
   }
+}
+
+interface SectionProps { title: string; children: React.ReactNode }
+function Section({ title, children }: SectionProps) {
+  return (
+    <div className="mb-5">
+      <p className="text-xs font-bold mb-2 px-1" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        {title}
+      </p>
+      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+interface FieldRowProps { label: string; value: string | null | undefined; warning?: boolean }
+function FieldRow({ label, value, warning }: FieldRowProps) {
+  const display = value || '—';
+  const isWarning = warning || (typeof display === 'string' && display.startsWith('⚠️'));
+  return (
+    <div className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: '1px solid #F3F4F6' }}>
+      <span className="text-xs font-medium w-40 flex-shrink-0 pt-0.5" style={{ color: '#6B7280' }}>{label}</span>
+      <span
+        className="text-sm flex-1 break-words"
+        style={{ color: isWarning ? '#DC2626' : '#111827' }}
+      >
+        {display}
+      </span>
+    </div>
+  );
+}
+
+const BADGE_STYLES = {
+  warning: { bg: '#FEF3C7', color: '#92400E' },
+  info: { bg: '#DBEAFE', color: '#1E40AF' },
+  purple: { bg: '#F3E8FF', color: '#5B21B6' },
+  gray: { bg: '#F3F4F6', color: '#374151' },
+  danger: { bg: '#FEE2E2', color: '#DC2626' },
+};
+
+interface BadgeProps { variant: keyof typeof BADGE_STYLES; children: React.ReactNode }
+function Badge({ variant, children }: BadgeProps) {
+  const s = BADGE_STYLES[variant];
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+      {children}
+    </span>
+  );
+}
+
+function fmtDate(d: string | null | undefined): string {
+  if (!d) return '—';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('es-CL', { dateStyle: 'short' });
+}
+
+function fmtDateTime(d: string | null | undefined): string {
+  if (!d) return '—';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
 }
 
 export default function RatDetailView({
@@ -60,143 +126,182 @@ export default function RatDetailView({
     }
   }
 
-  const fieldRows: [string, string | null | undefined][] = [
-    ['Categoría titulares', rat.categoria_titulares],
-    ['Fuente de datos', rat.fuente_datos],
-    ['Finalidad', rat.finalidad],
-    ['Plazo retención', rat.plazo_retencion],
-    ['Medidas de seguridad', rat.medidas_seguridad],
-    ['Destinatarios', rat.destinatarios],
-    rat.datos_sensibles ? ['Tipo dato sensible', rat.tipo_dato_sensible || 'No especificado'] : null,
-    rat.transferencia_internacional ? ['País destino', rat.pais_destino || '—'] : null,
-    rat.transferencia_internacional ? ['Garantías transferencia', rat.garantias_transferencia_int || '⚠️ No especificadas'] : null,
-    rat.observaciones_auditoria ? ['Obs. auditoría', rat.observaciones_auditoria] : null,
-    rat.base_legal && rat.base_legal !== 'Otra' ? [
-      'Doc. base legal',
-      rat.tiene_archivo_base_legal ? '📄 Documento adjunto' : '⚠️ Sin documento',
-    ] : null,
-  ].filter(Boolean) as [string, string | null | undefined][];
+  const primaryBadges: React.ReactNode[] = [];
+  const secondaryBadges: React.ReactNode[] = [];
+
+  if (rat.datos_sensibles) primaryBadges.push(<Badge key="sensible" variant="warning">⚠️ Datos sensibles</Badge>);
+  if (rat.evaluacion_impacto) primaryBadges.push(<Badge key="eipd" variant="info">📋 EIPD {rat.estado_eipd && rat.estado_eipd !== 'no_requerida' ? `· ${rat.estado_eipd}` : ''}</Badge>);
+  if (rat.transferencia_internacional) primaryBadges.push(<Badge key="trans" variant="purple">🌐 Transfer. internacional</Badge>);
+  if (rat.decisiones_automatizadas) secondaryBadges.push(<Badge key="auto" variant="gray">🤖 Dec. automatizadas</Badge>);
+  if (necesitaRevision(rat)) secondaryBadges.push(<Badge key="rev" variant="warning">⏰ Sin actualizar +6m</Badge>);
+  if (rat.nivel_riesgo === 'Crítico') secondaryBadges.push(<Badge key="crit" variant="danger">⚠️ Crítico</Badge>);
+
+  const allBadges = [...primaryBadges, ...secondaryBadges];
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap">
-        {rat.datos_sensibles && (
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>
-            ⚠️ Datos sensibles
-          </span>
-        )}
-        {rat.evaluacion_impacto && (
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>
-            📋 EIPD requerida
-          </span>
-        )}
-        {rat.transferencia_internacional && (
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#F3E8FF', color: '#5B21B6' }}>
-            🌐 Transfer. internacional
-          </span>
-        )}
-        {rat.decisiones_automatizadas && (
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#F3F4F6', color: '#374151' }}>
-            🤖 Dec. automatizadas
-          </span>
-        )}
-        {necesitaRevision(rat) && (
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>
-            ⏰ Sin actualizar +6m
-          </span>
-        )}
-        {rat.nivel_riesgo === 'Crítico' && (
-          <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#FEE2E2', color: '#DC2626' }}>
-            ⚠️ Crítico
-          </span>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        {fieldRows.map(([k, v]) => (
-          <div key={k} className="bg-white rounded-lg p-3" style={{ border: '1px solid #E5E7EB' }}>
-            <span className="text-xs font-semibold block mb-0.5" style={{ color: '#9CA3AF' }}>{k}</span>
-            <span
-              className="text-sm break-words"
-              style={{ color: v && (v as string).startsWith('⚠️') ? '#DC2626' : '#111827' }}
-            >
-              {(v as string) || '—'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
-        <PdfPreview ratId={rat.id} filename={rat.archivo_base_legal_nombre} />
+    <div className="space-y-1">
+      {allBadges.length > 0 && (
+        <div className="flex gap-2 flex-wrap mb-3">
+          {primaryBadges}
+          {secondaryBadges.length > 0 && (
+            <details className="inline-block">
+              <summary className="text-xs cursor-pointer px-2 py-1 rounded-full font-medium" style={{ background: '#F3F4F6', color: '#6B7280' }}>
+                +{secondaryBadges.length} más
+              </summary>
+              <div className="mt-1 flex gap-2 flex-wrap">{secondaryBadges}</div>
+            </details>
+          )}
+        </div>
       )}
 
-      <div className="flex gap-2 flex-wrap items-center pt-2">
-        {puedeEditar ? (
-          <>
-            {rat.estado !== 'aprobado' ? (
-              <button
-                onClick={handleApprove}
-                disabled={approving}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition disabled:opacity-60"
-                style={{ background: '#059669' }}
-              >
-                {approving ? 'Aprobando...' : '✓ Aprobar RAT'}
-              </button>
-            ) : (
-              <div
-                className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: '#DCFCE7', color: '#166534' }}
-              >
-                ✓ Aprobado
-                {rat.aprobado_por ? ` por ${rat.aprobado_por}` : ''}
-                {rat.fecha_aprobacion ? ` el ${new Date(rat.fecha_aprobacion).toLocaleDateString('es-CL')}` : ''}
-              </div>
-            )}
-            <button
-              onClick={onEdit}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition"
-              style={{ background: '#2563EB' }}
-            >
-              ✏ Editar
-            </button>
-            <button
-              onClick={() => onDuplicate(rat)}
-              className="px-4 py-2 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-              style={{ color: '#374151', borderColor: '#E5E7EB' }}
-            >
-              📋 Duplicar
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'SET_CONFIRM_DEL', value: true })}
-              className="px-4 py-2 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
-              style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-            >
-              🗑 Eliminar
-            </button>
-          </>
-        ) : (
-          <span className="text-xs px-3 py-1.5 rounded-lg" style={{ background: '#F3F4F6', color: '#6B7280' }}>
-            Solo lectura
-          </span>
+      <Section title="Identificación">
+        <FieldRow label="Categoría titulares" value={rat.categoria_titulares} />
+        <FieldRow label="Fuente de datos" value={rat.fuente_datos} />
+        <FieldRow label="Destinatarios" value={rat.destinatarios} />
+        <FieldRow label="Encargado tratamiento" value={rat.nombre_encargado} />
+        {rat.tiene_contrato_encargado !== undefined && (
+          <FieldRow
+            label="Contrato encargado"
+            value={rat.tiene_contrato_encargado ? '✓ Contrato firmado' : '⚠️ Sin contrato'}
+            warning={!rat.tiene_contrato_encargado}
+          />
         )}
+      </Section>
+
+      <Section title="Datos tratados">
+        <FieldRow label="Categoría datos" value={rat.categoria_datos} />
+        {rat.datos_sensibles && (
+          <FieldRow
+            label="Tipo dato sensible"
+            value={rat.tipo_dato_sensible || '⚠️ No especificado'}
+            warning={!rat.tipo_dato_sensible}
+          />
+        )}
+        {rat.evaluacion_impacto && (
+          <>
+            <FieldRow label="EIPD" value={rat.estado_eipd ? `• ${rat.estado_eipd.replace('_', ' ')}` : 'Pendiente'} />
+            {rat.fecha_eipd && <FieldRow label="Fecha EIPD" value={fmtDate(rat.fecha_eipd)} />}
+          </>
+        )}
+        {rat.decisiones_automatizadas && (
+          <FieldRow label="Decisiones automatizadas" value="Sí — requiere supervisión" />
+        )}
+      </Section>
+
+      <Section title="Base legal y finalidad">
+        <FieldRow label="Base legal" value={rat.base_legal} />
+        <FieldRow label="Finalidad" value={rat.finalidad} />
+        {rat.base_legal === 'Interés legítimo' && (
+          <FieldRow
+            label="Test interés legítimo"
+            value={rat.test_interes_legitimo || '⚠️ Test no documentado'}
+            warning={!rat.test_interes_legitimo}
+          />
+        )}
+        {rat.observaciones_auditoria && (
+          <FieldRow label="Obs. auditoría" value={rat.observaciones_auditoria} />
+        )}
+      </Section>
+
+      <Section title="Almacenamiento y transferencias">
+        <FieldRow label="Plazo retención" value={rat.plazo_retencion} />
+        <FieldRow label="Medidas de seguridad" value={rat.medidas_seguridad} />
+        <FieldRow label="Transferencia datos" value={rat.transferencia_datos} />
+        {rat.transferencia_internacional && (
+          <>
+            <FieldRow
+              label="País destino"
+              value={rat.pais_destino || '⚠️ No especificado'}
+              warning={!rat.pais_destino}
+            />
+            <FieldRow
+              label="Garantías"
+              value={rat.garantias_transferencia_int || '⚠️ No especificadas'}
+              warning={!rat.garantias_transferencia_int}
+            />
+          </>
+        )}
+      </Section>
+
+      {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
+        <div className="mb-5">
+          <p className="text-xs font-bold mb-2 px-1" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Documento base legal
+          </p>
+          <PdfPreview ratId={rat.id} filename={rat.archivo_base_legal_nombre} />
+        </div>
+      )}
+
+      <div className="border-t pt-4 mt-4" style={{ borderColor: '#E5E7EB' }}>
+        <p className="text-xs font-semibold mb-3" style={{ color: '#6B7280' }}>Acciones</p>
+        <div className="flex gap-2 flex-wrap items-center">
+          {puedeEditar ? (
+            <>
+              {rat.estado !== 'aprobado' ? (
+                <button
+                  onClick={handleApprove}
+                  disabled={approving}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50"
+                  style={{ background: '#059669' }}
+                >
+                  {approving ? 'Aprobando...' : '✓ Aprobar RAT'}
+                </button>
+              ) : (
+                <div
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium"
+                  style={{ background: '#DCFCE7', color: '#166534' }}
+                >
+                  ✓ Aprobado
+                  {rat.aprobado_por ? ` por ${rat.aprobado_por}` : ''}
+                  {rat.fecha_aprobacion ? ` el ${fmtDate(rat.fecha_aprobacion)}` : ''}
+                </div>
+              )}
+              <button
+                onClick={onEdit}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition"
+                style={{ background: '#2563EB' }}
+              >
+                ✏ Editar
+              </button>
+              <button
+                onClick={() => onDuplicate(rat)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold border transition hover:bg-gray-50"
+                style={{ color: '#374151', borderColor: '#E5E7EB' }}
+              >
+                📋 Duplicar
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_CONFIRM_DEL', value: true })}
+                className="px-4 py-2 rounded-xl text-xs font-semibold border transition hover:bg-red-50"
+                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+              >
+                🗑 Eliminar
+              </button>
+            </>
+          ) : (
+            <span className="text-xs px-3 py-1.5 rounded-xl" style={{ background: '#F3F4F6', color: '#6B7280' }}>
+              Solo lectura
+            </span>
+          )}
+        </div>
       </div>
 
       {confirmDel && (
-        <div className="rounded-lg p-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
-          <p className="text-sm font-medium mb-2" style={{ color: '#7F1D1D' }}>
-            ¿Eliminar <strong>{rat.nombre_proceso}</strong>? Irreversible.
+        <div className="mt-3 rounded-xl p-4" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
+          <p className="text-sm font-semibold mb-3" style={{ color: '#7F1D1D' }}>
+            ¿Eliminar <strong>{rat.nombre_proceso}</strong>? Esta acción es irreversible.
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => { onDelete(rat.id); dispatch({ type: 'SET_CONFIRM_DEL', value: false }); }}
-              className="px-3 py-1 rounded text-xs font-semibold text-white"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-white"
               style={{ background: '#DC2626' }}
             >
-              Confirmar
+              Confirmar eliminación
             </button>
             <button
               onClick={() => dispatch({ type: 'SET_CONFIRM_DEL', value: false })}
-              className="px-3 py-1 rounded text-xs font-semibold border"
+              className="px-4 py-2 rounded-xl text-xs font-semibold border"
               style={{ borderColor: '#E5E7EB', color: '#374151' }}
             >
               Cancelar
@@ -206,17 +311,30 @@ export default function RatDetailView({
       )}
 
       {auditLogs && auditLogs.length > 0 && (
-        <div className="pt-1">
-          <p className="text-xs font-semibold mb-2" style={{ color: '#374151' }}>
-            Historial ({auditLogs.length})
-          </p>
-          <div className="space-y-1">
-            {auditLogs.slice(0, 4).map((log, li) => (
-              <div key={li} className="text-xs" style={{ color: '#9CA3AF' }}>
-                <span className="font-bold" style={{ color: '#2563EB' }}>
-                  {log.accion?.toUpperCase()}
-                </span>
-                {' · '}{log.usuario}{' · '}{log.timestamp?.slice(0, 16).replace('T', ' ')}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-xs font-bold" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Historial de cambios
+            </p>
+            {auditLogs.length > 4 && (
+              <span className="text-xs" style={{ color: '#9CA3AF' }}>
+                {auditLogs.length} registros
+              </span>
+            )}
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
+            {auditLogs.slice(0, 6).map((log, li) => (
+              <div key={li} className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: li < Math.min(auditLogs.length, 6) - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#2563EB' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold" style={{ color: '#1E40AF' }}>{log.accion}</span>
+                    <span className="text-xs" style={{ color: '#6B7280' }}>por {log.usuario}</span>
+                  </div>
+                  <span className="text-xs" style={{ color: '#9CA3AF' }}>
+                    {fmtDateTime(log.timestamp)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
