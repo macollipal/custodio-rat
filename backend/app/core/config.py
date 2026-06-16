@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     ASESOR_CHUNK_SIZE: int = 800
     ASESOR_CHUNK_OVERLAP: int = 100
     ASESOR_TOP_K: int = 5
-    ASESOR_MIN_SIMILARITY: float = 0.7
+    ASESOR_MIN_SIMILARITY: float = 0.3
     ASESOR_LLM_MAX_TOKENS: int = 1000
     ASESOR_LLM_TEMPERATURE: float = 0.3
     ASESOR_CORPUS_PATH: str = "data/asesor_corpus"
