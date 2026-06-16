@@ -37,9 +37,9 @@ def retrieve(
     Cada item: {content, source, source_type, title, chunk_index, score, snippet, chunk_id}
     """
     if top_k is None:
-        top_k = settings.ASESOR_TOP_K
+        top_k = settings.asesor_config()["top_k"]
     if min_similarity is None:
-        min_similarity = settings.ASESOR_MIN_SIMILARITY
+        min_similarity = settings.asesor_config()["min_similarity"]
 
     chunks = db.query(AsesorChunk).all()
     if not chunks:

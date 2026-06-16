@@ -26,14 +26,10 @@ class Settings(BaseSettings):
     _dev_secret: str = "dev-secret-never-use-in-production"
     ALLOWED_ORIGINS: str = ""
 
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o-mini"
     MINIMAX_API_KEY: str = ""
     MINIMAX_MODEL: str = "MiniMax-M2.7"
 
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
-    MINIMAX_EMBEDDING_MODEL: str = "embo-01"
-
+    ASESOR_CONFIG: str = ""
     ASESOR_CHUNK_SIZE: int = 800
     ASESOR_CHUNK_OVERLAP: int = 100
     ASESOR_TOP_K: int = 5
@@ -41,6 +37,7 @@ class Settings(BaseSettings):
     ASESOR_LLM_MAX_TOKENS: int = 1000
     ASESOR_LLM_TEMPERATURE: float = 0.3
     ASESOR_CORPUS_PATH: str = "data/asesor_corpus"
+    ASESOR_EMBEDDING_MODEL: str = "embo-01"
 
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
@@ -83,5 +80,29 @@ class Settings(BaseSettings):
         if self.ENVIRONMENT in ("production", "qa", "staging"):
             raise ValueError("ENCRYPTION_KEY es obligatoria en producci├│n. Genera una clave con: python -c \"from app.core.crypto import generate_key; print(generate_key())\"")
         return self._dev_encryption_key
+
+    def asesor_config(self) -> dict:
+        """Retorna config del Asesor. Si ASESOR_CONFIG esta vacio, usa los defaults.
+        Si tiene JSON, esos valores toman prioridad sobre los defaults.
+        Unica credencial: MINIMAX_API_KEY.
+        """
+        defaults = {
+            "chunk_size": self.ASESOR_CHUNK_SIZE,
+            "chunk_overlap": self.ASESOR_CHUNK_OVERLAP,
+            "top_k": self.ASESOR_TOP_K,
+            "min_similarity": self.ASESOR_MIN_SIMILARITY,
+            "llm_max_tokens": self.ASESOR_LLM_MAX_TOKENS,
+            "llm_temperature": self.ASESOR_LLM_TEMPERATURE,
+            "corpus_path": self.ASESOR_CORPUS_PATH,
+            "embedding_model": self.ASESOR_EMBEDDING_MODEL,
+        }
+        if not self.ASESOR_CONFIG:
+            return defaults
+        import json
+        try:
+            parsed = json.loads(self.ASESOR_CONFIG)
+            return {**defaults, **parsed}
+        except (json.JSONDecodeError, TypeError):
+            return defaults
 
 settings = Settings()

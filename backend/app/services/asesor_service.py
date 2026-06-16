@@ -39,11 +39,12 @@ ASESOR_SYSTEM_PROMPT = (
 async def _call_llm_minimax(messages: list) -> str:
     if not settings.MINIMAX_API_KEY:
         raise RuntimeError("MINIMAX_API_KEY no configurada")
+    cfg = settings.asesor_config()
     payload = {
         "model": settings.MINIMAX_MODEL,
         "messages": messages,
-        "max_completion_tokens": settings.ASESOR_LLM_MAX_TOKENS,
-        "temperature": settings.ASESOR_LLM_TEMPERATURE,
+        "max_completion_tokens": cfg["llm_max_tokens"],
+        "temperature": cfg["llm_temperature"],
     }
     headers = {
         "Authorization": f"Bearer {settings.MINIMAX_API_KEY}",
@@ -56,20 +57,6 @@ async def _call_llm_minimax(messages: list) -> str:
         )
         resp.raise_for_status()
         return resp.json()["choices"][0]["message"]["content"].strip()
-
-
-async def _call_llm_openai(messages: list) -> str:
-    if not settings.OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY no configurada")
-    from openai import AsyncOpenAI
-    client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-    resp = await client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
-        messages=messages,
-        max_tokens=settings.ASESOR_LLM_MAX_TOKENS,
-        temperature=settings.ASESOR_LLM_TEMPERATURE,
-    )
-    return resp.choices[0].message.content.strip()
 
 
 def _build_prompt(question: str, chunks: List[dict]) -> list:
@@ -113,22 +100,13 @@ async def ask(db: Session, question: str, context_extra: str = "") -> dict:
     if context_extra:
         messages.insert(1, {"role": "system", "content": f"Contexto del sistema: {context_extra}"})
 
-    if settings.MINIMAX_API_KEY:
-        try:
-            answer = await _call_llm_minimax(messages)
-            provider = "minimax"
-        except Exception as e:
-            logger.warning(f"MiniMax falló: {e}. Fallback a OpenAI.")
-            if settings.OPENAI_API_KEY:
-                answer = await _call_llm_openai(messages)
-                provider = "openai"
-            else:
-                raise
-    elif settings.OPENAI_API_KEY:
-        answer = await _call_llm_openai(messages)
-        provider = "openai"
-    else:
-        raise RuntimeError("No hay LLM configurado. Define MINIMAX_API_KEY u OPENAI_API_KEY.")
+    if not settings.MINIMAX_API_KEY:
+        raise RuntimeError(
+            "MINIMAX_API_KEY no configurada. "
+            "El Asesor requiere MINIMAX_API_KEY para funcionar."
+        )
+    answer = await _call_llm_minimax(messages)
+    provider = "minimax"
 
     latency = int((time.time() - start) * 1000)
     return {

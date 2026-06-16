@@ -19,7 +19,7 @@ def test_ask_question_vacia_retorna_422(client, auth_headers):
 
 def test_ask_sin_embedding_provider(client, auth_headers):
     resp = client.post("/asesor/ask", json={"question": "Qué es un RAT?"}, headers=auth_headers)
-    # Sin MiniMax ni OpenAI en test, retorna 503
+    # Sin MiniMax_API_Key en test, retorna 503 (OpenAI eliminado en v1.0)
     assert resp.status_code == 503
 
 

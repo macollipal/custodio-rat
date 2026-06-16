@@ -56,7 +56,7 @@ def _hash(content: str) -> str:
 
 def list_corpus_files(corpus_path: Optional[str] = None) -> List[str]:
     """Lista archivos soportados en el corpus."""
-    root = corpus_path or settings.ASESOR_CORPUS_PATH
+    root = corpus_path or settings.asesor_config()["corpus_path"]
     if not os.path.isdir(root):
         return []
     files: List[str] = []
@@ -165,7 +165,7 @@ def get_stats(db: Session) -> dict:
         chunks_por_source[row[0]] = chunks_por_source.get(row[0], 0) + 1
     last = db.query(AsesorChunk).order_by(AsesorChunk.created_at.desc()).first()
     ultimo = last.created_at if last else None
-    provider = "minimax" if settings.MINIMAX_API_KEY else ("openai" if settings.OPENAI_API_KEY else "none")
+    provider = "minimax" if settings.MINIMAX_API_KEY else "none"
     return {
         "total_chunks": total_chunks,
         "total_documents": total_documents,

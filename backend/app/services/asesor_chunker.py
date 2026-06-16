@@ -36,7 +36,7 @@ def split_by_hierarchy(text: str) -> List[str]:
 
     # 2) Si una sección es muy larga (> chunk_size * 6 chars), dividir por párrafos
     final_parts: List[str] = []
-    char_limit = settings.ASESOR_CHUNK_SIZE * 6  # margen 6x tokens->chars
+    char_limit = settings.asesor_config()["chunk_size"] * 6  # margen 6x tokens->chars
     for p in parts:
         if len(p) <= char_limit:
             final_parts.append(p)
@@ -56,8 +56,9 @@ def chunk_text(text: str, title_hint: str = "") -> List[dict]:
         return []
 
     parts = split_by_hierarchy(text)
-    chunk_size = settings.ASESOR_CHUNK_SIZE
-    overlap = settings.ASESOR_CHUNK_OVERLAP
+    cfg = settings.asesor_config()
+    chunk_size = cfg["chunk_size"]
+    overlap = cfg["chunk_overlap"]
 
     chunks: List[dict] = []
     buf = ""
