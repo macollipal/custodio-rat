@@ -14,7 +14,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 COHERE_URL = "https://api.cohere.com/v1/embed"
-COHERE_MODEL = "embed-english-v3.0"
+COHERE_MODEL = "embed-multilingual-v3.0"
 
 
 def _embed_cohere(texts: List[str], input_type: str) -> List[List[float]]:
