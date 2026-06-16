@@ -13,7 +13,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.config import settings, BASE_DIR
 from app.models.asesor import AsesorChunk
 from app.services.asesor_chunker import chunk_text
 from app.services.asesor_embedder import embed_texts
@@ -79,9 +79,13 @@ async def index_corpus(
     Solo permite archivos dentro de corpus_path (previene path traversal).
     """
     start = time.time()
+    resolved_corpus = corpus_path or settings.asesor_config()["corpus_path"]
+    logger.info(f"Asesor indexer: corpus_path={resolved_corpus}, force={force}, paths={paths}")
+    logger.info(f"Asesor indexer: BASE_DIR={BASE_DIR}, cwd={os.getcwd()}")
     files = paths if paths else list_corpus_files(corpus_path)
+    logger.info(f"Asesor indexer: found {len(files)} files: {files}")
     if not files:
-        return {"indexed": 0, "skipped": 0, "errors": ["No hay archivos para indexar"], "duration_ms": 0}
+        return {"indexed": 0, "skipped": 0, "errors": ["No hay archivos para indexar en " + resolved_corpus], "duration_ms": 0}
 
     if paths:
         root = os.path.abspath(corpus_path or settings.asesor_config()["corpus_path"])
