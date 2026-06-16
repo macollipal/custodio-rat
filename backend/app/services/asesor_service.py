@@ -37,33 +37,37 @@ ASESOR_SYSTEM_PROMPT = (
 
 
 def _call_llm_minimax(messages: list) -> str:
-    if not settings.MINIMAX_API_KEY:
-        raise RuntimeError("MINIMAX_API_KEY no configurada")
+    if not settings.GROQ_API_KEY:
+        raise RuntimeError(
+            "GROQ_API_KEY no configurada. "
+            "El Asesor requiere una API key de Groq para el chat. "
+            "Configura GROQ_API_KEY en backend/.env o en Vercel."
+        )
     cfg = settings.asesor_config()
     payload = {
-        "model": settings.MINIMAX_MODEL,
+        "model": settings.GROQ_CHAT_MODEL,
         "messages": messages,
         "max_completion_tokens": cfg["llm_max_tokens"],
         "temperature": cfg["llm_temperature"],
     }
     headers = {
-        "Authorization": f"Bearer {settings.MINIMAX_API_KEY}",
+        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
     resp = requests.post(
-        "https://api.minimaxi.com/v1/chat/completions",
+        "https://api.groq.com/openai/v1/chat/completions",
         json=payload, headers=headers, timeout=60,
     )
     resp.raise_for_status()
     data = resp.json()
 
-    logger.info(f"MiniMax chat response keys: {list(data.keys())[:10]}")
+    logger.info(f"Groq chat response keys: {list(data.keys())[:10]}")
 
     try:
         return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError, TypeError) as e:
         raise RuntimeError(
-            f"MiniMax chat completions formato inesperado. Keys: {list(data.keys())}. "
+            f"Groq chat completions formato inesperado. Keys: {list(data.keys())}. "
             f"Error: {e}. Response (first 300): {str(data)[:300]}"
         )
 
@@ -109,13 +113,13 @@ async def ask(db: Session, question: str, context_extra: str = "") -> dict:
     if context_extra:
         messages.insert(1, {"role": "system", "content": f"Contexto del sistema: {context_extra}"})
 
-    if not settings.MINIMAX_API_KEY:
+    if not settings.GROQ_API_KEY:
         raise RuntimeError(
-            "MINIMAX_API_KEY no configurada. "
-            "El Asesor requiere MINIMAX_API_KEY para funcionar."
+            "GROQ_API_KEY no configurada. "
+            "El Asesor requiere GROQ_API_KEY para funcionar."
         )
     answer = _call_llm_minimax(messages)
-    provider = "minimax"
+    provider = "groq"
 
     latency = int((time.time() - start) * 1000)
     return {

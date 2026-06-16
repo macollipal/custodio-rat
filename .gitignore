@@ -111,3 +111,7 @@ paso/*
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Local API keys (no subir)
+*.local.key
+.minimax_key.txt

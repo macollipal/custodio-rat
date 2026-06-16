@@ -44,11 +44,11 @@ async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_cur
     """
     import requests
 
-    if not settings.MINIMAX_API_KEY:
+    if not settings.GROQ_API_KEY:
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="MINIMAX_API_KEY no configurada. El Asistente IA requiere una API key de MiniMax."
+            detail="GROQ_API_KEY no configurada. El Asistente IA requiere una API key de Groq."
         )
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -57,18 +57,18 @@ async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_cur
     messages.append({"role": "user", "content": req.question})
 
     payload = {
-        "model": settings.MINIMAX_MODEL or "MiniMax-M2.7",
+        "model": settings.GROQ_CHAT_MODEL,
         "messages": messages,
         "max_completion_tokens": 800,
         "temperature": 0.3,
     }
     headers = {
-        "Authorization": f"Bearer {settings.MINIMAX_API_KEY}",
+        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
     try:
         resp = requests.post(
-            "https://api.minimaxi.com/v1/chat/completions",
+            "https://api.groq.com/openai/v1/chat/completions",
             json=payload,
             headers=headers,
             timeout=30,
@@ -82,13 +82,13 @@ async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_cur
             from fastapi import HTTPException as HTTPExc, status
             raise HTTPExc(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"MiniMax formato inesperado. Keys: {list(data.keys())}. Error: {e}"
+                detail=f"Groq formato inesperado. Keys: {list(data.keys())}. Error: {e}"
             )
     except Exception as e:
         from fastapi import HTTPException as HTTPExc, status
         raise HTTPExc(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error al consultar MiniMax: {str(e)}"
+            detail=f"Error al consultar Groq: {str(e)}"
         )
 
     try:
@@ -98,7 +98,7 @@ async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_cur
             entidad_id=0,
             accion="consulta",
             usuario=current_user.username,
-            detalle={"question": req.question[:500], "context": req.context[:500] if req.context else None, "provider": "minimax"},
+            detalle={"question": req.question[:500], "context": req.context[:500] if req.context else None, "provider": "groq"},
             ip_origen=get_client_ip(request),
         )
         db.commit()
