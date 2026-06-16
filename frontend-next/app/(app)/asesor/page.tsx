@@ -77,7 +77,7 @@ export default function AsesorPage() {
   async function handleReindex() {
     setIndexing(true);
     try {
-      const result = await indexAsesor(undefined, false);
+      const result = await indexAsesor(undefined, true);
       const errMsg = result.errors.length ? ` Error: ${result.errors[0]}` : "";
       toast.success(`Indexado: ${result.indexed} nuevos · ${result.skipped} ya existían · ${result.errors.length} errores${errMsg}`);
       const s = await getAsesorStats();
