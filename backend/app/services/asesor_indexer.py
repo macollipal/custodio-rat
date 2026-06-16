@@ -76,11 +76,23 @@ async def index_corpus(
 ) -> dict:
     """
     Indexa el corpus. Retorna {indexed, skipped, errors, duration_ms}.
+    Solo permite archivos dentro de corpus_path (previene path traversal).
     """
     start = time.time()
     files = paths if paths else list_corpus_files(corpus_path)
     if not files:
         return {"indexed": 0, "skipped": 0, "errors": ["No hay archivos para indexar"], "duration_ms": 0}
+
+    if paths:
+        root = os.path.abspath(corpus_path or settings.asesor_config()["corpus_path"])
+        safe_files = []
+        for p in paths:
+            abs_path = os.path.abspath(p)
+            if not abs_path.startswith(root + os.sep) and abs_path != root:
+                continue
+            if os.path.isfile(abs_path):
+                safe_files.append(abs_path)
+        files = safe_files
 
     indexed = 0
     skipped = 0

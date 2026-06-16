@@ -4,6 +4,7 @@ Endpoints admin del Asesor (solo superadmin).
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.limiter import limiter
 from app.database.database import get_db
 from app.routes.deps import get_current_user
 from app.schemas.asesor import (
@@ -28,9 +29,10 @@ def require_superadmin(current_user: User) -> User:
 
 
 @router.post("/index", response_model=AsesorIndexResponse)
+@limiter.limit("5/minute")
 async def index_endpoint(
-    req: AsesorIndexRequest,
     request: Request,
+    req: AsesorIndexRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -68,7 +70,9 @@ async def index_endpoint(
 
 
 @router.get("/stats", response_model=AsesorStatsResponse)
+@limiter.limit("10/minute")
 async def stats_endpoint(
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -78,6 +82,7 @@ async def stats_endpoint(
 
 
 @router.delete("/documents/{chunk_id}")
+@limiter.limit("10/minute")
 async def delete_chunk_endpoint(
     chunk_id: int,
     request: Request,
@@ -91,8 +96,6 @@ async def delete_chunk_endpoint(
     if not chunk:
         raise HTTPException(status_code=404, detail="Chunk no encontrado")
     db.delete(chunk)
-    db.commit()
-
     try:
         log_audit(
             db=db,
@@ -107,5 +110,6 @@ async def delete_chunk_endpoint(
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"Audit log failed: {e}")
+        db.rollback()
 
     return {"ok": True, "id": chunk_id}

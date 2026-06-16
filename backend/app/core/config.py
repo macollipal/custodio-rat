@@ -102,7 +102,11 @@ class Settings(BaseSettings):
         try:
             parsed = json.loads(self.ASESOR_CONFIG)
             return {**defaults, **parsed}
-        except (json.JSONDecodeError, TypeError):
+        except (json.JSONDecodeError, TypeError, ValueError):
+            import logging
+            logging.getLogger(__name__).warning(
+                f"ASESOR_CONFIG JSON malformado, usando defaults: {self.ASESOR_CONFIG[:100]}"
+            )
             return defaults
 
 settings = Settings()
