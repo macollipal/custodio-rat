@@ -1,0 +1,10 @@
+# Bytecode / cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Salida de regeneracion (no commitear, son artefactos)
+.tmp/
+
+# NO ignorar: los .py de build son la fuente de versionamiento
+# NO ignorar: _theme_asesorgpt.py es la fuente de versionamiento
