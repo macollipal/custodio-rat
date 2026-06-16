@@ -31,6 +31,17 @@ class Settings(BaseSettings):
     MINIMAX_API_KEY: str = ""
     MINIMAX_MODEL: str = "MiniMax-M2.7"
 
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    MINIMAX_EMBEDDING_MODEL: str = "embo-01"
+
+    ASESOR_CHUNK_SIZE: int = 800
+    ASESOR_CHUNK_OVERLAP: int = 100
+    ASESOR_TOP_K: int = 5
+    ASESOR_MIN_SIMILARITY: float = 0.7
+    ASESOR_LLM_MAX_TOKENS: int = 1000
+    ASESOR_LLM_TEMPERATURE: float = 0.3
+    ASESOR_CORPUS_PATH: str = "data/asesor_corpus"
+
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""

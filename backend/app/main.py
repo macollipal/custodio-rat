@@ -16,7 +16,7 @@ from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.csrf import CSRFMiddleware
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 setup_logging()
@@ -157,6 +157,8 @@ app.include_router(consentimientos.router)
 app.include_router(eipd.router)
 app.include_router(admin_tasks.router)
 app.include_router(feriados.router)
+app.include_router(asesor.router)
+app.include_router(admin_asesor.router)
 
 
 @app.get("/", tags=["Sistema"])
