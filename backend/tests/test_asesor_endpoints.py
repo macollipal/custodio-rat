@@ -27,6 +27,7 @@ def test_ask_fallback_sin_chunks(client, auth_headers, monkeypatch):
     """Si no hay chunks indexados, debe retornar respuesta de fallback con sources vacío."""
     from app.services import asesor_service
     from app.services import asesor_embedder
+    import app.routes.asesor
 
     async def fake_embed_query(text):
         return [0.0] * 3, "fake"
@@ -41,7 +42,9 @@ def test_ask_fallback_sin_chunks(client, auth_headers, monkeypatch):
         }
 
     monkeypatch.setattr(asesor_service, "embed_query", fake_embed_query)
+    monkeypatch.setattr(asesor_embedder, "embed_query", fake_embed_query)
     monkeypatch.setattr(asesor_service, "ask", fake_ask)
+    monkeypatch.setattr(app.routes.asesor, "ask", fake_ask)
 
     resp = client.post(
         "/asesor/ask",

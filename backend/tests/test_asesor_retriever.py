@@ -58,17 +58,26 @@ def test_retrieve_con_chunks(db):
 
 
 def test_retrieve_filtra_por_min_similarity(db):
-    for i in range(2):
-        db.add(AsesorChunk(
-            source=f"doc{i}.txt",
-            source_type="manual",
-            content=f"C{i}",
-            content_hash=f"h{i}" + "0" * 62,
-            chunk_index=0,
-            token_count=5,
-            embedding_json=json.dumps([1.0, 0.0, 0.0]),
-        ))
+    db.add(AsesorChunk(
+        source="doc0.txt",
+        source_type="manual",
+        content="Contenido casi igual al query",
+        content_hash="h0" + "0" * 62,
+        chunk_index=0,
+        token_count=5,
+        embedding_json=json.dumps([1.0, 0.0, 0.0]),
+    ))
+    db.add(AsesorChunk(
+        source="doc1.txt",
+        source_type="manual",
+        content="Contenido muy diferente, no debe aparecer",
+        content_hash="h1" + "0" * 62,
+        chunk_index=0,
+        token_count=5,
+        embedding_json=json.dumps([0.0, 0.0, 1.0]),
+    ))
     db.commit()
     result = retrieve(db, [1.0, 0.0, 0.0], top_k=5, min_similarity=0.99)
     assert len(result) == 1
+    assert result[0]["source"] == "doc0.txt"
     assert result[0]["score"] >= 0.99

@@ -19,6 +19,7 @@ type Page =
   | 'encargados-contrato'
   | 'consentimientos'
   | 'eipd'
+  | 'asesor'
   ;
 
 type NavItem = { key: Page; label: string; icon: string; roles: string[] };
@@ -47,7 +48,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Análisis',
     items: [
       { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      // { key: 'asesor', label: 'Asesor', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'asesor', label: 'Asesor', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     ],
   },
   {
