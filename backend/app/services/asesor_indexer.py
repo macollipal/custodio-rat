@@ -13,7 +13,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings, BASE_DIR
+from app.core.config import settings, BASE_DIR, BASE_DIR
 from app.models.asesor import AsesorChunk
 from app.services.asesor_chunker import chunk_text
 from app.services.asesor_embedder import embed_texts
@@ -56,8 +56,11 @@ def _hash(content: str) -> str:
 
 def list_corpus_files(corpus_path: Optional[str] = None) -> List[str]:
     """Lista archivos soportados en el corpus."""
-    root = corpus_path or settings.asesor_config()["corpus_path"]
-    if not os.path.isdir(root):
+    rel_path = corpus_path or settings.asesor_config()["corpus_path"]
+    root = BASE_DIR / rel_path
+    logger.info(f"list_corpus_files: BASE_DIR={BASE_DIR} rel_path={rel_path} root={root} exists={root.exists()}")
+    if not root.is_dir():
+        logger.warning(f"list_corpus_files: corpus dir does not exist: {root}")
         return []
     files: List[str] = []
     for dirpath, _, filenames in os.walk(root):

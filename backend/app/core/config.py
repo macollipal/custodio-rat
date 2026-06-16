@@ -6,7 +6,17 @@ Carga variables de entorno y expone un objeto Settings reutilizable.
 from pydantic_settings import BaseSettings
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+_config_py = Path(__file__).resolve()
+# En Vercel: __file__ = /var/task/backend/app/core/config.py → parent.parent.parent = /var/task/backend
+# En local: __file__ = .../backend/app/core/config.py → parent.parent.parent = .../backend
+# Nos detenemos en el directorio que contiene 'app' y 'data' para encontrar la raíz útil
+_backend_root = _config_py.parent.parent.parent
+# Si 'data' existe como sibling de 'backend', la raíz es el padre (repo root)
+# Si 'data' existe dentro de 'backend', la raíz es 'backend'
+if (_backend_root / "data").is_dir():
+    BASE_DIR = _backend_root
+else:
+    BASE_DIR = _backend_root.parent
 
 
 class Settings(BaseSettings):
