@@ -22,7 +22,7 @@ def _embed_cohere(texts: List[str], input_type: str) -> List[List[float]]:
     if not settings.COHERE_API_KEY:
         raise RuntimeError(
             "COHERE_API_KEY no configurada. "
-            "Configura la API key de Cohere en backend/.env para usar el Asesor."
+            "Agrega COHERE_API_KEY en Vercel QA Environment Variables."
         )
     payload = {
         "model": COHERE_MODEL,

@@ -177,7 +177,7 @@ def get_stats(db: Session) -> dict:
         chunks_por_source[row[0]] = chunks_por_source.get(row[0], 0) + 1
     last = db.query(AsesorChunk).order_by(AsesorChunk.created_at.desc()).first()
     ultimo = last.created_at if last else None
-    provider = "minimax" if settings.MINIMAX_API_KEY else "none"
+    provider = "cohere" if settings.COHERE_API_KEY else ("groq" if settings.GROQ_API_KEY else "none")
     return {
         "total_chunks": total_chunks,
         "total_documents": total_documents,
