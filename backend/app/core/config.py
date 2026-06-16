@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ASESOR_LLM_MAX_TOKENS: int = 1000
     ASESOR_LLM_TEMPERATURE: float = 0.3
     ASESOR_CORPUS_PATH: str = "data/asesor_corpus"
-    ASESOR_EMBEDDING_MODEL: str = "embo-01"
+    ASESOR_EMBEDDING_MODEL: str = "MiniMax-M2.7"
 
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
