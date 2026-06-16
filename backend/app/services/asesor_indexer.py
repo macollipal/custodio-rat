@@ -131,7 +131,7 @@ async def index_corpus(
             # Generar embeddings en batch
             texts = [c["content"] for c in new_chunks]
             try:
-                embs, provider_used = await embed_texts(texts)
+                embs, provider_used = embed_texts(texts)
             except Exception as e:
                 errors.append(f"Embeddings fallaron para {path}: {e}")
                 continue

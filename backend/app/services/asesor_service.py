@@ -7,7 +7,7 @@ import logging
 import time
 from typing import List
 
-import httpx
+import requests
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -36,7 +36,7 @@ ASESOR_SYSTEM_PROMPT = (
 )
 
 
-async def _call_llm_minimax(messages: list) -> str:
+def _call_llm_minimax(messages: list) -> str:
     if not settings.MINIMAX_API_KEY:
         raise RuntimeError("MINIMAX_API_KEY no configurada")
     cfg = settings.asesor_config()
@@ -50,13 +50,12 @@ async def _call_llm_minimax(messages: list) -> str:
         "Authorization": f"Bearer {settings.MINIMAX_API_KEY}",
         "Content-Type": "application/json",
     }
-    async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(
-            "https://api.minimaxi.com/v1/chat/completions",
-            json=payload, headers=headers,
-        )
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"].strip()
+    resp = requests.post(
+        "https://api.minimaxi.com/v1/chat/completions",
+        json=payload, headers=headers, timeout=60,
+    )
+    resp.raise_for_status()
+    return resp.json()["choices"][0]["message"]["content"].strip()
 
 
 def _build_prompt(question: str, chunks: List[dict]) -> list:
@@ -82,7 +81,7 @@ async def ask(db: Session, question: str, context_extra: str = "") -> dict:
     Retorna {answer, sources, provider, embedding_provider, latency_ms}.
     """
     start = time.time()
-    query_embedding, emb_provider = await embed_query(question)
+    query_embedding, emb_provider = embed_query(question)
     chunks = retrieve(db, query_embedding)
 
     if not chunks:
@@ -105,7 +104,7 @@ async def ask(db: Session, question: str, context_extra: str = "") -> dict:
             "MINIMAX_API_KEY no configurada. "
             "El Asesor requiere MINIMAX_API_KEY para funcionar."
         )
-    answer = await _call_llm_minimax(messages)
+    answer = _call_llm_minimax(messages)
     provider = "minimax"
 
     latency = int((time.time() - start) * 1000)

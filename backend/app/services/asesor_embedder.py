@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-import httpx
+import requests
 
 from app.core.config import settings
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 MINIMAX_EMBEDDINGS_URL = "https://api.minimaxi.com/v1/embeddings"
 
 
-async def embed_texts(texts: List[str], provider_hint: Optional[str] = None) -> tuple[List[List[float]], str]:
+def embed_texts(texts: List[str], provider_hint: Optional[str] = None) -> tuple[List[List[float]], str]:
     """
     Genera embeddings via MiniMax.
     Retorna (embeddings, provider_usado).
@@ -39,14 +39,13 @@ async def embed_texts(texts: List[str], provider_hint: Optional[str] = None) -> 
         "model": cfg["embedding_model"],
         "input": texts,
     }
-    async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(MINIMAX_EMBEDDINGS_URL, json=payload, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
+    resp = requests.post(MINIMAX_EMBEDDINGS_URL, json=payload, headers=headers, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
     return [item["embedding"] for item in data["data"]], "minimax"
 
 
-async def embed_query(text: str) -> tuple[List[float], str]:
+def embed_query(text: str) -> tuple[List[float], str]:
     """Genera embedding de una sola query."""
-    embs, provider = await embed_texts([text])
+    embs, provider = embed_texts([text])
     return embs[0], provider
