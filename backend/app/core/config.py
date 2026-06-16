@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_CHAT_MODEL: str = "llama-3.3-70b-versatile"
 
+    COHERE_API_KEY: str = ""
+
     ASESOR_CONFIG: str = ""
     ASESOR_CHUNK_SIZE: int = 800
     ASESOR_CHUNK_OVERLAP: int = 100
