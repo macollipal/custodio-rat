@@ -42,7 +42,21 @@ def embed_texts(texts: List[str], provider_hint: Optional[str] = None) -> tuple[
     resp = requests.post(MINIMAX_EMBEDDINGS_URL, json=payload, headers=headers, timeout=60)
     resp.raise_for_status()
     data = resp.json()
-    return [item["embedding"] for item in data["data"]], "minimax"
+
+    logger.info(f"MiniMax embeddings response keys: {list(data.keys())[:10]}")
+    if len(str(data)) > 200:
+        logger.debug(f"MiniMax embeddings full response (truncated): {str(data)[:500]}")
+
+    if "data" in data and isinstance(data["data"], list):
+        return [item["embedding"] for item in data["data"]], "minimax"
+
+    if "embedding" in data:
+        return [data["embedding"]], "minimax"
+
+    raise RuntimeError(
+        f"MiniMax embeddings formato inesperado. Keys: {list(data.keys())}. "
+        f"Response (first 300 chars): {str(data)[:300]}"
+    )
 
 
 def embed_query(text: str) -> tuple[List[float], str]:

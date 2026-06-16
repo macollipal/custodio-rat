@@ -55,7 +55,17 @@ def _call_llm_minimax(messages: list) -> str:
         json=payload, headers=headers, timeout=60,
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    data = resp.json()
+
+    logger.info(f"MiniMax chat response keys: {list(data.keys())[:10]}")
+
+    try:
+        return data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError) as e:
+        raise RuntimeError(
+            f"MiniMax chat completions formato inesperado. Keys: {list(data.keys())}. "
+            f"Error: {e}. Response (first 300): {str(data)[:300]}"
+        )
 
 
 def _build_prompt(question: str, chunks: List[dict]) -> list:

@@ -74,7 +74,16 @@ async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_cur
             timeout=30,
         )
         resp.raise_for_status()
-        answer = resp.json()["choices"][0]["message"]["content"].strip()
+        data = resp.json()
+
+        try:
+            answer = data["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, TypeError) as e:
+            from fastapi import HTTPException as HTTPExc, status
+            raise HTTPExc(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"MiniMax formato inesperado. Keys: {list(data.keys())}. Error: {e}"
+            )
     except Exception as e:
         from fastapi import HTTPException as HTTPExc, status
         raise HTTPExc(
