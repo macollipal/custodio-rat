@@ -81,7 +81,10 @@ migrate_to_neon.py
 
 # Archives (no versionar)
 archive/
-paso/
+paso/*
+!paso/desarrollo_de_software_estandar/
+!paso/desarrollo_de_software_estandar/_build/
+!paso/desarrollo_de_software_estandar/_build/**
 
 # Ambiente
 .env
