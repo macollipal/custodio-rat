@@ -19,13 +19,20 @@ export default function AsesorPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const currentUserId = user ? String(user.id) : null;
+    const savedUserId = localStorage.getItem('custodio_user');
+    if (savedUserId && currentUserId && savedUserId !== currentUserId) {
+      setMessages([]);
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setMessages(JSON.parse(raw));
     } catch {
       // ignore
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
