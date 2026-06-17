@@ -12,7 +12,7 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from sqlalchemy.orm import Session
 
@@ -58,14 +58,28 @@ def _hash(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
-def list_corpus_files(db: Optional[Session] = None, corpus_path: Optional[str] = None) -> List[str]:
+def list_corpus_files(db_or_path: Optional[Union[Session, str]] = None, corpus_path: Optional[str] = None) -> List[str]:
     """Lista archivos soportados para indexar.
 
     Prioriza BD (documentos subidos a OCI) con fallback a filesystem.
     Si la tabla AsesorCorpusDocument tiene documentos activos, retorna solo
     los object_names de OCI (que se descargan durante el index).
     Si la BD está vacía, usa el filesystem local (backwards compatible).
+
+    Calling conventions:
+      - list_corpus_files(db)                     → usa db para BD, fallback FS
+      - list_corpus_files(db, corpus_path)         → usa db para BD, FS en corpus_path
+      - list_corpus_files(corpus_path)             → solo FS (backwards compat test)
     """
+    db: Optional[Session] = None
+    fs_path: Optional[str] = None
+
+    if isinstance(db_or_path, Session):
+        db = db_or_path
+        fs_path = corpus_path
+    elif isinstance(db_or_path, str):
+        fs_path = db_or_path
+
     if db is not None:
         bd_docs = db.query(AsesorCorpusDocument).filter(
             AsesorCorpusDocument.status == "active"
@@ -74,7 +88,7 @@ def list_corpus_files(db: Optional[Session] = None, corpus_path: Optional[str] =
             logger.info(f"list_corpus_files: usando {len(bd_docs)} documentos de BD (OCI)")
             return [doc.object_name for doc in bd_docs]
 
-    rel_path = corpus_path or settings.asesor_config()["corpus_path"]
+    rel_path = fs_path or settings.asesor_config()["corpus_path"]
     root = BASE_DIR / rel_path
     logger.info(f"list_corpus_files: BASE_DIR={BASE_DIR} rel_path={rel_path} root={root} exists={root.exists()}")
     if not root.is_dir():

@@ -20,7 +20,6 @@ class AsesorCorpusDocument(Base):
     __tablename__ = "asesor_corpus_documents"
     __table_args__ = (
         Index("ix_asesor_corpus_documents_object_name", "object_name"),
-        Index("ix_asesor_corpus_documents_content_hash", "content_hash"),
         Index("ix_asesor_corpus_documents_status", "status"),
     )
 
