@@ -1,5 +1,5 @@
 """
-Modelo Asesor: chunks del corpus con embeddings.
+Modelos Asesor: chunks del corpus con embeddings y documentos del corpus.
 
 v1.0 almacena el embedding como JSON serializado (List[float]) en un
 campo Text para máxima portabilidad (SQLite local + Neon prod).
@@ -10,10 +10,40 @@ Migración a pgvector (v1.1):
     en el modelo. Mantener `embedding_json` durante la transición.
 """
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, Index, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+
+
+class AsesorCorpusDocument(Base):
+    __tablename__ = "asesor_corpus_documents"
+    __table_args__ = (
+        Index("ix_asesor_corpus_documents_object_name", "object_name"),
+        Index("ix_asesor_corpus_documents_content_hash", "content_hash"),
+        Index("ix_asesor_corpus_documents_status", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    object_name: Mapped[str] = mapped_column(String(512), nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(100), nullable=False, default="text/markdown")
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, default="otros")
+    chunks_indexed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
+    uploaded_by_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    uploaded_by_username: Mapped[str] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
 
 class AsesorChunk(Base):

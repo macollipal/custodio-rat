@@ -7,6 +7,7 @@ import { API_BASE } from '@/lib/constants';
 import { getDbHealth, getAuditoriaGlobal, type DbHealth } from '@/lib/api';
 import { getToken } from '@/lib/api';
 import StorageTab from '@/components/configuracion/StorageTab';
+import AsesorCorpusTab from '@/components/configuracion/AsesorCorpusTab';
 
 interface AuditEntry {
   id: number;
@@ -33,13 +34,22 @@ interface SolicitudDerecho {
   updated_at: string;
 }
 
-const TABS = [
+const BASE_TABS = [
   { key: 'sistema', label: 'Sistema' },
   { key: 'registros', label: 'Último log' },
   { key: 'exportacion', label: 'Exportación' },
   { key: 'almacenamiento', label: 'Almacenamiento' },
   { key: 'feriados', label: 'Feriados' },
 ];
+
+function getTabs(isSuperadmin: boolean) {
+  if (!isSuperadmin) return BASE_TABS;
+  return [
+    ...BASE_TABS.slice(0, 2),
+    { key: 'asesor_corpus', label: 'Asesor · Corpus' },
+    ...BASE_TABS.slice(2),
+  ];
+}
 
 const EXPORT_KEY = 'custodio_export_config';
 
@@ -338,6 +348,8 @@ function SolicitudRow({ sol, onResponder }: { sol: SolicitudDerecho; onResponder
 export default function ConfiguracionPage() {
   const { user, company } = useApp();
   const [tab, setTab] = useState('sistema');
+  const isSuperadmin = user?.rol_global === 'superadmin';
+  const TABS = getTabs(isSuperadmin);
   const [dbHealth, setDbHealth] = useState<DbHealth | null>(null);
   const [loadingDb, setLoadingDb] = useState(true);
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
@@ -712,6 +724,10 @@ export default function ConfiguracionPage() {
       {/* TAB 4: Almacenamiento */}
       {tab === 'almacenamiento' && (
         <StorageTab />
+      )}
+      {/* TAB: Asesor Corpus */}
+      {tab === 'asesor_corpus' && isSuperadmin && (
+        <AsesorCorpusTab />
       )}
       {/* TAB 5: Feriados */}
       {tab === 'feriados' && (

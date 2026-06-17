@@ -1,20 +1,28 @@
 """
 Endpoints admin del Asesor (solo superadmin).
 """
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status
 from sqlalchemy.orm import Session
 
 from app.core.limiter import limiter
 from app.database.database import get_db
 from app.routes.deps import get_current_user
 from app.schemas.asesor import (
+    AsesorCorpusDocumentSchema,
+    AsesorDeleteResponse,
+    AsesorDocumentsListResponse,
     AsesorIndexRequest,
     AsesorIndexResponse,
     AsesorStatsResponse,
+    AsesorUploadResponse,
 )
+from app.services.asesor_corpus_store import get_asesor_corpus_store
 from app.services.asesor_indexer import index_corpus, get_stats
 from app.services.audit_service import log_audit
 from app.models.user import User, RolGlobal
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/asesor", tags=["Admin · Asesor"])
 
@@ -108,8 +116,163 @@ async def delete_chunk_endpoint(
         )
         db.commit()
     except Exception as e:
-        import logging
         logging.getLogger(__name__).warning(f"Audit log failed: {e}")
         db.rollback()
 
     return {"ok": True, "id": chunk_id}
+
+
+@router.get("/documents", response_model=AsesorDocumentsListResponse)
+@limiter.limit("30/minute")
+async def list_documents_endpoint(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Lista todos los documentos del corpus con metadata."""
+    require_superadmin(current_user)
+    store = get_asesor_corpus_store()
+    docs = store.list_documents(db)
+    return {
+        "documents": [AsesorCorpusDocumentSchema.model_validate(d) for d in docs],
+        "total": len(docs),
+    }
+
+
+@router.post("/upload", response_model=AsesorUploadResponse)
+@limiter.limit("10/minute")
+async def upload_document_endpoint(
+    request: Request,
+    file: UploadFile = File(..., description="Archivo .md o .txt (max 5MB)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Sube un archivo al corpus y lo indexa automáticamente."""
+    require_superadmin(current_user)
+
+    content = await file.read()
+    content_type = file.content_type or "text/plain"
+
+    try:
+        store = get_asesor_corpus_store()
+        doc, index_result = store.upload(
+            db=db,
+            file_content=content,
+            original_filename=file.filename or "documento.txt",
+            content_type=content_type,
+            uploaded_by_id=current_user.id,
+            uploaded_by_username=current_user.username,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al subir archivo: {e}",
+        )
+
+    try:
+        log_audit(
+            db=db,
+            entidad="asesor",
+            entidad_id=doc.id,
+            accion="upload",
+            usuario=current_user.username,
+            detalle={
+                "filename": doc.original_filename,
+                "size_bytes": doc.size_bytes,
+                "chunks_indexed": doc.chunks_indexed,
+            },
+            ip_origen=request.client.host if request.client else None,
+        )
+        db.commit()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Audit log failed: {e}")
+
+    return {
+        "doc_id": doc.id,
+        "original_filename": doc.original_filename,
+        "title": doc.title or doc.original_filename,
+        "source_type": doc.source_type,
+        "size_bytes": doc.size_bytes,
+        "chunks_indexed": doc.chunks_indexed,
+        "indexed": index_result["indexed"],
+        "skipped": index_result["skipped"],
+    }
+
+
+@router.get("/documents/{doc_id}/download")
+@limiter.limit("30/minute")
+async def download_document_endpoint(
+    doc_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Genera una URL de descarga para el documento (presigned URL si es OCI)."""
+    require_superadmin(current_user)
+    store = get_asesor_corpus_store()
+    try:
+        url = store.get_download_url(db, doc_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    except Exception as e:
+        logger.error(f"Download URL failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al generar URL: {e}",
+        )
+    return {"download_url": url}
+
+
+@router.delete("/documents/{doc_id}", response_model=AsesorDeleteResponse)
+@limiter.limit("10/minute")
+async def delete_document_endpoint(
+    doc_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Elimina un documento del corpus (soft delete + borra chunks de BD + borra de OCI)."""
+    require_superadmin(current_user)
+    store = get_asesor_corpus_store()
+    try:
+        doc = store.delete_document(db, doc_id, deleted_by_username=current_user.username)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    except Exception as e:
+        logger.error(f"Delete document failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al eliminar documento: {e}",
+        )
+
+    try:
+        log_audit(
+            db=db,
+            entidad="asesor",
+            entidad_id=doc_id,
+            accion="delete_document",
+            usuario=current_user.username,
+            detalle={
+                "filename": doc.original_filename,
+                "chunks_indexed": doc.chunks_indexed,
+            },
+            ip_origen=request.client.host if request.client else None,
+        )
+        db.commit()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Audit log failed: {e}")
+
+    from app.models.asesor import AsesorChunk
+    chunks_removed = db.query(AsesorChunk).filter(
+        AsesorChunk.source == doc.object_name
+    ).count()
+
+    return {
+        "ok": True,
+        "doc_id": doc_id,
+        "original_filename": doc.original_filename,
+        "chunks_removed": chunks_removed,
+    }

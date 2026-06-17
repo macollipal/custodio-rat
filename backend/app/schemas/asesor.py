@@ -46,3 +46,46 @@ class AsesorStatsResponse(BaseModel):
     chunks_por_source: dict
     ultimo_indexado: Optional[datetime] = None
     provider: str
+
+
+class AsesorCorpusDocumentSchema(BaseModel):
+    id: int
+    object_name: str
+    original_filename: str
+    content_type: str
+    size_bytes: int
+    content_hash: str
+    title: Optional[str] = None
+    source_type: str
+    chunks_indexed: int
+    status: str
+    uploaded_by_id: Optional[int] = None
+    uploaded_by_username: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AsesorUploadResponse(BaseModel):
+    doc_id: int
+    original_filename: str
+    title: str
+    source_type: str
+    size_bytes: int
+    chunks_indexed: int
+    indexed: int
+    skipped: int
+
+
+class AsesorDeleteResponse(BaseModel):
+    ok: bool
+    doc_id: int
+    original_filename: str
+    chunks_removed: int
+
+
+class AsesorDocumentsListResponse(BaseModel):
+    documents: List[AsesorCorpusDocumentSchema]
+    total: int

@@ -1,6 +1,9 @@
 """
 Asesor Indexer: indexa el corpus a la BD con embeddings.
 Idempotente por sha256 del contenido.
+
+Prioriza documentos de BD (AsesorCorpusDocument) sobre filesystem.
+Los documentos subidos via /upload se guardan en OCI y se indexan desde ahí.
 """
 from __future__ import annotations
 import hashlib
@@ -9,12 +12,13 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
 from app.core.config import settings, BASE_DIR, BASE_DIR
-from app.models.asesor import AsesorChunk
+from app.core.storage import get_storage_backend
+from app.models.asesor import AsesorChunk, AsesorCorpusDocument
 from app.services.asesor_chunker import chunk_text
 from app.services.asesor_embedder import embed_texts
 
@@ -54,8 +58,22 @@ def _hash(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
-def list_corpus_files(corpus_path: Optional[str] = None) -> List[str]:
-    """Lista archivos soportados en el corpus."""
+def list_corpus_files(db: Optional[Session] = None, corpus_path: Optional[str] = None) -> List[str]:
+    """Lista archivos soportados para indexar.
+
+    Prioriza BD (documentos subidos a OCI) con fallback a filesystem.
+    Si la tabla AsesorCorpusDocument tiene documentos activos, retorna solo
+    los object_names de OCI (que se descargan durante el index).
+    Si la BD está vacía, usa el filesystem local (backwards compatible).
+    """
+    if db is not None:
+        bd_docs = db.query(AsesorCorpusDocument).filter(
+            AsesorCorpusDocument.status == "active"
+        ).all()
+        if bd_docs:
+            logger.info(f"list_corpus_files: usando {len(bd_docs)} documentos de BD (OCI)")
+            return [doc.object_name for doc in bd_docs]
+
     rel_path = corpus_path or settings.asesor_config()["corpus_path"]
     root = BASE_DIR / rel_path
     logger.info(f"list_corpus_files: BASE_DIR={BASE_DIR} rel_path={rel_path} root={root} exists={root.exists()}")
@@ -79,50 +97,65 @@ async def index_corpus(
 ) -> dict:
     """
     Indexa el corpus. Retorna {indexed, skipped, errors, duration_ms}.
-    Solo permite archivos dentro de corpus_path (previene path traversal).
+
+    Acepta tanto archivos del filesystem como object_names de OCI
+    (asesor_corpus/<nombre>.md). Si el path no existe en el filesystem,
+    se intenta descargar desde OCI.
+
+    Solo permite archivos dentro de corpus_path (previene path traversal)
+    cuando se usan paths del filesystem.
     """
     start = time.time()
     resolved_corpus = corpus_path or settings.asesor_config()["corpus_path"]
     logger.info(f"Asesor indexer: corpus_path={resolved_corpus}, force={force}, paths={paths}")
     logger.info(f"Asesor indexer: BASE_DIR={BASE_DIR}, cwd={os.getcwd()}")
-    files = paths if paths else list_corpus_files(corpus_path)
+    files = paths if paths else list_corpus_files(db, corpus_path)
     logger.info(f"Asesor indexer: found {len(files)} files: {files}")
     if not files:
-        return {"indexed": 0, "skipped": 0, "errors": ["No hay archivos para indexar en " + resolved_corpus], "duration_ms": 0}
+        return {"indexed": 0, "skipped": 0, "errors": ["No hay archivos para indexar"], "duration_ms": 0}
 
+    safe_files: List[str] = []
     if paths:
         root = os.path.abspath(corpus_path or settings.asesor_config()["corpus_path"])
-        safe_files = []
         for p in paths:
             abs_path = os.path.abspath(p)
-            if not abs_path.startswith(root + os.sep) and abs_path != root:
-                continue
-            if os.path.isfile(abs_path):
-                safe_files.append(abs_path)
+            if abs_path.startswith(root + os.sep) or abs_path == root:
+                if os.path.isfile(abs_path):
+                    safe_files.append(abs_path)
+            elif p.startswith(CORPUS_PREFIX + "/"):
+                safe_files.append(p)
         files = safe_files
 
     indexed = 0
     skipped = 0
     errors: List[str] = []
     provider_used = "none"
+    storage = get_storage_backend() if any(f.startswith(CORPUS_PREFIX + "/") for f in files) else None
 
     for path in files:
         try:
-            if not os.path.exists(path):
+            is_oci = path.startswith(CORPUS_PREFIX + "/")
+            if is_oci and storage:
+                try:
+                    content_bytes = storage.download(path)
+                    content = content_bytes.decode("utf-8")
+                except FileNotFoundError:
+                    errors.append(f"No se encontró en storage: {path}")
+                    continue
+            elif os.path.exists(path):
+                content = _read_file(path)
+            else:
                 errors.append(f"No existe: {path}")
                 continue
 
-            content = _read_file(path)
             chunks = chunk_text(content, title_hint=_infer_title(path, content))
             if not chunks:
                 errors.append(f"Sin chunks: {path}")
                 continue
 
-            # Si force, eliminar chunks previos del source
             if force:
                 db.query(AsesorChunk).filter(AsesorChunk.source == path).delete()
 
-            # Calcular hashes primero para saber cuáles son nuevos
             new_chunks = []
             for c in chunks:
                 h = _hash(c["content"])
@@ -135,7 +168,6 @@ async def index_corpus(
             if not new_chunks:
                 continue
 
-            # Generar embeddings en batch
             texts = [c["content"] for c in new_chunks]
             try:
                 embs, provider_used = embed_texts(texts)
@@ -144,6 +176,14 @@ async def index_corpus(
                 continue
 
             for c, emb in zip(new_chunks, embs):
+                doc_meta = {}
+                if is_oci:
+                    doc = db.query(AsesorCorpusDocument).filter(
+                        AsesorCorpusDocument.object_name == path,
+                        AsesorCorpusDocument.status == "active",
+                    ).first()
+                    if doc:
+                        doc_meta["document_id"] = doc.id
                 chunk_row = AsesorChunk(
                     source=path,
                     source_type=_infer_source_type(path),
@@ -153,7 +193,11 @@ async def index_corpus(
                     chunk_index=c["chunk_index"],
                     token_count=c["token_count"],
                     embedding_json=json.dumps(emb),
-                    chunk_metadata=json.dumps({"file_size": len(content), "indexed_at": datetime.now(timezone.utc).isoformat()}),
+                    chunk_metadata=json.dumps({
+                        "file_size": len(content_bytes) if is_oci else len(content.encode("utf-8")),
+                        "indexed_at": datetime.now(timezone.utc).isoformat(),
+                        **doc_meta,
+                    }),
                 )
                 db.add(chunk_row)
                 indexed += 1
