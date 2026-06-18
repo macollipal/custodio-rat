@@ -1,4 +1,5 @@
 'use client';
+// QW10: Formulario público ARCO con representantes + archivos + tracking token
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
