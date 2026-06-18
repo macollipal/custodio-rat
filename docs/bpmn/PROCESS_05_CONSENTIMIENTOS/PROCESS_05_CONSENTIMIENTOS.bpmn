@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:do="http://www.omg.org/spec/DD/20100524/DO"
+                  xmlns:bioc="http://www.omg.org/spec/BPMN/20100524/BIOC"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Process_05"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:collaboration id="Collaboration_Consentimientos">
+    <bpmn:participant id="Participant_Custodio_Consentimientos" name="Gestión Consentimientos - Custodio Platform" processRef="Process_Consentimientos"/>
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Titular" name="Titular">
+        <bpmn:flowNodeRef>Start_Solicitud_Consentimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Titular_Revisa_Informacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Titular_Otorga_Consentimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Revocacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Consentimiento_Revocado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>Tarea_DPO_Disenar_Formulario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_DPO_Configurar_Texto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Notificar_DPO</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Tarea_Sistema_Publicar_Formulario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Registrar_Consentimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Generar_Evidencia_Hash</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Almacenar_Hashchain</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Actualizar_RAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Validez</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Registrar_Invalido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Asignar_Version</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Comparar_Version</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cambios_Significativos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Registrar_Revocacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Verificar_Consentimiento_Existe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Invalidar_Consentimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Registrar_Hashchain_Revocacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Notificar_Sistemas_Dependientes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Actualizar_RAT_Revocacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Revision_12_Meses</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Identificar_Consentimientos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Respuesta_Titular</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Registrar_Inactivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Sistema_Actualizar_RAT_Inactivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Consentimiento_Registrado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Nueva_Obtension</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Sistema_Notificar_Cambios</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema_Correo" name="Sistema de Correo">
+        <bpmn:flowNodeRef>Tarea_Correo_Solicitar_Renovacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Correo_Confirmacion_Revocacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tarea_Correo_Notificar_Cambios</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_Consentimientos" name="Gestión Consentimientos" isExecutable="true">
+
+    <!-- DATA OBJECTS -->
+    <bpmn:dataObject id="DataObject_FormularioConsentimiento" name="FormularioConsentimiento"/>
+    <bpmn:dataObject id="DataObject_RegistroConsentimiento" name="RegistroConsentimiento"/>
+    <bpmn:dataObject id="DataObject_EvidenciaHash" name="EvidenciaHash"/>
+    <bpmn:dataObject id="DataObject_NotificacionRenewal" name="NotificacionRenewal"/>
+
+    <!-- ==================== -->
+    <!-- FLOW: OBTENCIÓN -->
+    <!-- ==================== -->
+
+    <!-- Start Event: Solicitud de consentimiento requerida -->
+    <bpmn:startEvent id="Start_Solicitud_Consentimiento" name="Solicitud de consentimiento requerida">
+      <bpmn:outgoing>Flow_A1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Tarea: Diseñar formulario consentimiento (DPO) -->
+    <bpmn:userTask id="Tarea_DPO_Disenar_Formulario" name="Diseñar formulario consentimiento">
+      <bpmn:documentation>DPO diseña formulario con campos: finalidad, categorias_datos, terceros, tiempo_retention, derecho_retirar</bpmn:documentation>
+      <bpmn:incoming>Flow_A1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Tarea: Configurar texto información (DPO) -->
+    <bpmn:userTask id="Tarea_DPO_Configurar_Texto" name="Configurar texto información">
+      <bpmn:documentation>DPO configura texto completo de divulgación: identidad responsable, propósito, tipos de datos, derechos, cómo retirar</bpmn:documentation>
+      <bpmn:incoming>Flow_A2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Tarea: Publicar formulario consentimiento (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Publicar_Formulario" name="Publicar formulario consentimiento">
+      <bpmn:documentation>Sistema publica formulario en app/website y habilita captura de metadatos</bpmn:documentation>
+      <bpmn:incoming>Flow_A3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A4</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DAO_Publicar">
+        <bpmn:targetRef>DataObject_FormularioConsentimiento</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+
+    <!-- ==================== -->
+    <!-- FLOW: REGISTRO -->
+    <!-- ==================== -->
+
+    <!-- Tarea: Titular revisa información (Titular) -->
+    <bpmn:userTask id="Tarea_Titular_Revisa_Informacion" name="Titular revisa información">
+      <bpmn:incoming>Flow_A4</bpmn:incoming>
+      <bpmn:outgoing>Flow_A5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Tarea: Titular otorga consentimiento (Titular) -->
+    <bpmn:userTask id="Tarea_Titular_Otorga_Consentimiento" name="Titular otorga consentimiento">
+      <bpmn:documentation>Checkbox explícito o acción afirmativa clara. Medio: WEB/MOVIL/PAPEL/VERBAL</bpmn:documentation>
+      <bpmn:incoming>Flow_A5</bpmn:incoming>
+      <bpmn:outgoing>Flow_A6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Tarea: Registrar consentimiento con timestamp (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Registrar_Consentimiento" name="Registrar consentimiento con timestamp">
+      <bpmn:documentation>Genera consent_id, guarda: titular_id, finalidad, version, fecha_otorgamiento, ip_address, user_agent, medio</bpmn:documentation>
+      <bpmn:incoming>Flow_A6</bpmn:incoming>
+      <bpmn:outgoing>Flow_A7</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DAO_Registro">
+        <bpmn:targetRef>DataObject_RegistroConsentimiento</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Generar evidencia hash (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Generar_Evidencia_Hash" name="Generar evidencia hash">
+      <bpmn:documentation>Hash de: consent_text + timestamp + ip_address (SHA-256)</bpmn:documentation>
+      <bpmn:incoming>Flow_A7</bpmn:incoming>
+      <bpmn:outgoing>Flow_A8</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DAO_Hash">
+        <bpmn:targetRef>DataObject_EvidenciaHash</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Almacenar evidencia en hashchain M1 (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Almacenar_Hashchain" name="Almacenar evidencia en hashchain M1">
+      <bpmn:documentation>Inserta hash en cadena de bloques privada con referencia al bloque anterior</bpmn:documentation>
+      <bpmn:incoming>Flow_A8</bpmn:incoming>
+      <bpmn:outgoing>Flow_A9</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Actualizar RAT automáticamente (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Actualizar_RAT" name="Actualizar RAT automáticamente">
+      <bpmn:documentation>Si RAT.actividad requiere consent → RAT.consentimiento_registrado = true, vincula consent_id</bpmn:documentation>
+      <bpmn:incoming>Flow_A9</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ==================== -->
+    <!-- FLOW: VERIFICACIÓN -->
+    <!-- ==================== -->
+
+    <!-- Gateway: ¿Consentimiento válido? (FISU) -->
+    <bpmn:exclusiveGateway id="Gateway_Validez" name="¿Consentimiento válido?">
+      <bpmn:incoming>Flow_A10</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11_Valido</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A11_Invalido</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Rama NO: Registrar consentimiento inválido -->
+    <bpmn:serviceTask id="Tarea_Sistema_Registrar_Invalido" name="Registrar consentimiento inválido">
+      <bpmn:incoming>Flow_A11_Invalido</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Notificar DPO (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Notificar_DPO" name="Notificar DPO">
+      <bpmn:documentation>Alerta sobre consentimiento inválido, requiere intervención manual</bpmn:documentation>
+      <bpmn:incoming>Flow_A12</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Rama SÍ: Asignar versión -->
+    <bpmn:serviceTask id="Tarea_Sistema_Asignar_Version" name="Asignar versión">
+      <bpmn:documentation>Formato major.minor (1.0, 1.1, 2.0). Major: cambios sustanciales. Minor: cambios menores.</bpmn:documentation>
+      <bpmn:incoming>Flow_A11_Valido</bpmn:incoming>
+      <bpmn:outgoing>Flow_A14</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Comparar con versión anterior (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Comparar_Version" name="Comparar con versión anterior">
+      <bpmn:documentation>Recupera versión previa del consentimiento del mismo titular, identifica diferencias</bpmn:documentation>
+      <bpmn:incoming>Flow_A14</bpmn:incoming>
+      <bpmn:outgoing>Flow_A15</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Gateway: ¿Cambios significativos? -->
+    <bpmn:exclusiveGateway id="Gateway_Cambios_Significativos" name="¿Cambios significativos?">
+      <bpmn:incoming>Flow_A15</bpmn:incoming>
+      <bpmn:outgoing>Flow_A16_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A16_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Rama SÍ: Notificar titulares con consentimiento previo -->
+    <bpmn:serviceTask id="Task_Sistema_Notificar_Cambios" name="Notificar titulares con consentimiento previo">
+      <bpmn:incoming>Flow_A16_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow_A17</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Notificar cambios (Sistema de Correo) -->
+    <bpmn:serviceTask id="Tarea_Correo_Notificar_Cambios" name="Notificar cambios (Sistema de Correo)">
+      <bpmn:documentation>Descripción de cambios y nueva aceptación requerida. Plazo: 30 días.</bpmn:documentation>
+      <bpmn:incoming>Flow_A17</bpmn:incoming>
+      <bpmn:outgoing>Flow_A18</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DAO_NotificarCambios">
+        <bpmn:targetRef>DataObject_NotificacionRenewal</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+
+    <!-- End Event: Consentimiento registrado -->
+    <bpmn:endEvent id="End_Consentimiento_Registrado" name="Consentimiento registrado">
+      <bpmn:incoming>Flow_A16_No</bpmn:incoming>
+      <bpmn:incoming>Flow_A18</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ==================== -->
+    <!-- FLOW: REVOCACIÓN -->
+    <!-- ==================== -->
+
+    <!-- Start Intermediate: Titular solicita revocación (Signal) -->
+    <bpmn:startEvent id="Start_Revocacion" name="Titular solicita revocación">
+      <bpmn:signalEventDefinition id="Signal_Revocacion"/>
+      <bpmn:outgoing>Flow_B1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Tarea: Registrar solicitud revocación (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Registrar_Revocacion" name="Registrar solicitud revocación">
+      <bpmn:documentation>Almacena fecha_revocation, motivo (opcional)</bpmn:documentation>
+      <bpmn:incoming>Flow_B1</bpmn:incoming>
+      <bpmn:outgoing>Flow_B2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Verificar consentimiento existe (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Verificar_Consentimiento_Existe" name="Verificar consentimiento existe">
+      <bpmn:documentation>Confirma existencia de consentimiento activo para esta finalidad y que el solicitante es el titular</bpmn:documentation>
+      <bpmn:incoming>Flow_B2</bpmn:incoming>
+      <bpmn:outgoing>Flow_B3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Invalidar consentimiento (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Invalidar_Consentimiento" name="Invalidar consentimiento">
+      <bpmn:documentation>Actualiza estado: ACTIVO → REVOGADO, registra fecha y motivo</bpmn:documentation>
+      <bpmn:incoming>Flow_B3</bpmn:incoming>
+      <bpmn:outgoing>Flow_B4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Registrar en hashchain M1 (Revocación) (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Registrar_Hashchain_Revocacion" name="Registrar en hashchain M1">
+      <bpmn:documentation>Inserta entrada de revocación en cadena de evidencia</bpmn:documentation>
+      <bpmn:incoming>Flow_B4</bpmn:incoming>
+      <bpmn:outgoing>Flow_B5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Notificar a sistemas dependientes (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Notificar_Sistemas_Dependientes" name="Notificar a sistemas dependientes">
+      <bpmn:documentation>Deshabilitar tratamiento basado en este consentimiento, confirmar propagación</bpmn:documentation>
+      <bpmn:incoming>Flow_B5</bpmn:incoming>
+      <bpmn:outgoing>Flow_B6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Actualizar RAT (Revocación) (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Actualizar_RAT_Revocacion" name="Actualizar RAT">
+      <bpmn:documentation>RAT.consentimiento_activo = false para esta finalidad, vincula fecha_revocation</bpmn:documentation>
+      <bpmn:incoming>Flow_B6</bpmn:incoming>
+      <bpmn:outgoing>Flow_B7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Enviar confirmación revocación (Sistema de Correo) -->
+    <bpmn:serviceTask id="Tarea_Correo_Confirmacion_Revocacion" name="Enviar confirmación revocación">
+      <bpmn:documentation>Confirmación de revocación, fecha efectiva, derechos残余</bpmn:documentation>
+      <bpmn:incoming>Flow_B7</bpmn:incoming>
+      <bpmn:outgoing>Flow_B8</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- End Event: Consentimiento revocado -->
+    <bpmn:endEvent id="End_Consentimiento_Revocado" name="Consentimiento revocado">
+      <bpmn:incoming>Flow_B8</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ==================== -->
+    <!-- FLOW: REVISIÓN PERIÓDICA -->
+    <!-- ==================== -->
+
+    <!-- Intermediate Timer Event: Revisión 12 meses -->
+    <bpmn:intermediateCatchEvent id="Timer_Revision_12_Meses" name="Revisión consentimiento: 12 meses">
+      <bpmn:timerEventDefinition id="Timer_12Meses">
+        <bpmn:timeDuration>P12M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+      <bpmn:outgoing>Flow_C1</bpmn:outgoing>
+    </bpmn:intermediateCatchEvent>
+
+    <!-- Tarea: Identificar consentimientos > 12 meses (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Identificar_Consentimientos" name="Identificar consentimientos > 12 meses">
+      <bpmn:documentation>Filtra: estado = ACTIVO y fecha_otorgamiento &lt; fecha_actual - 12 meses</bpmn:documentation>
+      <bpmn:incoming>Flow_C1</bpmn:incoming>
+      <bpmn:outgoing>Flow_C2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Solicitar renovación (Sistema de Correo) -->
+    <bpmn:serviceTask id="Tarea_Correo_Solicitar_Renovacion" name="Solicitar renovación">
+      <bpmn:documentation>Recordatorio, enlace para renovar o revocar</bpmn:documentation>
+      <bpmn:incoming>Flow_C2</bpmn:incoming>
+      <bpmn:outgoing>Flow_C3</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DAO_Renovacion">
+        <bpmn:targetRef>DataObject_NotificacionRenewal</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+
+    <!-- Gateway: ¿Titular responde? -->
+    <bpmn:exclusiveGateway id="Gateway_Respuesta_Titular" name="¿Titular responde?">
+      <bpmn:incoming>Flow_C3</bpmn:incoming>
+      <bpmn:outgoing>Flow_C4_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C4_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Rama SÍ: Nueva obtención -->
+    <bpmn:startEvent id="Start_Nueva_Obtension" name="Nueva aceptación">
+      <bpmn:outgoing>Flow_C5</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Rama NO: Registrar como inactivo -->
+    <bpmn:serviceTask id="Tarea_Sistema_Registrar_Inactivo" name="Registrar como inactivo tras 30 días">
+      <bpmn:documentation>Actualiza estado: ACTIVO → INACTIVO, ejecuta acciones de revocación implícita</bpmn:documentation>
+      <bpmn:incoming>Flow_C4_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_C6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Tarea: Actualizar RAT (Inactivo) (Sistema) -->
+    <bpmn:serviceTask id="Tarea_Sistema_Actualizar_RAT_Inactivo" name="Actualizar RAT">
+      <bpmn:documentation>RAT.consentimiento_activo = false</bpmn:documentation>
+      <bpmn:incoming>Flow_C6</bpmn:incoming>
+      <bpmn:outgoing>Flow_C7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ==================== -->
+    <!-- SEQUENCE FLOWS -->
+    <!-- ==================== -->
+
+    <!-- Flow: Obtención -->
+    <bpmn:sequenceFlow id="Flow_A1" name="" sourceRef="Start_Solicitud_Consentimiento" targetRef="Tarea_DPO_Disenar_Formulario"/>
+    <bpmn:sequenceFlow id="Flow_A2" name="" sourceRef="Tarea_DPO_Disenar_Formulario" targetRef="Tarea_DPO_Configurar_Texto"/>
+    <bpmn:sequenceFlow id="Flow_A3" name="" sourceRef="Tarea_DPO_Configurar_Texto" targetRef="Tarea_Sistema_Publicar_Formulario"/>
+    <bpmn:sequenceFlow id="Flow_A4" name="" sourceRef="Tarea_Sistema_Publicar_Formulario" targetRef="Tarea_Titular_Revisa_Informacion"/>
+
+    <!-- Flow: Registro -->
+    <bpmn:sequenceFlow id="Flow_A5" name="" sourceRef="Tarea_Titular_Revisa_Informacion" targetRef="Tarea_Titular_Otorga_Consentimiento"/>
+    <bpmn:sequenceFlow id="Flow_A6" name="" sourceRef="Tarea_Titular_Otorga_Consentimiento" targetRef="Tarea_Sistema_Registrar_Consentimiento"/>
+    <bpmn:sequenceFlow id="Flow_A7" name="" sourceRef="Tarea_Sistema_Registrar_Consentimiento" targetRef="Tarea_Sistema_Generar_Evidencia_Hash"/>
+    <bpmn:sequenceFlow id="Flow_A8" name="" sourceRef="Tarea_Sistema_Generar_Evidencia_Hash" targetRef="Tarea_Sistema_Almacenar_Hashchain"/>
+    <bpmn:sequenceFlow id="Flow_A9" name="" sourceRef="Tarea_Sistema_Almacenar_Hashchain" targetRef="Tarea_Sistema_Actualizar_RAT"/>
+    <bpmn:sequenceFlow id="Flow_A10" name="" sourceRef="Tarea_Sistema_Actualizar_RAT" targetRef="Gateway_Validez"/>
+
+    <!-- Flow: Verificación - Validez -->
+    <bpmn:sequenceFlow id="Flow_A11_Valido" name="Sí" sourceRef="Gateway_Validez" targetRef="Tarea_Sistema_Asignar_Version">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">consentimientoValido = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A11_Invalido" name="No" sourceRef="Gateway_Validez" targetRef="Tarea_Sistema_Registrar_Invalido">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">consentimientoValido = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A12" name="" sourceRef="Tarea_Sistema_Registrar_Invalido" targetRef="Tarea_Sistema_Notificar_DPO"/>
+    <bpmn:sequenceFlow id="Flow_A13" name="" sourceRef="Tarea_Sistema_Notificar_DPO" targetRef="End_Consentimiento_Registrado"/>
+
+    <!-- Flow: Versionado -->
+    <bpmn:sequenceFlow id="Flow_A14" name="" sourceRef="Tarea_Sistema_Asignar_Version" targetRef="Tarea_Sistema_Comparar_Version"/>
+    <bpmn:sequenceFlow id="Flow_A15" name="" sourceRef="Tarea_Sistema_Comparar_Version" targetRef="Gateway_Cambios_Significativos"/>
+    <bpmn:sequenceFlow id="Flow_A16_Si" name="Sí" sourceRef="Gateway_Cambios_Significativos" targetRef="Task_Sistema_Notificar_Cambios">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">cambiosSignificativos = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A16_No" name="No" sourceRef="Gateway_Cambios_Significativos" targetRef="End_Consentimiento_Registrado">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">cambiosSignificativos = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A17" name="" sourceRef="Task_Sistema_Notificar_Cambios" targetRef="Tarea_Correo_Notificar_Cambios"/>
+    <bpmn:sequenceFlow id="Flow_A18" name="" sourceRef="Tarea_Correo_Notificar_Cambios" targetRef="End_Consentimiento_Registrado"/>
+
+    <!-- Flow: Revocación -->
+    <bpmn:sequenceFlow id="Flow_B1" name="" sourceRef="Start_Revocacion" targetRef="Tarea_Sistema_Registrar_Revocacion"/>
+    <bpmn:sequenceFlow id="Flow_B2" name="" sourceRef="Tarea_Sistema_Registrar_Revocacion" targetRef="Tarea_Sistema_Verificar_Consentimiento_Existe"/>
+    <bpmn:sequenceFlow id="Flow_B3" name="" sourceRef="Tarea_Sistema_Verificar_Consentimiento_Existe" targetRef="Tarea_Sistema_Invalidar_Consentimiento"/>
+    <bpmn:sequenceFlow id="Flow_B4" name="" sourceRef="Tarea_Sistema_Invalidar_Consentimiento" targetRef="Tarea_Sistema_Registrar_Hashchain_Revocacion"/>
+    <bpmn:sequenceFlow id="Flow_B5" name="" sourceRef="Tarea_Sistema_Registrar_Hashchain_Revocacion" targetRef="Tarea_Sistema_Notificar_Sistemas_Dependientes"/>
+    <bpmn:sequenceFlow id="Flow_B6" name="" sourceRef="Tarea_Sistema_Notificar_Sistemas_Dependientes" targetRef="Tarea_Sistema_Actualizar_RAT_Revocacion"/>
+    <bpmn:sequenceFlow id="Flow_B7" name="" sourceRef="Tarea_Sistema_Actualizar_RAT_Revocacion" targetRef="Tarea_Correo_Confirmacion_Revocacion"/>
+    <bpmn:sequenceFlow id="Flow_B8" name="" sourceRef="Tarea_Correo_Confirmacion_Revocacion" targetRef="End_Consentimiento_Revocado"/>
+
+    <!-- Flow: Revisión Periódica -->
+    <bpmn:sequenceFlow id="Flow_C1" name="" sourceRef="Timer_Revision_12_Meses" targetRef="Tarea_Sistema_Identificar_Consentimientos"/>
+    <bpmn:sequenceFlow id="Flow_C2" name="" sourceRef="Tarea_Sistema_Identificar_Consentimientos" targetRef="Tarea_Correo_Solicitar_Renovacion"/>
+    <bpmn:sequenceFlow id="Flow_C3" name="" sourceRef="Tarea_Correo_Solicitar_Renovacion" targetRef="Gateway_Respuesta_Titular"/>
+    <bpmn:sequenceFlow id="Flow_C4_Si" name="Sí" sourceRef="Gateway_Respuesta_Titular" targetRef="Start_Nueva_Obtension">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">titularResponde = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C4_No" name="No" sourceRef="Gateway_Respuesta_Titular" targetRef="Tarea_Sistema_Registrar_Inactivo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">titularResponde = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C5" name="" sourceRef="Start_Nueva_Obtension" targetRef="Tarea_DPO_Disenar_Formulario"/>
+    <bpmn:sequenceFlow id="Flow_C6" name="" sourceRef="Tarea_Sistema_Registrar_Inactivo" targetRef="Tarea_Sistema_Actualizar_RAT_Inactivo"/>
+    <bpmn:sequenceFlow id="Flow_C7" name="" sourceRef="Tarea_Sistema_Actualizar_RAT_Inactivo" targetRef="End_Consentimiento_Revocado"/>
+
+  </bpmn:process>
+
+  <!-- ==================== -->
+  <!-- DIAGRAM INTERCHANGE -->
+  <!-- ==================== -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Consentimientos" name="Gestión de Consentimientos - Custodio Platform">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Consentimientos">
+      <!-- Lanes will be positioned by BPMN editor -->
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

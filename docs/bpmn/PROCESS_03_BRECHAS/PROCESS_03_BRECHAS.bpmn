@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Process_03_Brechas"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Custodio SaaS Platform"
+                  exporterVersion="1.0">
+
+  <bpmn:collaboration id="Collaboration_Brechas">
+    <bpmn:participant id="Participant_GestionBrechas" name="Gestión Brechas de Seguridad - Custodio Platform" processRef="Process_03_Brechas"/>
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Reportante" name="Reportante">
+        <bpmn:flowNodeRef>StartEvent_BrechaDetectada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReportarBrecha</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>Task_ClasificarTipoBrecha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarCategorias</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EstimarTitulares</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarImpactoNegocio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarImpactoTitulares</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarObligaciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarEncargados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ElaborarNotificacionAPDP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepararRespuestaAPDP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RedactarComunicacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ElaborarPlanRemediacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsignarResponsables</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarImplementacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DocumentarAcuerdos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SesionComite</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Comite" name="Comité">
+        <bpmn:flowNodeRef>Task_SesionComite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DocumentarAcuerdos</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Task_CrearRegistroBrecha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarEvidenciaHashchain</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarDPO</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IniciarTimer72h</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcularCriticidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BuscarControles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarInformeImpacto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConvocarComite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ValidarNotificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotificacionAPDP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarFechaEnvio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarHashchain</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotificacionMasivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarEnvios</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CrearTareasSeguimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DocumentarLecciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarEstadoCerrada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarInformeFinal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ArchivarEvidencias</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarCierre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateTimer_72h</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Clasificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CriticidadMedia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ParaleloEvaluacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ReunirEvaluaciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CriticidadCritica</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DecisionAPDP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RiesgoTitulares</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NotificarAPDP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_APDPRequiereInfo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_BreachContenida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_BrechaCerrada</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_SistemaCorreo" name="Sistema de Correo">
+        <bpmn:flowNodeRef>Task_NotificarDPO</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotificacionMasivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarCierre</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_03_Brechas" name="Gestión Brechas de Seguridad" isClosed="false" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_BrechaDetectada" name="Brecha detectada">
+      <bpmn:outgoing>Flow_Start_To_Reportar</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" messageRef="Message_BrechaDetectada"/>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_ReportarBrecha" name="Reportar brecha">
+      <bpmn:documentation>Formulario de reporte de brecha: descripcion, fecha_deteccion, sistemas_afectados, datos_afectados, categorias_datos, numero_titulares_afectados_estimado</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Field_Descripcion" label="Descripción" type="string"/>
+          <camunda:formField id="Field_FechaDeteccion" label="Fecha de Detección" type="date"/>
+          <camunda:formField id="Field_SistemasAfectados" label="Sistemas Afectados" type="string"/>
+          <camunda:formField id="Field_DatosAfectados" label="Datos Afectados" type="string"/>
+          <camunda:formField id="Field_CategoriasDatos" label="Categorías de Datos" type="string"/>
+          <camunda:formField id="Field_NumTitulares" label="Número de Titulares Afectados (estimado)" type="long"/>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_To_Reportar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Reportar_To_CrearRegistro</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_CrearRegistroBrecha" name="Crear Brecha registro (estado=DETECTADA)" camunda:async="true">
+      <bpmn:documentation>Crea registro de brecha con estado=DETECTADA y genera brecha_id único</bpmn:documentation>
+      <bpmn:incoming>Flow_Reportar_To_CrearRegistro</bpmn:incoming>
+      <bpmn:outgoing>Flow_Crear_To_RegistrarEvidencia</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RegistrarEvidenciaHashchain" name="Registrar evidencia hashchain M1" camunda:async="true">
+      <bpmn:documentation>Registra timestamp + hash del reporte inicial en hashchain</bpmn:documentation>
+      <bpmn:incoming>Flow_Crear_To_RegistrarEvidencia</bpmn:incoming>
+      <bpmn:outgoing>Flow_Evidencia_To_NotificarDPO</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_NotificarDPO" name="Notificar DPO inmediatamente" camunda:async="true">
+      <bpmn:documentation>Envía email automático al DPO con brecha_id</bpmn:documentation>
+      <bpmn:incoming>Flow_Evidencia_To_NotificarDPO</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotificarDPO_To_IniciarTimer</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:scriptTask id="Task_IniciarTimer72h" name="Iniciar Timer 72 horas APDP" scriptFormat="javascript">
+      <bpmn:documentation>Timer event que cuenta desde fecha_deteccion para deadline APDP</bpmn:documentation>
+      <bpmn:incoming>Flow_NotificarDPO_To_IniciarTimer</bpmn:incoming>
+      <bpmn:outgoing>Flow_Timer_To_ClasificarTipo</bpmn:outgoing>
+    </bpmn:scriptTask>
+
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_72h" name="72h APDP deadline">
+      <bpmn:timerEventDefinition id="TimerEventDefinition_72h" timeDuration="PT72H"/>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_ClasificarTipoBrecha" name="Clasificar tipo de brecha">
+      <bpmn:documentation>Clasificar como: CONFIDENCIALIDAD, INTEGRIDAD o DISPONIBILIDAD</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Field_TipoBrecha" label="Tipo de Brecha" type="enum">
+            <camunda:value id="CONFIDENCIALIDAD" name="CONFIDENCIALIDAD"/>
+            <camunda:value id="INTEGRIDAD" name="INTEGRIDAD"/>
+            <camunda:value id="DISPONIBILIDAD" name="DISPONIBILIDAD"/>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Timer_To_ClasificarTipo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Clasificar_To_IdentificarCategorias</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_IdentificarCategorias" name="Identificar categorías datos comprometidos">
+      <bpmn:documentation>Categorías: normal, sensible, protected</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Field_Categorias" label="Categorías" type="enum">
+            <camunda:value id="normal" name="normal"/>
+            <camunda:value id="sensible" name="sensible"/>
+            <camunda:value id="protected" name="protected"/>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Clasificar_To_IdentificarCategorias</bpmn:incoming>
+      <bpmn:outgoing>Flow_Identificar_To_EstimarTitulares</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EstimarTitulares" name="Estimar número titulares afectados">
+      <bpmn:documentation>Cantidad estimada de personas cuyos datos fueron comprometidos</bpmn:documentation>
+      <bpmn:incoming>Flow_Identificar_To_EstimarTitulares</bpmn:incoming>
+      <bpmn:outgoing>Flow_Estimar_To_CalcularCriticidad</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_CalcularCriticidad" name="Calcular puntuación criticidad automática" camunda:async="true">
+      <bpmn:documentation>Fórmula: (categorias × ponderacion) + (num_afectados × factor) + (tipo × peso). Clasificación: BAJA/MEDIA/ALTA/CRÍTICA</bpmn:documentation>
+      <bpmn:incoming>Flow_Estimar_To_CalcularCriticidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_Calcular_To_GatewayClasificacion</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Clasificacion" name="Clasificación criticidad">
+      <bpmn:incoming>Flow_Calcular_To_GatewayClasificacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Clasificacion_To_Baja</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Clasificacion_To_Media</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Clasificacion_To_Alta</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Clasificacion_To_Critica</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Clasificacion_To_Baja" name="BAJA" sourceRef="Gateway_Clasificacion" targetRef="Gateway_CriticidadMedia">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "BAJA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Clasificacion_To_Media" name="MEDIA" sourceRef="Gateway_Clasificacion" targetRef="Gateway_CriticidadMedia">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "MEDIA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Clasificacion_To_Alta" name="ALTA" sourceRef="Gateway_Clasificacion" targetRef="Gateway_CriticidadMedia">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "ALTA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Clasificacion_To_Critica" name="CRÍTICA" sourceRef="Gateway_Clasificacion" targetRef="Gateway_CriticidadMedia">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "CRÍTICA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:exclusiveGateway id="Gateway_CriticidadMedia" name="¿Criticidad &gt;= MEDIA?">
+      <bpmn:incoming>Flow_Clasificacion_To_Baja</bpmn:incoming>
+      <bpmn:incoming>Flow_Clasificacion_To_Media</bpmn:incoming>
+      <bpmn:incoming>Flow_Clasificacion_To_Alta</bpmn:incoming>
+      <bpmn:incoming>Flow_Clasificacion_To_Critica</bpmn:incoming>
+      <bpmn:outgoing>Flow_Media_To_FlujoSimplificado</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Media_To_EvaluacionCompleta</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Media_To_FlujoSimplificado" name="No (BAJA)" sourceRef="Gateway_CriticidadMedia" targetRef="Gateway_CriticidadCritica">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "BAJA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Media_To_EvaluacionCompleta" name="Sí (MEDIA/ALTA/CRÍTICA)" sourceRef="Gateway_CriticidadMedia" targetRef="Task_EvaluarImpactoNegocio">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad != "BAJA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_EvaluarImpactoNegocio" name="Evaluar impacto negocio">
+      <bpmn:documentation>Evaluar: financial_impact, reputational_impact, legal_impact</bpmn:documentation>
+      <bpmn:incoming>Flow_Media_To_EvaluacionCompleta</bpmn:incoming>
+      <bpmn:outgoing>Flow_ImpactoNegocio_To_ImpactoTitulares</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EvaluarImpactoTitulares" name="Evaluar impacto derechos titulares">
+      <bpmn:documentation>Evaluar: daño_reputacional, discriminacion, fraude, perdida_financiera</bpmn:documentation>
+      <bpmn:incoming>Flow_ImpactoNegocio_To_ImpactoTitulares</bpmn:incoming>
+      <bpmn:outgoing>Flow_ImpactoTitulares_To_GatewayParalelo</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:parallelGateway id="Gateway_ParaleloEvaluacion" name="Evaluación paralela">
+      <bpmn:incoming>Flow_ImpactoTitulares_To_GatewayParalelo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Paralelo_To_Obligaciones</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Paralelo_To_Encargados</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Paralelo_To_Controles</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <bpmn:userTask id="Task_EvaluarObligaciones" name="Evaluar obligaciones contractuales">
+      <bpmn:incoming>Flow_Paralelo_To_Obligaciones</bpmn:incoming>
+      <bpmn:outgoing>Flow_Obligaciones_To_Reunir</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EvaluarEncargados" name="Evaluar Encargados de Tratamiento involucrados">
+      <bpmn:incoming>Flow_Paralelo_To_Encargados</bpmn:incoming>
+      <bpmn:outgoing>Flow_Encargados_To_Reunir</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_BuscarControles" name="Buscar controles existentes breach" camunda:async="true">
+      <bpmn:incoming>Flow_Paralelo_To_Controles</bpmn:incoming>
+      <bpmn:outgoing>Flow_Controles_To_Reunir</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:parallelGateway id="Gateway_ReunirEvaluaciones" name="Reunir evaluaciones">
+      <bpmn:incoming>Flow_Obligaciones_To_Reunir</bpmn:incoming>
+      <bpmn:incoming>Flow_Encargados_To_Reunir</bpmn:incoming>
+      <bpmn:incoming>Flow_Controles_To_Reunir</bpmn:incoming>
+      <bpmn:outgoing>Flow_Reunir_To_GenerarInforme</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <bpmn:serviceTask id="Task_GenerarInformeImpacto" name="Generar informe evaluación impacto" camunda:async="true">
+      <bpmn:documentation>Genera documento consolidado de evaluación de impacto</bpmn:documentation>
+      <bpmn:incoming>Flow_Reunir_To_GenerarInforme</bpmn:incoming>
+      <bpmn:outgoing>Flow_Informe_To_GatewayCritica</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CriticidadCritica" name="¿Criticidad = CRÍTICA?">
+      <bpmn:incoming>Flow_Media_To_FlujoSimplificado</bpmn:incoming>
+      <bpmn:incoming>Flow_Informe_To_GatewayCritica</bpmn:incoming>
+      <bpmn:outgoing>Flow_Critica_To_NoConvocar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Critica_To_Convocar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Critica_To_NoConvocar" name="No" sourceRef="Gateway_CriticidadCritica" targetRef="Task_SesionComite">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad != "CRÍTICA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Critica_To_Convocar" name="Sí" sourceRef="Gateway_CriticidadCritica" targetRef="Task_ConvocarComite">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">criticidad == "CRÍTICA"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:serviceTask id="Task_ConvocarComite" name="Convocar comité de emergencia" camunda:async="true">
+      <bpmn:documentation>Invita: DPO, Gerente Legal, Risk Manager, Comunicaciones</bpmn:documentation>
+      <bpmn:incoming>Flow_Critica_To_Convocar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Convocar_To_SesionComite</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_SesionComite" name="Sesión comité de revisión">
+      <bpmn:documentation>Participantes: DPO, Legal, Risk, Compliance, Comunicaciones</bpmn:documentation>
+      <bpmn:incoming>Flow_Critica_To_NoConvocar</bpmn:incoming>
+      <bpmn:incoming>Flow_Convocar_To_SesionComite</bpmn:incoming>
+      <bpmn:outgoing>Flow_Sesion_To_Acuerdos</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_DocumentarAcuerdos" name="Documentar acuerdos committee">
+      <bpmn:documentation>Minuta con: decisiones, responsables, plazos</bpmn:documentation>
+      <bpmn:incoming>Flow_Sesion_To_Acuerdos</bpmn:incoming>
+      <bpmn:outgoing>Flow_Acuerdos_To_GatewayDecision</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_DecisionAPDP" name="Decisión del comité">
+      <bpmn:incoming>Flow_Acuerdos_To_GatewayDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decision_To_NotificarAPDP</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decision_To_NoInformarAPDP</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Decision_To_NotificarAPDP" name="Informar APDP" sourceRef="Gateway_DecisionAPDP" targetRef="Gateway_NotificarAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Decision_To_NoInformarAPDP" name="No informar APDP" sourceRef="Gateway_DecisionAPDP" targetRef="Gateway_RiesgoTitulares"/>
+
+    <bpmn:exclusiveGateway id="Gateway_NotificarAPDP" name="¿Decisión: Notificar APDP?">
+      <bpmn:incoming>Flow_Decision_To_NotificarAPDP</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotificarAPDP_To_Elaborar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NotificarAPDP_To_Saltar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_NotificarAPDP_To_Elaborar" name="Sí" sourceRef="Gateway_NotificarAPDP" targetRef="Task_ElaborarNotificacionAPDP">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">decisionNotificarAPDP == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NotificarAPDP_To_Saltar" name="No" sourceRef="Gateway_NotificarAPDP" targetRef="Gateway_RiesgoTitulares">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">decisionNotificarAPDP == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_ElaborarNotificacionAPDP" name="Elaborar notificación APDP">
+      <bpmn:documentation>Contenido según Art. 26.3: naturaleza breach, categorías datos, consecuencias, medidas adoptadas</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Field_NaturalezaBreach" label="Naturaleza de la Brecha" type="string"/>
+          <camunda:formField id="Field_CategoriasDatos" label="Categorías de Datos" type="string"/>
+          <camunda:formField id="Field_Consecuencias" label="Consecuencias Probables" type="string"/>
+          <camunda:formField id="Field_MedidasAdoptadas" label="Medidas Adoptadas" type="string"/>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_NotificarAPDP_To_Elaborar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Elaborar_To_Validar</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_ValidarNotificacion" name="Validar completitud notificación" camunda:async="true">
+      <bpmn:documentation>Verifica campos requeridos para notificación APDP</bpmn:documentation>
+      <bpmn:incoming>Flow_Elaborar_To_Validar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validar_To_Enviar</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_EnviarNotificacionAPDP" name="Enviar notificación APDP" camunda:async="true">
+      <bpmn:documentation>Medio: registro APDP o email certificado</bpmn:documentation>
+      <bpmn:incoming>Flow_Validar_To_Enviar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Enviar_To_RegistrarFecha</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RegistrarFechaEnvio" name="Registrar fecha_envio_apdp" camunda:async="true">
+      <bpmn:documentation>Timestamp oficial de envío a APDP</bpmn:documentation>
+      <bpmn:incoming>Flow_Enviar_To_RegistrarFecha</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fecha_To_ActualizarHashchain</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ActualizarHashchain" name="Actualizar evidencia hashchain" camunda:async="true">
+      <bpmn:documentation>Registra envío con hash en hashchain de evidencias</bpmn:documentation>
+      <bpmn:incoming>Flow_Fecha_To_ActualizarHashchain</bpmn:incoming>
+      <bpmn:outgoing>Flow_Hashchain_To_GatewayAPDP</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_APDPRequiereInfo" name="¿APDP requiere información adicional?">
+      <bpmn:incoming>Flow_Hashchain_To_GatewayAPDP</bpmn:incoming>
+      <bpmn:outgoing>Flow_APDP_To_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_APDP_To_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_APDP_To_Si" name="Sí" sourceRef="Gateway_APDPRequiereInfo" targetRef="Task_PrepararRespuestaAPDP">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">apdpRequiereInfo == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_APDP_To_No" name="No" sourceRef="Gateway_APDPRequiereInfo" targetRef="Gateway_RiesgoTitulares">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">apdpRequiereInfo == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_PrepararRespuestaAPDP" name="Preparar respuesta APDP">
+      <bpmn:documentation>Complementar información requerida por la Agencia</bpmn:documentation>
+      <bpmn:incoming>Flow_APDP_To_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow_Respuesta_To_GatewayRiesgo</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_RiesgoTitulares" name="¿Riesgo para titulares?">
+      <bpmn:incoming>Flow_Decision_To_NoInformarAPDP</bpmn:incoming>
+      <bpmn:incoming>Flow_NotificarAPDP_To_Saltar</bpmn:incoming>
+      <bpmn:incoming>Flow_APDP_To_No</bpmn:incoming>
+      <bpmn:incoming>Flow_Respuesta_To_GatewayRiesgo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Riesgo_To_NoNotificar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Riesgo_To_Notificar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Riesgo_To_NoNotificar" name="No" sourceRef="Gateway_RiesgoTitulares" targetRef="Task_ElaborarPlanRemediacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">riesgoParaTitulares == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Riesgo_To_Notificar" name="Sí" sourceRef="Gateway_RiesgoTitulares" targetRef="Task_RedactarComunicacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">riesgoParaTitulares == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_RedactarComunicacion" name="Redactar comunicación a afectados">
+      <bpmn:documentation>Redactar comunicación DPO + Comunicaciones</bpmn:documentation>
+      <bpmn:incoming>Flow_Riesgo_To_Notificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Redactar_To_EnviarMasivo</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_EnviarNotificacionMasivo" name="Enviar notificación masivo" camunda:async="true">
+      <bpmn:documentation>Una notificación por cada titular afectado</bpmn:documentation>
+      <bpmn:incoming>Flow_Redactar_To_EnviarMasivo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Masivo_To_RegistrarEnvios</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RegistrarEnvios" name="Registrar envios" camunda:async="true">
+      <bpmn:documentation>Logs de entrega con timestamps</bpmn:documentation>
+      <bpmn:incoming>Flow_Masivo_To_RegistrarEnvios</bpmn:incoming>
+      <bpmn:outgoing>Flow_Envios_To_Remediacion</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_ElaborarPlanRemediacion" name="Elaborar plan remediación">
+      <bpmn:documentation>Medidas: técnicas, organizativas, correctivas</bpmn:documentation>
+      <bpmn:incoming>Flow_Riesgo_To_NoNotificar</bpmn:incoming>
+      <bpmn:incoming>Flow_Envios_To_Remediacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Plan_To_Asignar</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AsignarResponsables" name="Asignar responsables remediación">
+      <bpmn:documentation>Definir OWNER por cada medida</bpmn:documentation>
+      <bpmn:incoming>Flow_Plan_To_Asignar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Asignar_To_CrearTareas</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_CrearTareasSeguimiento" name="Crear tareas seguimiento" camunda:async="true">
+      <bpmn:documentation>Crea tickets de monitoreo para cada medida</bpmn:documentation>
+      <bpmn:incoming>Flow_Asignar_To_CrearTareas</bpmn:incoming>
+      <bpmn:outgoing>Flow_Tareas_To_GatewayContenida</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_BreachContenida" name="¿Brecha contenida?">
+      <bpmn:incoming>Flow_Tareas_To_GatewayContenida</bpmn:incoming>
+      <bpmn:outgoing>Flow_Contenida_To_Continuar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Contenida_To_Verificar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Contenida_To_Continuar" name="No" sourceRef="Gateway_BreachContenida" targetRef="Task_CrearTareasSeguimiento">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">brechaContenida == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Contenida_To_Verificar" name="Sí" sourceRef="Gateway_BreachContenida" targetRef="Task_VerificarImplementacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">brechaContenida == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_VerificarImplementacion" name="Verificar implementación medidas">
+      <bpmn:documentation>Validar que controles funcionan correctamente</bpmn:documentation>
+      <bpmn:incoming>Flow_Contenida_To_Verificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verificar_To_Lecciones</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_DocumentarLecciones" name="Documentar lecciones aprendidas" camunda:async="true">
+      <bpmn:documentation>Registrar best practices para prevenir futuras brechas</bpmn:documentation>
+      <bpmn:incoming>Flow_Verificar_To_Lecciones</bpmn:incoming>
+      <bpmn:outgoing>Flow_Lecciones_To_CerrarEstado</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ActualizarEstadoCerrada" name="Actualizar estado = CERRADA" camunda:async="true">
+      <bpmn:documentation>Cambia estado de la brecha a CERRADA</bpmn:documentation>
+      <bpmn:incoming>Flow_Lecciones_To_CerrarEstado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Estado_To_InformeFinal</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_GenerarInformeFinal" name="Generar informe final breach" camunda:async="true">
+      <bpmn:documentation>PDF con: cronograma, evidencias, notificaciones, remediación</bpmn:documentation>
+      <bpmn:incoming>Flow_Estado_To_InformeFinal</bpmn:incoming>
+      <bpmn:outgoing>Flow_InformeFinal_To_Archivar</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ArchivarEvidencias" name="Archivar evidencias hashchain" camunda:async="true">
+      <bpmn:documentation>Almacenamiento inmutable de evidencias</bpmn:documentation>
+      <bpmn:incoming>Flow_InformeFinal_To_Archivar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Archivar_To_NotificarCierre</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_NotificarCierre" name="Notificar cierre a stakeholders" camunda:async="true">
+      <bpmn:documentation>Comunicación de cierre del proceso a involucrados</bpmn:documentation>
+      <bpmn:incoming>Flow_Archivar_To_NotificarCierre</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cierre_To_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_BrechaCerrada" name="Brecha cerrada y documentada">
+      <bpmn:incoming>Flow_Cierre_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:dataObject id="DataObject_ReporteBrecha" name="ReporteBrecha"/>
+    <bpmn:dataObject id="DataObject_InformeImpacto" name="InformeImpacto"/>
+    <bpmn:dataObject id="DataObject_NotificacionAPDP" name="NotificacionAPDP"/>
+    <bpmn:dataObject id="DataObject_PlanRemediacion" name="PlanRemediacion"/>
+    <bpmn:dataObject id="DataObject_EvidenciaHashchain" name="EvidenciaHashchain"/>
+
+    <bpmn:association id="Association_Reporte" sourceRef="Task_ReportarBrecha" targetRef="DataObject_ReporteBrecha" associationDirection="One"/>
+    <bpmn:association id="Association_Informe" sourceRef="Task_GenerarInformeImpacto" targetRef="DataObject_InformeImpacto" associationDirection="One"/>
+    <bpmn:association id="Association_Notificacion" sourceRef="Task_ElaborarNotificacionAPDP" targetRef="DataObject_NotificacionAPDP" associationDirection="One"/>
+    <bpmn:association id="Association_Plan" sourceRef="Task_ElaborarPlanRemediacion" targetRef="DataObject_PlanRemediacion" associationDirection="One"/>
+    <bpmn:association id="Association_Evidencia" sourceRef="Task_RegistrarEvidenciaHashchain" targetRef="DataObject_EvidenciaHashchain" associationDirection="One"/>
+
+    <bpmn:message id="Message_APDP" name="Notificación APDP"/>
+    <bpmn:message id="Message_Titulares" name="Notificación Titulares"/>
+    <bpmn:message id="Message_BrechaDetectada" name="Brecha Detectada"/>
+
+    <bpmn:signal id="Signal_ComiteConvocado" name="Comité convocado"/>
+
+    <bpmn:sequenceFlow id="Flow_Start_To_Reportar" sourceRef="StartEvent_BrechaDetectada" targetRef="Task_ReportarBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Reportar_To_CrearRegistro" sourceRef="Task_ReportarBrecha" targetRef="Task_CrearRegistroBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Crear_To_RegistrarEvidencia" sourceRef="Task_CrearRegistroBrecha" targetRef="Task_RegistrarEvidenciaHashchain"/>
+    <bpmn:sequenceFlow id="Flow_Evidencia_To_NotificarDPO" sourceRef="Task_RegistrarEvidenciaHashchain" targetRef="Task_NotificarDPO"/>
+    <bpmn:sequenceFlow id="Flow_NotificarDPO_To_IniciarTimer" sourceRef="Task_NotificarDPO" targetRef="Task_IniciarTimer72h"/>
+    <bpmn:sequenceFlow id="Flow_Timer_To_ClasificarTipo" sourceRef="Task_IniciarTimer72h" targetRef="Task_ClasificarTipoBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Clasificar_To_IdentificarCategorias" sourceRef="Task_ClasificarTipoBrecha" targetRef="Task_IdentificarCategorias"/>
+    <bpmn:sequenceFlow id="Flow_Identificar_To_EstimarTitulares" sourceRef="Task_IdentificarCategorias" targetRef="Task_EstimarTitulares"/>
+    <bpmn:sequenceFlow id="Flow_Estimar_To_CalcularCriticidad" sourceRef="Task_EstimarTitulares" targetRef="Task_CalcularCriticidad"/>
+    <bpmn:sequenceFlow id="Flow_Calcular_To_GatewayClasificacion" sourceRef="Task_CalcularCriticidad" targetRef="Gateway_Clasificacion"/>
+    <bpmn:sequenceFlow id="Flow_ImpactoNegocio_To_ImpactoTitulares" sourceRef="Task_EvaluarImpactoNegocio" targetRef="Task_EvaluarImpactoTitulares"/>
+    <bpmn:sequenceFlow id="Flow_ImpactoTitulares_To_GatewayParalelo" sourceRef="Task_EvaluarImpactoTitulares" targetRef="Gateway_ParaleloEvaluacion"/>
+    <bpmn:sequenceFlow id="Flow_Paralelo_To_Obligaciones" sourceRef="Gateway_ParaleloEvaluacion" targetRef="Task_EvaluarObligaciones"/>
+    <bpmn:sequenceFlow id="Flow_Paralelo_To_Encargados" sourceRef="Gateway_ParaleloEvaluacion" targetRef="Task_EvaluarEncargados"/>
+    <bpmn:sequenceFlow id="Flow_Paralelo_To_Controles" sourceRef="Gateway_ParaleloEvaluacion" targetRef="Task_BuscarControles"/>
+    <bpmn:sequenceFlow id="Flow_Obligaciones_To_Reunir" sourceRef="Task_EvaluarObligaciones" targetRef="Gateway_ReunirEvaluaciones"/>
+    <bpmn:sequenceFlow id="Flow_Encargados_To_Reunir" sourceRef="Task_EvaluarEncargados" targetRef="Gateway_ReunirEvaluaciones"/>
+    <bpmn:sequenceFlow id="Flow_Controles_To_Reunir" sourceRef="Task_BuscarControles" targetRef="Gateway_ReunirEvaluaciones"/>
+    <bpmn:sequenceFlow id="Flow_Reunir_To_GenerarInforme" sourceRef="Gateway_ReunirEvaluaciones" targetRef="Task_GenerarInformeImpacto"/>
+    <bpmn:sequenceFlow id="Flow_Informe_To_GatewayCritica" sourceRef="Task_GenerarInformeImpacto" targetRef="Gateway_CriticidadCritica"/>
+    <bpmn:sequenceFlow id="Flow_Sesion_To_Acuerdos" sourceRef="Task_SesionComite" targetRef="Task_DocumentarAcuerdos"/>
+    <bpmn:sequenceFlow id="Flow_Acuerdos_To_GatewayDecision" sourceRef="Task_DocumentarAcuerdos" targetRef="Gateway_DecisionAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Elaborar_To_Validar" sourceRef="Task_ElaborarNotificacionAPDP" targetRef="Task_ValidarNotificacion"/>
+    <bpmn:sequenceFlow id="Flow_Validar_To_Enviar" sourceRef="Task_ValidarNotificacion" targetRef="Task_EnviarNotificacionAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Enviar_To_RegistrarFecha" sourceRef="Task_EnviarNotificacionAPDP" targetRef="Task_RegistrarFechaEnvio"/>
+    <bpmn:sequenceFlow id="Flow_Fecha_To_ActualizarHashchain" sourceRef="Task_RegistrarFechaEnvio" targetRef="Task_ActualizarHashchain"/>
+    <bpmn:sequenceFlow id="Flow_Hashchain_To_GatewayAPDP" sourceRef="Task_ActualizarHashchain" targetRef="Gateway_APDPRequiereInfo"/>
+    <bpmn:sequenceFlow id="Flow_Respuesta_To_GatewayRiesgo" sourceRef="Task_PrepararRespuestaAPDP" targetRef="Gateway_RiesgoTitulares"/>
+    <bpmn:sequenceFlow id="Flow_Redactar_To_EnviarMasivo" sourceRef="Task_RedactarComunicacion" targetRef="Task_EnviarNotificacionMasivo"/>
+    <bpmn:sequenceFlow id="Flow_Masivo_To_RegistrarEnvios" sourceRef="Task_EnviarNotificacionMasivo" targetRef="Task_RegistrarEnvios"/>
+    <bpmn:sequenceFlow id="Flow_Envios_To_Remediacion" sourceRef="Task_RegistrarEnvios" targetRef="Task_ElaborarPlanRemediacion"/>
+    <bpmn:sequenceFlow id="Flow_Plan_To_Asignar" sourceRef="Task_ElaborarPlanRemediacion" targetRef="Task_AsignarResponsables"/>
+    <bpmn:sequenceFlow id="Flow_Asignar_To_CrearTareas" sourceRef="Task_AsignarResponsables" targetRef="Task_CrearTareasSeguimiento"/>
+    <bpmn:sequenceFlow id="Flow_Tareas_To_GatewayContenida" sourceRef="Task_CrearTareasSeguimiento" targetRef="Gateway_BreachContenida"/>
+    <bpmn:sequenceFlow id="Flow_Verificar_To_Lecciones" sourceRef="Task_VerificarImplementacion" targetRef="Task_DocumentarLecciones"/>
+    <bpmn:sequenceFlow id="Flow_Lecciones_To_CerrarEstado" sourceRef="Task_DocumentarLecciones" targetRef="Task_ActualizarEstadoCerrada"/>
+    <bpmn:sequenceFlow id="Flow_Estado_To_InformeFinal" sourceRef="Task_ActualizarEstadoCerrada" targetRef="Task_GenerarInformeFinal"/>
+    <bpmn:sequenceFlow id="Flow_InformeFinal_To_Archivar" sourceRef="Task_GenerarInformeFinal" targetRef="Task_ArchivarEvidencias"/>
+    <bpmn:sequenceFlow id="Flow_Archivar_To_NotificarCierre" sourceRef="Task_ArchivarEvidencias" targetRef="Task_NotificarCierre"/>
+    <bpmn:sequenceFlow id="Flow_Cierre_To_End" sourceRef="Task_NotificarCierre" targetRef="EndEvent_BrechaCerrada"/>
+
+  </bpmn:process>
+
+  <bpmn:message id="Message_BrechaDetectada" name="Brecha Detectada"/>
+  <bpmn:message id="Message_APDP" name="Notificación APDP"/>
+  <bpmn:message id="Message_Titulares" name="Notificación Titulares"/>
+
+</bpmn:definitions>

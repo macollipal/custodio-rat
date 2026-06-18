@@ -24,6 +24,7 @@ import {
 } from '@/lib/api';
 import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
+import { FlujoModal } from '@/components/arco/FlujoModal';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
@@ -364,6 +365,7 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
   const [mostrarProrroga, setMostrarProrroga] = useState(false);
   const [prorrogaDias, setProrrogaDias] = useState(10);
   const [prorrogaMotivo, setProrrogaMotivo] = useState('');
+  const [flujoModalOpen, setFlujoModalOpen] = useState(false);
 
   useEffect(() => {
     if (open && ticket) {
@@ -595,6 +597,14 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
               >
                 {prioridad.label}
               </span>
+              <button
+                onClick={() => setFlujoModalOpen(true)}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
+                style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' }}
+                title="Ver flujo del proceso"
+              >
+                Ver Flujo
+              </button>
             </div>
           </div>
 
@@ -1007,6 +1017,14 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
           )}
         </div>
       </div>
+
+      <FlujoModal
+        open={flujoModalOpen}
+        onClose={() => setFlujoModalOpen(false)}
+        tipo={ticket.tipo as any}
+        estadoActual={ticket.estado as any}
+        trackingToken={ticket.tracking_token}
+      />
     </Drawer>
   );
 }

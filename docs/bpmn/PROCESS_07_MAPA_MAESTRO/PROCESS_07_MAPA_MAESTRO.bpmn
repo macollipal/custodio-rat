@@ -1,0 +1,812 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  id="Definitions_Master"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  exporter="Custodio Platform"
+  exporterVersion="1.0">
+
+  <!-- ================================================ -->
+  <!-- PARTICIPANTS / POOLS -->
+  <!-- ================================================ -->
+  <bpmn:collaboration id="Collaboration_MasterCompliance">
+
+    <!-- Pool 1: RAT -->
+    <bpmn:participant id="Participant_RAT" name="RAT - Registro de Actividades" processRef="Process_RAT">
+      <bpmn:laneSet id="LaneSet_RAT">
+        <bpmn:lane id="Lane_DPO_RAT" name="DPO">
+          <bpmn:flowNodeRef>Task_RegistrarActividad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EstablecerBaseLegal</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_IdentificarCategorias</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_IdentificarDatosSensibles</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EstablecerMedidas</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ValidarRegistro</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AprobarRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisionPeriodica</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_RAT" name="Sistema">
+          <bpmn:flowNodeRef>Start_RAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CrearRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarRiesgoAutomatico</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_RiesgoAlto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActivarRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarHistorial</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarPDF</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_RATActivo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_RevisionAnual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EnviarNotificacionEIPD</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 2: EIPD -->
+    <bpmn:participant id="Participant_EIPD" name="EIPD - Evaluación de Impacto" processRef="Process_EIPD">
+      <bpmn:laneSet id="LaneSet_EIPD">
+        <bpmn:lane id="Lane_DPO_EIPD" name="DPO">
+          <bpmn:flowNodeRef>Task_DescribirTratamiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_IdentificarRiesgos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_DocumentarControles</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ControlesPropuestos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisarEIPD</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AprobarEIPD</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_NivelRiesgoInherente</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_RiesgoResidual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_RequiereAutorizacion</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_EIPD" name="Sistema">
+          <bpmn:flowNodeRef>Start_EIPD</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CrearEIPD</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularProbabilidad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularImpacto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularRiesgoInherente</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarControlesExistentes</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularRiesgoResidual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ProgramarRevision</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_EIPDAprobado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_Revision24Meses</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 3: ARCO -->
+    <bpmn:participant id="Participant_ARCO" name="ARCO - Derechos ARCO" processRef="Process_ARCO">
+      <bpmn:laneSet id="LaneSet_ARCO">
+        <bpmn:lane id="Lane_Titular" name="Titular">
+          <bpmn:flowNodeRef>Task_CompletarFormulario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_TitularSubsana</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_DPO_ARCO" name="DPO">
+          <bpmn:flowNodeRef>Task_RecibirSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GestionarSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_SubsolicitarSubsanacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ResolverSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RechazarSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_InvocarProrroga</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_TipoSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Decision</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Subsanacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Prorroga</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_ARCO" name="Sistema">
+          <bpmn:flowNodeRef>Start_ARCO</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ValidarDatos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CrearTicketARCO</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarTrackingToken</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarAcuse</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AutoAsignar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CompletarSubsanacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EstablecerProrroga</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EstablecerResuelto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EstablecerRechazado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ExportarSolicitud</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_ARCO</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_Subsanacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_Prorroga</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarHashchain</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 4: Brechas -->
+    <bpmn:participant id="Participant_Brechas" name="Brechas - Gestión de Incidentes" processRef="Process_Brechas">
+      <bpmn:laneSet id="LaneSet_Brechas">
+        <bpmn:lane id="Lane_Reportante" name="Reportante">
+          <bpmn:flowNodeRef>Task_ReportarBrecha</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_DPO_Brechas" name="DPO">
+          <bpmn:flowNodeRef>Task_ClasificarBrecha</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarImpacto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ConfeccionarNotificacionAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarTitulares</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ElaborarPlanRemediacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_NotificarAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_RiesgoTitulares</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Criticidad</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Comite" name="Comité">
+          <bpmn:flowNodeRef>Task_SesionComite</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ConvocarComiteEmergencia</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_Brechas" name="Sistema">
+          <bpmn:flowNodeRef>Start_Brecha</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CrearRegistroBrecha</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarDPO</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularCriticidad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_RequiereComite</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EnviarNotificacionAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EnviarNotificacionMasiva</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CerrarBrecha</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarInformeFinal</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_BrechaCerrada</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_72HorasAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarEvidencia</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 5: Consentimientos -->
+    <bpmn:participant id="Participant_Consent" name="Consentimientos" processRef="Process_Consent">
+      <bpmn:laneSet id="LaneSet_Consent">
+        <bpmn:lane id="Lane_Titular_Cons" name="Titular">
+          <bpmn:flowNodeRef>Task_RevisarInformacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_OtorgarConsentimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_SolicitarRevocacion</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_DPO_Cons" name="DPO">
+          <bpmn:flowNodeRef>Task_DisenarFormulario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ConfigurarTexto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarConsentimientoValido</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_Cons" name="Sistema">
+          <bpmn:flowNodeRef>Start_ConsentimientoRequerido</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_PublicarFormulario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RegistrarConsentimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarEvidenciaHash</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AlmacenarHashchain</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarRATConsent</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AsignarVersion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarCambios</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_InvalidarConsentimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EnviarConfirmacionRevocacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_ConsentimientoRegistrado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_ConsentimientoRevocado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_Revision12Meses</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RegistrarInactividad</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 6: Encargados -->
+    <bpmn:participant id="Participant_Encargados" name="Encargados - Tratamiento" processRef="Process_Encargados">
+      <bpmn:laneSet id="LaneSet_Encargados">
+        <bpmn:lane id="Lane_DPO_Enc" name="DPO">
+          <bpmn:flowNodeRef>Task_SolicitarAltaEncargado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarIdoneidad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ElaborarProyecto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisarContrato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_FirmarContrato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisarCumplimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EvaluarDesempeno</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_DocumentarTerminacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarEstadoDatos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ElaborarContratoRenovacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_FirmarRenovacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Idoneidad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_AceptaCondiciones</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_CumpleObligaciones</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Renovar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_DatosEnOrden</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_EncargadoExt" name="Encargado Externo">
+          <bpmn:flowNodeRef>Task_RecibirContrato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_AceptarCondiciones</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_SolicitarSubcontratacion</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Sistema_Enc" name="Sistema">
+          <bpmn:flowNodeRef>Start_NuevaRelacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarUnicidad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RegistrarContrato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarMedidasSeguridad</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VincularRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ProgramarRecordatorio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarVencimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarFechas</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RecibirCertificacionEliminacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ActualizarRATEncargado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ArchivarDocumentacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_EncargadoActivo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_RelacionTerminada</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_30DiasVencimiento</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_Revision24Meses_Enc</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- Pool 7: Master Orchestration -->
+    <bpmn:participant id="Participant_Master" name="Master - Orchestration" processRef="Process_Master">
+      <bpmn:laneSet id="LaneSet_Master">
+        <bpmn:lane id="Lane_Sistema_Master" name="Sistema">
+          <bpmn:flowNodeRef>Start_PlataformaInicializada</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CargarConfiguracion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_InicializarDashboard</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ConfigurarCalendario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarRAT</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarEIPDs</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarARCOPendientes</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarConsentimientos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarEncargos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_VerificarBrechasAbiertas</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Paralelo_Verificacion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_Paralelo_Reunir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_CalcularComplianceScore</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarInformeAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarPackageAuditoria</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_GenerarInformeAnnual</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_EnviarInformeAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_NotificarDireccion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_MonitorearPlan</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Gateway_ComplianceScore</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Timer_RevisionAnnualIntegral</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisarCambiosRegulatorios</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_OperacionCompliant</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_NoCompliance</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_DPOSenior_Master" name="DPO Senior">
+          <bpmn:flowNodeRef>Task_AprobarInformeAPDP</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_PrepararDocumentacionAuditoria</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_RevisarHallazgos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_SesionExtraordinaria</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Task_ElaborarPlanMejora</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="Lane_Comite_Master" name="Comité (DPO+Legal+Risk+CEO)">
+          <bpmn:flowNodeRef>Task_SesionComiteCompliance</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+    </bpmn:participant>
+
+    <!-- ================================================ -->
+    <!-- MESSAGE FLOWS (Inter-pool communication) -->
+    <!-- ================================================ -->
+    <!-- RAT triggers EIPD -->
+    <bpmn:messageFlow id="MessageFlow_RAT_EIPD" name="EIPD requerida" sourceRef="Participant_RAT" targetRef="Participant_EIPD"/>
+    <!-- RAT requests consent -->
+    <bpmn:messageFlow id="MessageFlow_RAT_Consent" name="Solicitar consentimiento" sourceRef="Participant_RAT" targetRef="Participant_Consent"/>
+    <!-- RAT links to Encargados -->
+    <bpmn:messageFlow id="MessageFlow_RAT_Encargados" name="Vincular encargado" sourceRef="Participant_RAT" targetRef="Participant_Encargados"/>
+    <!-- Brechas affect RAT -->
+    <bpmn:messageFlow id="MessageFlow_Brechas_RAT" name="Tratamiento afectado" sourceRef="Participant_Brechas" targetRef="Participant_RAT"/>
+    <!-- EIPD updates RAT -->
+    <bpmn:messageFlow id="MessageFlow_EIPD_RAT" name="Actualizar estado RAT" sourceRef="Participant_EIPD" targetRef="Participant_RAT"/>
+    <!-- Consent updates RAT -->
+    <bpmn:messageFlow id="MessageFlow_Consent_RAT" name="Base legal actualizada" sourceRef="Participant_Consent" targetRef="Participant_RAT"/>
+    <!-- Encargados updates RAT -->
+    <bpmn:messageFlow id="MessageFlow_Encargados_RAT" name="Actividades actualizadas" sourceRef="Participant_Encargados" targetRef="Participant_RAT"/>
+    <!-- Brechas trigger ARCO review -->
+    <bpmn:messageFlow id="MessageFlow_Brechas_ARCO" name="¿Derechos afectados?" sourceRef="Participant_Brechas" targetRef="Participant_ARCO"/>
+    <!-- EIPD rejection feedback -->
+    <bpmn:messageFlow id="MessageFlow_EIPD_Rejection" name="Comentarios rechazo" sourceRef="Participant_EIPD" targetRef="Participant_RAT"/>
+    <!-- APDP notification from Brechas -->
+    <bpmn:messageFlow id="MessageFlow_Brechas_APDP" name="Notificación APDP" sourceRef="Participant_Brechas" targetRef="Participant_Master"/>
+    <!-- ARCO notification from Master -->
+    <bpmn:messageFlow id="MessageFlow_Master_ARCO" name="Reporte ARCO" sourceRef="Participant_Master" targetRef="Participant_ARCO"/>
+
+  </bpmn:collaboration>
+
+  <!-- ================================================ -->
+  <!-- PROCESS DEFINITIONS -->
+  <!-- ================================================ -->
+
+  <!-- Process RAT -->
+  <bpmn:process id="Process_RAT" isExecutable="false">
+    <bpmn:startEvent id="Start_RAT" name="DPO inicia registro RAT"/>
+    <bpmn:userTask id="Task_RegistrarActividad" name="Registrar información básica&#10;del tratamiento"/>
+    <bpmn:userTask id="Task_EstablecerBaseLegal" name="Determinar base legal"/>
+    <bpmn:userTask id="Task_IdentificarCategorias" name="Identificar categorías&#10;de datos"/>
+    <bpmn:userTask id="Task_IdentificarDatosSensibles" name="Identificar datos sensibles"/>
+    <bpmn:userTask id="Task_EstablecerMedidas" name="Elaborar medidas&#10;de seguridad"/>
+    <bpmn:userTask id="Task_ValidarRegistro" name="Revisar y validar registro"/>
+    <bpmn:userTask id="Task_AprobarRAT" name="Aprobar registro RAT"/>
+    <bpmn:serviceTask id="Task_CrearRAT" name="Crear RAT en base de datos" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_EvaluarRiesgoAutomatico" name="Evaluar riesgo automático" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_RiesgoAlto" name="¿Riesgo ALTO?"/>
+    <bpmn:serviceTask id="Task_EnviarNotificacionEIPD" name="Enviar notificación EIPD&#10;requerida" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ActivarRAT" name="Activar registro RAT" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarHistorial" name="Registrar historial&#10;de cambios" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarPDF" name="Generar PDF oficial RAT" camunda:async="true"/>
+    <bpmn:endEvent id="End_RATActivo" name="Registro RAT activo"/>
+    <bpmn:intermediateThrowEvent id="Timer_RevisionAnual" name="Revisión anual&#10;(Timer 12 meses)">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="Task_RevisionPeriodica" name="Revisión periódica RAT"/>
+
+    <!-- Sequence flows RAT -->
+    <bpmn:sequenceFlow id="Flow_RAT_1" sourceRef="Start_RAT" targetRef="Task_CrearRAT"/>
+    <bpmn:sequenceFlow id="Flow_RAT_2" sourceRef="Task_CrearRAT" targetRef="Task_RegistrarActividad"/>
+    <bpmn:sequenceFlow id="Flow_RAT_3" sourceRef="Task_RegistrarActividad" targetRef="Task_EstablecerBaseLegal"/>
+    <bpmn:sequenceFlow id="Flow_RAT_4" sourceRef="Task_EstablecerBaseLegal" targetRef="Task_IdentificarCategorias"/>
+    <bpmn:sequenceFlow id="Flow_RAT_5" sourceRef="Task_IdentificarCategorias" targetRef="Task_IdentificarDatosSensibles"/>
+    <bpmn:sequenceFlow id="Flow_RAT_6" sourceRef="Task_IdentificarDatosSensibles" targetRef="Task_EstablecerMedidas"/>
+    <bpmn:sequenceFlow id="Flow_RAT_7" sourceRef="Task_EstablecerMedidas" targetRef="Task_EvaluarRiesgoAutomatico"/>
+    <bpmn:sequenceFlow id="Flow_RAT_8" sourceRef="Task_EvaluarRiesgoAutomatico" targetRef="Gateway_RiesgoAlto"/>
+    <bpmn:sequenceFlow id="Flow_RAT_9_EIPD" name="Sí" sourceRef="Gateway_RiesgoAlto" targetRef="Task_EnviarNotificacionEIPD">
+      <bpmn:conditionExpression>riesgo == &quot;ALTO&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_RAT_10" name="No" sourceRef="Gateway_RiesgoAlto" targetRef="Task_ValidarRegistro">
+      <bpmn:conditionExpression>riesgo != &quot;ALTO&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_RAT_11" sourceRef="Task_EnviarNotificacionEIPD" targetRef="Task_ValidarRegistro"/>
+    <bpmn:sequenceFlow id="Flow_RAT_12" sourceRef="Task_ValidarRegistro" targetRef="Task_AprobarRAT"/>
+    <bpmn:sequenceFlow id="Flow_RAT_13" sourceRef="Task_AprobarRAT" targetRef="Task_ActivarRAT"/>
+    <bpmn:sequenceFlow id="Flow_RAT_14" sourceRef="Task_ActivarRAT" targetRef="Task_GenerarHistorial"/>
+    <bpmn:sequenceFlow id="Flow_RAT_15" sourceRef="Task_GenerarHistorial" targetRef="Task_GenerarPDF"/>
+    <bpmn:sequenceFlow id="Flow_RAT_16" sourceRef="Task_GenerarPDF" targetRef="End_RATActivo"/>
+    <bpmn:sequenceFlow id="Flow_RAT_17" sourceRef="Timer_RevisionAnual" targetRef="Task_RevisionPeriodica"/>
+    <bpmn:sequenceFlow id="Flow_RAT_18" sourceRef="Task_RevisionPeriodica" targetRef="Task_ValidarRegistro"/>
+  </bpmn:process>
+
+  <!-- Process EIPD -->
+  <bpmn:process id="Process_EIPD" isExecutable="false">
+    <bpmn:startEvent id="Start_EIPD" name="EIPD requerida&#10;desde RAT"/>
+    <bpmn:serviceTask id="Task_CrearEIPD" name="Crear EIPD desde RAT" camunda:async="true"/>
+    <bpmn:userTask id="Task_DescribirTratamiento" name="Describir tratamiento&#10;objeto EIPD"/>
+    <bpmn:userTask id="Task_IdentificarRiesgos" name="Identificar riesgos inherentes"/>
+    <bpmn:serviceTask id="Task_CalcularProbabilidad" name="Calcular probabilidad&#10;inherente" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_CalcularImpacto" name="Calcular impacto&#10;inherente" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_CalcularRiesgoInherente" name="Calcular nivel riesgo&#10;inherente" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_NivelRiesgoInherente" name="Nivel riesgo&#10;inherente"/>
+    <bpmn:userTask id="Task_DocumentarControles" name="Documentar controles&#10;existentes"/>
+    <bpmn:serviceTask id="Task_EvaluarControlesExistentes" name="Evaluar eficacia&#10;controles existentes" camunda:async="true"/>
+    <bpmn:userTask id="Task_ControlesPropuestos" name="Identificar controles&#10;propuestos"/>
+    <bpmn:serviceTask id="Task_CalcularRiesgoResidual" name="Calcular riesgo&#10;residual" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_RiesgoResidual" name="¿Riesgo residual&#10;acceptable?"/>
+    <bpmn:userTask id="Task_ImplementarControlesAdicionales" name="Implementar controles&#10;adicionales"/>
+    <bpmn:exclusiveGateway id="Gateway_RequiereAutorizacion" name="¿Nivel muy alto?"/>
+    <bpmn:userTask id="Task_RevisarEIPD" name="Revisar EIPD completo"/>
+    <bpmn:userTask id="Task_AprobarEIPD" name="Aprobar EIPD"/>
+    <bpmn:serviceTask id="Task_ActualizarRAT" name="Vincular EIPD a RAT&#10;y actualizar estado" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ProgramarRevision" name="Programar revisión&#10;periódica 24 meses" camunda:async="true"/>
+    <bpmn:endEvent id="End_EIPDAprobado" name="EIPD aprobado y activo"/>
+    <bpmn:intermediateCatchEvent id="Timer_Revision24Meses" name="Revisión 24 meses">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_EIPD_1" sourceRef="Start_EIPD" targetRef="Task_CrearEIPD"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_2" sourceRef="Task_CrearEIPD" targetRef="Task_DescribirTratamiento"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_3" sourceRef="Task_DescribirTratamiento" targetRef="Task_IdentificarRiesgos"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_4" sourceRef="Task_IdentificarRiesgos" targetRef="Task_CalcularProbabilidad"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_5" sourceRef="Task_CalcularProbabilidad" targetRef="Task_CalcularImpacto"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_6" sourceRef="Task_CalcularImpacto" targetRef="Task_CalcularRiesgoInherente"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_7" sourceRef="Task_CalcularRiesgoInherente" targetRef="Gateway_NivelRiesgoInherente"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_8" sourceRef="Gateway_NivelRiesgoInherente" targetRef="Task_DocumentarControles"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_9" sourceRef="Task_DocumentarControles" targetRef="Task_EvaluarControlesExistentes"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_10" sourceRef="Task_EvaluarControlesExistentes" targetRef="Task_ControlesPropuestos"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_11" sourceRef="Task_ControlesPropuestos" targetRef="Task_CalcularRiesgoResidual"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_12" sourceRef="Task_CalcularRiesgoResidual" targetRef="Gateway_RiesgoResidual"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_13" name="Sí" sourceRef="Gateway_RiesgoResidual" targetRef="Gateway_RequiereAutorizacion">
+      <bpmn:conditionExpression>acceptable == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EIPD_14" name="No" sourceRef="Gateway_RiesgoResidual" targetRef="Task_ImplementarControlesAdicionales">
+      <bpmn:conditionExpression>acceptable == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EIPD_15" sourceRef="Task_ImplementarControlesAdicionales" targetRef="Task_CalcularRiesgoResidual"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_16" name="Sí" sourceRef="Gateway_RequiereAutorizacion" targetRef="Task_RevisarEIPD">
+      <bpmn:conditionExpression>muy_alto == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EIPD_17" name="No" sourceRef="Gateway_RequiereAutorizacion" targetRef="Task_RevisarEIPD">
+      <bpmn:conditionExpression>muy_alto == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EIPD_18" sourceRef="Task_RevisarEIPD" targetRef="Task_AprobarEIPD"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_19" sourceRef="Task_AprobarEIPD" targetRef="Task_ActualizarRAT"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_20" sourceRef="Task_ActualizarRAT" targetRef="Task_ProgramarRevision"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_21" sourceRef="Task_ProgramarRevision" targetRef="End_EIPDAprobado"/>
+    <bpmn:sequenceFlow id="Flow_EIPD_22" sourceRef="Timer_Revision24Meses" targetRef="Task_DescribirTratamiento"/>
+  </bpmn:process>
+
+  <!-- Process ARCO -->
+  <bpmn:process id="Process_ARCO" isExecutable="false">
+    <bpmn:startEvent id="Start_ARCO" name="Titular envía&#10;solicitud"/>
+    <bpmn:userTask id="Task_CompletarFormulario" name="Completar formulario ARCO"/>
+    <bpmn:serviceTask id="Task_ValidarDatos" name="Validar datos Eingang" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_CrearTicketARCO" name="Crear Ticket ARCO&#10;estado=ABIERTO" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarTrackingToken" name="Generar tracking token" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_NotificarAcuse" name="Notificar acuse de recibo" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_AutoAsignar" name="Auto-asignar por reglas" camunda:async="true"/>
+    <bpmn:userTask id="Task_RecibirSolicitud" name="Recibir y evaluar solicitud"/>
+    <bpmn:exclusiveGateway id="Gateway_TipoSolicitud" name="Evaluar tipo&#10;de solicitud"/>
+    <bpmn:userTask id="Task_GestionarSolicitud" name="Gestionar según tipo&#10;(A/R/C/O/B/P)"/>
+    <bpmn:exclusiveGateway id="Gateway_Subsanacion" name="¿Requiere&#10;subsanación?"/>
+    <bpmn:userTask id="Task_SubsolicitarSubsanacion" name="Solicitar subsanación"/>
+    <bpmn:userTask id="Task_TitularSubsana" name="Titular completa&#10;documentación"/>
+    <bpmn:serviceTask id="Task_CompletarSubsanacion" name="Completar subsanación" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_Prorroga" name="¿Invocar&#10;prórroga?"/>
+    <bpmn:serviceTask id="Task_InvocarProrroga" name="Establecer prorroga&#10;Art. 12 bis" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_Decision" name="Decisión DPO"/>
+    <bpmn:userTask id="Task_ResolverSolicitud" name="Resolver solicitud&#10;favorablemente"/>
+    <bpmn:userTask id="Task_RechazarSolicitud" name="Rechazar con&#10;fundamento"/>
+    <bpmn:serviceTask id="Task_EstablecerResuelto" name="Establecer estado=RESUELTO" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_EstablecerRechazado" name="Establecer estado=RECHAZADO" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ExportarSolicitud" name="Exportar (PDF/CSV/Excel)" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ActualizarHashchain" name="Actualizar hashchain M1" camunda:async="true"/>
+    <bpmn:endEvent id="End_ARCO" name="Solicitud ARCO cerrada"/>
+    <bpmn:intermediateCatchEvent id="Timer_Subsanacion" name="Plazo subsanación&#10;(10 días hábiles)">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Timer_Prorroga" name="Plazo prorroga&#10;(10 días hábiles)">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_ARCO_1" sourceRef="Start_ARCO" targetRef="Task_CompletarFormulario"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_2" sourceRef="Task_CompletarFormulario" targetRef="Task_ValidarDatos"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_3" sourceRef="Task_ValidarDatos" targetRef="Task_CrearTicketARCO"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_4" sourceRef="Task_CrearTicketARCO" targetRef="Task_GenerarTrackingToken"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_5" sourceRef="Task_GenerarTrackingToken" targetRef="Task_NotificarAcuse"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_6" sourceRef="Task_NotificarAcuse" targetRef="Task_AutoAsignar"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_7" sourceRef="Task_AutoAsignar" targetRef="Task_RecibirSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_8" sourceRef="Task_RecibirSolicitud" targetRef="Gateway_TipoSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_9" sourceRef="Gateway_TipoSolicitud" targetRef="Task_GestionarSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_10" sourceRef="Task_GestionarSolicitud" targetRef="Gateway_Subsanacion"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_11" name="Sí" sourceRef="Gateway_Subsanacion" targetRef="Task_SubsolicitarSubsanacion">
+      <bpmn:conditionExpression>requiere_subsanacion == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_12" name="No" sourceRef="Gateway_Subsanacion" targetRef="Gateway_Prorroga">
+      <bpmn:conditionExpression>requiere_subsanacion == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_13" sourceRef="Task_SubsolicitarSubsanacion" targetRef="Task_TitularSubsana"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_14" sourceRef="Task_TitularSubsana" targetRef="Task_CompletarSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_15" sourceRef="Task_CompletarSubsanacion" targetRef="Gateway_Prorroga"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_16" name="Sí" sourceRef="Gateway_Prorroga" targetRef="Task_InvocarProrroga">
+      <bpmn:conditionExpression>invocar_prorroga == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_17" name="No" sourceRef="Gateway_Prorroga" targetRef="Gateway_Decision">
+      <bpmn:conditionExpression>invocar_prorroga == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_18" sourceRef="Task_InvocarProrroga" targetRef="Gateway_Decision"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_19" name="Favorable" sourceRef="Gateway_Decision" targetRef="Task_ResolverSolicitud">
+      <bpmn:conditionExpression>decision == &quot;FAVORABLE&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_20" name="Rechazado" sourceRef="Gateway_Decision" targetRef="Task_RechazarSolicitud">
+      <bpmn:conditionExpression>decision == &quot;RECHAZADO&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ARCO_21" sourceRef="Task_ResolverSolicitud" targetRef="Task_EstablecerResuelto"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_22" sourceRef="Task_RechazarSolicitud" targetRef="Task_EstablecerRechazado"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_23" sourceRef="Task_EstablecerResuelto" targetRef="Task_ExportarSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_24" sourceRef="Task_EstablecerRechazado" targetRef="Task_ExportarSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_25" sourceRef="Task_ExportarSolicitud" targetRef="Task_ActualizarHashchain"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_26" sourceRef="Task_ActualizarHashchain" targetRef="End_ARCO"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_27" sourceRef="Timer_Subsanacion" targetRef="Task_RechazarSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_ARCO_28" sourceRef="Timer_Prorroga" targetRef="Gateway_Decision"/>
+  </bpmn:process>
+
+  <!-- Process Brechas -->
+  <bpmn:process id="Process_Brechas" isExecutable="false">
+    <bpmn:startEvent id="Start_Brecha" name="Brecha detectada"/>
+    <bpmn:userTask id="Task_ReportarBrecha" name="Reportar brecha"/>
+    <bpmn:serviceTask id="Task_CrearRegistroBrecha" name="Crear registro&#10;con estado=DETECTADA" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_NotificarDPO" name="Notificar DPO&#10;inmediatamente" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_CalcularCriticidad" name="Calcular criticidad&#10;automática" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_Criticidad" name="Clasificación&#10;criticidad"/>
+    <bpmn:exclusiveGateway id="Gateway_RequiereComite" name="¿Criticidad&#10;crítica?"/>
+    <bpmn:serviceTask id="Task_ConvocarComiteEmergencia" name="Convocar comité&#10;de emergencia" camunda:async="true"/>
+    <bpmn:userTask id="Task_ClasificarBrecha" name="Clasificar tipo de brecha"/>
+    <bpmn:userTask id="Task_EvaluarImpacto" name="Evaluar impacto"/>
+    <bpmn:userTask id="Task_SesionComite" name="Sesión comité&#10;de revisión"/>
+    <bpmn:exclusiveGateway id="Gateway_NotificarAPDP" name="¿Notificar APDP?"/>
+    <bpmn:userTask id="Task_ConfeccionarNotificacionAPDP" name="Elaborar notificación&#10;APDP"/>
+    <bpmn:serviceTask id="Task_EnviarNotificacionAPDP" name="Enviar notificación APDP&#10;(72 horas)" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_RiesgoTitulares" name="¿Riesgo para&#10;titulares?"/>
+    <bpmn:userTask id="Task_NotificarTitulares" name="Notificar a&#10;titulares afectados"/>
+    <bpmn:userTask id="Task_ElaborarPlanRemediacion" name="Elaborar plan&#10;de remediación"/>
+    <bpmn:serviceTask id="Task_CerrarBrecha" name="Cerrar brecha" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarInformeFinal" name="Generar informe final" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ActualizarEvidencia" name="Actualizar evidencia&#10;hashchain M1" camunda:async="true"/>
+    <bpmn:endEvent id="End_BrechaCerrada" name="Brecha cerrada"/>
+    <bpmn:intermediateCatchEvent id="Timer_72HorasAPDP" name="Timer 72 horas APDP">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_Brechas_1" sourceRef="Start_Brecha" targetRef="Task_ReportarBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_2" sourceRef="Task_ReportarBrecha" targetRef="Task_CrearRegistroBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_3" sourceRef="Task_CrearRegistroBrecha" targetRef="Task_NotificarDPO"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_4" sourceRef="Task_NotificarDPO" targetRef="Task_CalcularCriticidad"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_5" sourceRef="Task_CalcularCriticidad" targetRef="Gateway_Criticidad"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_6" sourceRef="Gateway_Criticidad" targetRef="Gateway_RequiereComite"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_7" name="Crítica" sourceRef="Gateway_RequiereComite" targetRef="Task_ConvocarComiteEmergencia">
+      <bpmn:conditionExpression>criticidad == &quot;CRITICA&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_8" name="No crítica" sourceRef="Gateway_RequiereComite" targetRef="Task_ClasificarBrecha">
+      <bpmn:conditionExpression>criticidad != &quot;CRITICA&quot;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_9" sourceRef="Task_ConvocarComiteEmergencia" targetRef="Task_SesionComite"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_10" sourceRef="Task_SesionComite" targetRef="Task_ClasificarBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_11" sourceRef="Task_ClasificarBrecha" targetRef="Task_EvaluarImpacto"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_12" sourceRef="Task_EvaluarImpacto" targetRef="Gateway_NotificarAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_13" name="Sí" sourceRef="Gateway_NotificarAPDP" targetRef="Task_ConfeccionarNotificacionAPDP">
+      <bpmn:conditionExpression>notificar_apdp == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_14" name="No" sourceRef="Gateway_NotificarAPDP" targetRef="Gateway_RiesgoTitulares">
+      <bpmn:conditionExpression>notificar_apdp == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_15" sourceRef="Task_ConfeccionarNotificacionAPDP" targetRef="Task_EnviarNotificacionAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_16" sourceRef="Task_EnviarNotificacionAPDP" targetRef="Gateway_RiesgoTitulares"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_17" name="Sí" sourceRef="Gateway_RiesgoTitulares" targetRef="Task_NotificarTitulares">
+      <bpmn:conditionExpression>riesgo_titulares == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_18" name="No" sourceRef="Gateway_RiesgoTitulares" targetRef="Task_ElaborarPlanRemediacion">
+      <bpmn:conditionExpression>riesgo_titulares == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Brechas_19" sourceRef="Task_NotificarTitulares" targetRef="Task_ElaborarPlanRemediacion"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_20" sourceRef="Task_ElaborarPlanRemediacion" targetRef="Task_CerrarBrecha"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_21" sourceRef="Task_CerrarBrecha" targetRef="Task_GenerarInformeFinal"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_22" sourceRef="Task_GenerarInformeFinal" targetRef="Task_ActualizarEvidencia"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_23" sourceRef="Task_ActualizarEvidencia" targetRef="End_BrechaCerrada"/>
+    <bpmn:sequenceFlow id="Flow_Brechas_24" sourceRef="Timer_72HorasAPDP" targetRef="Task_EnviarNotificacionAPDP"/>
+  </bpmn:process>
+
+  <!-- Process Consent -->
+  <bpmn:process id="Process_Consent" isExecutable="false">
+    <bpmn:startEvent id="Start_ConsentimientoRequerido" name="Consentimiento&#10;requerido"/>
+    <bpmn:userTask id="Task_DisenarFormulario" name="Diseñar formulario&#10;de consentimiento"/>
+    <bpmn:userTask id="Task_ConfigurarTexto" name="Configurar texto&#10;de información"/>
+    <bpmn:serviceTask id="Task_PublicarFormulario" name="Publicar formulario" camunda:async="true"/>
+    <bpmn:userTask id="Task_RevisarInformacion" name="Titular revisa&#10;información"/>
+    <bpmn:userTask id="Task_OtorgarConsentimiento" name="Titular otorga&#10;consentimiento"/>
+    <bpmn:serviceTask id="Task_RegistrarConsentimiento" name="Registrar consentimiento&#10;con timestamp" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarEvidenciaHash" name="Generar evidencia hash" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_AlmacenarHashchain" name="Almacenar en&#10;hashchain M1" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ActualizarRATConsent" name="Actualizar RAT&#10;automáticamente" camunda:async="true"/>
+    <bpmn:userTask id="Task_EvaluarConsentimientoValido" name="Evaluar si consentimiento&#10;es válido (FISU)"/>
+    <bpmn:serviceTask id="Task_AsignarVersion" name="Asignar versión" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_NotificarCambios" name="Notificar cambio&#10;de versión" camunda:async="true"/>
+    <bpmn:userTask id="Task_SolicitarRevocacion" name="Titular solicita&#10;revocación"/>
+    <bpmn:serviceTask id="Task_InvalidarConsentimiento" name="Invalidar consentimiento" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_EnviarConfirmacionRevocacion" name="Enviar confirmación&#10;de revocación" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_RegistrarInactividad" name="Registrar como inactivo" camunda:async="true"/>
+    <bpmn:endEvent id="End_ConsentimientoRegistrado" name="Consentimiento&#10;registrado"/>
+    <bpmn:endEvent id="End_ConsentimientoRevocado" name="Consentimiento&#10;revocado"/>
+    <bpmn:intermediateCatchEvent id="Timer_Revision12Meses" name="Revisión 12 meses">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_Consent_1" sourceRef="Start_ConsentimientoRequerido" targetRef="Task_DisenarFormulario"/>
+    <bpmn:sequenceFlow id="Flow_Consent_2" sourceRef="Task_DisenarFormulario" targetRef="Task_ConfigurarTexto"/>
+    <bpmn:sequenceFlow id="Flow_Consent_3" sourceRef="Task_ConfigurarTexto" targetRef="Task_PublicarFormulario"/>
+    <bpmn:sequenceFlow id="Flow_Consent_4" sourceRef="Task_PublicarFormulario" targetRef="Task_RevisarInformacion"/>
+    <bpmn:sequenceFlow id="Flow_Consent_5" sourceRef="Task_RevisarInformacion" targetRef="Task_OtorgarConsentimiento"/>
+    <bpmn:sequenceFlow id="Flow_Consent_6" sourceRef="Task_OtorgarConsentimiento" targetRef="Task_RegistrarConsentimiento"/>
+    <bpmn:sequenceFlow id="Flow_Consent_7" sourceRef="Task_RegistrarConsentimiento" targetRef="Task_GenerarEvidenciaHash"/>
+    <bpmn:sequenceFlow id="Flow_Consent_8" sourceRef="Task_GenerarEvidenciaHash" targetRef="Task_AlmacenarHashchain"/>
+    <bpmn:sequenceFlow id="Flow_Consent_9" sourceRef="Task_AlmacenarHashchain" targetRef="Task_ActualizarRATConsent"/>
+    <bpmn:sequenceFlow id="Flow_Consent_10" sourceRef="Task_ActualizarRATConsent" targetRef="Task_EvaluarConsentimientoValido"/>
+    <bpmn:sequenceFlow id="Flow_Consent_11" sourceRef="Task_EvaluarConsentimientoValido" targetRef="Task_AsignarVersion"/>
+    <bpmn:sequenceFlow id="Flow_Consent_12" sourceRef="Task_AsignarVersion" targetRef="Task_NotificarCambios"/>
+    <bpmn:sequenceFlow id="Flow_Consent_13" sourceRef="Task_NotificarCambios" targetRef="End_ConsentimientoRegistrado"/>
+    <bpmn:sequenceFlow id="Flow_Consent_14" sourceRef="Timer_Revision12Meses" targetRef="Task_OtorgarConsentimiento"/>
+    <bpmn:sequenceFlow id="Flow_Consent_15" sourceRef="Start_ConsentimientoRequerido" targetRef="Task_SolicitarRevocacion"/>
+    <bpmn:sequenceFlow id="Flow_Consent_16" sourceRef="Task_SolicitarRevocacion" targetRef="Task_InvalidarConsentimiento"/>
+    <bpmn:sequenceFlow id="Flow_Consent_17" sourceRef="Task_InvalidarConsentimiento" targetRef="Task_EnviarConfirmacionRevocacion"/>
+    <bpmn:sequenceFlow id="Flow_Consent_18" sourceRef="Task_EnviarConfirmacionRevocacion" targetRef="Task_RegistrarInactividad"/>
+    <bpmn:sequenceFlow id="Flow_Consent_19" sourceRef="Task_RegistrarInactividad" targetRef="End_ConsentimientoRevocado"/>
+  </bpmn:process>
+
+  <!-- Process Encargados -->
+  <bpmn:process id="Process_Encargados" isExecutable="false">
+    <bpmn:startEvent id="Start_NuevaRelacion" name="Nueva relación&#10;con encargado"/>
+    <bpmn:userTask id="Task_SolicitarAltaEncargado" name="Solicitar alta&#10;encargado"/>
+    <bpmn:serviceTask id="Task_VerificarUnicidad" name="Verificar unicidad" camunda:async="true"/>
+    <bpmn:userTask id="Task_EvaluarIdoneidad" name="Evaluar idoneidad&#10;del encargado"/>
+    <bpmn:exclusiveGateway id="Gateway_Idoneidad" name="¿Encargado&#10;idóneo?"/>
+    <bpmn:userTask id="Task_ElaborarProyecto" name="Elaborar proyecto&#10;de encargo"/>
+    <bpmn:userTask id="Task_RevisarContrato" name="Revisar proyecto&#10;con área legal"/>
+    <bpmn:userTask id="Task_RecibirContrato" name="Remitir contrato&#10;a encargado"/>
+    <bpmn:exclusiveGateway id="Gateway_AceptaCondiciones" name="¿Encargado acepta&#10;condiciones?"/>
+    <bpmn:userTask id="Task_AceptarCondiciones" name="Encargado acepta"/>
+    <bpmn:userTask id="Task_FirmarContrato" name="Firmar contrato"/>
+    <bpmn:serviceTask id="Task_RegistrarContrato" name="Registrar contrato&#10;estado=VIGENTE" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarMedidasSeguridad" name="Verificar medidas&#10;de seguridad" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VincularRAT" name="Vincular a RAT&#10;correspondientes" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ProgramarRecordatorio" name="Programar recordatorio&#10;30 días" camunda:async="true"/>
+    <bpmn:endEvent id="End_EncargadoActivo" name="Encargado de&#10;tratamiento activo"/>
+    <bpmn:intermediateCatchEvent id="Timer_30DiasVencimiento" name="30 días antes&#nbsp;vencimiento">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Timer_Revision24Meses_Enc" name="Revisión contractual&#10;24 meses">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Task_NotificarVencimiento" name="Notificar proximidad&#10;vencimiento" camunda:async="true"/>
+    <bpmn:userTask id="Task_RevisarCumplimiento" name="Revisar cumplimiento&#10;de obligaciones"/>
+    <bpmn:exclusiveGateway id="Gateway_CumpleObligaciones" name="¿Encargado&#10;cumple?"/>
+    <bpmn:userTask id="Task_EvaluarDesempeno" name="Evaluar desempeño"/>
+    <bpmn:exclusiveGateway id="Gateway_Renovar" name="¿Renovar&#10;contrato?"/>
+    <bpmn:userTask id="Task_ElaborarContratoRenovacion" name="Renegociar términos"/>
+    <bpmn:userTask id="Task_FirmarRenovacion" name="Firmar renovación"/>
+    <bpmn:serviceTask id="Task_ActualizarFechas" name="Actualizar fechas&#10;vigencia" camunda:async="true"/>
+    <bpmn:userTask id="Task_DocumentarTerminacion" name="Documentar motivos&#10;de terminación"/>
+    <bpmn:userTask id="Task_VerificarEstadoDatos" name="Verificar estado&#10;de datos"/>
+    <bpmn:exclusiveGateway id="Gateway_DatosEnOrden" name="¿Datos en&#10;orden?"/>
+    <bpmn:userTask id="Task_SolicitarSubcontratacion" name="Solicitar&#10;subcontratación"/>
+    <bpmn:serviceTask id="Task_RecibirCertificacionEliminacion" name="Recibir certificación&#10;de eliminación" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ActualizarRATEncargado" name="Actualizar RAT&#10;(desvincular)" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ArchivarDocumentacion" name="Archivar documentación" camunda:async="true"/>
+    <bpmn:endEvent id="End_RelacionTerminada" name="Relación con&#10;encargado terminada"/>
+
+    <bpmn:sequenceFlow id="Flow_Enc_1" sourceRef="Start_NuevaRelacion" targetRef="Task_SolicitarAltaEncargado"/>
+    <bpmn:sequenceFlow id="Flow_Enc_2" sourceRef="Task_SolicitarAltaEncargado" targetRef="Task_VerificarUnicidad"/>
+    <bpmn:sequenceFlow id="Flow_Enc_3" sourceRef="Task_VerificarUnicidad" targetRef="Task_EvaluarIdoneidad"/>
+    <bpmn:sequenceFlow id="Flow_Enc_4" sourceRef="Task_EvaluarIdoneidad" targetRef="Gateway_Idoneidad"/>
+    <bpmn:sequenceFlow id="Flow_Enc_5" name="Sí" sourceRef="Gateway_Idoneidad" targetRef="Task_ElaborarProyecto">
+      <bpmn:conditionExpression>idoneo == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_6" name="No" sourceRef="Gateway_Idoneidad" targetRef="Task_SolicitarAltaEncargado">
+      <bpmn:conditionExpression>idoneo == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_7" sourceRef="Task_ElaborarProyecto" targetRef="Task_RevisarContrato"/>
+    <bpmn:sequenceFlow id="Flow_Enc_8" sourceRef="Task_RevisarContrato" targetRef="Task_RecibirContrato"/>
+    <bpmn:sequenceFlow id="Flow_Enc_9" sourceRef="Task_RecibirContrato" targetRef="Gateway_AceptaCondiciones"/>
+    <bpmn:sequenceFlow id="Flow_Enc_10" name="Sí" sourceRef="Gateway_AceptaCondiciones" targetRef="Task_FirmarContrato">
+      <bpmn:conditionExpression>acepta == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_11" name="No" sourceRef="Gateway_AceptaCondiciones" targetRef="Task_AceptarCondiciones">
+      <bpmn:conditionExpression>acepta == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_12" sourceRef="Task_AceptarCondiciones" targetRef="Gateway_AceptaCondiciones"/>
+    <bpmn:sequenceFlow id="Flow_Enc_13" sourceRef="Task_FirmarContrato" targetRef="Task_RegistrarContrato"/>
+    <bpmn:sequenceFlow id="Flow_Enc_14" sourceRef="Task_RegistrarContrato" targetRef="Task_VerificarMedidasSeguridad"/>
+    <bpmn:sequenceFlow id="Flow_Enc_15" sourceRef="Task_VerificarMedidasSeguridad" targetRef="Task_VincularRAT"/>
+    <bpmn:sequenceFlow id="Flow_Enc_16" sourceRef="Task_VincularRAT" targetRef="Task_ProgramarRecordatorio"/>
+    <bpmn:sequenceFlow id="Flow_Enc_17" sourceRef="Task_ProgramarRecordatorio" targetRef="End_EncargadoActivo"/>
+    <bpmn:sequenceFlow id="Flow_Enc_18" sourceRef="Timer_30DiasVencimiento" targetRef="Task_NotificarVencimiento"/>
+    <bpmn:sequenceFlow id="Flow_Enc_19" sourceRef="Task_NotificarVencimiento" targetRef="Task_EvaluarDesempeno"/>
+    <bpmn:sequenceFlow id="Flow_Enc_20" sourceRef="Timer_Revision24Meses_Enc" targetRef="Task_RevisarCumplimiento"/>
+    <bpmn:sequenceFlow id="Flow_Enc_21" sourceRef="Task_RevisarCumplimiento" targetRef="Gateway_CumpleObligaciones"/>
+    <bpmn:sequenceFlow id="Flow_Enc_22" name="Sí" sourceRef="Gateway_CumpleObligaciones" targetRef="Task_EvaluarDesempeno">
+      <bpmn:conditionExpression>cumple == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_23" name="No" sourceRef="Gateway_CumpleObligaciones" targetRef="Task_DocumentarTerminacion">
+      <bpmn:conditionExpression>cumple == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_24" sourceRef="Task_EvaluarDesempeno" targetRef="Gateway_Renovar"/>
+    <bpmn:sequenceFlow id="Flow_Enc_25" name="Sí" sourceRef="Gateway_Renovar" targetRef="Task_ElaborarContratoRenovacion">
+      <bpmn:conditionExpression>renovar == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_26" name="No" sourceRef="Gateway_Renovar" targetRef="Task_DocumentarTerminacion">
+      <bpmn:conditionExpression>renovar == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_27" sourceRef="Task_ElaborarContratoRenovacion" targetRef="Task_FirmarRenovacion"/>
+    <bpmn:sequenceFlow id="Flow_Enc_28" sourceRef="Task_FirmarRenovacion" targetRef="Task_ActualizarFechas"/>
+    <bpmn:sequenceFlow id="Flow_Enc_29" sourceRef="Task_ActualizarFechas" targetRef="Task_ProgramarRecordatorio"/>
+    <bpmn:sequenceFlow id="Flow_Enc_30" sourceRef="Task_DocumentarTerminacion" targetRef="Task_VerificarEstadoDatos"/>
+    <bpmn:sequenceFlow id="Flow_Enc_31" sourceRef="Task_VerificarEstadoDatos" targetRef="Gateway_DatosEnOrden"/>
+    <bpmn:sequenceFlow id="Flow_Enc_32" name="No" sourceRef="Gateway_DatosEnOrden" targetRef="Task_VerificarEstadoDatos">
+      <bpmn:conditionExpression>datos_orden == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_33" name="Sí" sourceRef="Gateway_DatosEnOrden" targetRef="Task_RecibirCertificacionEliminacion">
+      <bpmn:conditionExpression>datos_orden == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Enc_34" sourceRef="Task_RecibirCertificacionEliminacion" targetRef="Task_ActualizarRATEncargado"/>
+    <bpmn:sequenceFlow id="Flow_Enc_35" sourceRef="Task_ActualizarRATEncargado" targetRef="Task_ArchivarDocumentacion"/>
+    <bpmn:sequenceFlow id="Flow_Enc_36" sourceRef="Task_ArchivarDocumentacion" targetRef="End_RelacionTerminada"/>
+  </bpmn:process>
+
+  <!-- Process Master Orchestration -->
+  <bpmn:process id="Process_Master" isExecutable="false">
+    <bpmn:startEvent id="Start_PlataformaInicializada" name="Plataforma&#10;inicializada"/>
+    <bpmn:serviceTask id="Task_CargarConfiguracion" name="Cargar configuración&#10;regulatoria Chile" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_InicializarDashboard" name="Inicializar dashboard&#10;compliance" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_ConfigurarCalendario" name="Configurar calendario&#10;regulatorio" camunda:async="true"/>
+    <bpmn:parallelGateway id="Gateway_Paralelo_Verificacion" name="Verificación&#10;paralela"/>
+    <bpmn:serviceTask id="Task_VerificarRAT" name="Verificar estado RAT" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarEIPDs" name="Verificar EIPDs vigentes" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarARCOPendientes" name="Verificar ARCO&#10;pendientes" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarConsentimientos" name="Verificar&#10;consentimientos" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarEncargos" name="Verificar encargos&#10;vigentes" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_VerificarBrechasAbiertas" name="Verificar brechas&#10;abiertas" camunda:async="true"/>
+    <bpmn:parallelGateway id="Gateway_Paralelo_Reunir" name="Reunir métricas"/>
+    <bpmn:serviceTask id="Task_CalcularComplianceScore" name="Calcular compliance score&#10;global" camunda:async="true"/>
+    <bpmn:exclusiveGateway id="Gateway_ComplianceScore" name="¿Score &lt; 80%?"/>
+    <bpmn:serviceTask id="Task_NotificarDireccion" name="Notificar a dirección" camunda:async="true"/>
+    <bpmn:userTask id="Task_SesionExtraordinaria" name="Sesión extraordinaria&#10;de compliance"/>
+    <bpmn:userTask id="Task_ElaborarPlanMejora" name="Elaborar plan&#10;de mejora"/>
+    <bpmn:serviceTask id="Task_MonitorearPlan" name="Monitorear implementación&#10;del plan" camunda:async="true"/>
+    <bpmn:serviceTask id="Task_GenerarInformeAPDP" name="Generar informe&#10;regulatorio APDP" camunda:async="true"/>
+    <bpmn:userTask id="Task_AprobarInformeAPDP" name="Revisar y aprobar&#10;informe APDP"/>
+    <bpmn:serviceTask id="Task_EnviarInformeAPDP" name="Enviar a APDP" camunda:async="true"/>
+    <bpmn:userTask id="Task_PrepararDocumentacionAuditoria" name="Preparar documentación&#10;auditoría"/>
+    <bpmn:serviceTask id="Task_GenerarPackageAuditoria" name="Generar package&#10;de evidencias" camunda:async="true"/>
+    <bpmn:userTask id="Task_RevisarHallazgos" name="Revisar hallazgos&#10;de auditoría"/>
+    <bpmn:userTask id="Task_SesionComiteCompliance" name="Sesión comité&#10;compliance"/>
+    <bpmn:serviceTask id="Task_GenerarInformeAnnual" name="Generar informe&#10;anual compliance" camunda:async="true"/>
+    <bpmn:userTask id="Task_RevisarCambiosRegulatorios" name="Evaluar cambios&#10;regulatorios"/>
+    <bpmn:intermediateCatchEvent id="Timer_RevisionAnnualIntegral" name="Revisión anual&#10;integral (12 meses)">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="End_OperacionCompliant" name="Operación&#10;compliant"/>
+    <bpmn:endEvent id="End_NoCompliance" name="No-compliance&#10;en curso"/>
+
+    <bpmn:sequenceFlow id="Flow_Master_1" sourceRef="Start_PlataformaInicializada" targetRef="Task_CargarConfiguracion"/>
+    <bpmn:sequenceFlow id="Flow_Master_2" sourceRef="Task_CargarConfiguracion" targetRef="Task_InicializarDashboard"/>
+    <bpmn:sequenceFlow id="Flow_Master_3" sourceRef="Task_InicializarDashboard" targetRef="Task_ConfigurarCalendario"/>
+    <bpmn:sequenceFlow id="Flow_Master_4" sourceRef="Task_ConfigurarCalendario" targetRef="Gateway_Paralelo_Verificacion"/>
+    <bpmn:sequenceFlow id="Flow_Master_5" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarRAT"/>
+    <bpmn:sequenceFlow id="Flow_Master_6" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarEIPDs"/>
+    <bpmn:sequenceFlow id="Flow_Master_7" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarARCOPendientes"/>
+    <bpmn:sequenceFlow id="Flow_Master_8" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarConsentimientos"/>
+    <bpmn:sequenceFlow id="Flow_Master_9" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarEncargos"/>
+    <bpmn:sequenceFlow id="Flow_Master_10" sourceRef="Gateway_Paralelo_Verificacion" targetRef="Task_VerificarBrechasAbiertas"/>
+    <bpmn:sequenceFlow id="Flow_Master_11" sourceRef="Task_VerificarRAT" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_12" sourceRef="Task_VerificarEIPDs" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_13" sourceRef="Task_VerificarARCOPendientes" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_14" sourceRef="Task_VerificarConsentimientos" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_15" sourceRef="Task_VerificarEncargos" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_16" sourceRef="Task_VerificarBrechasAbiertas" targetRef="Gateway_Paralelo_Reunir"/>
+    <bpmn:sequenceFlow id="Flow_Master_17" sourceRef="Gateway_Paralelo_Reunir" targetRef="Task_CalcularComplianceScore"/>
+    <bpmn:sequenceFlow id="Flow_Master_18" sourceRef="Task_CalcularComplianceScore" targetRef="Gateway_ComplianceScore"/>
+    <bpmn:sequenceFlow id="Flow_Master_19" name="Score &lt; 80%" sourceRef="Gateway_ComplianceScore" targetRef="Task_NotificarDireccion">
+      <bpmn:conditionExpression>score &lt; 80</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Master_20" name="Score >= 80%" sourceRef="Gateway_ComplianceScore" targetRef="End_OperacionCompliant">
+      <bpmn:conditionExpression>score &gt;= 80</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Master_21" sourceRef="Task_NotificarDireccion" targetRef="Task_SesionExtraordinaria"/>
+    <bpmn:sequenceFlow id="Flow_Master_22" sourceRef="Task_SesionExtraordinaria" targetRef="Task_ElaborarPlanMejora"/>
+    <bpmn:sequenceFlow id="Flow_Master_23" sourceRef="Task_ElaborarPlanMejora" targetRef="Task_MonitorearPlan"/>
+    <bpmn:sequenceFlow id="Flow_Master_24" sourceRef="Task_MonitorearPlan" targetRef="End_NoCompliance"/>
+    <bpmn:sequenceFlow id="Flow_Master_25" sourceRef="Timer_RevisionAnnualIntegral" targetRef="Task_GenerarInformeAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Master_26" sourceRef="Task_GenerarInformeAPDP" targetRef="Task_AprobarInformeAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Master_27" sourceRef="Task_AprobarInformeAPDP" targetRef="Task_EnviarInformeAPDP"/>
+    <bpmn:sequenceFlow id="Flow_Master_28" sourceRef="Task_EnviarInformeAPDP" targetRef="Task_PrepararDocumentacionAuditoria"/>
+    <bpmn:sequenceFlow id="Flow_Master_29" sourceRef="Task_PrepararDocumentacionAuditoria" targetRef="Task_GenerarPackageAuditoria"/>
+    <bpmn:sequenceFlow id="Flow_Master_30" sourceRef="Task_GenerarPackageAuditoria" targetRef="Task_RevisarHallazgos"/>
+    <bpmn:sequenceFlow id="Flow_Master_31" sourceRef="Task_RevisarHallazgos" targetRef="Task_SesionComiteCompliance"/>
+    <bpmn:sequenceFlow id="Flow_Master_32" sourceRef="Task_SesionComiteCompliance" targetRef="Task_GenerarInformeAnnual"/>
+    <bpmn:sequenceFlow id="Flow_Master_33" sourceRef="Task_GenerarInformeAnnual" targetRef="Task_RevisarCambiosRegulatorios"/>
+    <bpmn:sequenceFlow id="Flow_Master_34" sourceRef="Task_RevisarCambiosRegulatorios" targetRef="Gateway_Paralelo_Verificacion"/>
+  </bpmn:process>
+
+  <!-- ================================================ -->
+  <!-- BPMN DIAGRAMS (DI) -->
+  <!-- ================================================ -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Master" name="Mapa Maestro de Cumplimiento - Custodio">
+    <bpmndi:BPMNPlane id="BPMNPlane_Master" bpmnElement="Collaboration_MasterCompliance">
+      <!-- Process RAT -->
+      <bpmndi:BPMNShape id="Participant_RAT_di" bpmnElement="Participant_RAT" isHorizontal="true">
+        <dc:Bounds x="100" y="50" width="600" height="300"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process EIPD -->
+      <bpmndi:BPMNShape id="Participant_EIPD_di" bpmnElement="Participant_EIPD" isHorizontal="true">
+        <dc:Bounds x="100" y="380" width="600" height="280"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process ARCO -->
+      <bpmndi:BPMNShape id="Participant_ARCO_di" bpmnElement="Participant_ARCO" isHorizontal="true">
+        <dc:Bounds x="100" y="690" width="600" height="340"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process Brechas -->
+      <bpmndi:BPMNShape id="Participant_Brechas_di" bpmnElement="Participant_Brechas" isHorizontal="true">
+        <dc:Bounds x="750" y="50" width="650" height="320"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process Consent -->
+      <bpmndi:BPMNShape id="Participant_Consent_di" bpmnElement="Participant_Consent" isHorizontal="true">
+        <dc:Bounds x="750" y="400" width="650" height="280"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process Encargados -->
+      <bpmndi:BPMNShape id="Participant_Encargados_di" bpmnElement="Participant_Encargados" isHorizontal="true">
+        <dc:Bounds x="750" y="710" width="650" height="320"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <!-- Process Master -->
+      <bpmndi:BPMNShape id="Participant_Master_di" bpmnElement="Participant_Master" isHorizontal="true">
+        <dc:Bounds x="1450" y="50" width="700" height="980"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

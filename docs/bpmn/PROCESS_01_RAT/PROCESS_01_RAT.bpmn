@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  xmlns:bioc="http://www.omg.org/spec/BIOC/20120524/BPMN"
+  id="Definitions_Process1"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  exporter="Custodio Platform"
+  exporterVersion="1.0">
+
+  <bpmn:collaboration id="Collaboration_RAT">
+    <bpmn:participant id="Participant_RAT" name="Gestión RAT - Custodio Platform" processRef="Process_RAT">
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false"/>
+    </bpmn:participant>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_RAT" name="RAT - Registro de Actividades de Tratamiento" isClosed="false" isExecutable="true">
+
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>StartEvent_DPOInicia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompletarInfoBasica</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DeterminarBaseLegal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConfigurarConsentimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarCategorias</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarSensible</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MedidasArt11</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DocumentarTransferencia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarEncargados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarEIPD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ElaborarMedidas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ControlesAdicionales</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarValidar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AprobarRAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisionPeriodica</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_DPOSenior" name="DPO Senior">
+        <bpmn:flowNodeRef>Task_AprobarRAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisionPeriodica</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Task_EvaluarRiesgo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CrearEIPD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcularRiesgoResidual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarPDF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarHistorial</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActivarRAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarCaducidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateTimer_Revision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateTimer_Caducidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Activo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Encargado" name="Encargado Tratamiento">
+        <bpmn:flowNodeRef>Task_IdentificarEncargados</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_DPOInicia" name="DPO inicia registro RAT">
+      <bpmn:outgoing>Flow1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_CompletarInfoBasica" name="Completar información básica del tratamiento">
+      <bpmn:documentation>El DPO ingresa: nombre_actividad, empresa_id, responsable_tratamiento, finalidad, descripcion_operacion</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="nombre_actividad" label="Nombre Actividad" type="string" required="true"/>
+          <camunda:formField id="empresa_id" label="Empresa ID" type="string" required="true"/>
+          <camunda:formField id="responsable_tratamiento" label="Responsable Tratamiento" type="string" required="true"/>
+          <camunda:formField id="finalidad" label="Finalidad" type="string" required="true"/>
+          <camunda:formField id="descripcion_operacion" label="Descripción Operación" type="string"/>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow1</bpmn:incoming>
+      <bpmn:outgoing>Flow2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_DeterminarBaseLegal" name="Determinar base legal">
+      <bpmn:documentation>Opciones: consentimiento, contrato, obligación_legal, interés_público, interés_legítimo, protección_vital</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="base_legal" label="Base Legal" type="enum" required="true">
+            <camunda:value id="consentimiento" label="Consentimiento"/>
+            <camunda:value id="contrato" label="Contrato"/>
+            <camunda:value id="obligacion_legal" label="Obligación Legal"/>
+            <camunda:value id="interes_publico" label="Interés Público"/>
+            <camunda:value id="interes_legitimo" label="Interés Legítimo"/>
+            <camunda:value id="proteccion_vital" label="Protección Vital"/>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow2</bpmn:incoming>
+      <bpmn:outgoing>Flow3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_BaseLegal" name="Base legal = consentimiento?">
+      <bpmn:incoming>Flow3</bpmn:incoming>
+      <bpmn:outgoing>Flow4_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow4_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_ConfigurarConsentimiento" name="Configurar mecanismo de obtención consentimiento">
+      <bpmn:documentation>Mecanismo de obtención, texto del consentimiento, método de registro</bpmn:documentation>
+      <bpmn:incoming>Flow4_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_IdentificarCategorias" name="Identificar categorías de datos">
+      <bpmn:documentation>Categorías: datos_identificativos, datos_contacto, datos_economicos, datos_salud, datos_geneticos, datos_biometricos, datos_ubicacion, datos_electronicos</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="categorias_datos" label="Categorías de Datos" type="enum" required="true"/>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow4_No</bpmn:incoming>
+      <bpmn:incoming>Flow5</bpmn:incoming>
+      <bpmn:outgoing>Flow6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_IdentificarSensible" name="Identificar datos sensibles">
+      <bpmn:documentation>Incluye: origen_étnico, opiniones_políticas, creencias_religiosas, afiliación_sindical, salud_sexual, datos_penales</bpmn:documentation>
+      <bpmn:incoming>Flow6</bpmn:incoming>
+      <bpmn:outgoing>Flow7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_DatosSensibles" name="¿Datos sensibles detectados?">
+      <bpmn:incoming>Flow7</bpmn:incoming>
+      <bpmn:outgoing>Flow8_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow8_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_MedidasArt11" name="Aplicar medidas adicionales Art. 11 Ley 21.719">
+      <bpmn:documentation>Medidas reforzadas para datos sensibles</bpmn:documentation>
+      <bpmn:incoming>Flow8_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Transferencias" name="¿Transferencias internacionales?">
+      <bpmn:incoming>Flow8_No</bpmn:incoming>
+      <bpmn:incoming>Flow9</bpmn:incoming>
+      <bpmn:outgoing>Flow10_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow10_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_DocumentarTransferencia" name="Documentar transferencia internacional">
+      <bpmn:documentation>País destino, mecanismo de transferencia, garantías</bpmn:documentation>
+      <bpmn:incoming>Flow10_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow11</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_IdentificarEncargados" name="Identificar encargados de tratamiento">
+      <bpmn:documentation>Encargados externos, servicios, ubicación</bpmn:documentation>
+      <bpmn:incoming>Flow10_No</bpmn:incoming>
+      <bpmn:incoming>Flow11</bpmn:incoming>
+      <bpmn:outgoing>Flow12</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_EvaluarRiesgo" name="Evaluar riesgo automático" camunda:async="true" camunda:delegateExpression="${evaluarRiesgoDelegate}">
+      <bpmn:documentation>Calcula: probabilidad_impacto, nivel_riesgo (BAJO/MEDIO/ALTO) según Art. 35 GDPR</bpmn:documentation>
+      <bpmn:incoming>Flow12</bpmn:incoming>
+      <bpmn:outgoing>Flow13</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_RiesgoAlto" name="¿Riesgo ALTO (requiere EIPD)?">
+      <bpmn:incoming>Flow13</bpmn:incoming>
+      <bpmn:outgoing>Flow14_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow14_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_CrearEIPD" name="Crear EIPD-001" camunda:async="true" camunda:delegateExpression="${crearEIPDDelegate}">
+      <bpmn:documentation>Genera EIPD y activa proceso EIPD</bpmn:documentation>
+      <bpmn:incoming>Flow14_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow15</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_RevisarEIPD" name="Revisar conclusiones EIPD">
+      <bpmn:documentation>DPO revisa y aprueba conclusiones del EIPD</bpmn:documentation>
+      <bpmn:incoming>Flow15</bpmn:incoming>
+      <bpmn:outgoing>Flow16</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ElaborarMedidas" name="Elaborar medidas de seguridad">
+      <bpmn:documentation>Medidas técnicas y organizativas según nivel de riesgo</bpmn:documentation>
+      <bpmn:incoming>Flow14_No</bpmn:incoming>
+      <bpmn:incoming>Flow16</bpmn:incoming>
+      <bpmn:outgoing>Flow17</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_CalcularRiesgoResidual" name="Calcular puntuación riesgo residual" camunda:async="true" camunda:delegateExpression="${calcularRiesgoResidualDelegate}">
+      <bpmn:documentation>Calcula riesgo después de medidas de seguridad</bpmn:documentation>
+      <bpmn:incoming>Flow17</bpmn:incoming>
+      <bpmn:outgoing>Flow18</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_RiesgoResidual" name="¿Riesgo residual acceptable?">
+      <bpmn:incoming>Flow18</bpmn:incoming>
+      <bpmn:outgoing>Flow19_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow19_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_ControlesAdicionales" name="Implementar controles adicionales">
+      <bpmn:documentation>Refuerza medidas para reducir riesgo residual</bpmn:documentation>
+      <bpmn:incoming>Flow19_No</bpmn:incoming>
+      <bpmn:outgoing>Flow20</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RevisarValidar" name="Revisar y validar registro">
+      <bpmn:documentation>Verificación final de completitud y coherencia</bpmn:documentation>
+      <bpmn:incoming>Flow19_Si</bpmn:incoming>
+      <bpmn:incoming>Flow20</bpmn:incoming>
+      <bpmn:outgoing>Flow21</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AprobarRAT" name="Aprobar registro RAT">
+      <bpmn:documentation>Solo usuarios con rol admin_empresa pueden aprobar</bpmn:documentation>
+      <bpmn:incoming>Flow21</bpmn:incoming>
+      <bpmn:outgoing>Flow22</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_GenerarPDF" name="Generar PDF oficial RAT" camunda:async="true" camunda:delegateExpression="${generarPDFDelegate}">
+      <bpmn:documentation>Genera PDF oficial con código QR y firma digital</bpmn:documentation>
+      <bpmn:incoming>Flow22</bpmn:incoming>
+      <bpmn:outgoing>Flow23</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RegistrarHistorial" name="Registrar en historial de cambios" camunda:async="true" camunda:delegateExpression="${registrarHistorialDelegate}">
+      <bpmn:documentation>Hashchain para inmutabilidad</bpmn:documentation>
+      <bpmn:incoming>Flow23</bpmn:incoming>
+      <bpmn:outgoing>Flow24</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ActivarRAT" name="Activar registro RAT" camunda:async="true" camunda:delegateExpression="${activarRATDelegate}">
+      <bpmn:documentation>Estado = ACTIVO, activa timers</bpmn:documentation>
+      <bpmn:incoming>Flow24</bpmn:incoming>
+      <bpmn:outgoing>Flow25</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_Revision" name="Timer 12 meses (revisión)">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle>R/P1Y</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+      <bpmn:incoming>Flow25</bpmn:incoming>
+      <bpmn:outgoing>Flow26</bpmn:outgoing>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_RevisionPeriodica" name="Revisión periódica anual">
+      <bpmn:documentation>DPO revisa RAT cada 12 meses</bpmn:documentation>
+      <bpmn:incoming>Flow26</bpmn:incoming>
+      <bpmn:outgoing>Flow27</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_Caducidad" name="Timer 30 días (renovación)">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT30D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+      <bpmn:incoming>Flow25</bpmn:incoming>
+      <bpmn:outgoing>Flow28</bpmn:outgoing>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:serviceTask id="Task_NotificarCaducidad" name="Notificar caducidad certificados encargados" camunda:async="true" camunda:delegateExpression="${notificarCaducidadDelegate}">
+      <bpmn:documentation>Alertas automáticas 30 días antes de vencimiento</bpmn:documentation>
+      <bpmn:incoming>Flow28</bpmn:incoming>
+      <bpmn:outgoing>Flow29</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_Activo" name="Registro RAT activo">
+      <bpmn:incoming>Flow27</bpmn:incoming>
+      <bpmn:incoming>Flow29</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow1" sourceRef="StartEvent_DPOInicia" targetRef="Task_CompletarInfoBasica"/>
+    <bpmn:sequenceFlow id="Flow2" sourceRef="Task_CompletarInfoBasica" targetRef="Task_DeterminarBaseLegal"/>
+    <bpmn:sequenceFlow id="Flow3" sourceRef="Task_DeterminarBaseLegal" targetRef="Gateway_BaseLegal"/>
+    <bpmn:sequenceFlow id="Flow4_Si" name="Sí" sourceRef="Gateway_BaseLegal" targetRef="Task_ConfigurarConsentimiento">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">base_legal == "consentimiento"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow4_No" name="No" sourceRef="Gateway_BaseLegal" targetRef="Task_IdentificarCategorias">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">base_legal != "consentimiento"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow5" sourceRef="Task_ConfigurarConsentimiento" targetRef="Task_IdentificarCategorias"/>
+    <bpmn:sequenceFlow id="Flow6" sourceRef="Task_IdentificarCategorias" targetRef="Task_IdentificarSensible"/>
+    <bpmn:sequenceFlow id="Flow7" sourceRef="Task_IdentificarSensible" targetRef="Gateway_DatosSensibles"/>
+    <bpmn:sequenceFlow id="Flow8_Si" name="Sí" sourceRef="Gateway_DatosSensibles" targetRef="Task_MedidasArt11">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">datos_sensibles == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow8_No" name="No" sourceRef="Gateway_DatosSensibles" targetRef="Gateway_Transferencias">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">datos_sensibles == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow9" sourceRef="Task_MedidasArt11" targetRef="Gateway_Transferencias"/>
+    <bpmn:sequenceFlow id="Flow10_Si" name="Sí" sourceRef="Gateway_Transferencias" targetRef="Task_DocumentarTransferencia">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">transferencia_internacional == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow10_No" name="No" sourceRef="Gateway_Transferencias" targetRef="Task_IdentificarEncargados">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">transferencia_internacional == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow11" sourceRef="Task_DocumentarTransferencia" targetRef="Task_IdentificarEncargados"/>
+    <bpmn:sequenceFlow id="Flow12" sourceRef="Task_IdentificarEncargados" targetRef="Task_EvaluarRiesgo"/>
+    <bpmn:sequenceFlow id="Flow13" sourceRef="Task_EvaluarRiesgo" targetRef="Gateway_RiesgoAlto"/>
+    <bpmn:sequenceFlow id="Flow14_Si" name="Sí" sourceRef="Gateway_RiesgoAlto" targetRef="Task_CrearEIPD">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">nivel_riesgo == "ALTO"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow14_No" name="No" sourceRef="Gateway_RiesgoAlto" targetRef="Task_ElaborarMedidas">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">nivel_riesgo != "ALTO"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow15" sourceRef="Task_CrearEIPD" targetRef="Task_RevisarEIPD"/>
+    <bpmn:sequenceFlow id="Flow16" sourceRef="Task_RevisarEIPD" targetRef="Task_ElaborarMedidas"/>
+    <bpmn:sequenceFlow id="Flow17" sourceRef="Task_ElaborarMedidas" targetRef="Task_CalcularRiesgoResidual"/>
+    <bpmn:sequenceFlow id="Flow18" sourceRef="Task_CalcularRiesgoResidual" targetRef="Gateway_RiesgoResidual"/>
+    <bpmn:sequenceFlow id="Flow19_Si" name="Sí" sourceRef="Gateway_RiesgoResidual" targetRef="Task_RevisarValidar">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">riesgo_residual_acceptable == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow19_No" name="No" sourceRef="Gateway_RiesgoResidual" targetRef="Task_ControlesAdicionales">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">riesgo_residual_acceptable == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow20" sourceRef="Task_ControlesAdicionales" targetRef="Task_RevisarValidar"/>
+    <bpmn:sequenceFlow id="Flow21" sourceRef="Task_RevisarValidar" targetRef="Task_AprobarRAT"/>
+    <bpmn:sequenceFlow id="Flow22" sourceRef="Task_AprobarRAT" targetRef="Task_GenerarPDF"/>
+    <bpmn:sequenceFlow id="Flow23" sourceRef="Task_GenerarPDF" targetRef="Task_RegistrarHistorial"/>
+    <bpmn:sequenceFlow id="Flow24" sourceRef="Task_RegistrarHistorial" targetRef="Task_ActivarRAT"/>
+    <bpmn:sequenceFlow id="Flow25" sourceRef="Task_ActivarRAT" targetRef="IntermediateTimer_Revision"/>
+    <bpmn:sequenceFlow id="Flow26" sourceRef="IntermediateTimer_Revision" targetRef="Task_RevisionPeriodica"/>
+    <bpmn:sequenceFlow id="Flow27" sourceRef="Task_RevisionPeriodica" targetRef="EndEvent_Activo"/>
+    <bpmn:sequenceFlow id="Flow28" sourceRef="IntermediateTimer_Caducidad" targetRef="Task_NotificarCaducidad"/>
+    <bpmn:sequenceFlow id="Flow29" sourceRef="Task_NotificarCaducidad" targetRef="EndEvent_Activo"/>
+
+    <bpmn:dataObject id="DataObject_DocumentoRAT" name="Documento RAT" dataObjectType="true"/>
+    <bpmn:dataObject id="DataObject_MedidasSeguridad" name="Medidas Seguridad" dataObjectType="true"/>
+    <bpmn:dataObject id="DataObject_ContratoEncargado" name="Contrato Encargado" dataObjectType="true"/>
+    <bpmn:dataObject id="DataObject_EIPD" name="Evaluación EIPD" dataObjectType="true"/>
+    <bpmn:dataObject id="DataObject_PDFOficial" name="PDF Oficial RAT" dataObjectType="true"/>
+
+    <bpmn:dataStore id="DataStore_RAT" name="Almacenamiento RAT" capacity="1000"/>
+
+    <bpmn:association id="Association_1" sourceRef="Task_ElaborarMedidas" targetRef="DataObject_MedidasSeguridad"/>
+    <bpmn:association id="Association_2" sourceRef="Task_IdentificarEncargados" targetRef="DataObject_ContratoEncargado"/>
+    <bpmn:association id="Association_3" sourceRef="Task_CrearEIPD" targetRef="DataObject_EIPD"/>
+    <bpmn:association id="Association_4" sourceRef="Task_GenerarPDF" targetRef="DataObject_PDFOficial"/>
+    <bpmn:association id="Association_5" sourceRef="Task_CompletarInfoBasica" targetRef="DataObject_DocumentoRAT"/>
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="RAT - Proceso de Registro de Actividades de Tratamiento">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_RAT">
+      <bpmndi:BPMNShape id="Participant_RAT_di" bpmnElement="Participant_RAT" isHorizontal="true">
+        <dc:Bounds x="100" y="50" width="1200" height="800"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_DPO_di" bpmnElement="Lane_DPO" isHorizontal="true">
+        <dc:Bounds x="130" y="100" width="1170" height="200"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_DPOSenior_di" bpmnElement="Lane_DPOSenior" isHorizontal="true">
+        <dc:Bounds x="130" y="300" width="1170" height="150"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sistema_di" bpmnElement="Lane_Sistema" isHorizontal="true">
+        <dc:Bounds x="130" y="450" width="1170" height="250"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Encargado_di" bpmnElement="Lane_Encargado" isHorizontal="true">
+        <dc:Bounds x="130" y="700" width="1170" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_DPOInicia_di" bpmnElement="StartEvent_DPOInicia">
+        <dc:Bounds x="180" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CompletarInfoBasica_di" bpmnElement="Task_CompletarInfoBasica">
+        <dc:Bounds x="260" y="140" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DeterminarBaseLegal_di" bpmnElement="Task_DeterminarBaseLegal">
+        <dc:Bounds x="460" y="140" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_BaseLegal_di" bpmnElement="Gateway_BaseLegal" isMarkerVisible="true">
+        <dc:Bounds x="665" y="155" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfigurarConsentimiento_di" bpmnElement="Task_ConfigurarConsentimiento">
+        <dc:Bounds x="765" y="140" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentificarCategorias_di" bpmnElement="Task_IdentificarCategorias">
+        <dc:Bounds x="765" y="240" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentificarSensible_di" bpmnElement="Task_IdentificarSensible">
+        <dc:Bounds x="965" y="140" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DatosSensibles_di" bpmnElement="Gateway_DatosSensibles" isMarkerVisible="true">
+        <dc:Bounds x="1170" y="155" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MedidasArt11_di" bpmnElement="Task_MedidasArt11">
+        <dc:Bounds x="260" y="320" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Transferencias_di" bpmnElement="Gateway_Transferencias" isMarkerVisible="true">
+        <dc:Bounds x="1170" y="305" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DocumentarTransferencia_di" bpmnElement="Task_DocumentarTransferencia">
+        <dc:Bounds x="260" y="500" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentificarEncargados_di" bpmnElement="Task_IdentificarEncargados">
+        <dc:Bounds x="465" y="500" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EvaluarRiesgo_di" bpmnElement="Task_EvaluarRiesgo">
+        <dc:Bounds x="670" y="500" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RiesgoAlto_di" bpmnElement="Gateway_RiesgoAlto" isMarkerVisible="true">
+        <dc:Bounds x="875" y="505" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CrearEIPD_di" bpmnElement="Task_CrearEIPD">
+        <dc:Bounds x="260" y="600" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarEIPD_di" bpmnElement="Task_RevisarEIPD">
+        <dc:Bounds x="465" y="600" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ElaborarMedidas_di" bpmnElement="Task_ElaborarMedidas">
+        <dc:Bounds x="980" y="500" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CalcularRiesgoResidual_di" bpmnElement="Task_CalcularRiesgoResidual">
+        <dc:Bounds x="670" y="620" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RiesgoResidual_di" bpmnElement="Gateway_RiesgoResidual" isMarkerVisible="true">
+        <dc:Bounds x="875" y="635" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ControlesAdicionales_di" bpmnElement="Task_ControlesAdicionales">
+        <dc:Bounds x="465" y="710" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarValidar_di" bpmnElement="Task_RevisarValidar">
+        <dc:Bounds x="980" y="620" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AprobarRAT_di" bpmnElement="Task_AprobarRAT">
+        <dc:Bounds x="980" y="350" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GenerarPDF_di" bpmnElement="Task_GenerarPDF">
+        <dc:Bounds x="670" y="730" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarHistorial_di" bpmnElement="Task_RegistrarHistorial">
+        <dc:Bounds x="465" y="800" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ActivarRAT_di" bpmnElement="Task_ActivarRAT">
+        <dc:Bounds x="260" y="800" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateTimer_Revision_di" bpmnElement="IntermediateTimer_Revision">
+        <dc:Bounds x="180" y="810" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisionPeriodica_di" bpmnElement="Task_RevisionPeriodica">
+        <dc:Bounds x="100" y="720" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateTimer_Caducidad_di" bpmnElement="IntermediateTimer_Caducidad">
+        <dc:Bounds x="420" y="810" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarCaducidad_di" bpmnElement="Task_NotificarCaducidad">
+        <dc:Bounds x="100" y="800" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Activo_di" bpmnElement="EndEvent_Activo">
+        <dc:Bounds x="180" y="720" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow1_di" bpmnElement="Flow1"/>
+      <bpmndi:BPMNEdge id="Flow2_di" bpmnElement="Flow2"/>
+      <bpmndi:BPMNEdge id="Flow3_di" bpmnElement="Flow3"/>
+      <bpmndi:BPMNEdge id="Flow4_Si_di" bpmnElement="Flow4_Si"/>
+      <bpmndi:BPMNEdge id="Flow4_No_di" bpmnElement="Flow4_No"/>
+      <bpmndi:BPMNEdge id="Flow5_di" bpmnElement="Flow5"/>
+      <bpmndi:BPMNEdge id="Flow6_di" bpmnElement="Flow6"/>
+      <bpmndi:BPMNEdge id="Flow7_di" bpmnElement="Flow7"/>
+      <bpmndi:BPMNEdge id="Flow8_Si_di" bpmnElement="Flow8_Si"/>
+      <bpmndi:BPMNEdge id="Flow8_No_di" bpmnElement="Flow8_No"/>
+      <bpmndi:BPMNEdge id="Flow9_di" bpmnElement="Flow9"/>
+      <bpmndi:BPMNEdge id="Flow10_Si_di" bpmnElement="Flow10_Si"/>
+      <bpmndi:BPMNEdge id="Flow10_No_di" bpmnElement="Flow10_No"/>
+      <bpmndi:BPMNEdge id="Flow11_di" bpmnElement="Flow11"/>
+      <bpmndi:BPMNEdge id="Flow12_di" bpmnElement="Flow12"/>
+      <bpmndi:BPMNEdge id="Flow13_di" bpmnElement="Flow13"/>
+      <bpmndi:BPMNEdge id="Flow14_Si_di" bpmnElement="Flow14_Si"/>
+      <bpmndi:BPMNEdge id="Flow14_No_di" bpmnElement="Flow14_No"/>
+      <bpmndi:BPMNEdge id="Flow15_di" bpmnElement="Flow15"/>
+      <bpmndi:BPMNEdge id="Flow16_di" bpmnElement="Flow16"/>
+      <bpmndi:BPMNEdge id="Flow17_di" bpmnElement="Flow17"/>
+      <bpmndi:BPMNEdge id="Flow18_di" bpmnElement="Flow18"/>
+      <bpmndi:BPMNEdge id="Flow19_Si_di" bpmnElement="Flow19_Si"/>
+      <bpmndi:BPMNEdge id="Flow19_No_di" bpmnElement="Flow19_No"/>
+      <bpmndi:BPMNEdge id="Flow20_di" bpmnElement="Flow20"/>
+      <bpmndi:BPMNEdge id="Flow21_di" bpmnElement="Flow21"/>
+      <bpmndi:BPMNEdge id="Flow22_di" bpmnElement="Flow22"/>
+      <bpmndi:BPMNEdge id="Flow23_di" bpmnElement="Flow23"/>
+      <bpmndi:BPMNEdge id="Flow24_di" bpmnElement="Flow24"/>
+      <bpmndi:BPMNEdge id="Flow25_di" bpmnElement="Flow25"/>
+      <bpmndi:BPMNEdge id="Flow26_di" bpmnElement="Flow26"/>
+      <bpmndi:BPMNEdge id="Flow27_di" bpmnElement="Flow27"/>
+      <bpmndi:BPMNEdge id="Flow28_di" bpmnElement="Flow28"/>
+      <bpmndi:BPMNEdge id="Flow29_di" bpmnElement="Flow29"/>
+
+      <bpmndi:BPMNShape id="DataObject_DocumentoRAT_di" bpmnElement="DataObject_DocumentoRAT">
+        <dc:Bounds x="280" y="80" width="36" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObject_MedidasSeguridad_di" bpmnElement="DataObject_MedidasSeguridad">
+        <dc:Bounds x="1000" y="460" width="36" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObject_ContratoEncargado_di" bpmnElement="DataObject_ContratoEncargado">
+        <dc:Bounds x="500" y="460" width="36" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObject_EIPD_di" bpmnElement="DataObject_EIPD">
+        <dc:Bounds x="280" y="560" width="36" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObject_PDFOficial_di" bpmnElement="DataObject_PDFOficial">
+        <dc:Bounds x="700" y="680" width="36" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStore_RAT_di" bpmnElement="DataStore_RAT">
+        <dc:Bounds x="1100" y="760" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
