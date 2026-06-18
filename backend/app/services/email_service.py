@@ -187,3 +187,34 @@ def notificar_respuesta_arco(
         f"Respuesta a su solicitud {tipo_derecho}", saludo, cuerpo
     )
     _send_raw(email_titular, f"[Custodio] Respuesta a su solicitud {tipo_derecho}", html, text)
+
+
+def notificar_vencimiento_encargado(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    nombre_encargado: str,
+    finalidad: str,
+    dias_restantes: int,
+) -> None:
+    """
+    Notifica al DPO que un contrato de encargado del tratamiento está por vencer.
+    """
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    estado = "por vencer" if dias_restantes > 0 else "ya venció"
+    plazo = f"en {dias_restantes} día(s)" if dias_restantes > 0 else "(ya está vencido)"
+    cuerpo = (
+        f"<p>El contrato de encargado del tratamiento con <strong>{nombre_encargado}</strong> "
+        f"de la empresa <strong>{nombre_empresa}</strong> está {estado} {plazo}.</p>"
+        f"<ul>"
+        f"<li><strong>Encargado:</strong> {nombre_encargado}</li>"
+        f"<li><strong>Fines del tratamiento:</strong> {finalidad}</li>"
+        f"</ul>"
+        f"<p>Recuerde que, según el Art. 14 quater de la Ley 21.719, todo contrato de "
+        f"encargado del tratamiento debe mantenerse vigente mientras dure el tratamiento.</p>"
+        f"<p>Renueve o celebre un nuevo contrato antes de la fecha de vencimiento.</p>"
+    )
+    text, html = _render_template(
+        f"Contrato de encargado por vencer: {nombre_encargado}", saludo, cuerpo
+    )
+    _send_raw(email_dpo, f"[Custodio] Contrato de encargado {estado} - {nombre_encargado}", html, text)

@@ -179,6 +179,19 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 space-y-6">
+      {(!company?.contacto_dpo || !company?.email_dpo) && (
+        <AlertBanner
+          message={
+            !company?.contacto_dpo && !company?.email_dpo
+              ? '<strong>DPO no configurado.</strong> Complete el nombre y email del Delegado de Protección de Datos en la configuración de la empresa.'
+              : !company?.contacto_dpo
+              ? '<strong>Nombre del DPO no configurado.</strong> Complete el nombre del Delegado de Protección de Datos en la configuración de la empresa.'
+              : '<strong>Email del DPO no configurado.</strong> Complete el email del Delegado de Protección de Datos en la configuración de la empresa.'
+          }
+          type="danger"
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

@@ -1,6 +1,6 @@
 # Changelog — Custodio RAT Manager
 
-## [Unreleased] - 2026-06-15
+## [Unreleased] - 2026-06-17
 
 ### Security
 - (N-01) **PENDIENTE**: Asesor module — 9 constantes `ASESOR_*` faltantes en `backend/app/core/config.py` bloquean 14 tests y generan riesgo de crash en producción
@@ -13,6 +13,69 @@
 - (Z-02) CORS restrictivo: `allow_methods` y `allow_headers` específicos
 - (Z-03) File upload validation: extensión y max size
 - (Z-06) Backups documentados
+
+---
+
+## [1.6.1-beta] - 2026-06-17
+
+### Features (Asesor — Gestión de Corpus)
+
+- **NEW**: `AsesorCorpusDocument` model — metadata en BD, archivo en OCI (`asesor_corpus/`)
+- **NEW**: `asesor_corpus_store.py` — store service con lógica OCI + BD + auto-reindex + soft delete
+- **NEW**: 4 endpoints corpus management en `admin_asesor.py`:
+  - `GET /admin/asesor/documents` — lista documentos con metadata
+  - `POST /admin/asesor/upload` — upload + auto-indexación incremental
+  - `GET /admin/asesor/documents/{id}/download` — URL presigned OCI
+  - `DELETE /admin/asesor/documents/{id}` — soft delete doc + chunks + OCI
+- **NEW**: Indexer BD-first con fallback filesystem; auto-reindex al subir documento
+- **NEW**: `AsesorCorpusTab.tsx` — drag-drop, lista con badges, confirmación inline, download
+- **NEW**: Tab "Asesor · Corpus" en Configuración (solo superadmin visible)
+- **NEW**: Dual provider embeddings: Cohere (`embed-multilingual-v3.0`) + Groq (`llama-3.3-70b-versatile`)
+
+### Fixes (Asesor)
+
+- **FIX**: Chat history bleed — `useEffect` de carga de historial usaba `companyId` en vez de `user?.id` como dependencia (`f18bb43`)
+- **FIX**: Duplicate index `idx_asesor_source` en migración BD (`9e99352`)
+- **FIX**: `Union` import faltante para Python 3.10 backwards compat (`9e99352`)
+
+### Known Issues
+
+- **CORS error reindex QA**: POST `/admin/asesor/index` no retorna headers CORS en Vercel serverless — hipótesis: cold start + OCI + Cohere timeout
+- 14 tests Asesor preexistentes siguen bloqueados por config faltante (`ASESOR_*` en Settings)
+
+### Files
+
+- `backend/app/models/asesor.py` (AsesorCorpusDocument model — nuevo)
+- `backend/app/services/asesor_corpus_store.py` (store OCI+DB — nuevo)
+- `backend/app/routes/admin_asesor.py` (4 endpoints nuevos — modificado)
+- `backend/app/services/asesor_indexer.py` (BD-first fallback — modificado)
+- `frontend-next/lib/asesor-api.ts` (4 funciones API corpus — modificado)
+- `frontend-next/components/configuracion/AsesorCorpusTab.tsx` (UI corpus — nuevo)
+- `frontend-next/app/(app)/asesor/page.tsx` (chat history fix — modificado)
+
+### Quick Wins (v1.6.1)
+
+- **QW1**: Health Score en listado empresas — `GET /companies` y `GET /companies/{id}` ahora retornan `completitud_promedio` y `rats_vencidos` (regex `plazo_retencion` + `created_at + años*365 vs now`)
+- **QW2**: Scheduler revisar encargados vencidos — `REVISAR_ENCARGADOS_VENCIDOS` task type + `_run_revisar_encargados_vencidos()` + `notificar_vencimiento_encargado()` email + scheduler daily enqueue (≤30 días)
+- **QW3**: Banner DPO incompleto en dashboard — `AlertBanner type=danger` en `dashboard/page.tsx` cuando `!contacto_dpo` o `!email_dpo`
+- **QW4**: Score SLA ARCO en resumen empresa — `CompanyOut` con `solicitudes_pendientes` (estado abierto/en_proceso/pendiente) y `solicitudes_vencidas_sla` (fecha_vencimiento < now && no resuelto)
+- **QW5**: Pre-fill EIPD desde RAT — `router.push('/eipd?rat_id=${rat.id}')` en `RatDetailView`; `EIPDPage` lee `rat_id` de searchParams y pre-selecciona RAT en `EIPDForm`
+
+### Files (Quick Wins)
+
+- `backend/app/routes/companies.py` (SLA ARCO stats — modificado)
+- `backend/app/schemas/company.py` (CompanyOut fields — modificado)
+- `backend/app/services/task_service.py` (REVISAR_ENCARGADOS_VENCIDOS — modificado)
+- `backend/app/services/scheduler.py` (job diario encargado — modificado)
+- `backend/app/services/email_service.py` (notificar_vencimiento_encargado — modificado)
+- `backend/app/models/task.py` (TaskType enum — modificado)
+- `frontend-next/app/(app)/dashboard/page.tsx` (DPO banner — modificado)
+- `frontend-next/app/(app)/eipd/page.tsx` (pre-fill desde rat_id — modificado)
+- `frontend-next/components/rat/RatDetailView.tsx` (botón EIPD con router.push — modificado)
+
+---
+
+## [1.6.0-beta] - 2026-06-15
 
 ---
 

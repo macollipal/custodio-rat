@@ -1,6 +1,7 @@
 'use client';
 
 import { useReducer, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import PdfPreview from './PdfPreview';
@@ -110,6 +111,7 @@ export default function RatDetailView({
   auditLogs,
 }: RatDetailViewProps) {
   const [{ confirmDel, approving }, dispatch] = useReducer(localReducer, { confirmDel: false, approving: false });
+  const router = useRouter();
 
   useEffect(() => { dispatch({ type: 'RESET' }); }, [rat.id]);
 
@@ -181,6 +183,17 @@ export default function RatDetailView({
           <>
             <FieldRow label="EIPD" value={rat.estado_eipd ? `• ${rat.estado_eipd.replace('_', ' ')}` : 'Pendiente'} />
             {rat.fecha_eipd && <FieldRow label="Fecha EIPD" value={fmtDate(rat.fecha_eipd)} />}
+            {rat.estado_eipd !== 'completada' && puedeEditar && (
+              <div className="px-4 py-2.5">
+                <button
+                  onClick={() => router.push(`/eipd?rat_id=${rat.id}`)}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white"
+                  style={{ background: '#7C3AED' }}
+                >
+                  📋 Solicitar EIPD
+                </button>
+              </div>
+            )}
           </>
         )}
         {rat.decisiones_automatizadas && (

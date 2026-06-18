@@ -46,9 +46,21 @@ def _job_enqueue_cleanup_tokens() -> None:
         db.close()
 
 
+def _job_enqueue_revisar_encargados_vencidos() -> None:
+    """Encola la tarea de revisión de contratos de encargado próximos a vencer."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "revisar_encargados_vencidos")
+        logger.info("Scheduler: tarea 'revisar_encargados_vencidos' encolada")
+    finally:
+        db.close()
+
+
 _JOBS = [
     (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
+    (_job_enqueue_revisar_encargados_vencidos, 24 * 60 * 60),  # cada 24h
 ]  # type: ignore
 
 

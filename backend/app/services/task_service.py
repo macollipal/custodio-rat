@@ -144,6 +144,49 @@ def _run_cleanup_tokens(db: Session) -> int:
     return result.rowcount if hasattr(result, 'rowcount') else 0
 
 
+def _run_revisar_encargados_vencidos(db: Session) -> int:
+    """Revisa contratos de encargado próximos a vencer (≤30 días) y notifica al DPO."""
+    from datetime import timedelta
+    from app.models.encargado_contrato import EncargadoContrato
+    from app.models.company import Company
+    from app.services.email_service import notificar_vencimiento_encargado, EmailError
+
+    DIAS_UMBRAL = 30
+    ahora = datetime.now(timezone.utc)
+    umbral = ahora + timedelta(days=DIAS_UMBRAL)
+
+    contratos = (
+        db.query(EncargadoContrato)
+        .filter(
+            EncargadoContrato.activo == True,
+            EncargadoContrato.duracion_fin.isnot(None),
+            EncargadoContrato.duracion_fin <= umbral,
+        )
+        .all()
+    )
+
+    notificados = 0
+    for contrato in contratos:
+        empresa = db.query(Company).filter(Company.id == contrato.company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+        dias_restantes = (contrato.duracion_fin - ahora).days
+        try:
+            notificar_vencimiento_encargado(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                nombre_encargado=contrato.nombre_encargado,
+                finalidad=contrato.finalidad,
+                dias_restantes=dias_restantes,
+            )
+            notificados += 1
+        except EmailError as e:
+            logger.error(f"Encargado contrato {contrato.id}: fallo enviando notificación: {e}")
+
+    return notificados
+
+
 def run_task(db: Session, task: TaskQueue) -> bool:
     """Ejecuta una tarea individual. Retorna True si fue exitosa."""
     task.status = TaskStatus.RUNNING
@@ -170,6 +213,10 @@ def run_task(db: Session, task: TaskQueue) -> bool:
             count = _run_cleanup_tokens(db)
             success = True
             detail = f"{count} tokens eliminados"
+        elif task.task_type == TaskType.REVISAR_ENCARGADOS_VENCIDOS.value:
+            count = _run_revisar_encargados_vencidos(db)
+            success = True
+            detail = f"{count} encargados notificados"
         else:
             detail = f"Tipo de tarea desconocido: {task.task_type}"
             logger.warning(detail)

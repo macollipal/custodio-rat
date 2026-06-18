@@ -49,8 +49,12 @@ class CompanyOut(CompanyBase):
     created_at: datetime
     updated_at: datetime
     total_rats: Optional[int] = 0
-    mi_rol: Optional[str] = None  # rol del usuario actual en esta empresa (None = admin global)
+    mi_rol: Optional[str] = None
     rubro_id: Optional[int] = None
+    completitud_promedio: Optional[int] = 0
+    rats_vencidos: Optional[int] = 0
+    solicitudes_pendientes: Optional[int] = 0
+    solicitudes_vencidas_sla: Optional[int] = 0
 
     model_config = {"from_attributes": True}
 

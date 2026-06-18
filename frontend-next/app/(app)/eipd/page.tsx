@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { API_BASE } from '@/lib/constants';
@@ -38,11 +39,13 @@ const RESULTADO_COLORS: Record<string, { bg: string; fg: string }> = {
 
 export default function EIPDPage() {
   const { company, user } = useApp();
+  const searchParams = useSearchParams();
+  const ratIdParam = searchParams.get('rat_id');
   const [items, setItems] = useState<EIPD[]>([]);
   const [rats, setRats] = useState<RAT[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EIPD | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(!!ratIdParam);
 
   async function load() {
     if (!company) return;
@@ -210,6 +213,7 @@ export default function EIPDPage() {
           eipd={editing}
           ratsRequiring={ratsRequiringEipd}
           existingRats={rats}
+          preselectedRatId={creating ? (ratIdParam || undefined) : undefined}
           onClose={() => {
             setEditing(null);
             setCreating(false);
@@ -233,17 +237,25 @@ function EIPDForm({
   eipd,
   ratsRequiring,
   existingRats,
+  preselectedRatId,
   onClose,
   onSaved,
 }: {
   eipd: EIPD | null;
   ratsRequiring: RAT[];
   existingRats: RAT[];
+  preselectedRatId?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const allRats = Array.from(new Map([...ratsRequiring, ...existingRats].map((r) => [r.id, r])).values());
-  const [ratId, setRatId] = useState<string>(eipd?.rat_id?.toString() || ratsRequiring[0]?.id?.toString() || allRats[0]?.id?.toString() || '');
+  const [ratId, setRatId] = useState<string>(
+    preselectedRatId ||
+    eipd?.rat_id?.toString() ||
+    ratsRequiring[0]?.id?.toString() ||
+    allRats[0]?.id?.toString() ||
+    ''
+  );
   const [metodologia, setMetodologia] = useState(eipd?.metodologia || '');
   const [objetivos, setObjetivos] = useState(eipd?.objetivos || '');
   const [necesidad, setNecesidad] = useState(eipd?.necesidad_proporcionalidad || '');

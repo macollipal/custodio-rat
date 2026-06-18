@@ -14,6 +14,7 @@ from app.services.company_service import (
 from app.services.user_company_service import get_empresas_usuario, get_rol_usuario
 from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
 from app.models.rat import RAT as RATModel
+from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, EstadoTicket
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
@@ -51,10 +52,62 @@ async def listar(
     )
     rat_counts = {row.company_id: row.cnt for row in db.query(count_q).all()}
 
+    rats_by_company = {}
+    for rat in db.query(RATModel).filter(RATModel.company_id.in_([c.id for c in companies])).all():
+        rats_by_company.setdefault(rat.company_id, []).append(rat)
+
+    from datetime import datetime, timezone, timedelta
+    import re
+
     result = []
     for c in companies:
         out = CompanyOut.model_validate(c)
         out.total_rats = rat_counts.get(c.id, 0)
+        rats = rats_by_company.get(c.id, [])
+
+        if rats:
+            out.completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / len(rats))
+            vencidos = 0
+            now = datetime.now(timezone.utc)
+            for r in rats:
+                plazo = r.plazo_retencion or ""
+                match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
+                if not match:
+                    continue
+                years = int(match.group(1))
+                created = r.created_at
+                if created is None:
+                    continue
+                if isinstance(created, str):
+                    try:
+                        created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                expiry = created + timedelta(days=years * 365)
+                if expiry < now:
+                    vencidos += 1
+            out.rats_vencidos = vencidos
+        else:
+            out.completitud_promedio = 0
+            out.rats_vencidos = 0
+
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
+        tickets = db.query(TktSolicitudDerecho).filter(
+            TktSolicitudDerecho.company_id == c.id,
+            TktSolicitudDerecho.estado.in_(estados_pendientes),
+        ).all()
+        out.solicitudes_pendientes = len(tickets)
+        vencidas = db.query(TktSolicitudDerecho).filter(
+            TktSolicitudDerecho.company_id == c.id,
+            TktSolicitudDerecho.fecha_vencimiento < now,
+            TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
+        ).count()
+        out.solicitudes_vencidas_sla = vencidas
+
         if current_user.rol_global != "superadmin":
             rol = get_rol_usuario(db, current_user.id, c.id)
             out.mi_rol = rol.value if rol else None
@@ -71,7 +124,53 @@ async def obtener(
     check_company_access(current_user, company_id, db)
     c = get_company(db, company_id)
     out = CompanyOut.model_validate(c)
-    out.total_rats = len(c.rats)
+    rats = c.rats
+    out.total_rats = len(rats)
+
+    if rats:
+        out.completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / len(rats))
+        from datetime import datetime, timezone, timedelta
+        import re
+        vencidos = 0
+        now = datetime.now(timezone.utc)
+        for r in rats:
+            plazo = r.plazo_retencion or ""
+            match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
+            if not match:
+                continue
+            years = int(match.group(1))
+            created = r.created_at
+            if created is None:
+                continue
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except Exception:
+                    continue
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            expiry = created + timedelta(days=years * 365)
+            if expiry < now:
+                vencidos += 1
+        out.rats_vencidos = vencidos
+    else:
+        out.completitud_promedio = 0
+        out.rats_vencidos = 0
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
+    tickets = db.query(TktSolicitudDerecho).filter(
+        TktSolicitudDerecho.company_id == company_id,
+        TktSolicitudDerecho.estado.in_(estados_pendientes),
+    ).all()
+    out.solicitudes_pendientes = len(tickets)
+    out.solicitudes_vencidas_sla = db.query(TktSolicitudDerecho).filter(
+        TktSolicitudDerecho.company_id == company_id,
+        TktSolicitudDerecho.fecha_vencimiento < now,
+        TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
+    ).count()
+
     if current_user.rol_global != "superadmin":
         rol = get_rol_usuario(db, current_user.id, c.id)
         out.mi_rol = rol.value if rol else None
