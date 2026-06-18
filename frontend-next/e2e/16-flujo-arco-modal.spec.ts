@@ -139,7 +139,7 @@ test.describe('Ver Flujo - múltiples tipos ARCO', () => {
     await page.waitForTimeout(5000);
 
     const modalTitle = page.locator('h2').filter({ hasText: /ACCESO|CANCELACIÓN|RECTIFICACIÓN|OPOSICIÓN|BLOQUEO|PORTABILIDAD/i }).first();
-    const titleText = await modalTitle.textContent({ timeout: 8000 }).catch(() => '');
+    const titleText = (await modalTitle.textContent({ timeout: 8000 }).catch(() => '')) || '';
     expect(titleText.length).toBeGreaterThan(0);
     console.log(`Tipo de ARCO detectado: ${titleText}`);
   });
