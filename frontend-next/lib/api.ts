@@ -595,6 +595,16 @@ export interface TktTicket {
   dias_restantes?: number;
   sla_color?: string;
   estado_sla?: string;
+  tracking_token?: string;
+  representante_nombre?: string;
+  representante_rut?: string;
+  subsanacion_detalle?: string;
+  subsanacion_fecha_pedido?: string;
+  prorroga_fecha?: string;
+  prorroga_dias?: number;
+  rat_id?: number;
+  plazo_bloqueo_vencimiento?: string;
+  estado_original?: string;
 }
 
 export interface TktDashboard {
@@ -604,6 +614,10 @@ export interface TktDashboard {
   pendientes: number;
   resueltos: number;
   vencidos: number;
+  bloqueados: number;
+  rechazados: number;
+  subsanacion: number;
+  prorrogas: number;
   cumplimiento_sla: number;
   tiempo_promedio_horas: number;
 }
@@ -708,6 +722,36 @@ export async function exportarPortabilidad(solicitudId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/portabilidad/export`);
   if (!res.ok) throw new Error('Error al exportar portabilidad');
   return res.blob();
+}
+
+// ── QW3: Subsanación ─────────────────────────────────────────────────────────
+
+export async function solicitarSubsanacion(solicitudId: number, detalle: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/subsanar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ detalle }),
+  });
+  return handle<void>(res);
+}
+
+export async function completarSubsanacion(solicitudId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/completar-subsanacion`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+  });
+  return handle<void>(res);
+}
+
+// ── QW4: Prórroga ────────────────────────────────────────────────────────────
+
+export async function prorrogarTicket(solicitudId: number, dias?: number, motivo?: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/prorrogar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dias: dias ?? 10, motivo }),
+  });
+  return handle<void>(res);
 }
 
 // ── B-05: Evaluacion de riesgo de brecha ───────────────────────────────────────
@@ -943,4 +987,33 @@ export async function actualizarEipd(id: number, data: Partial<EIPDItem>): Promi
     body: JSON.stringify(data),
   });
   return handle<EIPDItem>(res);
+}
+
+// ── QW8: Seguimiento público del titular ──────────────────────────────────────
+
+export interface SeguimientoEntry {
+  estado_anterior: string | null;
+  estado_nuevo: string;
+  descripcion: string | null;
+  fecha: string;
+}
+
+export interface SeguimientoResponse {
+  id: number;
+  tipo: string;
+  estado: string;
+  fecha_recepcion: string | null;
+  fecha_vencimiento: string | null;
+  dias_restantes: number | null;
+  company_nombre: string | null;
+  historial: SeguimientoEntry[];
+}
+
+export async function consultarSeguimiento(trackingToken: string): Promise<SeguimientoResponse> {
+  const res = await apiFetch(`${API_BASE}/seguimiento/${trackingToken}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error al consultar seguimiento' }));
+    throw new Error(err.detail || 'Token inválido o no encontrado');
+  }
+  return handle<SeguimientoResponse>(res);
 }
