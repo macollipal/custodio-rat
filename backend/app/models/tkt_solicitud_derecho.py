@@ -77,6 +77,8 @@ class TktSolicitudDerecho(Base):
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    representante_nombre: Mapped[str] = mapped_column(String(255), nullable=True)
+    representante_rut: Mapped[str] = mapped_column(String(20), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
     responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821

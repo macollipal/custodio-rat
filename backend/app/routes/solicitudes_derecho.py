@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime, timezone, timedelta
 from app.database.database import get_db
@@ -15,6 +15,7 @@ from app.services.ticket_service import crear_ticket_desde_solicitud
 from app.core.limiter import limiter
 import uuid
 import logging
+import json
 
 router = APIRouter(prefix="/solicitudes-derecho", tags=["Solicitudes de Derecho"])
 logger = logging.getLogger(__name__)
@@ -46,6 +47,8 @@ class SolicitudCreate(BaseModel):
     email_titular: EmailStr
     descripcion: Optional[str] = None
     token: str
+    representante_nombre: Optional[str] = None
+    representante_rut: Optional[str] = None
 
     @field_validator('company_id')
     @classmethod
@@ -117,13 +120,56 @@ def obtener_token(request: Request, db: Session = Depends(get_db)):
 @limiter.limit("3/hour")
 async def crear_solicitud(
     request: Request,
-    data: SolicitudCreate,
     db: Session = Depends(get_db),
 ):
-    if not _validate_token(db, data.token):
+    content_type = request.headers.get("content-type", "")
+
+    if "application/json" in content_type.lower():
+        body = await request.json()
+        company_id_val = body.get("company_id")
+        tipo = body.get("tipo")
+        nombre_titular = body.get("nombre_titular")
+        rut_titular = body.get("rut_titular")
+        email_titular = body.get("email_titular")
+        descripcion = body.get("descripcion")
+        token = body.get("token")
+        representante_nombre = body.get("representante_nombre")
+        representante_rut = body.get("representante_rut")
+        files_data = None
+    else:
+        form = await request.form()
+        company_id_val = form.get("company_id")
+        tipo = form.get("tipo")
+        nombre_titular = form.get("nombre_titular")
+        rut_titular = form.get("rut_titular")
+        email_titular = form.get("email_titular")
+        descripcion = form.get("descripcion")
+        token = form.get("token")
+        representante_nombre = form.get("representante_nombre")
+        representante_rut = form.get("representante_rut")
+        files_data = [f for f in form.getlist("files") if f] if "files" in form else None
+
+    if not token or not _validate_token(db, token):
         return JSONResponse(status_code=400, content={"detail": "Token inválido o expirado. Recargá la página e intentá de nuevo."})
 
-    company = db.query(Company).filter(Company.id == data.company_id).first()
+    try:
+        company_id_int = int(company_id_val)
+        if company_id_int <= 0:
+            raise ValueError()
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=400, content={"detail": "company_id es obligatorio y debe ser mayor a 0."})
+
+    valid_types = [e.value for e in TipoSolicitud]
+    if tipo not in valid_types:
+        return JSONResponse(status_code=400, content={"detail": f"tipo debe ser uno de: {valid_types}"})
+
+    if not nombre_titular or not nombre_titular.strip():
+        return JSONResponse(status_code=400, content={"detail": "nombre_titular es obligatorio."})
+
+    if not email_titular or not email_titular.strip():
+        return JSONResponse(status_code=400, content={"detail": "email_titular es obligatorio."})
+
+    company = db.query(Company).filter(Company.id == company_id_int).first()
     if not company:
         return JSONResponse(status_code=404, content={"detail": "Empresa no encontrada"})
 
@@ -131,25 +177,48 @@ async def crear_solicitud(
 
     ticket = crear_ticket_desde_solicitud(
         db=db,
-        company_id=data.company_id,
-        tipo=data.tipo,
-        titular_nombre=data.nombre_titular,
-        titular_email=data.email_titular,
-        descripcion=data.descripcion,
-        titular_rut=data.rut_titular,
+        company_id=company_id_int,
+        tipo=tipo,
+        titular_nombre=nombre_titular,
+        titular_email=email_titular,
+        descripcion=descripcion,
+        titular_rut=rut_titular,
         origen="web",
         company_nombre=company.nombre,
+        representante_nombre=representante_nombre,
+        representante_rut=representante_rut,
     )
 
-    logger.info(f"Solicitud ARCO creada (TKT only): company={data.company_id} tipo={data.tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
+    if files_data:
+        from app.models.tkt_adjunto import TktAdjunto
+        allowed_types = {"image/jpeg", "image/png", "image/gif", "application/pdf"}
+        max_size = 5 * 1024 * 1024
+        for f in files_data[:5]:
+            filename = getattr(f, "filename", "archivo") or "archivo"
+            content_type_file = getattr(f, "content_type", None) or "application/octet-stream"
+            file_bytes = await f.read()
+            if len(file_bytes) > max_size:
+                return JSONResponse(status_code=400, content={"detail": f"El archivo '{filename}' supera el límite de 5MB."})
+            if content_type_file not in allowed_types:
+                return JSONResponse(status_code=400, content={"detail": f"El archivo '{filename}' tiene tipo no permitido. Solo PDF, JPEG, PNG o GIF."})
+            adjunto = TktAdjunto(
+                ticket_id=ticket.id,
+                filename=filename,
+                content_type=content_type_file,
+                data=file_bytes,
+            )
+            db.add(adjunto)
+        db.commit()
+
+    logger.info(f"Solicitud ARCO creada (TKT only): company={company_id_int} tipo={tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
     return {
         "id": ticket.id,
-        "company_id": data.company_id,
-        "tipo": data.tipo,
-        "nombre_titular": data.nombre_titular,
-        "rut_titular": data.rut_titular,
-        "email_titular": data.email_titular,
-        "descripcion": data.descripcion,
+        "company_id": company_id_int,
+        "tipo": tipo,
+        "nombre_titular": nombre_titular,
+        "rut_titular": rut_titular,
+        "email_titular": email_titular,
+        "descripcion": descripcion,
         "estado": "abierto",
         "solicitud_fecha": ticket.fecha_recepcion.isoformat() if ticket.fecha_recepcion else None,
         "respuesta": None,
@@ -157,6 +226,8 @@ async def crear_solicitud(
         "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
         "tracking_token": ticket.tracking_token,
         "acuse_enviado_at": ticket.acuse_enviado_at.isoformat() if ticket.acuse_enviado_at else None,
+        "representante_nombre": representante_nombre,
+        "representante_rut": representante_rut,
     }
 
 

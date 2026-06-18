@@ -15,6 +15,9 @@ const TIPOS_DERECHO = [
 ];
 
 const VALID_TIPOS = ['acceso', 'rectificacion', 'cancelacion', 'oposicion', 'bloqueo', 'portabilidad'];
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif'];
 
 interface Company {
   id: number;
@@ -29,6 +32,22 @@ interface FormErrors {
   rut_titular?: string;
   email_titular?: string;
   descripcion?: string;
+  representante_nombre?: string;
+  representante_rut?: string;
+}
+
+interface SubmitResponse {
+  id: number;
+  tracking_token: string;
+  company_id: number;
+  tipo: string;
+  nombre_titular: string;
+  rut_titular?: string;
+  email_titular: string;
+  descripcion?: string;
+  estado: string;
+  solicitud_fecha: string;
+  created_at: string;
 }
 
 function validarEmail(email: string): boolean {
@@ -67,6 +86,7 @@ export default function SolicitudDerechoPage() {
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [rutError, setRutError] = useState('');
+  const [repRutError, setRepRutError] = useState('');
   const [token, setToken] = useState('');
   const [tokenError, setTokenError] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -78,7 +98,12 @@ export default function SolicitudDerechoPage() {
     rut_titular: '',
     email_titular: '',
     descripcion: '',
+    actAsRepresentative: false,
+    representante_nombre: '',
+    representante_rut: '',
   });
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [submitResult, setSubmitResult] = useState<SubmitResponse | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/companies/publico`)
@@ -135,6 +160,14 @@ export default function SolicitudDerechoPage() {
         : undefined,
       email_titular: validarEmailField(form.email_titular),
       descripcion: form.descripcion.length > 2000 ? 'La descripción no puede superar los 2000 caracteres.' : undefined,
+      representante_nombre: form.actAsRepresentative && !form.representante_nombre.trim()
+        ? 'El nombre del representante es obligatorio.'
+        : form.actAsRepresentative && form.representante_nombre.trim().length < 3
+          ? 'El nombre del representante debe tener al menos 3 caracteres.'
+          : undefined,
+      representante_rut: form.actAsRepresentative && form.representante_rut && form.representante_rut.length >= 8
+        ? (validarRUT(form.representante_rut).valido ? undefined : 'El RUT del representante no es válido.')
+        : undefined,
     };
   }
 
@@ -144,11 +177,15 @@ export default function SolicitudDerechoPage() {
       const result = validarRUT(form.rut_titular);
       setRutError(result.valido ? '' : result.mensaje);
     }
+    if (field === 'representante_rut' && form.representante_rut && form.representante_rut.length >= 8) {
+      const result = validarRUT(form.representante_rut);
+      setRepRutError(result.valido ? '' : result.mensaje);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setTouched({ companyId: true, tipo: true, nombre_titular: true, rut_titular: true, email_titular: true, descripcion: true });
+    setTouched({ companyId: true, tipo: true, nombre_titular: true, rut_titular: true, email_titular: true, descripcion: true, representante_nombre: true, representante_rut: true });
     const allErrors = validateAll();
     setErrors(allErrors);
     if (tokenLoading || !token) {
@@ -161,18 +198,28 @@ export default function SolicitudDerechoPage() {
       return;
     }
     setSubmitting(true);
+
+    const fd = new FormData();
+    fd.append('company_id', String(form.companyId));
+    fd.append('tipo', form.tipo);
+    fd.append('nombre_titular', form.nombre_titular.trim());
+    if (form.rut_titular) fd.append('rut_titular', form.rut_titular);
+    fd.append('email_titular', form.email_titular.trim().toLowerCase());
+    if (form.descripcion) fd.append('descripcion', form.descripcion);
+    fd.append('token', token);
+    if (form.actAsRepresentative) {
+      fd.append('representante_nombre', form.representante_nombre.trim());
+      if (form.representante_rut) fd.append('representante_rut', form.representante_rut);
+    }
+    if (files) {
+      for (let i = 0; i < Math.min(files.length, MAX_FILES); i++) {
+        fd.append('files', files[i]);
+      }
+    }
+
     fetch(`${API_BASE}/solicitudes-derecho/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        company_id: Number(form.companyId),
-        tipo: form.tipo,
-        nombre_titular: form.nombre_titular.trim(),
-        rut_titular: form.rut_titular || undefined,
-        email_titular: form.email_titular.trim().toLowerCase(),
-        descripcion: form.descripcion || undefined,
-        token: token,
-      }),
+      body: fd,
     })
       .then(async r => {
         if (!r.ok) {
@@ -181,7 +228,8 @@ export default function SolicitudDerechoPage() {
         }
         return r.json();
       })
-      .then(() => {
+      .then((data: SubmitResponse) => {
+        setSubmitResult(data);
         setStep(3);
       })
       .catch(err => {
@@ -199,8 +247,47 @@ export default function SolicitudDerechoPage() {
           <p className="mb-4" style={{ color: '#6B7280' }}>
             Tu solicitud de {selectedTipo?.label} fue enviada correctamente. La empresa te responderá a tu email.
           </p>
+          {submitResult && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-4 text-left">
+              <p className="text-xs font-semibold mb-1" style={{ color: '#6B7280' }}>Nº de seguimiento</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm font-mono break-all" style={{ color: '#111827' }}>
+                  {submitResult.tracking_token}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(submitResult.tracking_token).catch(() => {});
+                    toast.success('Copiado al portapapeles');
+                  }}
+                  className="px-2 py-1 rounded text-xs font-medium text-white flex-shrink-0"
+                  style={{ backgroundColor: '#2563EB' }}
+                >
+                  Copiar
+                </button>
+              </div>
+              <p className="text-xs mt-2" style={{ color: '#9CA3AF' }}>
+                Guardá este número para consultar el estado de tu solicitud.
+              </p>
+            </div>
+          )}
           <button
-            onClick={() => setStep(1)}
+            onClick={() => {
+              setStep(1);
+              setSubmitResult(null);
+              setForm(f => ({
+                ...f,
+                companyId: '',
+                tipo: '',
+                nombre_titular: '',
+                rut_titular: '',
+                email_titular: '',
+                descripcion: '',
+                actAsRepresentative: false,
+                representante_nombre: '',
+                representante_rut: '',
+              }));
+              setFiles(null);
+            }}
             className="px-6 py-2 rounded-lg text-white font-medium"
             style={{ backgroundColor: '#2563EB' }}
           >
@@ -406,6 +493,137 @@ export default function SolicitudDerechoPage() {
                   <p id="descripcion-hint" className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
                     Opcional pero recomendable. ({form.descripcion.length}/2000)
                   </p>
+                )}
+              </div>
+
+              <div className="border-t pt-4">
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, actAsRepresentative: !f.actAsRepresentative }))}
+                  className="flex items-center gap-2 text-sm font-medium"
+                  style={{ color: '#374151' }}
+                >
+                  <div
+                    className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: form.actAsRepresentative ? '#2563EB' : 'white', borderColor: form.actAsRepresentative ? '#2563EB' : '#D1D5DB' }}
+                  >
+                    {form.actAsRepresentative && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  Estoy actuando en representación de un tercero
+                </button>
+
+                {form.actAsRepresentative && (
+                  <div className="mt-3 pl-6 space-y-3 border-l-2 border-gray-200">
+                    <div>
+                      <label htmlFor="rep-nombre" className="block text-sm font-semibold mb-1" style={{ color: '#374151' }}>
+                        Nombre del titular que represento *
+                      </label>
+                      <input
+                        id="rep-nombre"
+                        type="text"
+                        value={form.representante_nombre}
+                        onChange={e => setForm(f => ({ ...f, representante_nombre: e.target.value }))}
+                        onBlur={() => handleBlur('representante_nombre')}
+                        placeholder="Ej: Juan Pérez González"
+                        className="w-full p-3 rounded-lg border"
+                        style={{ borderColor: touched.representante_nombre && errors.representante_nombre ? '#DC2626' : '#E5E7EB', outline: 'none' }}
+                        aria-required="true"
+                        aria-describedby={touched.representante_nombre && errors.representante_nombre ? 'rep-nombre-error' : undefined}
+                      />
+                      {touched.representante_nombre && errors.representante_nombre && (
+                        <p id="rep-nombre-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.representante_nombre}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="rep-rut" className="block text-sm font-semibold mb-1" style={{ color: '#374151' }}>
+                        RUT del titular (opcional)
+                      </label>
+                      <input
+                        id="rep-rut"
+                        type="text"
+                        value={form.representante_rut}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setForm(f => ({ ...f, representante_rut: val }));
+                          if (val && val.length >= 8) {
+                            const result = validarRUT(val);
+                            setRepRutError(result.valido ? '' : result.mensaje);
+                          } else {
+                            setRepRutError('');
+                          }
+                        }}
+                        onBlur={() => handleBlur('representante_rut')}
+                        placeholder="Ej: 12.345.678-5"
+                        className="w-full p-3 rounded-lg border"
+                        style={{ borderColor: repRutError ? '#DC2626' : '#E5E7EB', outline: 'none' }}
+                        aria-describedby={repRutError ? 'rep-rut-error' : undefined}
+                      />
+                      {repRutError && <p id="rep-rut-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{repRutError}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1" style={{ color: '#374151' }}>
+                  Documentos adjuntos (opcional)
+                </label>
+                <label
+                  className="flex flex-col items-center justify-center w-full p-4 rounded-lg border-2 border-dashed cursor-pointer transition-colors"
+                  style={{ borderColor: '#D1D5DB', backgroundColor: '#FAFAFA' }}
+                >
+                  <svg className="w-6 h-6 mb-2" style={{ color: '#9CA3AF' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="text-sm" style={{ color: '#6B7280' }}>
+                    {files && files.length > 0 ? `${files.length} archivo(s) seleccionado(s)` : 'Hacé click para adjuntar archivos'}
+                  </span>
+                  <span className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                    PDF, JPEG, PNG o GIF — máx 5 archivos de 5MB c/u
+                  </span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.gif"
+                    className="hidden"
+                    onChange={e => {
+                      const selected = e.target.files;
+                      if (selected) {
+                        const valid: File[] = [];
+                        let sizeError = false;
+                        let typeError = false;
+                        for (let i = 0; i < selected.length && valid.length < MAX_FILES; i++) {
+                          if (selected[i].size > MAX_FILE_SIZE) sizeError = true;
+                          else if (!['application/pdf', 'image/jpeg', 'image/png', 'image/gif'].includes(selected[i].type)) typeError = true;
+                          else valid.push(selected[i]);
+                        }
+                        if (sizeError) toast.error('Uno o más archivos superan los 5MB.');
+                        if (typeError) toast.error('Solo se permiten archivos PDF, JPEG, PNG o GIF.');
+                        if (valid.length > 0) {
+                          const dt = new DataTransfer();
+                          valid.forEach(f => dt.items.add(f));
+                          setFiles(dt.files);
+                        }
+                      }
+                    }}
+                  />
+                </label>
+                {files && files.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {Array.from(files).map((f, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs" style={{ color: '#374151' }}>
+                        <svg className="w-3 h-3 flex-shrink-0" style={{ color: '#059669' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="truncate">{f.name}</span>
+                        <span className="flex-shrink-0" style={{ color: '#9CA3AF' }}>{(f.size / 1024).toFixed(0)}KB</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
 

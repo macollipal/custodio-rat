@@ -16,6 +16,9 @@ import {
   bloquearSolicitud,
   desbloquearSolicitud,
   exportarPortabilidad,
+  solicitarSubsanacion,
+  completarSubsanacion,
+  prorrogarTicket,
   type TktTicket,
   type TktDashboard,
 } from '@/lib/api';
@@ -42,9 +45,13 @@ const TKT_ESTADO_MAP: Record<string, { label: string; color: string; bg: string 
   en_proceso: { label: 'En Proceso', color: '#7C3AED', bg: '#EDE9FE' },
   pendiente: { label: 'Pendiente', color: '#D97706', bg: '#FEF3C7' },
   resuelto: { label: 'Resuelto', color: '#059669', bg: '#DCFCE7' },
+  bloqueado: { label: 'Bloqueado', color: '#DC2626', bg: '#FEE2E2' },
+  rechazado: { label: 'Rechazado', color: '#991B1B', bg: '#FEE2E2' },
+  subsanacion: { label: 'Subsanación', color: '#D97706', bg: '#FEF3C7' },
+  prorroga: { label: 'Prórroga', color: '#7C3AED', bg: '#EDE9FE' },
 };
 
-const TABS = ['abierto', 'en_proceso', 'pendiente', 'resuelto', 'vencido', 'todos'] as const;
+const TABS = ['abierto', 'en_proceso', 'pendiente', 'bloqueado', 'subsanacion', 'prorroga', 'resuelto', 'rechazado', 'vencido', 'todos'] as const;
 type TabType = typeof TABS[number];
 
 function getSlaColor(dias: number | null | undefined): { color: string; bg: string; text: string } {
@@ -345,13 +352,18 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [nuevaNota, setNuevaNota] = useState('');
   const [guardandoNota, setGuardandoNota] = useState(false);
-    const [respuesta, setRespuesta] = useState('');
+  const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [rats, setRats] = useState<RAT[]>([]);
   const [selectedRatId, setSelectedRatId] = useState<number | null>(null);
   const [plazoDias, setPlazoDias] = useState(30);
   const [accionLoading, setAccionLoading] = useState(false);
+  const [subsanacionDetalle, setSubsanacionDetalle] = useState('');
+  const [mostrarSubsanacion, setMostrarSubsanacion] = useState(false);
+  const [mostrarProrroga, setMostrarProrroga] = useState(false);
+  const [prorrogaDias, setProrrogaDias] = useState(10);
+  const [prorrogaMotivo, setProrrogaMotivo] = useState('');
 
   useEffect(() => {
     if (open && ticket) {
@@ -362,6 +374,11 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
       setHistorial([]);
       setSelectedRatId(null);
       setPlazoDias(30);
+      setSubsanacionDetalle('');
+      setMostrarSubsanacion(false);
+      setMostrarProrroga(false);
+      setProrrogaDias(10);
+      setProrrogaMotivo('');
       if ((ticket.tipo === 'bloqueo' || ticket.tipo === 'portabilidad') && companyId) {
         listarRats(companyId).then(r => setRats(Array.isArray(r) ? r : [])).catch(() => setRats([]));
       }
@@ -463,6 +480,50 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
     }
   }
 
+  async function handleSolicitarSubsanacion() {
+    if (!ticket?.id || !subsanacionDetalle.trim()) return;
+    setAccionLoading(true);
+    try {
+      await solicitarSubsanacion(ticket.id, subsanacionDetalle);
+      toast.success('Subsanación solicitada al titular');
+      setMostrarSubsanacion(false);
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al solicitar subsanación');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
+  async function handleCompletarSubsanacion() {
+    if (!ticket?.id) return;
+    setAccionLoading(true);
+    try {
+      await completarSubsanacion(ticket.id);
+      toast.success('Subsanación completada');
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al completar subsanación');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
+  async function handleProrrogar() {
+    if (!ticket?.id) return;
+    setAccionLoading(true);
+    try {
+      await prorrogarTicket(ticket.id, prorrogaDias, prorrogaMotivo || undefined);
+      toast.success(`Prórroga de ${prorrogaDias} días aplicada`);
+      setMostrarProrroga(false);
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al aplicar prorroga');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
   async function handleAgregarNota() {
     if (!ticket?.id || !nuevaNota.trim()) return;
     setGuardandoNota(true);
@@ -543,6 +604,17 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
               {sanitize(ticket.titular_rut) || 'Sin RUT'}
               {ticket.titular_email && ` · ${sanitize(ticket.titular_email)}`}
             </p>
+            {ticket.representante_nombre && (
+              <p className="text-xs mt-0.5" style={{ color: '#7C3AED' }}>
+                Representado por: {sanitize(ticket.representante_nombre)}
+                {ticket.representante_rut && ` (${sanitize(ticket.representante_rut)})`}
+              </p>
+            )}
+            {ticket.tracking_token && (
+              <p className="text-xs mt-0.5 font-mono" style={{ color: '#9CA3AF' }}>
+                Tracking: {ticket.tracking_token}
+              </p>
+            )}
           </div>
         </div>
 
@@ -587,6 +659,27 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
           </div>
         )}
 
+        {ticket.subsanacion_detalle && (
+          <div className="rounded-lg p-4" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: '#92400E' }}>Subsanación solicitada</p>
+            <p className="text-sm" style={{ color: '#78350F' }}>{sanitize(ticket.subsanacion_detalle)}</p>
+            {ticket.subsanacion_fecha_pedido && (
+              <p className="text-xs mt-1" style={{ color: '#B45309' }}>
+                Pedida el: {fmtDate(ticket.subsanacion_fecha_pedido)}
+              </p>
+            )}
+          </div>
+        )}
+
+        {ticket.prorroga_fecha && (
+          <div className="rounded-lg p-4" style={{ background: '#F5F3FF', border: '1px solid #C4B5FD' }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: '#5B21B6' }}>Prórroga aplicada (Art. 12 bis)</p>
+            <p className="text-sm" style={{ color: '#6D28D9' }}>
+              +{ticket.prorroga_dias ?? 10} días hábiles desde el {fmtDate(ticket.prorroga_fecha)}
+            </p>
+          </div>
+        )}
+
         <div>
           <p className="text-xs font-semibold mb-2" style={{ color: '#374151' }}>Respuesta formal</p>
           {isAdmin ? (
@@ -601,6 +694,10 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
                 <option value="en_proceso">En Proceso</option>
                 <option value="pendiente">Pendiente</option>
                 <option value="resuelto">Resuelto</option>
+                <option value="bloqueado">Bloqueado</option>
+                <option value="rechazado">Rechazado</option>
+                <option value="subsanacion">Subsanación</option>
+                <option value="prorroga">Prórroga</option>
               </select>
               <textarea
                 value={respuesta}
@@ -696,6 +793,132 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
                   {accionLoading ? 'Exportando...' : 'Exportar Portabilidad (JSON)'}
                 </button>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* QW3: Acciones de Subsanación */}
+        {isAdmin && ticket.estado !== 'resuelto' && ticket.estado !== 'rechazado' && (
+          <div className="rounded-xl p-4 space-y-3" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+            <p className="text-xs font-semibold" style={{ color: '#92400E' }}>Subsanación (Art. 12)</p>
+            {ticket.estado === 'subsanacion' ? (
+              <div className="space-y-2">
+                <p className="text-xs" style={{ color: '#92400E' }}>
+                  El titular fue notificado para completar información faltante.
+                  Una vez que subsane, hacé clic en completar.
+                </p>
+                <button
+                  onClick={handleCompletarSubsanacion}
+                  disabled={accionLoading}
+                  className="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                  style={{ background: '#059669' }}
+                >
+                  {accionLoading ? 'Procesando...' : 'Completar Subsanación'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {mostrarSubsanacion ? (
+                  <>
+                    <textarea
+                      value={subsanacionDetalle}
+                      onChange={e => setSubsanacionDetalle(e.target.value)}
+                      rows={3}
+                      placeholder="Detallá qué información falta para procesar la solicitud..."
+                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      style={{ borderColor: '#FDE68A' }}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setMostrarSubsanacion(false)}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border"
+                        style={{ borderColor: '#FDE68A', color: '#92400E' }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={handleSolicitarSubsanacion}
+                        disabled={accionLoading || !subsanacionDetalle.trim()}
+                        className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                        style={{ background: '#D97706' }}
+                      >
+                        {accionLoading ? 'Enviando...' : 'Enviar Solicitud'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setMostrarSubsanacion(true)}
+                    disabled={accionLoading}
+                    className="w-full px-4 py-2 rounded-lg text-sm font-semibold border disabled:opacity-60"
+                    style={{ borderColor: '#FDE68A', color: '#92400E' }}
+                  >
+                    Solicitar Subsanación
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* QW4: Acción de Prórroga */}
+        {isAdmin && ticket.estado !== 'resuelto' && ticket.estado !== 'rechazado' && !ticket.prorroga_fecha && (
+          <div className="rounded-xl p-4 space-y-3" style={{ background: '#F5F3FF', border: '1px solid #C4B5FD' }}>
+            <p className="text-xs font-semibold" style={{ color: '#5B21B6' }}>Prórroga (Art. 12 bis — máximo 10 días)</p>
+            {mostrarProrroga ? (
+              <>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-xs block mb-1" style={{ color: '#5B21B6' }}>Días adicionales</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={prorrogaDias}
+                      onChange={e => setProrrogaDias(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      style={{ borderColor: '#C4B5FD' }}
+                    />
+                  </div>
+                  <div className="flex-[3]">
+                    <label className="text-xs block mb-1" style={{ color: '#5B21B6' }}>Motivo (opcional)</label>
+                    <input
+                      type="text"
+                      value={prorrogaMotivo}
+                      onChange={e => setProrrogaMotivo(e.target.value)}
+                      placeholder="Complejidad del caso..."
+                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      style={{ borderColor: '#C4B5FD' }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMostrarProrroga(false)}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border"
+                    style={{ borderColor: '#C4B5FD', color: '#5B21B6' }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleProrrogar}
+                    disabled={accionLoading}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: '#7C3AED' }}
+                  >
+                    {accionLoading ? 'Aplicando...' : `Aplicar +${prorrogaDias} días`}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => setMostrarProrroga(true)}
+                disabled={accionLoading}
+                className="w-full px-4 py-2 rounded-lg text-sm font-semibold border disabled:opacity-60"
+                style={{ borderColor: '#C4B5FD', color: '#5B21B6' }}
+              >
+                Aplicar Prórroga (+10 días hábiles)
+              </button>
             )}
           </div>
         )}
@@ -889,12 +1112,16 @@ export default function TktSolicitudDerechoPage() {
         </div>
       ) : dashboard ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-10 gap-3">
             <KpiCard label="Total" value={dashboard.total} color="#2563EB" icon="📋" />
             <KpiCard label="Abiertos" value={dashboard.abiertos} color="#2563EB" icon="📬" />
             <KpiCard label="En Proceso" value={dashboard.en_proceso} color="#7C3AED" icon="⚙️" />
             <KpiCard label="Pendientes" value={dashboard.pendientes} color="#D97706" icon="⏳" />
+            <KpiCard label="Bloqueados" value={dashboard.bloqueados ?? 0} color="#DC2626" icon="🔒" />
+            <KpiCard label="Subsanación" value={dashboard.subsanacion ?? 0} color="#D97706" icon="📝" />
+            <KpiCard label="Prórroga" value={dashboard.prorrogas ?? 0} color="#7C3AED" icon="⏰" />
             <KpiCard label="Resueltos" value={dashboard.resueltos} color="#059669" icon="✅" />
+            <KpiCard label="Rechazados" value={dashboard.rechazados ?? 0} color="#991B1B" icon="🚫" />
             <KpiCard label="Vencidos" value={dashboard.vencidos} color="#DC2626" icon="⚠️" />
           </div>
           <SlaBar cumplimiento={dashboard.cumplimiento_sla} />
@@ -990,6 +1217,11 @@ export default function TktSolicitudDerechoPage() {
                         <p className="text-xs font-medium" style={{ color: '#111827' }}>{sanitize(ticket.titular_nombre)}</p>
                         <p className="text-xs" style={{ color: '#9CA3AF' }}>{sanitize(ticket.titular_rut) || '—'}</p>
                         <p className="text-xs truncate" style={{ color: '#6B7280' }}>{sanitize(ticket.titular_email)}</p>
+                        {ticket.tracking_token && (
+                          <p className="text-xs font-mono mt-0.5 truncate" style={{ color: '#9CA3AF' }} title={ticket.tracking_token}>
+                            #{ticket.tracking_token.slice(0, 8)}...
+                          </p>
+                        )}
                       </td>
                       <td className="py-2.5 px-2 hidden md:table-cell">
                         <p className="text-xs line-clamp-2" style={{ color: '#374151' }} title={ticket.descripcion || ''}>
