@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, timezone
+from pydantic import BaseModel
 from app.database.database import get_db
 from app.routes.deps import get_current_user
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -20,6 +21,10 @@ from app.services.ticket_service import (
     get_dashboard_stats,
     calcular_dias_restantes,
     get_sla_color,
+    bloquear_ticket,
+    desbloquear_ticket,
+    rechazar_ticket,
+    guardar_portability_data,
 )
 from app.services.audit_service import log_audit
 from app.schemas.tkt_solicitud_derecho import (
@@ -29,6 +34,8 @@ from app.schemas.tkt_solicitud_derecho import (
     TktTicketResponse,
     TktListResponse,
     TktDashboardResponse,
+    TktBloquearRequest,
+    TktExportPortabilidadResponse,
 )
 import logging
 
@@ -57,6 +64,9 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         responsable_id=ticket.responsable_id,
         respuesta_texto=ticket.respuesta_texto,
         respuesta_fecha=ticket.respuesta_fecha,
+        rat_id=ticket.rat_id,
+        plazo_bloqueo_vencimiento=ticket.plazo_bloqueo_vencimiento,
+        portability_data=ticket.portability_data,
         created_by=ticket.created_by,
         created_at=ticket.created_at,
         dias_restantes=dias_rest,
@@ -115,9 +125,10 @@ def crear_ticket_endpoint(
         origen=data.origen,
         titular_nombre=data.titular_nombre,
         titular_email=data.titular_email,
-        titular_rut=data.titular_rut,
+        titular_rut=data.rut_titular,
         descripcion=data.descripcion,
         created_by=current_user.username,
+        rat_id=data.rat_id,
     )
     log_audit(
         db=db,
@@ -389,3 +400,206 @@ def listar_historial(
         }
         for h in historial
     ]
+
+
+@router.post("/{ticket_id}/bloquear", summary="Bloquear RAT temporalmente (Art. 8 ter)")
+def bloquear_rat_ticket(
+    ticket_id: int,
+    data: TktBloquearRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Bloquea un RAT y marca el ticket como bloqueado."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden bloquear RATs")
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    ticket_out, error = bloquear_ticket(
+        db=db,
+        ticket_id=ticket_id,
+        rat_id=data.rat_id,
+        dias_bloqueo=data.dias_bloqueo,
+        user_id=current_user.id,
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket_id,
+        accion="bloquear",
+        usuario=current_user.username,
+        detalle={"rat_id": data.rat_id, "dias_bloqueo": data.dias_bloqueo},
+    )
+    return _ticket_to_response(ticket_out)
+
+
+@router.post("/{ticket_id}/desbloquear", summary="Desbloquear RAT antes del vencimiento")
+def desbloquear_rat_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Desbloquea un RAT antes del vencimiento y marca ticket como resuelto."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden desbloquear RATs")
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    ticket_out, error = desbloquear_ticket(
+        db=db,
+        ticket_id=ticket_id,
+        user_id=current_user.id,
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket_id,
+        accion="desbloquear",
+        usuario=current_user.username,
+        detalle={},
+    )
+    return _ticket_to_response(ticket_out)
+
+
+class RechazarRequest(BaseModel):
+    motivo: str
+
+
+@router.post("/{ticket_id}/rechazar", summary="Rechazar solicitud con motivo fundado (Art. 12.5)")
+def rechazar_solicitud_ticket(
+    ticket_id: int,
+    data: RechazarRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Rechaza una solicitud ARCO con motivo fundado."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden rechazar solicitudes")
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    ticket_out, error = rechazar_ticket(
+        db=db,
+        ticket_id=ticket_id,
+        motivo=data.motivo,
+        user_id=current_user.id,
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket_id,
+        accion="rechazar",
+        usuario=current_user.username,
+        detalle={"motivo": data.motivo},
+    )
+    return _ticket_to_response(ticket_out)
+
+
+@router.get("/{ticket_id}/portabilidad/export", response_model=TktExportPortabilidadResponse, summary="Exportar datos de portabilidad (Art. 9)")
+def exportar_portabilidad_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Exporta los datos de portabilidad de un ticket."""
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    if ticket.tipo != "portabilidad":
+        raise HTTPException(status_code=400, detail="El ticket no es de portabilidad")
+
+    exportado_en = datetime.now(timezone.utc)
+
+    return TktExportPortabilidadResponse(
+        id=ticket.id,
+        company_id=ticket.company_id,
+        tipo=ticket.tipo,
+        titular_nombre=ticket.titular_nombre,
+        titular_email=ticket.titular_email,
+        titular_rut=ticket.titular_rut,
+        descripcion=ticket.descripcion,
+        estado=ticket.estado,
+        fecha_recepcion=ticket.fecha_recepcion.isoformat() if ticket.fecha_recepcion else None,
+        portability_data=ticket.portability_data,
+        exportado_en=exportado_en.isoformat(),
+    )
+
+
+class GuardarPortabilidadRequest(BaseModel):
+    portability_data: str
+
+
+@router.post("/{ticket_id}/portabilidad/guardar", summary="Guardar datos de portabilidad en ticket")
+def guardar_portabilidad_ticket(
+    ticket_id: int,
+    data: GuardarPortabilidadRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Guarda los datos de portabilidad JSON en el ticket y lo marca como resuelto."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden guardar portabilidad")
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    ticket_out, error = guardar_portability_data(
+        db=db,
+        ticket_id=ticket_id,
+        portability_data=data.portability_data,
+        user_id=current_user.id,
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket_id,
+        accion="exportar_portabilidad",
+        usuario=current_user.username,
+        detalle={},
+    )
+    return _ticket_to_response(ticket_out)

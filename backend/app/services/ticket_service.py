@@ -115,6 +115,7 @@ def crear_ticket_desde_solicitud(
     descripcion: Optional[str] = None,
     titular_rut: Optional[str] = None,
     origen: str = "web",
+    rat_id: Optional[int] = None,
 ) -> "TktSolicitudDerecho":
     """Crea un ticket TKT desde el formulario público de solicitudes."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -135,6 +136,7 @@ def crear_ticket_desde_solicitud(
         descripcion=descripcion,
         fecha_recepcion=ahora,
         fecha_vencimiento=fecha_vencimiento,
+        rat_id=rat_id,
     )
     db.add(ticket)
     db.flush()
@@ -162,6 +164,7 @@ def crear_ticket(
     titular_rut: Optional[str] = None,
     descripcion: Optional[str] = None,
     created_by: Optional[str] = None,
+    rat_id: Optional[int] = None,
 ) -> "TktSolicitudDerecho":
     """Crea un ticket TKT (para uso interno/admin)."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -183,6 +186,7 @@ def crear_ticket(
         fecha_recepcion=ahora,
         fecha_vencimiento=fecha_vencimiento,
         created_by=created_by,
+        rat_id=rat_id,
     )
     db.add(ticket)
     db.flush()
@@ -288,3 +292,160 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
         "cumplimiento_sla": cumplimiento,
         "tiempo_promedio_horas": tiempo_promedio,
     }
+
+
+def bloquear_ticket(
+    db: Session,
+    ticket_id: int,
+    rat_id: int,
+    dias_bloqueo: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Bloquea un RAT y marca el ticket como bloqueado (Art. 8 ter)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.rat import RAT as RATModel
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if not rat:
+        return None, "RAT no encontrado"
+
+    if rat.company_id != ticket.company_id:
+        return None, "El RAT no pertenece a la empresa del ticket"
+
+    estado_anterior = ticket.estado
+    fecha_vencimiento = calcular_dias_habiles(datetime.now(timezone.utc), dias_bloqueo)
+
+    ticket.estado = "bloqueado"
+    ticket.rat_id = rat_id
+    ticket.plazo_bloqueo_vencimiento = fecha_vencimiento
+
+    rat.bloqueado = True
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="bloqueado",
+        user_id=user_id,
+        descripcion=f"RAT id={rat_id} bloqueado por {dias_bloqueo} días hábiles",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def desbloquear_ticket(
+    db: Session,
+    ticket_id: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Desbloquea un RAT antes del vencimiento y marca ticket como resuelto."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.rat import RAT as RATModel
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado != "bloqueado":
+        return None, "El ticket no está en estado bloqueado"
+
+    estado_anterior = ticket.estado
+
+    if ticket.rat_id:
+        rat = db.query(RATModel).filter(RATModel.id == ticket.rat_id).first()
+        if rat:
+            rat.bloqueado = False
+
+    ticket.estado = "resuelto"
+    ticket.plazo_bloqueo_vencimiento = None
+    ticket.respuesta_texto = "RAT desbloqueado antes del vencimiento"
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="resuelto",
+        user_id=user_id,
+        descripcion="Desbloqueo anticipado del RAT",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def rechazar_ticket(
+    db: Session,
+    ticket_id: int,
+    motivo: str,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Rechaza una solicitud ARCO con motivo fundado (Art. 12.5)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    estado_anterior = ticket.estado
+
+    ticket.estado = "rechazado"
+    ticket.respuesta_texto = motivo
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="rechazado",
+        user_id=user_id,
+        descripcion=f"Rechazo fundado: {motivo}",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def guardar_portability_data(
+    db: Session,
+    ticket_id: int,
+    portability_data: str,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Guarda datos de portabilidad en el ticket y lo marca como resuelto."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.tipo != "portabilidad":
+        return None, "El ticket no es de portabilidad"
+
+    estado_anterior = ticket.estado
+
+    ticket.portability_data = portability_data
+    ticket.estado = "resuelto"
+    ticket.respuesta_texto = "Datos de portabilidad exportados"
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="resuelto",
+        user_id=user_id,
+        descripcion="Exportación de portabilidad completada",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None

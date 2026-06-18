@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -12,6 +12,8 @@ class TktTipo(str, enum.Enum):
     RECTIFICACION = "rectificacion"
     CANCELACION = "cancelacion"
     OPOSICION = "oposicion"
+    BLOQUEO = "bloqueo"
+    PORTABILIDAD = "portabilidad"
 
 
 class EstadoTicket(str, enum.Enum):
@@ -19,6 +21,8 @@ class EstadoTicket(str, enum.Enum):
     EN_PROCESO = "en_proceso"
     PENDIENTE = "pendiente"
     RESUELTO = "resuelto"
+    BLOQUEADO = "bloqueado"
+    RECHAZADO = "rechazado"
 
 
 class PrioridadTicket(str, enum.Enum):
@@ -58,12 +62,16 @@ class TktSolicitudDerecho(Base):
     responsable_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     respuesta_texto: Mapped[str] = mapped_column(String(1000), nullable=True)
     respuesta_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True)
+    plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    portability_data: Mapped[str] = mapped_column(Text, nullable=True)
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
     responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821
+    rat: Mapped["RAT"] = relationship("RAT", foreign_keys=[rat_id])  # noqa: F821
     notas: Mapped[list["TktNota"]] = relationship("TktNota", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
     adjuntos: Mapped[list["TktAdjunto"]] = relationship("TktAdjunto", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
     historial: Mapped[list["TktHistorial"]] = relationship("TktHistorial", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821

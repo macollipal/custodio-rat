@@ -44,7 +44,7 @@ class TestCrearTicketARCO:
 
     def test_superadmin_puede_crear_ticket_rectificacion(self, client, auth_headers, empresa):
         """Superadmin puede crear ticket tipo rectificacion."""
-        resp = _crear_ticket(client, auth_headers, empresa["id"], "rectificacion", "alta")
+        resp = _crear_ticket(client, auth_headers, empresa["id"], "rectificacion", "urgente")
         assert resp.status_code == 200
         assert resp.json()["tipo"] == "rectificacion"
 

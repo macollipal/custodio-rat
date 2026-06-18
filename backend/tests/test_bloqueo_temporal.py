@@ -28,65 +28,55 @@ class TestBloqueoTemporal:
         assert resp.status_code == 200
         data = resp.json()
         assert data["tipo"] == "bloqueo"
-        assert data["estado"] == "pendiente"
+        assert data["estado"] == "abierto"
 
     def test_bloquear_rat(self, client, auth_headers, empresa, rat_base):
         resp = client.post("/rats/", json=rat_base, headers=auth_headers)
         assert resp.status_code == 201
         rat_id = resp.json()["id"]
 
-        resp = client.get("/solicitudes-derecho/token")
-        token = resp.json()["token"]
-
-        payload = {
+        resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "bloqueo",
-            "nombre_titular": "Carlos Ruiz",
-            "email_titular": "carlos@test.cl",
- }
-        resp = client.post("/solicitudes-derecho/", json={**payload, "token": token})
+            "titular_nombre": "Carlos Ruiz",
+            "titular_email": "carlos@test.cl",
+        }, headers=auth_headers)
         assert resp.status_code == 200
-        solicitud_id = resp.json()["id"]
+        ticket_id = resp.json()["id"]
 
         resp = client.post(
-            f"/solicitudes-derecho/{solicitud_id}/bloquear",
+            f"/tkt-solicitud-derecho/{ticket_id}/bloquear",
             json={"rat_id": rat_id, "dias_bloqueo": 2},
             headers=auth_headers,
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["ok"] is True
+        assert data["estado"] == "bloqueado"
         assert data["rat_id"] == rat_id
-        assert data["bloqueado"] is True
-        assert data["plazo_vencimiento"] is not None
+        assert data["plazo_bloqueo_vencimiento"] is not None
 
     def test_desbloquear_rat(self, client, auth_headers, empresa, rat_base):
         resp = client.post("/rats/", json=rat_base, headers=auth_headers)
         assert resp.status_code == 201
         rat_id = resp.json()["id"]
 
-        resp = client.get("/solicitudes-derecho/token")
-        token = resp.json()["token"]
-
-        payload = {
+        resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "bloqueo",
-            "nombre_titular": "Laura Torres",
-            "email_titular": "laura@test.cl",
-        }
-        resp = client.post("/solicitudes-derecho/", json={**payload, "token": token})
-        solicitud_id = resp.json()["id"]
+            "titular_nombre": "Laura Torres",
+            "titular_email": "laura@test.cl",
+        }, headers=auth_headers)
+        ticket_id = resp.json()["id"]
 
         client.post(
-            f"/solicitudes-derecho/{solicitud_id}/bloquear",
+            f"/tkt-solicitud-derecho/{ticket_id}/bloquear",
             json={"rat_id": rat_id, "dias_bloqueo": 2},
             headers=auth_headers,
         )
 
-        resp = client.post(f"/solicitudes-derecho/{solicitud_id}/desbloquear", headers=auth_headers)
+        resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/desbloquear", headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json()["ok"] is True
-        assert resp.json()["bloqueado"] is False
+        assert resp.json()["estado"] == "resuelto"
 
     def test_tipos_solicitud_incluyen_bloqueo_y_portabilidad(self):
         tipos = [e.value for e in TipoSolicitud]

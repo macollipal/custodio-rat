@@ -6,9 +6,9 @@ from typing import Optional, Literal
 from pydantic import BaseModel, EmailStr
 
 
-TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion"]
-TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto"]
-TktPrioridadEnum = Literal["alta", "normal", "baja"]
+TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion", "bloqueo", "portabilidad"]
+TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado"]
+TktPrioridadEnum = Literal["urgente", "normal", "baja"]
 TktOrigenEnum = Literal["web", "email", "telefono", "presencial", "manual"]
 
 
@@ -19,8 +19,9 @@ class TktTicketCreate(BaseModel):
     origen: TktOrigenEnum = "web"
     titular_nombre: str
     titular_email: EmailStr
-    titular_rut: Optional[str] = None
+    rut_titular: Optional[str] = None
     descripcion: Optional[str] = None
+    rat_id: Optional[int] = None
 
 
 class TktTicketUpdate(BaseModel):
@@ -66,11 +67,33 @@ class TktTicketResponse(BaseModel):
     responsable_id: Optional[int]
     respuesta_texto: Optional[str]
     respuesta_fecha: Optional[datetime]
+    rat_id: Optional[int]
+    plazo_bloqueo_vencimiento: Optional[datetime]
+    portability_data: Optional[str]
     created_by: Optional[str]
     created_at: Optional[datetime]
     dias_restantes: Optional[int] = None
     sla_color: Optional[str] = None
     estado_sla: Optional[str] = None
+
+
+class TktBloquearRequest(BaseModel):
+    rat_id: int
+    dias_bloqueo: int = 2
+
+
+class TktExportPortabilidadResponse(BaseModel):
+    id: int
+    company_id: int
+    tipo: str
+    titular_nombre: str
+    titular_email: str
+    titular_rut: Optional[str]
+    descripcion: Optional[str]
+    estado: str
+    fecha_recepcion: Optional[str]
+    portability_data: Optional[str]
+    exportado_en: Optional[str]
 
 
 class TktDashboardResponse(BaseModel):

@@ -128,19 +128,6 @@ async def crear_solicitud(
         return JSONResponse(status_code=404, content={"detail": "Empresa no encontrada"})
 
     ahora = datetime.now(timezone.utc)
-    solicitud = SolicitudDerecho(
-        company_id=data.company_id,
-        tipo=data.tipo,
-        nombre_titular=data.nombre_titular,
-        rut_titular=data.rut_titular,
-        email_titular=data.email_titular,
-        descripcion=data.descripcion,
-        estado="pendiente",
-        solicitud_fecha=ahora,
-    )
-    db.add(solicitud)
-    db.commit()
-    db.refresh(solicitud)
 
     ticket = crear_ticket_desde_solicitud(
         db=db,
@@ -153,20 +140,20 @@ async def crear_solicitud(
         origen="web",
     )
 
-    logger.info(f"Solicitud ARCO creada: id={solicitud.id} company={data.company_id} tipo={data.tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
+    logger.info(f"Solicitud ARCO creada (TKT only): company={data.company_id} tipo={data.tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
     return {
-        "id": solicitud.id,
-        "company_id": solicitud.company_id,
-        "tipo": solicitud.tipo,
-        "nombre_titular": solicitud.nombre_titular,
-        "rut_titular": solicitud.rut_titular,
-        "email_titular": solicitud.email_titular,
-        "descripcion": solicitud.descripcion,
-        "estado": solicitud.estado,
-        "solicitud_fecha": solicitud.solicitud_fecha.isoformat() if solicitud.solicitud_fecha else None,
-        "respuesta": solicitud.respuesta,
-        "respuesta_fecha": solicitud.respuesta_fecha.isoformat() if solicitud.respuesta_fecha else None,
-        "created_at": solicitud.created_at.isoformat() if solicitud.created_at else None,
+        "id": ticket.id,
+        "company_id": data.company_id,
+        "tipo": data.tipo,
+        "nombre_titular": data.nombre_titular,
+        "rut_titular": data.rut_titular,
+        "email_titular": data.email_titular,
+        "descripcion": data.descripcion,
+        "estado": "abierto",
+        "solicitud_fecha": ticket.fecha_recepcion.isoformat() if ticket.fecha_recepcion else None,
+        "respuesta": None,
+        "respuesta_fecha": None,
+        "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
     }
 
 
