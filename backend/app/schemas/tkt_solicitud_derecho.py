@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion", "bloqueo", "portabilidad"]
-TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado", "subsanacion"]
+TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado", "subsanacion", "prorroga"]
 TktPrioridadEnum = Literal["urgente", "normal", "baja"]
 TktOrigenEnum = Literal["web", "email", "telefono", "presencial", "manual"]
 
@@ -80,6 +80,8 @@ class TktTicketResponse(BaseModel):
     acuse_enviado_at: Optional[datetime]
     subsanacion_detalle: Optional[str]
     subsanacion_fecha_pedido: Optional[datetime]
+    prorroga_fecha: Optional[datetime]
+    prorroga_dias: Optional[int]
     created_by: Optional[str]
     created_at: Optional[datetime]
     dias_restantes: Optional[int] = None
@@ -123,3 +125,8 @@ class TktListResponse(BaseModel):
     skip: int
     limit: int
     stats: Optional[dict] = None
+
+
+class TktProrrogarRequest(BaseModel):
+    dias: int = Field(default=10, ge=1, le=10, description="Días de extensión (máximo 10 días hábiles, Art. 12 bis)")
+    motivo: Optional[str] = Field(default=None, max_length=500, description="Motivo de la prorroga (opcional)")

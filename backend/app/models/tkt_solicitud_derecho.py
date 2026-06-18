@@ -24,6 +24,7 @@ class EstadoTicket(str, enum.Enum):
     BLOQUEADO = "bloqueado"
     RECHAZADO = "rechazado"
     SUBSANACION = "subsanacion"
+    PRORROGA = "prorroga"
 
 
 class PrioridadTicket(str, enum.Enum):
@@ -71,6 +72,8 @@ class TktSolicitudDerecho(Base):
     acuse_enviado_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     subsanacion_detalle: Mapped[str] = mapped_column(String(1000), nullable=True)
     subsanacion_fecha_pedido: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    prorroga_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    prorroga_dias: Mapped[int] = mapped_column(Integer, nullable=True)
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

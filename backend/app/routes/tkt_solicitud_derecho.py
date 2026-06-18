@@ -27,6 +27,7 @@ from app.services.ticket_service import (
     guardar_portability_data,
     solicitar_subsanacion,
     completar_subsanacion,
+    prorrogar_ticket,
 )
 from app.services.audit_service import log_audit
 from app.schemas.tkt_solicitud_derecho import (
@@ -38,6 +39,7 @@ from app.schemas.tkt_solicitud_derecho import (
     TktDashboardResponse,
     TktBloquearRequest,
     TktExportPortabilidadResponse,
+    TktProrrogarRequest,
 )
 import logging
 
@@ -73,6 +75,8 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         acuse_enviado_at=ticket.acuse_enviado_at,
         subsanacion_detalle=ticket.subsanacion_detalle,
         subsanacion_fecha_pedido=ticket.subsanacion_fecha_pedido,
+        prorroga_fecha=ticket.prorroga_fecha,
+        prorroga_dias=ticket.prorroga_dias,
         created_by=ticket.created_by,
         created_at=ticket.created_at,
         dias_restantes=dias_rest,
@@ -718,5 +722,46 @@ def completar_subsanacion_ticket(
         accion="subsanacion_completar",
         usuario=current_user.username,
         detalle={},
+    )
+    return _ticket_to_response(ticket_out)
+
+
+@router.post("/{ticket_id}/prorrogar", summary="Extender plazo de respuesta (Art. 12 bis)")
+def prorrogar_solicitud_ticket(
+    ticket_id: int,
+    data: TktProrrogarRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Extiende el plazo de respuesta hasta 10 días hábiles adicionales (Art. 12 bis). Solo se puede prorrogar una vez."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Solo admin_empresa o superadmin pueden prorrogar")
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if ticket.company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
+
+    ticket_out, error = prorrogar_ticket(
+        db=db,
+        ticket_id=ticket_id,
+        dias=data.dias,
+        motivo=data.motivo,
+        user_id=current_user.id,
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket_id,
+        accion="prorrogar",
+        usuario=current_user.username,
+        detalle={"dias": data.dias, "motivo": data.motivo},
     )
     return _ticket_to_response(ticket_out)

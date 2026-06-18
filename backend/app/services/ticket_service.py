@@ -553,3 +553,47 @@ def completar_subsanacion(
     db.commit()
     db.refresh(ticket)
     return ticket, None
+
+
+def prorrogar_ticket(
+    db: Session,
+    ticket_id: int,
+    dias: int = 10,
+    motivo: Optional[str] = None,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Extiende el plazo de respuesta (Art. 12 bis — máximo 10 días hábiles adicionales)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado in ("resuelto", "rechazado", "bloqueado"):
+        return None, f"No se puede prorrogar desde estado '{ticket.estado}'"
+
+    if ticket.prorroga_fecha is not None:
+        return None, "El ticket ya fue prorrogado anteriormente"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    nueva_vencimiento = calcular_dias_habiles(ahora, dias)
+
+    ticket.estado = "prorroga"
+    ticket.prorroga_fecha = ahora
+    ticket.prorroga_dias = dias
+    ticket.fecha_vencimiento = nueva_vencimiento
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="prorroga",
+        user_id=user_id,
+        descripcion=f"Prórroga de {dias} días: {motivo or 'Sin motivo'}",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
