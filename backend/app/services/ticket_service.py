@@ -146,6 +146,11 @@ def crear_ticket_desde_solicitud(
     db.add(ticket)
     db.flush()
 
+    from app.services.asignacion_service import evaluar_reglas_asignacion
+    responsable_id = evaluar_reglas_asignacion(db, company_id, tipo, "normal")
+    if responsable_id:
+        ticket.responsable_id = responsable_id
+
     historial = TktHistorial(
         ticket_id=ticket.id,
         estado_anterior=None,
@@ -209,6 +214,11 @@ def crear_ticket(
     )
     db.add(ticket)
     db.flush()
+
+    from app.services.asignacion_service import evaluar_reglas_asignacion
+    responsable_id = evaluar_reglas_asignacion(db, company_id, tipo, prioridad)
+    if responsable_id:
+        ticket.responsable_id = responsable_id
 
     historial = TktHistorial(
         ticket_id=ticket.id,
