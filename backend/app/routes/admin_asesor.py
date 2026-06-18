@@ -2,6 +2,8 @@
 Endpoints admin del Asesor (solo superadmin).
 """
 import logging
+import threading
+import time
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status
 from sqlalchemy.orm import Session
 
@@ -44,36 +46,63 @@ async def index_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Indexa o actualiza el corpus."""
-    require_superadmin(current_user)
-    result = await index_corpus(db, paths=req.paths, force=req.force)
+    """Indexa o actualiza el corpus.
 
-    try:
-        log_audit(
-            db=db,
-            entidad="asesor",
-            entidad_id=0,
-            accion="index",
-            usuario=current_user.username,
-            detalle={
-                "indexed": result["indexed"],
-                "skipped": result["skipped"],
-                "errors_count": len(result["errors"]),
-                "duration_ms": result["duration_ms"],
-                "force": req.force,
-            },
-            ip_origen=request.client.host if request.client else None,
-        )
-        db.commit()
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning(f"Audit log failed: {e}")
+    Para evitar CORS timeout en cold start con OCI + Cohere,
+    el trabajo pesado se ejecuta en un thread daemon y el endpoint
+    responde inmediatamente. El resultado se audita via log_audit.
+    """
+    import threading
+    import time
+
+    require_superadmin(current_user)
+    ip_origen = request.client.host if request.client else None
+
+    result_holder: dict = {}
+    error_holder: list = []
+
+    def _index_in_thread():
+        from app.database.database import SessionLocal as _SessionLocal
+        _db = _SessionLocal()
+        try:
+            result = index_corpus(_db, paths=req.paths, force=req.force)
+            result_holder.update(result)
+            try:
+                log_audit(
+                    db=_db,
+                    entidad="asesor",
+                    entidad_id=0,
+                    accion="index",
+                    usuario=current_user.username,
+                    detalle={
+                        "indexed": result["indexed"],
+                        "skipped": result["skipped"],
+                        "errors_count": len(result["errors"]),
+                        "duration_ms": result["duration_ms"],
+                        "force": req.force,
+                    },
+                    ip_origen=ip_origen,
+                )
+                _db.commit()
+            except Exception as e:
+                logger.warning(f"Background audit log failed: {e}")
+        except Exception as e:
+            error_holder.append(str(e))
+            logger.exception(f"Index background task failed: {e}")
+        finally:
+            _db.close()
+
+    thread = threading.Thread(target=_index_in_thread, daemon=True)
+    thread.start()
+
+    time.sleep(0.1)
 
     return {
-        "indexed": result["indexed"],
-        "skipped": result["skipped"],
-        "errors": result["errors"],
-        "duration_ms": result["duration_ms"],
+        "indexed": result_holder.get("indexed", 0),
+        "skipped": result_holder.get("skipped", 0),
+        "errors": error_holder if error_holder else result_holder.get("errors", []),
+        "duration_ms": result_holder.get("duration_ms", 0),
+        "status": "processing" if not result_holder and not error_holder else "done",
     }
 
 
@@ -87,39 +116,6 @@ async def stats_endpoint(
     """Estadísticas del corpus."""
     require_superadmin(current_user)
     return get_stats(db)
-
-
-@router.delete("/documents/{chunk_id}")
-@limiter.limit("10/minute")
-async def delete_chunk_endpoint(
-    chunk_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Elimina un chunk del índice."""
-    require_superadmin(current_user)
-    from app.models.asesor import AsesorChunk
-    chunk = db.query(AsesorChunk).filter(AsesorChunk.id == chunk_id).first()
-    if not chunk:
-        raise HTTPException(status_code=404, detail="Chunk no encontrado")
-    db.delete(chunk)
-    try:
-        log_audit(
-            db=db,
-            entidad="asesor",
-            entidad_id=chunk_id,
-            accion="delete",
-            usuario=current_user.username,
-            detalle={"source": chunk.source},
-            ip_origen=request.client.host if request.client else None,
-        )
-        db.commit()
-    except Exception as e:
-        logging.getLogger(__name__).warning(f"Audit log failed: {e}")
-        db.rollback()
-
-    return {"ok": True, "id": chunk_id}
 
 
 @router.get("/documents", response_model=AsesorDocumentsListResponse)
@@ -276,3 +272,36 @@ async def delete_document_endpoint(
         "original_filename": doc.original_filename,
         "chunks_removed": chunks_removed,
     }
+
+
+@router.delete("/documents/{chunk_id}")
+@limiter.limit("10/minute")
+async def delete_chunk_endpoint(
+    chunk_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Elimina un chunk individual del índice (compatibilidad)."""
+    require_superadmin(current_user)
+    from app.models.asesor import AsesorChunk
+    chunk = db.query(AsesorChunk).filter(AsesorChunk.id == chunk_id).first()
+    if not chunk:
+        raise HTTPException(status_code=404, detail="Chunk no encontrado")
+    db.delete(chunk)
+    try:
+        log_audit(
+            db=db,
+            entidad="asesor",
+            entidad_id=chunk_id,
+            accion="delete",
+            usuario=current_user.username,
+            detalle={"source": chunk.source},
+            ip_origen=request.client.host if request.client else None,
+        )
+        db.commit()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Audit log failed: {e}")
+        db.rollback()
+
+    return {"ok": True, "id": chunk_id}

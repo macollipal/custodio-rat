@@ -38,6 +38,12 @@ class AsesorIndexResponse(BaseModel):
     skipped: int
     errors: List[str] = []
     duration_ms: int
+    status: Optional[str] = None
+
+
+class AsesorIndexJobResponse(BaseModel):
+    message: str
+    job: str = "index_corpus"
 
 
 class AsesorStatsResponse(BaseModel):

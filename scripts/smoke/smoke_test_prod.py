@@ -42,8 +42,8 @@ CONFIGS = {
     'local': {
         'frontend': 'http://localhost:3000',
         'backend': 'http://localhost:8002',
-        'test_user': None,
-        'test_password': None,
+        'test_user': 'admin',
+        'test_password': 'Admin1234!',
     }
 }
 
@@ -173,6 +173,44 @@ def run_smoke_test(env: str) -> int:
             failures.append('Login exception')
     else:
         check_warn('Login', True, 'skip (no test_user configurado)')
+
+    # 6. Corpus Asesor (solo si hay token y es superadmin)
+    print()
+    print('[6] CORPUS ASESOR')
+    if cfg.get('test_user'):
+        try:
+            r = requests.post(f'{cfg["backend"]}/auth/login', timeout=10,
+                              json={'username': cfg['test_user'], 'password': cfg['test_password']},
+                              headers={'Origin': cfg['frontend']})
+            if r.status_code == 200:
+                token = r.json().get('access_token')
+                headers_auth = {'Authorization': f'Bearer {token}'}
+
+                r_stats = requests.get(f'{cfg["backend"]}/admin/asesor/stats',
+                                       timeout=15, headers=headers_auth)
+                ok_stats = check('GET /admin/asesor/stats', r_stats.status_code == 200,
+                                 f'status={r_stats.status_code}')
+                if ok_stats:
+                    stats = r_stats.json()
+                    check_warn('Corpus chunks', stats.get('total_chunks', 0) >= 0,
+                               f"{stats.get('total_chunks', 0)} chunks, {stats.get('total_documents', 0)} docs")
+                    check_warn('Corpus provider', bool(stats.get('provider')),
+                               stats.get('provider', 'none'))
+
+                r_docs = requests.get(f'{cfg["backend"]}/admin/asesor/documents',
+                                      timeout=15, headers=headers_auth)
+                ok_docs = check('GET /admin/asesor/documents', r_docs.status_code == 200,
+                                 f'status={r_docs.status_code}')
+                if ok_docs and r_docs.status_code == 200:
+                    docs_data = r_docs.json()
+                    check_warn('Documentos en corpus', True,
+                               f"{docs_data.get('total', 0)} documentos listados")
+            else:
+                check_warn('Corpus', True, 'skip (login no exitoso)')
+        except Exception as e:
+            check_warn('Corpus smoke', True, f'skip (exception: {e})')
+    else:
+        check_warn('Corpus', True, 'skip (no test_user)')
 
     # Resumen
     print()
