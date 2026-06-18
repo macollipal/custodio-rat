@@ -320,9 +320,44 @@ completitud = round((completados / total) * 100)
 
 ## Tests
 
+### REGLA INVIOLABLE: Tests contra PostgreSQL (Neon QA), NO SQLite
+
+**Los tests DEBEN ejecutarse contra PostgreSQL (Neon QA)** antes de cualquier deploy. SQLite in-memory NO es válido para validar cambios de schema o queries específicas de PostgreSQL.
+
+**Por qué:** SQLite crea el schema fresco desde modelos Python en cada test, ignorando migraciones. Esto causa que tests pasen pero la BD real falle con errores como `column does not exist`.
+
+### Setup
+
 ```bash
 cd backend
-pytest tests/ -v
+
+# 1. Crear/resetear BD de test en Neon QA
+python reset_test_db.py
+
+# 2. Ejecutar TODOS los tests contra PostgreSQL
+python -m pytest tests/ -v
+
+# 3. Ejecutar solo tests ARCO (más rápido para desarrollo iterativo)
+python -m pytest tests/test_arco_consolidation.py tests/test_arco_tickets.py \
+  tests/test_subsanacion.py tests/test_prorroga.py \
+  tests/test_qw8_seguimiento.py tests/test_qw10_formulario.py \
+  tests/test_plantillas.py tests/test_reglas_asignacion.py \
+  tests/test_hash_chain.py -v
 ```
 
-Los tests couvren: CRUD RAT, completitud, dashboard stats, auth, brechas, auditoría, exportación.
+### BD de test
+
+- **Host:** Neon QA (`ep-fragrant-wildflower-apeqosx9-pooler.c-7.us-east-1.aws.neon.tech`)
+- **Database:** `custodio_test` (aislada, no afecta prod ni QA)
+- **Connection:** configurable via `TEST_DATABASE_URL` env var
+- **Schema:** creado desde modelos Python (equivalente a ejecutar todas las migraciones)
+
+### Pre-deploy checklist
+
+1. `python reset_test_db.py`
+2. `python -m pytest tests/ -v`
+3. Si hay cambios de schema: ejecutar migraciones en Neon QA manualmente
+4. Commit + push
+5. Verificar deploy en Vercel
+
+Los tests couvren: CRUD RAT, completitud, dashboard stats, auth, brechas, auditoría, exportación, ARCO completo.
