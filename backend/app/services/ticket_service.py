@@ -7,6 +7,8 @@ from datetime import datetime, date, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
+from app.services.audit_service import log_audit
+
 
 def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int] = None) -> datetime:
     """Calcula fecha de vencimiento sumando días hábiles (lunes a viernes, excluye feriados Chile)."""
@@ -118,6 +120,8 @@ def crear_ticket_desde_solicitud(
     origen: str = "web",
     rat_id: Optional[int] = None,
     company_nombre: str = "la empresa",
+    representante_nombre: Optional[str] = None,
+    representante_rut: Optional[str] = None,
 ) -> "TktSolicitudDerecho":
     """Crea un ticket TKT desde el formulario público de solicitudes y envía acuse al titular."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -142,6 +146,8 @@ def crear_ticket_desde_solicitud(
         rat_id=rat_id,
         tracking_token=tracking_token,
         acuse_enviado_at=ahora,
+        representante_nombre=representante_nombre,
+        representante_rut=representante_rut,
     )
     db.add(ticket)
     db.flush()
@@ -158,6 +164,25 @@ def crear_ticket_desde_solicitud(
         descripcion="Ticket creado desde formulario público",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="crear",
+        usuario=titular_email,
+        detalle={
+            "tipo": tipo,
+            "estado": "abierto",
+            "titular_nombre": titular_nombre,
+            "titular_email": titular_email,
+            "origen": origen,
+            "representante_nombre": representante_nombre,
+            "representante_rut": representante_rut,
+            "tracking_token": tracking_token,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
 
@@ -227,6 +252,23 @@ def crear_ticket(
         descripcion="Ticket creado",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="crear",
+        usuario=created_by or "system",
+        detalle={
+            "tipo": tipo,
+            "estado": "abierto",
+            "prioridad": prioridad,
+            "titular_nombre": titular_nombre,
+            "titular_email": titular_email,
+            "origen": origen,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket
@@ -259,6 +301,20 @@ def cambiar_estado_ticket(
         descripcion=descripcion or f"Estado cambiado a {nuevo_estado}",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="cambiar_estado",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "estado_anterior": estado_anterior,
+            "estado_nuevo": nuevo_estado,
+            "descripcion": descripcion,
+        },
+    )
+
     if auto_commit:
         db.commit()
     else:
@@ -281,10 +337,14 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
     en_proceso = query.filter(TktSolicitudDerecho.estado == "en_proceso").count()
     pendientes = query.filter(TktSolicitudDerecho.estado == "pendiente").count()
     resueltos = query.filter(TktSolicitudDerecho.estado == "resuelto").count()
+    bloqueados = query.filter(TktSolicitudDerecho.estado == "bloqueado").count()
+    rechazados = query.filter(TktSolicitudDerecho.estado == "rechazado").count()
+    subsanacion = query.filter(TktSolicitudDerecho.estado == "subsanacion").count()
+    prorrogas = query.filter(TktSolicitudDerecho.estado == "prorroga").count()
 
     ahora = datetime.now(timezone.utc)
     vencidos = query.filter(
-        TktSolicitudDerecho.estado.in_(["abierto", "en_proceso", "pendiente"]),
+        TktSolicitudDerecho.estado.in_(["abierto", "en_proceso", "pendiente", "bloqueado", "subsanacion", "prorroga"]),
         TktSolicitudDerecho.fecha_vencimiento < ahora,
     ).count()
 
@@ -317,6 +377,10 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
         "en_proceso": en_proceso,
         "pendientes": pendientes,
         "resueltos": resueltos,
+        "bloqueados": bloqueados,
+        "rechazados": rechazados,
+        "subsanacion": subsanacion,
+        "prorrogas": prorrogas,
         "vencidos": vencidos,
         "cumplimiento_sla": cumplimiento,
         "tiempo_promedio_horas": tiempo_promedio,
@@ -363,6 +427,20 @@ def bloquear_ticket(
         descripcion=f"RAT id={rat_id} bloqueado por {dias_bloqueo} días hábiles",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="bloquear",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "rat_id": rat_id,
+            "dias_bloqueo": dias_bloqueo,
+            "fecha_vencimiento_bloqueo": ticket.plazo_bloqueo_vencimiento.isoformat() if ticket.plazo_bloqueo_vencimiento else None,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -405,6 +483,16 @@ def desbloquear_ticket(
         descripcion="Desbloqueo anticipado del RAT",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="desbloquear",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"rat_id": ticket.rat_id},
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -438,6 +526,16 @@ def rechazar_ticket(
         descripcion=f"Rechazo fundado: {motivo}",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="rechazar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"motivo": motivo},
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -475,6 +573,16 @@ def guardar_portability_data(
         descripcion="Exportación de portabilidad completada",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="portabilidad",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"portability_data_length": len(portability_data)},
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -513,6 +621,19 @@ def solicitar_subsanacion(
         descripcion=f"Subsanación solicitada: {detalle}",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="subsanacion_solicitar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "detalle": detalle,
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -550,6 +671,18 @@ def completar_subsanacion(
         descripcion="Subsanación completada, titular entregó información faltante",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="subsanacion_completar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
@@ -594,6 +727,20 @@ def prorrogar_ticket(
         descripcion=f"Prórroga de {dias} días: {motivo or 'Sin motivo'}",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="prorrogar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "dias": dias,
+            "motivo": motivo,
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket, None
