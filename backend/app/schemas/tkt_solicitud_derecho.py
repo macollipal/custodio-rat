@@ -3,11 +3,11 @@ Schemas Pydantic para el módulo TKT Solicitudes ARCO.
 """
 from datetime import datetime
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion", "bloqueo", "portabilidad"]
-TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado"]
+TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado", "subsanacion"]
 TktPrioridadEnum = Literal["urgente", "normal", "baja"]
 TktOrigenEnum = Literal["web", "email", "telefono", "presencial", "manual"]
 
@@ -29,6 +29,12 @@ class TktTicketUpdate(BaseModel):
     prioridad: Optional[TktPrioridadEnum] = None
     responsable_id: Optional[int] = None
     respuesta_texto: Optional[str] = None
+    plantilla_id: Optional[int] = None
+    subsanacion_detalle: Optional[str] = None
+
+
+class TktSubsanarRequest(BaseModel):
+    detalle: str = Field(..., min_length=10, max_length=1000, description="Detalle de la información faltante requerida al titular")
 
 
 class TktNotaCreate(BaseModel):
@@ -72,6 +78,8 @@ class TktTicketResponse(BaseModel):
     portability_data: Optional[str]
     tracking_token: Optional[str]
     acuse_enviado_at: Optional[datetime]
+    subsanacion_detalle: Optional[str]
+    subsanacion_fecha_pedido: Optional[datetime]
     created_by: Optional[str]
     created_at: Optional[datetime]
     dias_restantes: Optional[int] = None

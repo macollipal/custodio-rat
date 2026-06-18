@@ -478,3 +478,78 @@ def guardar_portability_data(
     db.commit()
     db.refresh(ticket)
     return ticket, None
+
+
+def solicitar_subsanacion(
+    db: Session,
+    ticket_id: int,
+    detalle: str,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Solicita subsanación al titular (Art. 12 — solicitud incompleta). Pausa y extiende el plazo."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado not in ("abierto", "en_proceso", "pendiente"):
+        return None, f"No se puede solicitar subsanación desde estado '{ticket.estado}'"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    ticket.estado = "subsanacion"
+    ticket.subsanacion_detalle = detalle
+    ticket.subsanacion_fecha_pedido = ahora
+    ticket.fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="subsanacion",
+        user_id=user_id,
+        descripcion=f"Subsanación solicitada: {detalle}",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def completar_subsanacion(
+    db: Session,
+    ticket_id: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Completa la subsanación y vuelve a poner el ticket en proceso (plazo resumes)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado != "subsanacion":
+        return None, f"El ticket no está en estado subsanacion (estado actual: '{ticket.estado}')"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    ticket.estado = "en_proceso"
+    ticket.subsanacion_detalle = None
+    ticket.subsanacion_fecha_pedido = None
+    ticket.fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="en_proceso",
+        user_id=user_id,
+        descripcion="Subsanación completada, titular entregó información faltante",
+    )
+    db.add(historial)
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
