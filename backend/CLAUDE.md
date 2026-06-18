@@ -41,7 +41,7 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
   - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
   - `ALLOWED_ORIGINS` → **único mecanismo de CORS** (OBLIGATORIO en todos los ambientes)
     - Prod: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app`
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` → para envío de emails reales
+  - `SMTP_URL` → SMTP en formato DSN (ej. `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT`). Compatibilidad legacy con SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL, SMTP_FROM_NAME si SMTP_URL no está seteada.
 
 ### Vercel (QA)
 
@@ -97,7 +97,7 @@ Envío de emails transaccionales via SMTP:
 - `notificar_vencimiento_rat()` → al DPO cuando un RAT requiere revisión
 - `notificar_respuesta_arco()` → al titular cuando se responde su solicitud ARCO
 
-**Modo DRY_RUN:** si `SMTP_HOST` no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
+**Modo DRY_RUN:** si `SMTP_URL` (o `SMTP_HOST` en legacy) no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
 
 ### Scheduler (`app/services/scheduler.py`)
 Tareas periódicas en thread daemon. **Modo enqueue** (compatible con Vercel serverless):
@@ -301,7 +301,7 @@ completitud = round((completados / total) * 100)
 - Para queries que filtran por empresa sin ser superadmin: usar `get_empresas_usuario(db, user_id)` que retorna lista de `company_ids`
 - `get_current_user` en `routes/deps.py` extrae el usuario del token JWT
 - **CORS:** se usa `ALLOWED_ORIGINS` (env var, lista blanca). Si `ENVIRONMENT=production` y no está definida, la app levanta con `RuntimeError`
-- **Email:** si `SMTP_HOST` no está configurado, opera en modo DRY_RUN (loguea sin enviar)
+- **Email:** si `SMTP_URL` (o `SMTP_HOST` legacy) no está configurado, opera en modo DRY_RUN (loguea sin enviar)
 - **Logs:** en producción los logs son JSON con `request_id` para correlación de extremo a extremo
 
 ---

@@ -54,11 +54,7 @@ class Settings(BaseSettings):
     ASESOR_CORPUS_PATH: str = "data/asesor_corpus"
     ASESOR_EMBEDDING_MODEL: str = "embed-multilingual-v3.0"
 
-    SMTP_HOST: str = ""
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = ""
+    SMTP_URL: str = ""
 
     STORAGE_BACKEND: str = "local"
     OCI_CONFIG: str = ""
@@ -71,6 +67,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"
 
     @property
     def resolved_secret_key(self) -> str:

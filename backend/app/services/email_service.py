@@ -1,32 +1,30 @@
 """
 Servicio de email para notificaciones transaccionales.
 
-Configuración vía env vars:
-  SMTP_HOST         (ej. smtp.sendgrid.net)
-  SMTP_PORT         (ej. 587)
-  SMTP_USERNAME     (ej. apikey)
-  SMTP_PASSWORD     (password o API key)
-  SMTP_FROM_EMAIL   (ej. noreply@custodio-rat.cl)
-  SMTP_FROM_NAME    (ej. Custodio RAT Manager)
-  SMTP_USE_TLS      ("true" por defecto)
+Configuración vía SMTP_URL (formato DSN):
+  smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT%20Manager
 
-Si SMTP_HOST no está configurado, el servicio opera en modo DRY_RUN:
+Compatibilidad hacia atrás: si SMTP_URL no está configurada, busca
+SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL,
+SMTP_FROM_NAME, SMTP_USE_TLS sueltas (legacy).
+
+Si SMTP_HOST/SMTP_URL no está configurado, el servicio opera en modo DRY_RUN:
 - loguea la intención de envío (incluyendo cuerpo) a nivel INFO
 - NO llama a smtplib
 - retorna True para no bloquear al caller
 
-En modo real (SMTP_HOST configurado), si smtplib lanza excepción, se
-propaga EmailError para que el caller decida cómo manejar (sin
-silenciar).
+En modo real, si smtplib lanza excepción, se propaga EmailError para
+que el caller decida cómo manejar (sin silenciar).
 """
 
 import logging
-import os
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional
+
+from app.core.smtp_config import get_smtp_config
 
 logger = logging.getLogger(__name__)
 
@@ -36,29 +34,26 @@ class EmailError(Exception):
     pass
 
 
-def _is_configured() -> bool:
-    return bool(os.getenv("SMTP_HOST"))
-
-
 def _send_raw(to_email: str, subject: str, html_body: str, text_body: str) -> bool:
     """
     Envía el email. Retorna True si se envió OK o está en dry-run.
     Levanta EmailError si SMTP falla.
     """
-    if not _is_configured():
+    cfg = get_smtp_config()
+    if not cfg:
         logger.info(
             f"[DRY_RUN email] to={to_email} subject={subject!r} "
             f"text_len={len(text_body)} html_len={len(html_body)}"
         )
         return True
 
-    host = os.environ["SMTP_HOST"]
-    port = int(os.getenv("SMTP_PORT", "587"))
-    username = os.getenv("SMTP_USERNAME", "")
-    password = os.getenv("SMTP_PASSWORD", "")
-    from_email = os.getenv("SMTP_FROM_EMAIL", "noreply@localhost")
-    from_name = os.getenv("SMTP_FROM_NAME", "Custodio RAT")
-    use_tls = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+    host = cfg.host
+    port = cfg.port
+    username = cfg.username
+    password = cfg.password
+    from_email = cfg.from_email
+    from_name = cfg.from_name
+    use_tls = cfg.use_tls
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

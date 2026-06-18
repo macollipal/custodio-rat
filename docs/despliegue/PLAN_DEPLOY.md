@@ -167,7 +167,7 @@ Ir al dashboard de Vercel → Proyecto `custodio-api-prod` → Settings → Envi
 | `SECRET_KEY` | (openssl rand -hex 64) | Distinto de QA |
 | `ALLOWED_ORIGINS` | `https://custodio-prod.vercel.app` | **CRÍTICO** |
 | `ENVIRONMENT` | `production` | Activa rate limiting, JSON logs |
-| `SMTP_*` | (si aplica) | Para emails reales |
+| `SMTP_URL` | `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT` | Emails reales (SendGrid) |
 
 #### Frontend (`custodio-prod`)
 | Variable | Valor |

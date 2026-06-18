@@ -226,14 +226,9 @@ npm run test:e2e:headed
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
 | `MINIMAX_API_KEY` | IA chat | — | Opcional |
 | `OPENAI_API_KEY` | IA chat | — | Opcional |
-| `SMTP_HOST` | Servidor SMTP (ej. smtp.sendgrid.net) | — | Opcional |
-| `SMTP_PORT` | Puerto SMTP (587 o465) | — | Opcional |
-| `SMTP_USERNAME` | Usuario SMTP | — | Opcional |
-| `SMTP_PASSWORD` | Password/API key SMTP | — | Opcional |
-| `SMTP_FROM_EMAIL` | Email remitente | — | Opcional |
-| `SMTP_FROM_NAME` | Nombre remitente | — | Opcional |
+| `SMTP_URL` | SMTP DSN (ej. `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT`) | — | Opcional |
 
-> **Nota:** Si `SMTP_HOST` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
+> **Nota:** Si `SMTP_URL` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
 
 ### Frontend (.env.local)
 
