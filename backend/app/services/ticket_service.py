@@ -2,6 +2,7 @@
 Servicio de negocio para módulos TKT (ticketing).
 Maneja lógica de SLA, estados, y estadísticas.
 """
+import uuid
 from datetime import datetime, date, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -116,13 +117,15 @@ def crear_ticket_desde_solicitud(
     titular_rut: Optional[str] = None,
     origen: str = "web",
     rat_id: Optional[int] = None,
+    company_nombre: str = "la empresa",
 ) -> "TktSolicitudDerecho":
-    """Crea un ticket TKT desde el formulario público de solicitudes."""
+    """Crea un ticket TKT desde el formulario público de solicitudes y envía acuse al titular."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from app.models.tkt_historial import TktHistorial
 
     ahora = datetime.now(timezone.utc)
     fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+    tracking_token = str(uuid.uuid4())
 
     ticket = TktSolicitudDerecho(
         company_id=company_id,
@@ -137,6 +140,8 @@ def crear_ticket_desde_solicitud(
         fecha_recepcion=ahora,
         fecha_vencimiento=fecha_vencimiento,
         rat_id=rat_id,
+        tracking_token=tracking_token,
+        acuse_enviado_at=ahora,
     )
     db.add(ticket)
     db.flush()
@@ -150,6 +155,20 @@ def crear_ticket_desde_solicitud(
     db.add(historial)
     db.commit()
     db.refresh(ticket)
+
+    try:
+        from app.services.email_service import notificar_acuse_solicitud
+        notificar_acuse_solicitud(
+            email_titular=titular_email,
+            nombre_titular=titular_nombre,
+            tipo_derecho=tipo,
+            empresa_nombre=company_nombre,
+            ticket_id=ticket.id,
+            tracking_token=tracking_token,
+        )
+    except Exception:
+        pass
+
     return ticket
 
 

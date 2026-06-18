@@ -138,6 +138,7 @@ async def crear_solicitud(
         descripcion=data.descripcion,
         titular_rut=data.rut_titular,
         origen="web",
+        company_nombre=company.nombre,
     )
 
     logger.info(f"Solicitud ARCO creada (TKT only): company={data.company_id} tipo={data.tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
@@ -154,6 +155,8 @@ async def crear_solicitud(
         "respuesta": None,
         "respuesta_fecha": None,
         "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
+        "tracking_token": ticket.tracking_token,
+        "acuse_enviado_at": ticket.acuse_enviado_at.isoformat() if ticket.acuse_enviado_at else None,
     }
 
 

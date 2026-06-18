@@ -242,3 +242,78 @@ class TestAutorizacionWorkflows:
             headers=headers,
         )
         assert resp.status_code == 403
+
+
+class TestAcuseReciboQW2:
+    def test_crear_ticket_publico_genera_tracking_token(self, client, empresa):
+        """El formulario público genera un tracking_token único."""
+        resp = client.get("/solicitudes-derecho/token")
+        token = resp.json()["token"]
+
+        resp2 = client.post("/solicitudes-derecho/", json={
+            "company_id": empresa["id"],
+            "tipo": "acceso",
+            "nombre_titular": "Juan Acuse",
+            "email_titular": "juan_acuse@test.cl",
+            "token": token,
+        })
+        assert resp2.status_code == 200
+        data = resp2.json()
+        assert "tracking_token" in data
+        assert data["tracking_token"] is not None
+        assert len(data["tracking_token"]) == 36
+
+    def test_crear_ticket_publico_tiene_acuse_enviado_at(self, client, empresa):
+        """El ticket creado por formulario público tiene acuse_enviado_at."""
+        resp = client.get("/solicitudes-derecho/token")
+        token = resp.json()["token"]
+
+        resp2 = client.post("/solicitudes-derecho/", json={
+            "company_id": empresa["id"],
+            "tipo": "rectificacion",
+            "nombre_titular": "Pedro Acuse",
+            "email_titular": "pedro_acuse@test.cl",
+            "token": token,
+        })
+        assert resp2.status_code == 200
+        data = resp2.json()
+        assert "acuse_enviado_at" in data
+        assert data["acuse_enviado_at"] is not None
+
+    def test_tracking_token_es_unico(self, client, empresa):
+        """Cada ticket generado tiene un tracking_token diferente."""
+        tokens = set()
+        for i in range(3):
+            resp = client.get("/solicitudes-derecho/token")
+            token = resp.json()["token"]
+            resp2 = client.post("/solicitudes-derecho/", json={
+                "company_id": empresa["id"],
+                "tipo": "acceso",
+                "nombre_titular": f"Titular {i}",
+                "email_titular": f"titular{i}@test.cl",
+                "token": token,
+            })
+            assert resp2.status_code == 200
+            tokens.add(resp2.json()["tracking_token"])
+        assert len(tokens) == 3
+
+    def test_obtener_ticket_muestra_tracking_token(self, client, auth_headers, empresa):
+        """GET /tkt-solicitud-derecho/{id} devuelve tracking_token."""
+        resp = client.get("/solicitudes-derecho/token")
+        token = resp.json()["token"]
+
+        resp2 = client.post("/solicitudes-derecho/", json={
+            "company_id": empresa["id"],
+            "tipo": "cancelacion",
+            "nombre_titular": "María Tracking",
+            "email_titular": "maria_tracking@test.cl",
+            "token": token,
+        })
+        assert resp2.status_code == 200
+        ticket_id = resp2.json()["id"]
+
+        resp3 = client.get(f"/tkt-solicitud-derecho/{ticket_id}", headers=auth_headers)
+        assert resp3.status_code == 200
+        data = resp3.json()
+        assert "tracking_token" in data
+        assert data["tracking_token"] is not None

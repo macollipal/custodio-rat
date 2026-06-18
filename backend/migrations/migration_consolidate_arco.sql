@@ -1,12 +1,13 @@
--- Migration: Consolidate ARCO - extend tkt_solicitud_derecho + backfill from solicitudes_derecho
+-- Migration: Consolidate ARCO - extend tkt_solicitud_derecho + acuse recibo
 -- Version: 1.7.0
 -- Date: 2026-06-18
 -- Description:
 --   1. Agrega columnas rat_id, plazo_bloqueo_vencimiento, portability_data a tkt_solicitud_derecho
---   2. Agrega indices para nuevas columnas
---   3. Backfill de rat_id y plazo_bloqueo_vencimiento desde solicitudes_derecho
---   4. Backfill de portability_data para tickets de portabilidad
---   5. NOTE: La tabla solicitudes_derecho se depreca; el formulario público ahora crea SOLO TKT
+--   2. Agrega columnas tracking_token, acuse_enviado_at (QW2: acuse de recibo)
+--   3. Agrega indices para nuevas columnas
+--   4. Backfill de rat_id y plazo_bloqueo_vencimiento desde solicitudes_derecho
+--   5. Backfill de portability_data para tickets de portabilidad
+--   6. NOTE: La tabla solicitudes_derecho se depreca; el formulario público ahora crea SOLO TKT
 --
 -- IMPORTANTE: Ejecutar ANTES de hacer deploy. Hacer backup de la BD antes.
 --
@@ -17,6 +18,7 @@
 -- Verificar después:
 --   SELECT COUNT(*) FROM tkt_solicitud_derecho WHERE rat_id IS NOT NULL;
 --   SELECT COUNT(*) FROM tkt_solicitud_derecho WHERE portability_data IS NOT NULL;
+--   SELECT COUNT(*) FROM tkt_solicitud_derecho WHERE tracking_token IS NOT NULL;
 
 BEGIN;
 
@@ -30,9 +32,16 @@ ADD COLUMN IF NOT EXISTS plazo_bloqueo_vencimiento TIMESTAMPTZ;
 ALTER TABLE tkt_solicitud_derecho
 ADD COLUMN IF NOT EXISTS portability_data TEXT;
 
+ALTER TABLE tkt_solicitud_derecho
+ADD COLUMN IF NOT EXISTS tracking_token VARCHAR(36) UNIQUE;
+
+ALTER TABLE tkt_solicitud_derecho
+ADD COLUMN IF NOT EXISTS acuse_enviado_at TIMESTAMPTZ;
+
 -- 2. Indices para nuevas columnas
 CREATE INDEX IF NOT EXISTS idx_tkt_rat_id ON tkt_solicitud_derecho(rat_id);
 CREATE INDEX IF NOT EXISTS idx_tkt_plazo_bloqueo ON tkt_solicitud_derecho(plazo_bloqueo_vencimiento);
+CREATE INDEX IF NOT EXISTS idx_tkt_tracking_token ON tkt_solicitud_derecho(tracking_token);
 
 -- 3. Backfill rat_id y plazo_bloqueo_vencimiento desde solicitudes_derecho
 --    Matching por: company_id + tipo + titular_email + diff de timestamp <= 60 segundos

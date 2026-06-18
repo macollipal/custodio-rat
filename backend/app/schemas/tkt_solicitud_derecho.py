@@ -70,6 +70,8 @@ class TktTicketResponse(BaseModel):
     rat_id: Optional[int]
     plazo_bloqueo_vencimiento: Optional[datetime]
     portability_data: Optional[str]
+    tracking_token: Optional[str]
+    acuse_enviado_at: Optional[datetime]
     created_by: Optional[str]
     created_at: Optional[datetime]
     dias_restantes: Optional[int] = None

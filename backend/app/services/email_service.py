@@ -213,3 +213,46 @@ def notificar_vencimiento_encargado(
         f"Contrato de encargado por vencer: {nombre_encargado}", saludo, cuerpo
     )
     _send_raw(email_dpo, f"[Custodio] Contrato de encargado {estado} - {nombre_encargado}", html, text)
+
+
+def notificar_acuse_solicitud(
+    email_titular: str,
+    nombre_titular: Optional[str],
+    tipo_derecho: str,
+    empresa_nombre: str,
+    ticket_id: int,
+    tracking_token: str,
+    portal_url: str = "https://app.custodio.cl/portal-titular",
+) -> None:
+    """
+    Envía acuse de recibo al titular confirmando que su solicitud ARCO fue recibida.
+    Incluye link de seguimiento al portal del titular.
+    """
+    saludo = f"Estimado/a {nombre_titular or 'titular'}:"
+    link_seguimiento = f"{portal_url}?ticket_id={ticket_id}&token={tracking_token}"
+    cuerpo = (
+        f"<p>Hemos recibido correctamente su solicitud de derecho "
+        f"<strong>{tipo_derecho}</strong> presentada ante "
+        f"<strong>{empresa_nombre}</strong>.</p>"
+        f"<p><strong>Su número de solicitud:</strong> #{ticket_id}</p>"
+        f"<p>Puede hacer seguimiento de su solicitud en nuestro portal:</p>"
+        f'<p><a href="{link_seguimiento}" style="background:#2563EB;color:#fff;padding:10px 20px;'
+        f'text-decoration:none;border-radius:6px;display:inline-block;">'
+        f"Ver estado de mi solicitud</a></p>"
+        f"<p>O copie este enlace en su navegador:</p>"
+        f'<p style="word-break:break-all;color:#6B7280;font-size:12px;">{link_seguimiento}</p>'
+        f"<p>Este enlace es personal y expira en 30 días.</p>"
+        f"<p>El plazo máximo para responder su solicitud es de <strong>10 días hábiles</strong> "
+        f"contados desde la recepción de este acuse.</p>"
+        f"<p>Si no realizó esta solicitud, por favor ignore este correo.</p>"
+    )
+    footer = f"Correo enviado por Custodio RAT Manager · Ley 21.719 · Solicitud #{ticket_id}"
+    text, html = _render_template(
+        f"Acuse de recibo: Solicitud {tipo_derecho} recibida", saludo, cuerpo, footer
+    )
+    _send_raw(
+        email_titular,
+        f"[Custodio] Acuse: Solicitud {tipo_derecho} recibida - #{ticket_id}",
+        html,
+        text,
+    )

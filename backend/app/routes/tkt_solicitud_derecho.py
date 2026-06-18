@@ -67,6 +67,8 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         rat_id=ticket.rat_id,
         plazo_bloqueo_vencimiento=ticket.plazo_bloqueo_vencimiento,
         portability_data=ticket.portability_data,
+        tracking_token=ticket.tracking_token,
+        acuse_enviado_at=ticket.acuse_enviado_at,
         created_by=ticket.created_by,
         created_at=ticket.created_at,
         dias_restantes=dias_rest,

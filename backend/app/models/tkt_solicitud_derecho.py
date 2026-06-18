@@ -45,6 +45,7 @@ class TktSolicitudDerecho(Base):
         Index("idx_tkt_estado_company", "estado", "company_id"),
         Index("idx_tkt_fecha_vencimiento", "fecha_vencimiento"),
         Index("idx_tkt_estado_prioridad", "estado", "prioridad"),
+        Index("idx_tkt_tracking_token", "tracking_token"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -65,6 +66,8 @@ class TktSolicitudDerecho(Base):
     rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True)
     plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     portability_data: Mapped[str] = mapped_column(Text, nullable=True)
+    tracking_token: Mapped[str] = mapped_column(String(36), nullable=True, unique=True)
+    acuse_enviado_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
