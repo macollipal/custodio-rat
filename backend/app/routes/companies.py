@@ -2,14 +2,15 @@
 Endpoints CRUD para empresas (responsables del tratamiento).
 """
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database.database import get_db
 from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate, CompanyListResponse
 from app.services.company_service import (
-    create_company, delete_company, get_companies, get_company, update_company
+    create_company, delete_company, deactivate_company, get_companies, get_company,
+    reactivate_company, update_company,
 )
 from app.services.user_company_service import get_empresas_usuario, get_rol_usuario
 from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
@@ -25,7 +26,7 @@ async def listar_publico(
     current_user=Depends(get_current_user),
 ):
     from app.models.company import Company
-    companies = db.query(Company).order_by(Company.nombre).all()
+    companies = db.query(Company).filter(Company.activa == True).order_by(Company.nombre).all()
     return companies
 
 
@@ -33,16 +34,20 @@ async def listar_publico(
 async def listar(
     skip: int = 0,
     limit: int = 200,
+    incluir_inactivas: bool = False,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     if current_user.rol_global == "superadmin":
-        companies, total = get_companies(db, skip, limit)
+        companies, total = get_companies(db, skip, limit, incluir_inactivas=incluir_inactivas)
     else:
         ids = get_empresas_usuario(db, current_user.id)
         from app.models.company import Company as CompanyModel
-        count_total = db.query(CompanyModel).filter(CompanyModel.id.in_(ids)).count()
-        companies = db.query(CompanyModel).filter(CompanyModel.id.in_(ids)).offset(skip).limit(limit).all()
+        query = db.query(CompanyModel).filter(CompanyModel.id.in_(ids))
+        if not incluir_inactivas:
+            query = query.filter(CompanyModel.activa == True)
+        count_total = query.count()
+        companies = query.offset(skip).limit(limit).all()
         total = count_total
 
     count_q = (
@@ -175,6 +180,30 @@ async def obtener(
         rol = get_rol_usuario(db, current_user.id, c.id)
         out.mi_rol = rol.value if rol else None
     return out
+
+
+@router.patch("/{company_id}/desactivar", response_model=CompanyOut, summary="Desactivar empresa (soft delete)")
+async def desactivar(
+    request: Request,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    check_company_access(current_user, company_id, db)
+    return deactivate_company(db, company_id, current_user.username, get_client_ip(request))
+
+
+@router.patch("/{company_id}/reactivar", response_model=CompanyOut, summary="Reactivar empresa desactivada")
+async def reactivar(
+    request: Request,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    from app.models.user import RolGlobal
+    if current_user.rol_global != RolGlobal.SUPERADMIN.value:
+        raise HTTPException(status_code=403, detail="Solo superadmin puede reactivar empresas.")
+    return reactivate_company(db, company_id, current_user.username, get_client_ip(request))
 
 
 @router.post("/", response_model=CompanyOut, status_code=201, summary="Crear empresa")

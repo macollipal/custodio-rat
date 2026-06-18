@@ -446,13 +446,18 @@ export default function CompaniesPage() {
 
   async function handleDelete(id: number) {
     try {
-      await api.eliminarEmpresa(id);
-      toast.success('Empresa eliminada.');
+      if (user?.rol_global === 'superadmin') {
+        await api.eliminarEmpresa(id);
+        toast.success('Empresa eliminada.');
+      } else {
+        await api.desactivarEmpresa(id);
+        toast.success('Empresa desactivada.');
+      }
       setConfirmDelId(null);
       if (activeCompany?.id === id) setCompany(companies.find(c => c.id !== id) ?? null as unknown as Company);
       await loadCompanies();
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Error al eliminar.');
+      toast.error(e instanceof Error ? e.message : 'Error al desactivar.');
     }
   }
 
@@ -585,23 +590,29 @@ export default function CompaniesPage() {
                         >
                           Listado usuarios
                         </button>
-                        <button
-                          onClick={() => setConfirmDelId(emp.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
-                          style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
-                        >
-                          Eliminar
-                        </button>
+                        {user?.rol_global === 'superadmin' ? (
+                          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ color: '#9CA3AF', background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                            Gestión en Configuración
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDelId(emp.id)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
+                            style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
+                          >
+                            Desactivar
+                          </button>
+                        )}
                       </div>
 
                       {confirmDelId === emp.id && (
                         <div className="mt-3 rounded-lg p-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
                           <p className="text-sm font-medium mb-2" style={{ color: '#7F1D1D' }}>
-                            ¿Eliminar <strong>{emp.nombre}</strong> y todos sus registros RAT? Esta acción es irreversible.
+                            ¿Desactivar <strong>{emp.nombre}</strong>? La empresa dejará de aparecer en los listados.
                           </p>
                           <div className="flex gap-2">
                             <button onClick={() => handleDelete(emp.id)} className="px-3 py-1 rounded text-xs font-semibold text-white" style={{ background: '#DC2626' }}>
-                              Confirmar eliminación
+                              Confirmar desactivación
                             </button>
                             <button onClick={() => setConfirmDelId(null)} className="px-3 py-1 rounded text-xs font-semibold border" style={{ borderColor: '#E5E7EB', color: '#374151' }}>
                               Cancelar

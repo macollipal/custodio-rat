@@ -148,6 +148,25 @@ export async function eliminarEmpresa(id: number): Promise<void> {
   return handle<void>(res);
 }
 
+export async function desactivarEmpresa(id: number): Promise<Company> {
+  const res = await apiFetch(`${API_BASE}/companies/${id}/desactivar`, { method: 'PATCH' });
+  return handle<Company>(res);
+}
+
+export async function reactivarEmpresa(id: number): Promise<Company> {
+  const res = await apiFetch(`${API_BASE}/companies/${id}/reactivar`, { method: 'PATCH' });
+  return handle<Company>(res);
+}
+
+export async function hardDeleteEmpresa(id: number, password: string): Promise<{ message: string }> {
+  const res = await apiFetch(`${API_BASE}/admin/companies/${id}/hard-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  return handle<{ message: string }>(res);
+}
+
 // ── RAT ───────────────────────────────────────────────────────────────────────
 
 export async function listarRats(companyId?: number): Promise<RAT[]> {

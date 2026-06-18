@@ -27,6 +27,7 @@ class CompanyBase(BaseModel):
     email_dpo: Optional[str] = None
     descripcion: Optional[str] = None
     canal_ejercicio_derechos: Optional[str] = None
+    activa: Optional[bool] = True
 
 
 class CompanyCreate(CompanyBase):
@@ -55,6 +56,8 @@ class CompanyOut(CompanyBase):
     rats_vencidos: Optional[int] = 0
     solicitudes_pendientes: Optional[int] = 0
     solicitudes_vencidas_sla: Optional[int] = 0
+    activa: Optional[bool] = True
+    desactivada_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 

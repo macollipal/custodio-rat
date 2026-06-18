@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -7,9 +8,12 @@ from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.audit_service import log_audit
 
 
-def get_companies(db: Session, skip: int = 0, limit: int = 100) -> tuple[list[Company], int]:
-    total = db.query(Company).count()
-    companies = db.query(Company).offset(skip).limit(limit).all()
+def get_companies(db: Session, skip: int = 0, limit: int = 100, incluir_inactivas: bool = False) -> tuple[list[Company], int]:
+    query = db.query(Company)
+    if not incluir_inactivas:
+        query = query.filter(Company.activa == True)
+    total = query.count()
+    companies = query.offset(skip).limit(limit).all()
     return companies, total
 
 
@@ -27,7 +31,9 @@ def create_company(db: Session, data: CompanyCreate, usuario: str, ip_origen: Op
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Ya existe una empresa con el RUT {data.rut}.",
         )
-    company = Company(**data.model_dump())
+    dump = data.model_dump()
+    dump.pop("activa", None)
+    company = Company(**dump, activa=True)
     db.add(company)
     db.flush()
 
@@ -40,6 +46,7 @@ def create_company(db: Session, data: CompanyCreate, usuario: str, ip_origen: Op
 def update_company(db: Session, company_id: int, data: CompanyUpdate, usuario: str, ip_origen: Optional[str] = None) -> Company:
     company = get_company(db, company_id)
     cambios = data.model_dump(exclude_none=True)
+    cambios.pop("activa", None)
     for field, value in cambios.items():
         setattr(company, field, value)
 
@@ -55,3 +62,67 @@ def delete_company(db: Session, company_id: int, usuario: str, ip_origen: Option
     db.delete(company)
     db.commit()
     return {"message": f"Empresa '{company.nombre}' eliminada correctamente."}
+
+
+def deactivate_company(db: Session, company_id: int, usuario: str, ip_origen: Optional[str] = None) -> Company:
+    company = get_company(db, company_id)
+    if not company.activa:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="La empresa ya está desactivada.",
+        )
+    company.activa = False
+    company.desactivada_at = datetime.now(timezone.utc)
+    company.desactivada_por = usuario
+    log_audit(db, "company", company_id, "desactivar", usuario, {"nombre": company.nombre}, ip_origen)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+def reactivate_company(db: Session, company_id: int, usuario: str, ip_origen: Optional[str] = None) -> Company:
+    company = get_company(db, company_id)
+    if company.activa:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="La empresa ya está activa.",
+        )
+    company.activa = True
+    company.desactivada_at = None
+    company.desactivada_por = None
+    log_audit(db, "company", company_id, "reactivar", usuario, {"nombre": company.nombre}, ip_origen)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+def hard_delete_company(
+    db: Session,
+    company_id: int,
+    admin_username: str,
+    admin_password: str,
+    ip_origen: Optional[str] = None,
+) -> dict:
+    from app.models.user import User
+    from app.core.security import verify_password
+
+    admin = db.query(User).filter(User.username == admin_username).first()
+    if not admin or not verify_password(admin_password, admin.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Contraseña de administrador incorrecta.",
+        )
+
+    company = get_company(db, company_id)
+    nombre = company.nombre
+
+    log_audit(
+        db, "company", company_id, "hard_delete",
+        admin_username,
+        {"nombre": nombre, "borrado_por": admin_username},
+        ip_origen,
+    )
+
+    db.delete(company)
+    db.commit()
+    return {"message": f"Empresa '{nombre}' eliminada permanentemente."}

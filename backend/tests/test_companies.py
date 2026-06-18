@@ -126,3 +126,90 @@ class TestEliminarEmpresa:
     def test_eliminar_inexistente_404(self, client, auth_headers):
         resp = client.delete("/companies/99999", headers=auth_headers)
         assert resp.status_code == 404
+
+
+class TestSoftDeleteEmpresa:
+    def test_desactivar_empresa_existente(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Desactivar", "rut": "77.888.999-1"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+        assert resp.status_code == 200
+        assert resp.json()["activa"] is False
+        assert resp.json()["desactivada_at"] is not None
+
+    def test_desactivar_no_aparece_en_listado(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Ocultar", "rut": "77.888.999-2"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        listing = client.get("/companies/", headers=auth_headers)
+        ids = [e["id"] for e in listing.json()["empresas"]]
+        assert eid not in ids
+
+    def test_desactivar_ya_desactivada_409(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Ya Inactiva", "rut": "77.888.999-3"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        resp = client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+        assert resp.status_code == 409
+
+    def test_desactivar_inexistente_404(self, client, auth_headers):
+        resp = client.patch("/companies/99999/desactivar", headers=auth_headers)
+        assert resp.status_code == 404
+
+
+class TestReactivarEmpresa:
+    def test_reactivar_empresa_desactivada(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Reactivar", "rut": "77.888.999-4"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        resp = client.patch(f"/companies/{eid}/reactivar", headers=auth_headers)
+        assert resp.status_code == 200
+        assert resp.json()["activa"] is True
+        assert resp.json()["desactivada_at"] is None
+
+    def test_reactivar_ya_activa_409(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Ya Activa", "rut": "77.888.999-5"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.patch(f"/companies/{eid}/reactivar", headers=auth_headers)
+        assert resp.status_code == 409
+
+    def test_reactivar_inexistente_404(self, client, auth_headers):
+        resp = client.patch("/companies/99999/reactivar", headers=auth_headers)
+        assert resp.status_code == 404
+
+
+class TestHardDeleteEmpresa:
+    def test_hard_delete_password_incorrecta_403(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Hard Delete", "rut": "77.888.999-6"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.post(
+            f"/companies/{eid}/hard-delete",
+            json={"password": "wrong_password"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 403
+
+    def test_hard_delete_sin_password_422(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Hard Delete 2", "rut": "77.888.999-7"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.post(
+            f"/companies/{eid}/hard-delete",
+            json={},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422

@@ -23,6 +23,12 @@ export interface Company {
   canal_ejercicio_derechos?: string;
   total_rats?: number;
   mi_rol?: RolEmpresa | null;
+  activa?: boolean;
+  desactivada_at?: string | null;
+  completitud_promedio?: number;
+  rats_vencidos?: number;
+  solicitudes_pendientes?: number;
+  solicitudes_vencidas_sla?: number;
 }
 
 export interface Rubro {
