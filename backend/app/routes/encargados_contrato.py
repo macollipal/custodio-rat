@@ -18,6 +18,36 @@ from app.services import encargado_contrato_service as svc
 router = APIRouter(prefix="/encargados-contrato", tags=["Contratos de Encargado"])
 
 
+def _notificar_si_cerca_vencer(db: Session, contrato) -> None:
+    """Si el contrato vence en <= 30 días o ya venció, notifica al DPO."""
+    from datetime import datetime, timedelta, timezone
+    from app.models.company import Company
+    from app.services.email_service import notificar_vencimiento_encargado, EmailError
+
+    if not contrato.duracion_fin:
+        return
+    ahora = datetime.now(timezone.utc)
+    umbral = ahora + timedelta(days=30)
+    if contrato.duracion_fin > umbral:
+        return
+    empresa = db.query(Company).filter(Company.id == contrato.company_id).first()
+    if not empresa or not empresa.email_dpo:
+        return
+    dias = (contrato.duracion_fin - ahora).days
+    try:
+        notificar_vencimiento_encargado(
+            email_dpo=empresa.email_dpo,
+            nombre_dpo=empresa.contacto_dpo or "",
+            nombre_empresa=empresa.nombre,
+            nombre_encargado=contrato.nombre_encargado,
+            finalidad=contrato.finalidad or "",
+            dias_restantes=dias,
+        )
+    except EmailError as e:
+        import logging
+        logging.getLogger(__name__).error(f"Encargado contrato {contrato.id}: fallo enviando notificación: {e}")
+
+
 @router.get("/", response_model=EncargadoContratoListResponse, summary="Listar contratos de encargado")
 async def listar(
     company_id: int,
@@ -57,8 +87,10 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    from datetime import timezone as tz
     check_company_access(current_user, data.company_id, db)
     contrato = svc.crear_contrato(db, data, current_user.username)
+    _notificar_si_cerca_vencer(db, contrato)
     return svc._transform_to_out(contrato)
 
 
@@ -74,6 +106,7 @@ async def actualizar(
     except svc.ContratoNotFoundError:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
     check_company_access(current_user, c.company_id, db)
+    _notificar_si_cerca_vencer(db, c)
     return svc._transform_to_out(c)
 
 

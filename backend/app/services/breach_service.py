@@ -61,15 +61,17 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
     db.refresh(breach)
 
     if empresa.email_dpo:
-        from app.services.task_service import enqueue_task
+        from app.services.email_service import notificar_nueva_brecha, EmailError
         try:
-            enqueue_task(
-                db,
-                "notificar_brecha_dpo",
-                payload={"breach_id": breach.id},
+            notificar_nueva_brecha(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                descripcion=breach.descripcion or "Sin descripción",
+                fecha_deteccion=breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M"),
             )
-        except Exception as e:
-            logger.error(f"Brecha {breach.id}: fallo encolando notificación: {e}")
+        except EmailError as e:
+            logger.error(f"Brecha {breach.id}: fallo enviando notificación email: {e}")
 
     return breach
 
