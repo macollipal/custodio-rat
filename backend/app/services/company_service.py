@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.company import Company
+from app.models.encargado_contrato import EncargadoContrato
+from app.models.breach import SecurityBreach
+from app.models.politica_transparencia import PoliticaTransparencia
 from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.audit_service import log_audit
 
@@ -115,6 +118,12 @@ def hard_delete_company(
 
     company = get_company(db, company_id)
     nombre = company.nombre
+
+    from sqlalchemy import delete
+
+    db.execute(delete(EncargadoContrato).where(EncargadoContrato.company_id == company_id))
+    db.execute(delete(SecurityBreach).where(SecurityBreach.company_id == company_id))
+    db.execute(delete(PoliticaTransparencia).where(PoliticaTransparencia.company_id == company_id))
 
     log_audit(
         db, "company", company_id, "hard_delete",
