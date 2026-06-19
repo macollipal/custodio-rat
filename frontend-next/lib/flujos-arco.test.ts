@@ -13,7 +13,7 @@ describe('getDiagramaPorTipo', () => {
   it('retorna diagrama para acceso', () => {
     const diagrama = getDiagramaPorTipo('acceso');
     expect(diagrama).toContain('ABIERTO');
-    expect(diagrama).toContain('EN_PROCESO');
+    expect(diagrama).toContain('EN PROCESO');
     expect(diagrama).toContain('RESUELTO');
     expect(diagrama).toContain('RECHAZADO');
     expect(diagrama).toContain('flowchart TD');
@@ -36,7 +36,7 @@ describe('getDiagramaPorTipo', () => {
     const diagrama = getDiagramaPorTipo('oposicion');
     expect(diagrama).toContain('ABIERTO');
     expect(diagrama).toContain('RECHAZADO');
-    expect(diagrama).toContain('interés legítimo');
+    expect(diagrama).toContain('Legítimo interés');
   });
 
   it('retorna diagrama para bloqueo', () => {
@@ -50,7 +50,7 @@ describe('getDiagramaPorTipo', () => {
     const diagrama = getDiagramaPorTipo('portabilidad');
     expect(diagrama).toContain('ABIERTO');
     expect(diagrama).toContain('RESUELTO');
-    expect(diagrama).toContain('portability_data');
+    expect(diagrama).toContain('Generar JSON');
   });
 
   it('fallback a acceso si tipo invalido', () => {

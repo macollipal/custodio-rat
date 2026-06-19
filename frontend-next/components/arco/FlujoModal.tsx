@@ -49,8 +49,8 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
           flowchart: {
             htmlLabels: true,
             curve: 'basis',
-            nodeSpacing: 50,
-            rankSpacing: 80
+            nodeSpacing: 20,
+            rankSpacing: 30
           },
           securityLevel: 'loose'
         } as any);
@@ -153,9 +153,9 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
         <div className="px-6 py-3 border-t border-gray-200 bg-white shrink-0">
           <div className="flex items-center gap-6 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-blue-500 rounded-full"></span>
+              <span className="inline-block w-3 h-3 bg-yellow-300 rounded-full ring-2 ring-yellow-500"></span>
               <span className="text-gray-700 font-medium">
-                Estado actual: <span className="uppercase">{estadoActual.replace('_', ' ')}</span>
+                ★ Actual: <span className="uppercase">{estadoActual.replace('_', ' ')}</span>
               </span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -163,7 +163,7 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
               <span className="text-gray-600">Completado ({nodosAnteriores.length})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-gray-300 rounded-full"></span>
+              <span className="inline-block w-3 h-3 bg-gray-200 rounded-full"></span>
               <span className="text-gray-600">Pendiente</span>
             </div>
             <div className="flex items-center gap-1.5">

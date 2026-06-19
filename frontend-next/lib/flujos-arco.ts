@@ -4,12 +4,12 @@ export type EstadoTicket = 'abierto' | 'en_proceso' | 'pendiente' | 'subsanacion
 
 export const DIAGRAMAS: Record<TipoArco, string> = {
   acceso: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
     B --> C{"<b>¿Subsanación?</b>"}
-    C -->|Sí| D[<b>SUBSANACION</b>]
+    C -->|Sí| D[<b>SUBSANACIÓN</b>]
     D -.->|Complementa| B
     C -->|No| E{"<b>¿Prórroga?</b>"}
-    E -->|Sí| F[<b>PRORROGA</b>]
+    E -->|Sí| F[<b>PRÓRROGA</b>]
     F -.->|Vence| B
     E -->|No| G{"<b>Decisión DPO</b>"}
     G -->|Favorable| H[<b>RESUELTO</b>]
@@ -18,64 +18,64 @@ export const DIAGRAMAS: Record<TipoArco, string> = {
     I --> Z`,
 
   rectificacion: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
     B --> C[<b>Evaluar datos<br/>inexactos</b>]
-    C --> D{"<b>¿Datos<br/>efectivamente<br/>incorrectos?</b>"}
-    D -->|Sí| E[<b>RESUELTO</b><br/>Rectificar en BD]
-    D -->|No| F[<b>RECHAZADO</b><br/>Fundado]
+    C --> D{"<b>¿Datos incorrectos?</b>"}
+    D -->|Sí| E[<b>RESUELTO</b><br/>Rectificar BD]
+    D -->|No| F[<b>RECHAZADO</b><br/>Fundamentado]
     E --> Z([<b>FIN</b>])
     F --> Z`,
 
   cancelacion: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
     B --> C[<b>Evaluar excepciones<br/>Art. 8 c.ii</b>]
-    C --> D{"<b>¿Aplica<br/>excepción?</b>"}
-    D -->|Sí| E[<b>RECHAZADO</b><br/>Fundamento legal]
-    D -->|No| F{"<b>¿Datos<br/>compartidos<br/>con terceros?</b>"}
+    C --> D{"<b>¿Excepción<br/>aplica?</b>"}
+    D -->|Sí| E[<b>RECHAZADO</b><br/>Legal]
+    D -->|No| F{"<b>¿Terceros<br/>involucrados?</b>"}
     F -->|Sí| G[<b>Notificar<br/>terceros</b>]
-    F -->|No| H[<b>RESUELTO</b><br/>Eliminar de BD]
+    F -->|No| H[<b>RESUELTO</b><br/>Eliminar BD]
     G -.-> H
     H --> Z([<b>FIN</b>])
     E --> Z`,
 
   oposicion: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
-    B --> C[<b>Evaluar base legal<br/>tratamiento</b>]
-    C --> D{"<b>¿Base legal<br/>es interés legítimo<br/>o marketing?</b>"}
-    D -->|No| E[<b>RECHAZADO</b><br/>No aplica<br/>oposición]
-    D -->|Sí| F{"<b>¿Interés legítimo<br/>prevalece?</b>"}
-    F -->|Sí| G[<b>RECHAZADO</b><br/>Interés legítimo<br/>prevalece]
-    F -->|No| H[<b>RESUELTO</b><br/>Cese del<br/>tratamiento]
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
+    B --> C[<b>Evaluar base legal</b>]
+    C --> D{"<b>¿Legítimo interés<br/>o marketing?</b>"}
+    D -->|No| E[<b>RECHAZADO</b><br/>No aplica]
+    D -->|Sí| F{"<b>¿Prevalece<br/>interés?</b>"}
+    F -->|Sí| G[<b>RECHAZADO</b><br/>Prevalece interés]
+    F -->|No| H[<b>RESUELTO</b><br/>Cese tratamiento]
     H --> Z([<b>FIN</b>])
     G --> Z
     E --> Z`,
 
   bloqueo: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
-    B --> C{"<b>¿Causal<br/>Art. 8 ter<br/>acreditada?</b>"}
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
+    B --> C{"<b>¿Causal Art. 8 ter<br/>acreditada?</b>"}
     C -->|No| D[<b>RECHAZADO</b>]
-    C -->|Sí| E[<b>BLOQUEADO</b><br/>Art. 8 ter]
-    E --> F{"<b>¿Titular<br/>solicita<br/>desbloqueo?</b>"}
+    C -->|Sí| E[<b>BLOQUEADO</b>]
+    E --> F{"<b>¿Desbloqueo<br/>solicitado?</b>"}
     F -->|Sí| G[<b>Evaluar<br/>desbloqueo</b>]
-    G --> H{"<b>¿Procede<br/>desbloqueo?</b>"}
-    H -->|Sí| I[<b>EN_PROCESO</b><br/>o RESUELTO]
+    G --> H{"<b>¿Procede?</b>"}
+    H -->|Sí| I[<b>EN PROCESO<br/>o RESUELTO</b>]
     H -->|No| E
     I --> Z([<b>FIN</b>])
     E --> F`,
 
   portabilidad: `flowchart TD
-    A([<b>ABIERTO</b>]) --> B[<b>EN_PROCESO</b>]
-    B --> C[<b>Identificar datos<br/>para exportación</b>]
+    A([<b>ABIERTO</b>]) --> B[<b>EN PROCESO</b>]
+    B --> C[<b>Identificar datos<br/>a exportar</b>]
     C --> D{"<b>Formato<br/>solicitado</b>"}
-    D -->|JSON| E[<b>Generar<br/>portability_data<br/>JSON</b>]
-    D -->|CSV| F[<b>Generar<br/>portability_data<br/>CSV</b>]
-    D -->|Excel| G[<b>Generar<br/>portability_data<br/>XLSX</b>]
-    E --> H[<b>RESUELTO</b><br/>Enviar archivo]
+    D -->|JSON| E[<b>Generar JSON</b>]
+    D -->|CSV| F[<b>Generar CSV</b>]
+    D -->|Excel| G[<b>Generar XLSX</b>]
+    E --> H[<b>RESUELTO</b>]
     F --> H
     G --> H
     H --> Z([<b>FIN</b>])
-    B --> I{"<b>¿Prórroga?<br/>Art. 12 bis</b>"}
-    I -->|Sí| J[<b>PRORROGA</b>]
+    B --> I{"<b>¿Prórroga?<br/>Art.12 bis</b>"}
+    I -->|Sí| J[<b>PRÓRROGA</b>]
     J -.-> B
     I -->|No| D`
 };
@@ -108,6 +108,8 @@ const SECUENCIA_ESTADOS: Record<TipoArco, string[]> = {
   portabilidad: ['abierto', 'en_proceso', 'evaluacion', 'resuelto', 'rechazado']
 };
 
+const MARCA_ACTUAL = '★';
+
 export function getDiagramaPorTipo(tipo: TipoArco): string {
   return DIAGRAMAS[tipo] || DIAGRAMAS.acceso;
 }
@@ -123,16 +125,28 @@ export function getIdNodoPorEstado(estado: string): string {
   return MAPEO_ESTADO_A_NODO[estado] || 'A';
 }
 
+function marcarNodoActual(diagrama: string, nodoActual: string): string {
+  const patron = new RegExp(
+    `(${nodoActual}(\\[[^\\[]*?<b>)|${nodoActual}(\\([^\\(]*?<b>)|${nodoActual}(\\{[^\\{]*?<b>))`,
+    'g'
+  );
+  return diagrama.replace(patron, (match, grupo) => {
+    return match.replace(/<b>/, `<b>${MARCA_ACTUAL} `);
+  });
+}
+
 export function aplicarColores(diagrama: string, estadoActual: string, nodosAnteriores: string[]): { codigo: string; nodoActual: string } {
   const nodoActual = getIdNodoPorEstado(estadoActual);
 
-  const estiloActual = 'classDef currentNode fill:#3b82f6,color:#fff,stroke:#1d4ed8,stroke-width:3px';
-  const estiloCompletado = 'classDef completedNode fill:#1f2937,color:#fff,stroke:#000';
-  const estiloPendiente = 'classDef pendingNode fill:#ffffff,color:#6b7280,stroke:#d1d5db,stroke-dasharray:3 3';
-  const estiloFinal = 'classDef finalNode fill:#10b981,color:#fff,stroke:#059669';
-  const estiloDecision = 'classDef decisionNode fill:#f59e0b,color:#fff,stroke:#d97706';
+  const diagramaConMarca = marcarNodoActual(diagrama, nodoActual);
 
-  let resultado = diagrama;
+  const estiloActual = 'classDef currentNode fill:#fef08a,color:#713f12,stroke:#ca8a04,stroke-width:3px,stroke-dasharray:5 2';
+  const estiloCompletado = 'classDef completedNode fill:#1f2937,color:#fff,stroke:#000';
+  const estiloPendiente = 'classDef pendingNode fill:#f9fafb,color:#6b7280,stroke:#d1d5db';
+  const estiloFinal = 'classDef finalNode fill:#10b981,color:#fff,stroke:#059669';
+  const estiloDecision = 'classDef decisionNode fill:#fed7aa,color:#9a3412,stroke:#ea580c';
+
+  let resultado = diagramaConMarca;
   const lineas = resultado.split('\n');
   const nodoIdsEnDiagrama = new Set<string>();
 
