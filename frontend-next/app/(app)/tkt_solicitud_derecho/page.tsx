@@ -645,23 +645,6 @@ function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: TicketDrawe
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg p-3" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-            <p className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Fecha recepción</p>
-            <p className="text-sm font-medium" style={{ color: '#111827' }}>{fmtDate(ticket.fecha_recepcion ?? undefined)}</p>
-          </div>
-          <div
-            className="rounded-lg p-3"
-            style={{ background: sla.bg, border: `1px solid ${sla.color}` }}
-          >
-            <p className="text-xs font-medium mb-1" style={{ color: sla.color }}>Vencimiento SLA</p>
-            <p className="text-sm font-bold" style={{ color: sla.color }}>
-              {ticket.fecha_vencimiento ? fmtDate(ticket.fecha_vencimiento) : '—'}
-              <span className="ml-2 text-xs font-medium">({sla.text})</span>
-            </p>
-          </div>
-        </div>
-
         {ticket.descripcion && (
           <div className="rounded-lg p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
             <p className="text-xs font-semibold mb-2" style={{ color: '#374151' }}>Descripción</p>
