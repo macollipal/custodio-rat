@@ -21,44 +21,52 @@ interface FlujoModalProps {
 }
 
 export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<string>('');
+  const svgContainerRef = useRef<HTMLDivElement>(null);
+  const mermaidRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mermaidLoaded, setMermaidLoaded] = useState(false);
-  const mermaidApiRef = useRef<any>(null);
+  const [mermaidReady, setMermaidReady] = useState(false);
+  const renderKeyRef = useRef(0);
 
   useEffect(() => {
     if (!open) return;
 
-    const loadMermaid = async () => {
-      if (mermaidLoaded && mermaidApiRef.current) return;
-
+    const init = async () => {
       try {
         const mermaid = (await import('mermaid')).default;
         mermaid.initialize({
           startOnLoad: false,
-          theme: 'default',
+          theme: 'base',
+          themeVariables: {
+            primaryColor: '#3b82f6',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#1d4ed8',
+            lineColor: '#6b7280',
+            secondaryColor: '#f3f4f6',
+            tertiaryColor: '#f9fafb',
+            fontFamily: 'inherit'
+          },
           flowchart: {
             htmlLabels: true,
             curve: 'basis',
             nodeSpacing: 50,
             rankSpacing: 80
-          }
+          },
+          securityLevel: 'loose'
         } as any);
-        mermaidApiRef.current = mermaid;
-        setMermaidLoaded(true);
+        mermaidRef.current = mermaid;
+        setMermaidReady(true);
       } catch (err) {
-        console.error('Error cargando mermaid:', err);
+        console.error('[FlujoModal] Error cargando mermaid:', err);
         setError('Error al cargar el visualizador de diagramas');
       }
     };
 
-    loadMermaid();
-  }, [open, mermaidLoaded]);
+    init();
+  }, [open]);
 
   const renderDiagrama = useCallback(async () => {
-    if (!mermaidApiRef.current || !containerRef.current) return;
+    if (!mermaidRef.current || !svgContainerRef.current) return;
 
     setLoading(true);
     setError(null);
@@ -68,21 +76,25 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
       const nodosAnteriores = getNodosAnteriores(estadoActual, tipo);
       const { codigo } = aplicarColores(diagrama, estadoActual, nodosAnteriores);
 
-      const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const { svg: svgResult } = await mermaidApiRef.current.render(id, codigo);
-      setSvg(svgResult);
+      const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const { svg } = await mermaidRef.current.render(id, codigo);
+
+      if (svgContainerRef.current) {
+        svgContainerRef.current.innerHTML = svg;
+      }
     } catch (err: any) {
-      console.error('Error renderizando mermaid:', err);
-      setError(`Error al renderizar: ${err.message || 'verifique el tipo de solicitud'}`);
+      console.error('[FlujoModal] Error renderizando:', err);
+      setError(`Error al renderizar: ${err?.message || 'intente cerrar y abrir de nuevo'}`);
     } finally {
       setLoading(false);
     }
   }, [tipo, estadoActual]);
 
   useEffect(() => {
-    if (!open || !mermaidLoaded) return;
+    if (!open || !mermaidReady) return;
+    renderKeyRef.current += 1;
     renderDiagrama();
-  }, [open, mermaidLoaded, renderDiagrama]);
+  }, [open, mermaidReady, tipo, estadoActual, renderDiagrama]);
 
   if (!open) return null;
 
@@ -120,15 +132,20 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
           {error && (
             <div className="flex flex-col items-center justify-center h-64">
               <AlertCircle className="w-8 h-8 text-red-500 mb-3" />
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600 text-center px-4">{error}</p>
+              <button
+                onClick={renderDiagrama}
+                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+              >
+                Reintentar
+              </button>
             </div>
           )}
 
-          {!loading && !error && svg && (
+          {!loading && !error && (
             <div
-              ref={containerRef}
+              ref={svgContainerRef}
               className="flex justify-center"
-              dangerouslySetInnerHTML={{ __html: svg }}
             />
           )}
         </div>
