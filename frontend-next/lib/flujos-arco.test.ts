@@ -8,6 +8,7 @@ import {
   getDescripcionPorTipo,
   TipoArco
 } from './flujos-arco';
+import { getSubPaso } from './flujos-arco-detalle';
 
 describe('getDiagramaPorTipo', () => {
   it('retorna diagrama para acceso', () => {
@@ -100,53 +101,95 @@ describe('getNodosAnteriores', () => {
     expect(nodos).toContain('en_proceso');
     expect(nodos).toContain('abierto');
   });
+
+  it('portabilidad en_proceso retorna abierto', () => {
+    const nodos = getNodosAnteriores('en_proceso', 'portabilidad');
+    expect(nodos).toEqual(['abierto']);
+  });
 });
 
 describe('getIdNodoPorEstado', () => {
-  it('abierto mapea a A', () => {
-    expect(getIdNodoPorEstado('abierto')).toBe('A');
+  it('abierto siempre es A', () => {
+    expect(getIdNodoPorEstado('acceso', 'abierto')).toBe('A');
+    expect(getIdNodoPorEstado('rectificacion', 'abierto')).toBe('A');
+    expect(getIdNodoPorEstado('cancelacion', 'abierto')).toBe('A');
   });
 
-  it('en_proceso mapea a B', () => {
-    expect(getIdNodoPorEstado('en_proceso')).toBe('B');
+  it('acceso en_proceso es B', () => {
+    expect(getIdNodoPorEstado('acceso', 'en_proceso')).toBe('B');
   });
 
-  it('subsanacion mapea a D', () => {
-    expect(getIdNodoPorEstado('subsanacion')).toBe('D');
+  it('rectificacion en_proceso es C (Evaluar datos)', () => {
+    expect(getIdNodoPorEstado('rectificacion', 'en_proceso')).toBe('C');
   });
 
-  it('prorroga mapea a F', () => {
-    expect(getIdNodoPorEstado('prorroga')).toBe('F');
+  it('oposicion en_proceso es C (Evaluar base legal)', () => {
+    expect(getIdNodoPorEstado('oposicion', 'en_proceso')).toBe('C');
   });
 
-  it('resuelto mapea a H', () => {
-    expect(getIdNodoPorEstado('resuelto')).toBe('H');
+  it('bloqueo en_proceso es C (¿Causal Art.8 ter?)', () => {
+    expect(getIdNodoPorEstado('bloqueo', 'en_proceso')).toBe('C');
   });
 
-  it('rechazado mapea a I', () => {
-    expect(getIdNodoPorEstado('rechazado')).toBe('I');
+  it('cancelacion en_proceso es C (Evaluar excepciones)', () => {
+    expect(getIdNodoPorEstado('cancelacion', 'en_proceso')).toBe('C');
   });
 
-  it('bloqueado mapea a E', () => {
-    expect(getIdNodoPorEstado('bloqueado')).toBe('E');
+  it('portabilidad en_proceso es C (Identificar datos)', () => {
+    expect(getIdNodoPorEstado('portabilidad', 'en_proceso')).toBe('C');
+  });
+
+  it('acceso subsanacion es D', () => {
+    expect(getIdNodoPorEstado('acceso', 'subsanacion')).toBe('D');
+  });
+
+  it('acceso prorroga es F', () => {
+    expect(getIdNodoPorEstado('acceso', 'prorroga')).toBe('F');
+  });
+
+  it('acceso resuelto es H', () => {
+    expect(getIdNodoPorEstado('acceso', 'resuelto')).toBe('H');
+  });
+
+  it('acceso rechazado es I', () => {
+    expect(getIdNodoPorEstado('acceso', 'rechazado')).toBe('I');
+  });
+
+  it('bloqueo bloqueado es E', () => {
+    expect(getIdNodoPorEstado('bloqueo', 'bloqueado')).toBe('E');
+  });
+
+  it('rectificacion resuelto es E (Rectificar BD)', () => {
+    expect(getIdNodoPorEstado('rectificacion', 'resuelto')).toBe('E');
+  });
+
+  it('rectificacion rechazado es F (Fundamentado)', () => {
+    expect(getIdNodoPorEstado('rectificacion', 'rechazado')).toBe('F');
   });
 
   it('estado desconocido fallback a A', () => {
-    expect(getIdNodoPorEstado('invalid')).toBe('A');
+    expect(getIdNodoPorEstado('acceso', 'invalid')).toBe('A');
   });
 });
 
 describe('aplicarColores', () => {
-  it('estado en_proceso aplica currentNode al nodo B', () => {
+  it('estado en_proceso aplica currentNode al nodo B en acceso', () => {
     const diagrama = getDiagramaPorTipo('acceso');
-    const { codigo } = aplicarColores(diagrama, 'en_proceso', ['abierto']);
+    const { codigo } = aplicarColores(diagrama, 'acceso', 'en_proceso', ['abierto']);
     expect(codigo).toContain('class B currentNode');
+    expect(codigo).toContain('class A completedNode');
+  });
+
+  it('estado en_proceso aplica currentNode al nodo C en oposicion', () => {
+    const diagrama = getDiagramaPorTipo('oposicion');
+    const { codigo } = aplicarColores(diagrama, 'oposicion', 'en_proceso', ['abierto']);
+    expect(codigo).toContain('class C currentNode');
     expect(codigo).toContain('class A completedNode');
   });
 
   it('agrega classDef de estilos', () => {
     const diagrama = getDiagramaPorTipo('acceso');
-    const { codigo } = aplicarColores(diagrama, 'resuelto', ['en_proceso', 'abierto']);
+    const { codigo } = aplicarColores(diagrama, 'acceso', 'resuelto', ['en_proceso', 'abierto']);
     expect(codigo).toContain('classDef currentNode');
     expect(codigo).toContain('classDef completedNode');
     expect(codigo).toContain('classDef pendingNode');
@@ -154,30 +197,36 @@ describe('aplicarColores', () => {
 
   it('marca nodo Z como finalNode', () => {
     const diagrama = getDiagramaPorTipo('acceso');
-    const { codigo } = aplicarColores(diagrama, 'resuelto', ['en_proceso', 'abierto']);
+    const { codigo } = aplicarColores(diagrama, 'acceso', 'resuelto', ['en_proceso', 'abierto']);
     expect(codigo).toContain('class Z finalNode');
   });
 
-  it('retorna nodo actual correcto', () => {
+  it('retorna nodo actual correcto para acceso resuelto', () => {
     const diagrama = getDiagramaPorTipo('acceso');
-    const { nodoActual } = aplicarColores(diagrama, 'resuelto', ['en_proceso']);
+    const { nodoActual } = aplicarColores(diagrama, 'acceso', 'resuelto', ['en_proceso']);
     expect(nodoActual).toBe('H');
   });
 
   it('funciona con cancelacion', () => {
     const diagrama = getDiagramaPorTipo('cancelacion');
-    const { codigo, nodoActual } = aplicarColores(diagrama, 'en_proceso', ['abierto']);
-    expect(nodoActual).toBe('B');
+    const { codigo, nodoActual } = aplicarColores(diagrama, 'cancelacion', 'en_proceso', ['abierto']);
+    expect(nodoActual).toBe('C');
     expect(codigo).toContain('classDef');
   });
 
   it('funciona con bloqueo', () => {
     const diagrama = getDiagramaPorTipo('bloqueo');
-    const { codigo, nodoActual } = aplicarColores(diagrama, 'bloqueado', ['abierto', 'en_proceso']);
+    const { codigo, nodoActual } = aplicarColores(diagrama, 'bloqueo', 'bloqueado', ['abierto', 'en_proceso']);
     expect(nodoActual).toBe('E');
     expect(codigo).toContain('class E currentNode');
     expect(codigo).toContain('class A completedNode');
-    expect(codigo).toContain('class B completedNode');
+  });
+
+  it('rectificacion en_proceso pinta nodo C', () => {
+    const diagrama = getDiagramaPorTipo('rectificacion');
+    const { codigo, nodoActual } = aplicarColores(diagrama, 'rectificacion', 'en_proceso', ['abierto']);
+    expect(nodoActual).toBe('C');
+    expect(codigo).toContain('class C currentNode');
   });
 });
 
@@ -237,5 +286,59 @@ describe('getDescripcionPorTipo', () => {
 
   it('portabilidad menciona formato estructurado', () => {
     expect(getDescripcionPorTipo('portabilidad')).toContain('formato estructurado');
+  });
+});
+
+describe('getSubPaso', () => {
+  it('oposicion en_proceso tiene titulo de evaluar base legal', () => {
+    const sub = getSubPaso('oposicion', 'en_proceso');
+    expect(sub).not.toBeNull();
+    expect(sub!.titulo).toContain('Evaluar base legal');
+  });
+
+  it('rectificacion en_proceso tiene opciones', () => {
+    const sub = getSubPaso('rectificacion', 'en_proceso');
+    expect(sub).not.toBeNull();
+    expect(sub!.opciones).toBeDefined();
+    expect(sub!.opciones!.length).toBeGreaterThan(0);
+  });
+
+  it('acceso resuelto no tiene opciones', () => {
+    const sub = getSubPaso('acceso', 'resuelto');
+    expect(sub).not.toBeNull();
+    expect(sub!.opciones).toBeUndefined();
+  });
+
+  it('bloqueo en_proceso menciona Art. 8 ter', () => {
+    const sub = getSubPaso('bloqueo', 'en_proceso');
+    expect(sub).not.toBeNull();
+    expect(sub!.titulo).toContain('Art. 8 ter');
+  });
+
+  it('portabilidad en_proceso menciona exportar', () => {
+    const sub = getSubPaso('portabilidad', 'en_proceso');
+    expect(sub).not.toBeNull();
+    expect(sub!.opciones).toContain('Generar JSON');
+    expect(sub!.opciones).toContain('Generar CSV');
+    expect(sub!.opciones).toContain('Generar Excel');
+  });
+
+  it('cancelacion en_proceso menciona excepciones', () => {
+    const sub = getSubPaso('cancelacion', 'en_proceso');
+    expect(sub).not.toBeNull();
+    expect(sub!.accion).toContain('excepción');
+  });
+
+  it('todos los 6 tipos tienen subpaso para en_proceso', () => {
+    const tipos: TipoArco[] = ['acceso', 'rectificacion', 'cancelacion', 'oposicion', 'bloqueo', 'portabilidad'];
+    for (const tipo of tipos) {
+      const sub = getSubPaso(tipo, 'en_proceso');
+      expect(sub).not.toBeNull();
+    }
+  });
+
+  it('estado inexistente retorna null', () => {
+    const sub = getSubPaso('acceso', 'invalid' as any);
+    expect(sub).toBeNull();
   });
 });

@@ -80,32 +80,66 @@ export const DIAGRAMAS: Record<TipoArco, string> = {
     I -->|No| D`
 };
 
-const MAPEO_ESTADO_A_NODO: Record<string, string> = {
-  abierto: 'A',
-  en_proceso: 'B',
-  pendiente: 'C',
-  subsanacion: 'D',
-  prorroga: 'F',
-  bloqueado: 'E',
-  resuelto: 'H',
-  rechazado: 'I',
-  evaluacion: 'C',
-  evaluar_excepciones: 'C',
-  evaluar_base_legal: 'C',
-  notificar_terceros: 'G',
-  generar_export: 'C',
-  evaluacion_excepciones: 'C',
-  evaluar_datos: 'C',
-  evaluar_bloqueo: 'C'
+const MAPEO_ESTADO_A_NODO_POR_TIPO: Record<TipoArco, Partial<Record<EstadoTicket, string>>> = {
+  acceso: {
+    abierto: 'A',
+    en_proceso: 'B',
+    pendiente: 'C',
+    subsanacion: 'D',
+    prorroga: 'F',
+    resuelto: 'H',
+    rechazado: 'I'
+  },
+  rectificacion: {
+    abierto: 'A',
+    en_proceso: 'C',
+    pendiente: 'C',
+    resuelto: 'E',
+    rechazado: 'F'
+  },
+  cancelacion: {
+    abierto: 'A',
+    en_proceso: 'C',
+    pendiente: 'C',
+    subsanacion: 'D',
+    resuelto: 'H',
+    rechazado: 'E'
+  },
+  oposicion: {
+    abierto: 'A',
+    en_proceso: 'C',
+    pendiente: 'C',
+    subsanacion: 'D',
+    resuelto: 'H',
+    rechazado: 'G'
+  },
+  bloqueo: {
+    abierto: 'A',
+    en_proceso: 'C',
+    pendiente: 'C',
+    subsanacion: 'D',
+    bloqueado: 'E',
+    resuelto: 'I',
+    rechazado: 'D'
+  },
+  portabilidad: {
+    abierto: 'A',
+    en_proceso: 'C',
+    pendiente: 'C',
+    subsanacion: 'D',
+    prorroga: 'J',
+    resuelto: 'H',
+    rechazado: 'H'
+  }
 };
 
 const SECUENCIA_ESTADOS: Record<TipoArco, string[]> = {
   acceso: ['abierto', 'en_proceso', 'subsanacion', 'prorroga', 'resuelto', 'rechazado'],
   rectificacion: ['abierto', 'en_proceso', 'resuelto', 'rechazado'],
-  cancelacion: ['abierto', 'en_proceso', 'evaluacion', 'resuelto', 'rechazado'],
-  oposicion: ['abierto', 'en_proceso', 'evaluacion', 'resuelto', 'rechazado'],
-  bloqueo: ['abierto', 'en_proceso', 'bloqueado', 'resuelto', 'rechazado'],
-  portabilidad: ['abierto', 'en_proceso', 'evaluacion', 'resuelto', 'rechazado']
+  cancelacion: ['abierto', 'en_proceso', 'subsanacion', 'resuelto', 'rechazado'],
+  oposicion: ['abierto', 'en_proceso', 'subsanacion', 'resuelto', 'rechazado'],
+  bloqueo: ['abierto', 'en_proceso', 'subsanacion', 'bloqueado', 'resuelto', 'rechazado'],
+  portabilidad: ['abierto', 'en_proceso', 'subsanacion', 'prorroga', 'resuelto', 'rechazado']
 };
 
 const MARCA_ACTUAL = '★';
@@ -121,8 +155,20 @@ export function getNodosAnteriores(estado: string, tipo: TipoArco): string[] {
   return secuencia.slice(0, idx);
 }
 
-export function getIdNodoPorEstado(estado: string): string {
-  return MAPEO_ESTADO_A_NODO[estado] || 'A';
+export function getIdNodoPorEstado(tipo: TipoArco, estado: string): string {
+  const mapeo = MAPEO_ESTADO_A_NODO_POR_TIPO[tipo];
+  if (mapeo && mapeo[estado as EstadoTicket]) {
+    return mapeo[estado as EstadoTicket]!;
+  }
+  if (mapeo && mapeo[estado as EstadoTicket] === undefined) {
+    const secuencia = SECUENCIA_ESTADOS[tipo];
+    const idx = secuencia.indexOf(estado);
+    if (idx > 0) {
+      const estadoAnterior = secuencia[idx - 1];
+      return mapeo[estadoAnterior as EstadoTicket] || 'A';
+    }
+  }
+  return 'A';
 }
 
 function marcarNodoActual(diagrama: string, nodoActual: string): string {
@@ -130,13 +176,13 @@ function marcarNodoActual(diagrama: string, nodoActual: string): string {
     `(${nodoActual}(\\[[^\\[]*?<b>)|${nodoActual}(\\([^\\(]*?<b>)|${nodoActual}(\\{[^\\{]*?<b>))`,
     'g'
   );
-  return diagrama.replace(patron, (match, grupo) => {
+  return diagrama.replace(patron, (match) => {
     return match.replace(/<b>/, `<b>${MARCA_ACTUAL} `);
   });
 }
 
-export function aplicarColores(diagrama: string, estadoActual: string, nodosAnteriores: string[]): { codigo: string; nodoActual: string } {
-  const nodoActual = getIdNodoPorEstado(estadoActual);
+export function aplicarColores(diagrama: string, tipo: TipoArco, estadoActual: string, nodosAnteriores: string[]): { codigo: string; nodoActual: string } {
+  const nodoActual = getIdNodoPorEstado(tipo, estadoActual);
 
   const diagramaConMarca = marcarNodoActual(diagrama, nodoActual);
 
@@ -163,8 +209,8 @@ export function aplicarColores(diagrama: string, estadoActual: string, nodosAnte
     resultado += `\n    class ${nodoActual} currentNode`;
   }
 
-  for (const nodo of nodosAnteriores) {
-    const id = MAPEO_ESTADO_A_NODO[nodo] || nodo;
+  for (const estado of nodosAnteriores) {
+    const id = getIdNodoPorEstado(tipo, estado);
     if (nodoIdsEnDiagrama.has(id)) {
       resultado += `\n    class ${id} completedNode`;
     }

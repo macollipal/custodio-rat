@@ -1,16 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Loader2, AlertCircle } from 'lucide-react';
+import { X, Loader2, AlertCircle, CheckCircle2, XCircle, Clock, Ban, HelpCircle } from 'lucide-react';
 import {
   getDiagramaPorTipo,
   getNodosAnteriores,
   aplicarColores,
   getTituloPorTipo,
   getDescripcionPorTipo,
+  getIdNodoPorEstado,
   TipoArco,
   EstadoTicket
 } from '@/lib/flujos-arco';
+import { getSubPaso, SubPaso } from '@/lib/flujos-arco-detalle';
 
 interface FlujoModalProps {
   open: boolean;
@@ -20,13 +22,79 @@ interface FlujoModalProps {
   trackingToken?: string;
 }
 
+const ESTADO_ICON: Record<EstadoTicket, React.ReactNode> = {
+  abierto: <HelpCircle className="w-4 h-4 text-blue-500" />,
+  en_proceso: <Clock className="w-4 h-4 text-yellow-600" />,
+  pendiente: <Clock className="w-4 h-4 text-orange-500" />,
+  subsanacion: <HelpCircle className="w-4 h-4 text-purple-500" />,
+  prorroga: <Clock className="w-4 h-4 text-orange-500" />,
+  bloqueado: <Ban className="w-4 h-4 text-red-500" />,
+  resuelto: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
+  rechazado: <XCircle className="w-4 h-4 text-gray-500" />
+};
+
+function SubPasoPanel({ subPaso, tipo, estadoActual }: { subPaso: SubPaso; tipo: TipoArco; estadoActual: EstadoTicket }) {
+  const nodoActual = getIdNodoPorEstado(tipo, estadoActual);
+
+  return (
+    <div className="px-4 py-3 bg-yellow-50 border-b border-yellow-200">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 shrink-0">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-400 text-yellow-900 text-sm font-bold">
+            {nodoActual}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-yellow-800 mb-0.5">{subPaso.titulo}</p>
+          <p className="text-xs text-yellow-700 leading-relaxed">{subPaso.accion}</p>
+
+          {subPaso.opciones && subPaso.opciones.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {subPaso.opciones.map((op, i) => {
+                const isPositive = op.startsWith('✓');
+                const isNegative = op.startsWith('✗');
+                return (
+                  <span
+                    key={i}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                      isPositive
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : isNegative
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}
+                  >
+                    {op}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {subPaso.proximos && subPaso.proximos.length > 0 && (
+            <div className="mt-1.5 flex items-center gap-1 flex-wrap">
+              <span className="text-xs text-yellow-600">Próximos:</span>
+              {subPaso.proximos.map((p) => (
+                <span key={p} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white border border-yellow-300 rounded text-xs text-yellow-700">
+                  {p.replace('_', ' ')}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProps) {
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mermaidReady, setMermaidReady] = useState(false);
-  const renderKeyRef = useRef(0);
+
+  const subPaso = open ? getSubPaso(tipo, estadoActual) : null;
 
   useEffect(() => {
     if (!open) return;
@@ -74,7 +142,7 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
     try {
       const diagrama = getDiagramaPorTipo(tipo);
       const nodosAnteriores = getNodosAnteriores(estadoActual, tipo);
-      const { codigo } = aplicarColores(diagrama, estadoActual, nodosAnteriores);
+      const { codigo } = aplicarColores(diagrama, tipo, estadoActual, nodosAnteriores);
 
       const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const { svg } = await mermaidRef.current.render(id, codigo);
@@ -92,7 +160,6 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
 
   useEffect(() => {
     if (!open || !mermaidReady) return;
-    renderKeyRef.current += 1;
     renderDiagrama();
   }, [open, mermaidReady, tipo, estadoActual, renderDiagrama]);
 
@@ -104,13 +171,18 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
     <div className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {getTituloPorTipo(tipo)}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {getDescripcionPorTipo(tipo)}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="shrink-0">
+              {ESTADO_ICON[estadoActual]}
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {getTituloPorTipo(tipo)}
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {getDescripcionPorTipo(tipo)}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -120,6 +192,8 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
+
+        {subPaso && <SubPasoPanel subPaso={subPaso} tipo={tipo} estadoActual={estadoActual} />}
 
         <div className="flex-1 overflow-auto px-6 py-4 bg-gray-50">
           {loading && (
