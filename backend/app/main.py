@@ -132,6 +132,33 @@ if not ALLOWED_ORIGINS:
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(CSRFMiddleware)
 
+
+class SecurityHeadersMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        await self.app(scope, receive, self._patch_send(send))
+
+    def _patch_send(self, send):
+        async def patched_send(message):
+            if message.get("type") == "http.response.start":
+                headers = dict(message.get("headers", []))
+                headers[b"X-Content-Type-Options"] = b"nosniff"
+                headers[b"X-Frame-Options"] = b"DENY"
+                headers[b"X-XSS-Protection"] = b"1; mode=block"
+                headers[b"Referrer-Policy"] = b"strict-origin-when-cross-origin"
+                headers[b"Permissions-Policy"] = b"geolocation=(), microphone=(), camera=()"
+                message = {**message, "headers": list(headers.items())}
+            await send(message)
+        return patched_send
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
