@@ -14,6 +14,7 @@ import Badge from '@/components/ui/Badge';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 import RatDetailModal from '@/components/rat/RatDetailModal';
+import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
 import type { RAT } from '@/types';
 
 export default function DashboardPage() {
@@ -46,42 +47,7 @@ export default function DashboardPage() {
     [rats, now]
   );
 
-  const alertas = useMemo((): { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] => {
-    if (!dashboardStats) return [];
-    const {
-      procesos_con_datos_sensibles,
-      requieren_eipd,
-      transferencias_internacionales,
-      completitud_promedio,
-      eipd_pendientes = 0,
-      transferencias_sin_garantias = 0,
-      interes_legitimo_sin_test = 0,
-      encargados_sin_contrato = 0,
-      rats_sin_doc_base_legal = 0,
-    } = dashboardStats;
-    const a: { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] = [];
-    if (procesos_con_datos_sensibles > 0)
-      a.push({ type: 'warning', message: `<strong>${procesos_con_datos_sensibles} proceso(s)</strong> tratan datos sensibles. Verifique base legal expresa y medidas de seguridad reforzadas.` });
-    if (requieren_eipd > 0)
-      a.push({ type: 'danger', message: `<strong>${requieren_eipd} proceso(s)</strong> requieren EIPD. No pueden iniciarse sin completar la evaluación.` });
-    if (transferencias_internacionales > 0)
-      a.push({ type: 'info', message: `<strong>${transferencias_internacionales}</strong> transferencia(s) internacional(es). Verifique las garantías del Art. 28 Ley 21.719.` });
-    if (sinRevisionCount > 0)
-      a.push({ type: 'warning', message: `<strong>${sinRevisionCount} proceso(s)</strong> sin actualización hace más de 6 meses. La Ley 21.719 exige revisión periódica del RAT.` });
-    if (completitud_promedio < 60)
-      a.push({ type: 'warning', message: `Completitud del RAT en <strong>${completitud_promedio}%</strong>. Complete los campos obligatorios para estar preparado ante fiscalización.` });
-    if (eipd_pendientes > 0)
-      a.push({ type: 'danger', message: `<strong>${eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 bis).` });
-    if (transferencias_sin_garantias > 0)
-      a.push({ type: 'warning', message: `<strong>${transferencias_sin_garantias} transferencia(s)</strong> internacional(es) sin garantías documentadas. Documente SCC, BCR u otras garantías (Art. 28).` });
-    if (interes_legitimo_sin_test > 0)
-      a.push({ type: 'warning', message: `<strong>${interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.` });
-    if (encargados_sin_contrato > 0)
-      a.push({ type: 'info', message: `<strong>${encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).` });
-    if (rats_sin_doc_base_legal > 0)
-      a.push({ type: 'warning', message: `<strong>${rats_sin_doc_base_legal} proceso(s)</strong> sin documento de base legal adjunto. Para alcanzar el 100% de completitud, adjunte el documento que respalda la base legal.` });
-    return a;
-  }, [dashboardStats, sinRevisionCount]);
+  const alertas = useDashboardAlerts(dashboardStats, sinRevisionCount);
 
   useEffect(() => {
     const tourDone = localStorage.getItem('custodio_tour_completed');
@@ -192,7 +158,6 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Dashboard</h1>
@@ -215,7 +180,6 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Checklist de primeros pasos */}
       <OnboardingChecklist
         ratsCount={total_procesos}
         hasDpo={Boolean(company?.contacto_dpo && company?.email_dpo)}
@@ -224,7 +188,6 @@ export default function DashboardPage() {
         hasPoliticaTransparencia={hasPolitica}
       />
 
-      {/* KPIs principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total de procesos" value={total_procesos}
@@ -248,7 +211,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* KPIs de riesgo adicional */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="EIPDs pendientes" value={eipd_pendientes}
@@ -272,7 +234,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Gráfico + Alertas */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
@@ -319,7 +280,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Procesos recientes */}
       <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
         <h3 className="font-semibold text-sm mb-4" style={{ color: '#111827' }}>
           Procesos recientes
@@ -334,7 +294,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-0">
-            {/* Desktop header */}
             <div
               className="hidden sm:grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg whitespace-nowrap"
               style={{ gridTemplateColumns: '3fr 2fr 1.5fr 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}
@@ -344,7 +303,6 @@ export default function DashboardPage() {
               <span>Estado</span>
               <span>Completitud</span>
             </div>
-            {/* Desktop rows */}
             <div className="hidden sm:block">
               {recientes.map((rat, i) => (
                 <button
@@ -368,7 +326,6 @@ export default function DashboardPage() {
                 </button>
               ))}
             </div>
-            {/* Mobile cards */}
             <div className="sm:hidden divide-y" style={{ border: '1px solid #E5E7EB', borderRadius: '0 0 8px 8px' }}>
               {recientes.map((rat, i) => (
                 <button
@@ -443,7 +400,6 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Tour guiado */}
       {showTour && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm mx-4 overflow-hidden">
