@@ -214,6 +214,11 @@ def crear_ticket(
     descripcion: Optional[str] = None,
     created_by: Optional[str] = None,
     rat_id: Optional[int] = None,
+    representante_nombre: Optional[str] = None,
+    representante_rut: Optional[str] = None,
+    telefono: Optional[str] = None,
+    fecha_nacimiento: Optional[str] = None,
+    pais: Optional[str] = None,
 ) -> "TktSolicitudDerecho":
     """Crea un ticket TKT (para uso interno/admin)."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -236,7 +241,17 @@ def crear_ticket(
         fecha_vencimiento=fecha_vencimiento,
         created_by=created_by,
         rat_id=rat_id,
+        representante_nombre=representante_nombre,
+        representante_rut=representante_rut,
+        telefono=telefono,
+        pais=pais,
     )
+    if fecha_nacimiento:
+        from datetime import date
+        try:
+            ticket.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
+        except ValueError:
+            pass
     db.add(ticket)
     db.flush()
 

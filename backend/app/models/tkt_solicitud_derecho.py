@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -79,6 +79,9 @@ class TktSolicitudDerecho(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     representante_nombre: Mapped[str] = mapped_column(String(255), nullable=True)
     representante_rut: Mapped[str] = mapped_column(String(20), nullable=True)
+    telefono: Mapped[str] = mapped_column(String(50), nullable=True)
+    fecha_nacimiento: Mapped[datetime] = mapped_column(Date, nullable=True)
+    pais: Mapped[str] = mapped_column(String(100), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
     responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821

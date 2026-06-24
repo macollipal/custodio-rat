@@ -598,6 +598,9 @@ export interface TktTicket {
   tracking_token?: string;
   representante_nombre?: string;
   representante_rut?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  pais?: string;
   subsanacion_detalle?: string;
   subsanacion_fecha_pedido?: string;
   prorroga_fecha?: string;
@@ -655,6 +658,12 @@ export async function crearTktTicket(data: {
   titular_email: string;
   titular_rut?: string;
   descripcion?: string;
+  rat_id?: number;
+  representante_nombre?: string;
+  representante_rut?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  pais?: string;
 }): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/`, {
     method: 'POST',
@@ -662,6 +671,16 @@ export async function crearTktTicket(data: {
     body: JSON.stringify(data),
   });
   return handle<TktTicket>(res);
+}
+
+export async function checkDuplicadoTkt(
+  email: string,
+  tipo: string,
+  companyId: number,
+): Promise<{ es_duplicado: boolean; cantidad: number; solicitudes: TktTicket[] }> {
+  const params = new URLSearchParams({ email, tipo, company_id: String(companyId) });
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/check-duplicado?${params}`);
+  return handle<{ es_duplicado: boolean; cantidad: number; solicitudes: TktTicket[] }>(res);
 }
 
 export async function getTktTicket(id: number): Promise<TktTicket> {

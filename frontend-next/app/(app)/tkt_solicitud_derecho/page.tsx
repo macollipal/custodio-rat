@@ -13,6 +13,7 @@ import {
   listarTktHistorial,
   crearTktTicket,
   listarRats,
+  checkDuplicadoTkt,
   bloquearSolicitud,
   desbloquearSolicitud,
   exportarPortabilidad,
@@ -25,6 +26,7 @@ import {
 import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
 import { FlujoModal } from '@/components/arco/FlujoModal';
+import { validarRUT } from '@/components/ui/validation';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
@@ -150,9 +152,23 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
   const [origen, setOrigen] = useState('web');
   const [titularNombre, setTitularNombre] = useState('');
   const [titularEmail, setTitularEmail] = useState('');
+  const [confirmarEmail, setConfirmarEmail] = useState('');
   const [titularRut, setTitularRut] = useState('');
+  const [rutError, setRutError] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [telefono, setTelefono] = useState('');
+  const [fechaNacimiento, setFechaNacimiento] = useState('');
+  const [pais, setPais] = useState('');
+  const [reprNombre, setReprNombre] = useState('');
+  const [reprRut, setReprRut] = useState('');
+  const [ratId, setRatId] = useState<number | undefined>(undefined);
+  const [ratSearch, setRatSearch] = useState('');
+  const [rats, setRats] = useState<{ id: number; nombre_proceso: string }[]>([]);
+  const [ratsOpen, setRatsOpen] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState('');
+  const [showDuplicados, setShowDuplicados] = useState(false);
+  const [duplicados, setDuplicados] = useState<TktTicket[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -161,10 +177,53 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
       setOrigen('web');
       setTitularNombre('');
       setTitularEmail('');
+      setConfirmarEmail('');
       setTitularRut('');
+      setRutError('');
       setDescripcion('');
+      setTelefono('');
+      setFechaNacimiento('');
+      setPais('');
+      setReprNombre('');
+      setReprRut('');
+      setRatId(undefined);
+      setRatSearch('');
+      setDuplicateWarning('');
+      setShowDuplicados(false);
+      setDuplicados([]);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!ratSearch.trim()) { setRats([]); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const allRats = await listarRats(companyId);
+        const filtered = allRats.filter((r: RAT) =>
+          r.nombre_proceso.toLowerCase().includes(ratSearch.toLowerCase())
+        );
+        setRats(filtered.slice(0, 10).map((r: RAT) => ({ id: r.id, nombre_proceso: r.nombre_proceso })));
+      } catch { /* ignore */ }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [ratSearch, companyId]);
+
+  useEffect(() => {
+    if (!titularEmail || !tipo) return;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await checkDuplicadoTkt(titularEmail, tipo, companyId);
+        if (result.es_duplicado) {
+          setDuplicateWarning(`⚠️ Posible solicitud duplicada (${result.cantidad} en los últimos 90 días)`);
+          setDuplicados(result.solicitudes);
+        } else {
+          setDuplicateWarning('');
+          setDuplicados([]);
+        }
+      } catch { /* ignore */ }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [titularEmail, tipo, companyId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -174,6 +233,14 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
     }
     const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(titularEmail.trim());
     if (!emailValid) { toast.error('El email del titular no es valido.'); return; }
+    if (confirmarEmail && titularEmail !== confirmarEmail) {
+      toast.error('Los emails no coinciden');
+      return;
+    }
+    if (titularRut && rutError) {
+      toast.error('El RUT no es valido');
+      return;
+    }
     setGuardando(true);
     try {
       await crearTktTicket({
@@ -185,6 +252,12 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
         titular_email: sanitize(titularEmail),
         titular_rut: titularRut ? sanitize(titularRut) : undefined,
         descripcion: descripcion ? sanitize(descripcion) : undefined,
+        rat_id: ratId,
+        representante_nombre: reprNombre ? sanitize(reprNombre) : undefined,
+        representante_rut: reprRut ? sanitize(reprRut) : undefined,
+        telefono: telefono ? sanitize(telefono) : undefined,
+        fecha_nacimiento: fechaNacimiento || undefined,
+        pais: pais || undefined,
       });
       toast.success('Solicitud creada');
       onSuccess();
@@ -224,6 +297,8 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
               onChange={e => setTipo(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm border"
               style={{ borderColor: '#E5E7EB' }}
+              aria-label="Tipo de solicitud ARCO"
+              aria-required="true"
             >
               <option value="acceso">Acceso</option>
               <option value="rectificacion">Rectificación</option>
@@ -232,6 +307,14 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
               <option value="bloqueo">Bloqueo temporal</option>
               <option value="portabilidad">Portabilidad</option>
             </select>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+              {tipo === 'acceso' && 'Art. 12 — El titular puede solicitar información sobre sus datos tratados.'}
+              {tipo === 'rectificacion' && 'Art. 12 — El titular puede solicitar corrección de datos inexactos.'}
+              {tipo === 'cancelacion' && 'Art. 12 — El titular puede solicitar eliminación de sus datos.'}
+              {tipo === 'oposicion' && 'Art. 12 — El titular puede oponerse al tratamiento de sus datos.'}
+              {tipo === 'bloqueo' && 'Art. 12 bis — Suspensión temporal del tratamiento.'}
+              {tipo === 'portabilidad' && 'Art. 12 ter — El titular puede recibir sus datos en formato estructurado.'}
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Prioridad</label>
@@ -240,11 +323,18 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
               onChange={e => setPrioridad(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm border"
               style={{ borderColor: '#E5E7EB' }}
+              aria-label="Prioridad de la solicitud"
+              aria-required="false"
             >
-              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
               <option value="normal">Normal</option>
               <option value="baja">Baja</option>
             </select>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+              {prioridad === 'urgente' && 'Respuesta en 2 días hábiles (Art. 14 bis).'}
+              {prioridad === 'normal' && 'Respuesta en 10 días hábiles (plazo legal).'}
+              {prioridad === 'baja' && 'Sin urgencia. Máximo plazo legal.'}
+            </p>
           </div>
         </div>
 
@@ -286,8 +376,25 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
             className="w-full px-3 py-2 rounded-lg text-sm border"
             style={{ borderColor: '#E5E7EB' }}
             placeholder="email@ejemplo.cl"
-            required
+            aria-label="Email del titular"
+            aria-required="true"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Confirmar email</label>
+          <input
+            type="email"
+            value={confirmarEmail}
+            onChange={e => setConfirmarEmail(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: confirmarEmail && titularEmail !== confirmarEmail ? '#DC2626' : '#E5E7EB' }}
+            placeholder="Repita el email"
+            aria-label="Confirmar email del titular"
+          />
+          {confirmarEmail && titularEmail !== confirmarEmail && (
+            <p className="text-xs mt-1" style={{ color: '#DC2626' }}>Los emails no coinciden</p>
+          )}
         </div>
 
         <div>
@@ -295,12 +402,160 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
           <input
             type="text"
             value={titularRut}
-            onChange={e => setTitularRut(e.target.value)}
+            onChange={e => {
+              const formatted = e.target.value.toUpperCase().replace(/[^0-9K\-]/g, '').replace(/^(\d{1,2})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4').replace(/--/g, '-');
+              setTitularRut(formatted);
+              if (formatted) {
+                const { valido, mensaje } = validarRUT(formatted);
+                setRutError(valido ? '' : mensaje);
+              } else { setRutError(''); }
+            }}
             className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: '#E5E7EB' }}
+            style={{ borderColor: rutError ? '#DC2626' : '#E5E7EB' }}
             placeholder="12.345.678-9"
+            aria-label="RUT del titular"
           />
+          {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
         </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Teléfono</label>
+            <input
+              type="tel"
+              value={telefono}
+              onChange={e => setTelefono(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="+56 9 1234 5678"
+              aria-label="Teléfono del titular"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>País</label>
+            <input
+              type="text"
+              value={pais}
+              onChange={e => setPais(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="Chile"
+              aria-label="País del titular"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha nacimiento</label>
+            <input
+              type="date"
+              value={fechaNacimiento}
+              onChange={e => setFechaNacimiento(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              aria-label="Fecha de nacimiento del titular"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RAT asociado</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={ratSearch}
+              onChange={e => { setRatSearch(e.target.value); setRatsOpen(true); }}
+              onFocus={() => setRatsOpen(true)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="Buscar RAT..."
+              aria-label="Buscar RAT asociado"
+            />
+            {ratsOpen && rats.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg" style={{ background: 'white', borderColor: '#E5E7EB' }}>
+                {rats.map(r => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => { setRatId(r.id); setRatSearch(r.nombre_proceso); setRatsOpen(false); }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition"
+                  >
+                    {r.nombre_proceso}
+                  </button>
+                ))}
+              </div>
+            )}
+            {ratId && (
+              <button
+                type="button"
+                onClick={() => { setRatId(undefined); setRatSearch(''); }}
+                className="text-xs mt-1"
+                style={{ color: '#2563EB' }}
+              >
+                ✕ Quitar RAT
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre representante</label>
+            <input
+              type="text"
+              value={reprNombre}
+              onChange={e => setReprNombre(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="Nombre del representante legal"
+              aria-label="Nombre del representante"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RUT representante</label>
+            <input
+              type="text"
+              value={reprRut}
+              onChange={e => setReprRut(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="RUT del representante"
+              aria-label="RUT del representante"
+            />
+          </div>
+        </div>
+
+        {duplicateWarning && (
+          <div className="rounded-lg p-3 text-sm" style={{ background: '#FEF9C3', border: '1px solid #EAB308' }}>
+            <p className="font-medium" style={{ color: '#854D0E' }}>{duplicateWarning}</p>
+            {showDuplicados && duplicados.length > 0 && (
+              <div className="mt-2">
+                {duplicados.map(d => (
+                  <div key={d.id} className="text-xs mt-1" style={{ color: '#854D0E' }}>
+                    #{d.id} — {d.tipo} — {d.estado} — {new Date(d.fecha_recepcion || '').toLocaleDateString('es-CL')}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setShowDuplicados(false)}
+                  className="text-xs mt-1 underline"
+                  style={{ color: '#854D0E' }}
+                >
+                  Ocultar
+                </button>
+              </div>
+            )}
+            {!showDuplicados && duplicados.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowDuplicados(true)}
+                className="text-xs mt-1 underline"
+                style={{ color: '#854D0E' }}
+              >
+                Ver detalle
+              </button>
+            )}
+          </div>
+        )}
 
         <div>
           <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Descripción</label>

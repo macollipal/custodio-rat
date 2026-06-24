@@ -5,7 +5,7 @@ Ruta: /tkt-solicitud-derecho/
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field
 from app.database.database import get_db
 from app.routes.deps import get_current_user
@@ -79,10 +79,47 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         prorroga_dias=ticket.prorroga_dias,
         created_by=ticket.created_by,
         created_at=ticket.created_at,
+        representante_nombre=ticket.representante_nombre,
+        representante_rut=ticket.representante_rut,
+        telefono=ticket.telefono,
+        fecha_nacimiento=ticket.fecha_nacimiento,
+        pais=ticket.pais,
         dias_restantes=dias_rest,
         sla_color=sla_color,
         estado_sla=estado_sla,
     ).model_dump()
+
+
+@router.get("/check-duplicado")
+def check_duplicado(
+    email: str,
+    tipo: str,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Detecta posibles solicitudes duplicadas (QW6)."""
+    if current_user.rol_global != "superadmin":
+        empresas = get_empresas_usuario(db, current_user.id)
+        if company_id not in empresas:
+            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa")
+
+    desde = datetime.now(timezone.utc) - timedelta(days=90)
+    query = db.query(TktSolicitudDerecho).filter(
+        TktSolicitudDerecho.titular_email.ilike(email),
+        TktSolicitudDerecho.tipo == tipo,
+        TktSolicitudDerecho.company_id == company_id,
+        TktSolicitudDerecho.fecha_recepcion >= desde,
+    )
+    if current_user.rol_global != "superadmin":
+        query = query.filter(TktSolicitudDerecho.estado.notin_(["rechazado"]))
+
+    duplicados = query.order_by(TktSolicitudDerecho.fecha_recepcion.desc()).limit(5).all()
+    return {
+        "es_duplicado": len(duplicados) > 0,
+        "cantidad": len(duplicados),
+        "solicitudes": [_ticket_to_response(d) for d in duplicados],
+    }
 
 
 @router.get("/dashboard", response_model=TktDashboardResponse)
@@ -139,6 +176,11 @@ def crear_ticket_endpoint(
         descripcion=data.descripcion,
         created_by=current_user.username,
         rat_id=data.rat_id,
+        representante_nombre=data.representante_nombre,
+        representante_rut=data.representante_rut,
+        telefono=data.telefono,
+        fecha_nacimiento=data.fecha_nacimiento,
+        pais=data.pais,
     )
     log_audit(
         db=db,

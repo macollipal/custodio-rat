@@ -294,6 +294,15 @@ export default function SolicitudDerechoPage() {
           >
             Hacer otra solicitud
           </button>
+          {submitResult && (
+            <a
+              href={`/solicitud_derecho/consulta?token=${submitResult.tracking_token}`}
+              className="block mt-3 text-sm font-medium"
+              style={{ color: '#2563EB' }}
+            >
+              🔍 Consultar estado de mi solicitud
+            </a>
+          )}
         </div>
       </div>
     );
@@ -307,6 +316,17 @@ export default function SolicitudDerechoPage() {
           <p className="text-base" style={{ color: '#6B7280' }}>
             Ley 21.719 — Protección de Datos Personales de Chile
           </p>
+          <div
+            className="mt-4 rounded-lg p-3 text-xs text-left"
+            style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E40AF' }}
+            role="note"
+            aria-label="Aviso de privacidad"
+          >
+            <p className="font-semibold mb-1">🔒 Aviso de privacidad</p>
+            <p>
+              Los datos personales que proporcionés serán tratados únicamente para gestionar tu solicitud de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición, Bloqueo y Portabilidad) conforme a la Ley 21.719. No se compartirán con terceros sin tu consentimiento, salvo obligación legal.
+            </p>
+          </div>
           <div className="mt-3 flex items-center justify-center gap-2">
             {['1', '2'].map(s => (
               <div key={s} className="flex items-center gap-2">

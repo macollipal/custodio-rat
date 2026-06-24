@@ -22,6 +22,11 @@ class TktTicketCreate(BaseModel):
     rut_titular: Optional[str] = None
     descripcion: Optional[str] = None
     rat_id: Optional[int] = None
+    telefono: Optional[str] = Field(default=None, max_length=50)
+    fecha_nacimiento: Optional[str] = Field(default=None, description="YYYY-MM-DD")
+    pais: Optional[str] = Field(default=None, max_length=100)
+    representante_nombre: Optional[str] = Field(default=None, max_length=255)
+    representante_rut: Optional[str] = Field(default=None, max_length=20)
 
 
 class TktTicketUpdate(BaseModel):
@@ -84,6 +89,11 @@ class TktTicketResponse(BaseModel):
     prorroga_dias: Optional[int]
     created_by: Optional[str]
     created_at: Optional[datetime]
+    representante_nombre: Optional[str] = None
+    representante_rut: Optional[str] = None
+    telefono: Optional[str] = None
+    fecha_nacimiento: Optional[datetime] = None
+    pais: Optional[str] = None
     dias_restantes: Optional[int] = None
     sla_color: Optional[str] = None
     estado_sla: Optional[str] = None
