@@ -11,8 +11,18 @@
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
 | 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
+| 2026-06-24 | Cierre sesión v1.7 | ✅ Documentación | 9.0/10 |
 | 2026-06-15 | Cierre sesión v1.6-BETA | ✅ Activo | 8.7/10 |
 | 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
+
+### 2026-06-24 — Cierre sesión v1.7
+- **Estado:** ✅ Documentación generada
+- **Score:** 9.0/10 (8.7/10 → 9.0/10)
+- **Tema:** Sprint 1 FORMADMIN ARCO + Sprint 2 SLA Alert T-2d + Export CSV/Excel/PDF
+- **Commits:** `175e2c0` (Sprint 2), `09aebce` (Sprint 1), `73e39d5` (migración), `e0f98f2` (UX)
+- **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
+- **Carpeta:** `2026-06-24_auditoria_v1.7/`
+- **Gap cerrado:** G1 (doc 08 API estaba en v1.4, ahora en v1.7)
 
 ### 2026-06-15 — Cierre sesión v1.6-BETA
 - **Estado:** ✅ Documentación generada
@@ -82,6 +92,11 @@
 
 ## Ver También
 
+- [AUDITORIA_V1.7.md](2026-06-24_auditoria_v1.7/AUDITORIA_V1.7.md)
+- [HALLAZGOS.md](2026-06-24_auditoria_v1.7/HALLAZGOS.md)
+- [CIERRE_SESION_v1.7.md](2026-06-24_auditoria_v1.7/CIERRE_SESION_v1.7.md)
+- [INVENTARIO_v1.7.md](2026-06-24_auditoria_v1.7/INVENTARIO_v1.7.md)
+- [diff_codigo_vs_docs.md](2026-06-24_auditoria_v1.7/diff_codigo_vs_docs.md)
 - [AUDITORIA_V1.5.md](2026-06-14_auditoria_v1.5/AUDITORIA_V1.5.md)
 - [AUDITORIA_V1.4.md](2026-06-12_auditoria_v1.4/AUDITORIA_V1.4.md)
 - [HALLAZGOS.md](2026-06-12_auditoria_v1.4/HALLAZGOS.md)
@@ -92,4 +107,4 @@
 
 ---
 
-*Última actualización: 2026-06-15*
+*Última actualización: 2026-06-24*
