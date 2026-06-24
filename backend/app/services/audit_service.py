@@ -7,6 +7,7 @@ Implementa hash chain para inmutabilidad (Art. 12 Ley 21.719).
 import hashlib
 import json
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -16,6 +17,32 @@ from sqlalchemy import text, func
 from app.models.audit_log import AuditLog, GENESIS_HASH
 
 logger = logging.getLogger(__name__)
+
+_EMAIL_RE = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+', re.IGNORECASE)
+_RUT_RE = re.compile(r'\b\d{1,2}\.\d{3}\.\d{3}[-][\dkK]\b')
+_RUN_RE = re.compile(r'\b\d{7,8}-[\dkK]\b')
+_IP_RE = re.compile(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b')
+
+
+def _mask_pii_value(v: str) -> str:
+    if _EMAIL_RE.search(v):
+        return re.sub(_EMAIL_RE, lambda m: f"{m.group()[0]}***@{m.group().rsplit('@', 1)[1]}", v)
+    if _RUT_RE.search(v) or _RUN_RE.search(v):
+        return _RUT_RE.sub(lambda m: f"{m.group()[:-2]}-*", v)
+    if _IP_RE.fullmatch(v):
+        parts = v.split('.')
+        return f"***.***.***.{parts[3]}"
+    return v
+
+
+def _sanitize_pii(obj):
+    if isinstance(obj, dict):
+        return {k: _sanitize_pii(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_pii(item) for item in obj]
+    if isinstance(obj, str):
+        return _mask_pii_value(obj)
+    return obj
 
 
 def _compute_hash(prev_hash: str, timestamp: datetime, accion: str, entidad: str,
@@ -59,7 +86,7 @@ def log_audit(
         prev_hash = last_log.hash
 
     timestamp = datetime.now(timezone.utc)
-    detalle_str = json.dumps(detalle, ensure_ascii=False, default=str)
+    detalle_str = json.dumps(_sanitize_pii(detalle), ensure_ascii=False, default=str)
 
     record_hash = _compute_hash(
         prev_hash, timestamp, accion, entidad, entidad_id, usuario, detalle_str
