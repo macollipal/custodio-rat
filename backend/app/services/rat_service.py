@@ -119,11 +119,13 @@ def _procesar_archivo_base_legal(data: dict) -> dict:
 
     try:
         from app.core.storage import get_storage_backend, generate_object_name
+        from app.core.crypto import encrypt
         backend = get_storage_backend()
         object_name = generate_object_name("rats", nombre)
         content_type = tipo or "application/octet-stream"
-        url = backend.upload(datos, object_name, content_type)
-        logger.info(f"Archivo RAT migrado a OCI (sin cifrar — OCI usa su propia seguridad en esta fase): {object_name}")
+        datos_cifrados = encrypt(datos)
+        url = backend.upload(datos_cifrados, object_name, content_type)
+        logger.info(f"Archivo RAT cifrado y migrado a OCI: {object_name}")
         return {
             "archivo_base_legal_storage_url": url,
             "archivo_base_legal_hash": hash_val,
@@ -188,10 +190,51 @@ def _validar_contrato_encargado(db: Session, rat: RAT) -> None:
         )
 
 
+def _validar_eipd_obligatoria(data: dict) -> None:
+    """Valida EIPD obligatoria si datos_sensibles=True o transferencia_internacional=True (Arts. 15 bis y 28 Ley 21.719).
+
+    Si el RAT declara datos sensibles o transferencia internacional, debe existir una EIPD
+    completada antes de treat the data. El RAT queda bloqueado en BORRADOR hasta que se complete la EIPD.
+    """
+    datos_sensibles = data.get("datos_sensibles", False)
+    transferencia_internacional = data.get("transferencia_internacional", False)
+
+    if not (datos_sensibles or transferencia_internacional):
+        return
+
+    estado_eipd = data.get("estado_eipd", "no_requerida")
+    evaluacion_impacto = data.get("evaluacion_impacto", False)
+
+    if estado_eipd == "no_requerida":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Este RAT trata datos sensibles o declara transferencia internacional y requiere "
+                "una Evaluación de Impacto en la Protección de Datos (EIPD) conforme al Art. 15 bis "
+                "de la Ley 21.719. Debes iniciar la EIPD antes de treat these datos. "
+                "Creá la EIPD mediante POST /eipd/ vinculada a este RAT."
+            ),
+        )
+
+    if not evaluacion_impacto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Este RAT trata datos sensibles o declara transferencia internacional y requiere "
+                "que evaluacion_impacto=True (Art. 15 bis Ley 21.719). "
+                "No se puede aprobar un RAT con datos sensibles o transferencias internacionales "
+                "sin documentar la evaluación de impacto."
+            ),
+        )
+
+
 def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     from app.models.company import Company
     if not db.query(Company).filter(Company.id == data.company_id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
+
+    datos = data.model_dump()
+    _validar_eipd_obligatoria(datos)
 
     datos = data.model_dump()
     archivo_fields = _procesar_archivo_base_legal(datos)
@@ -244,6 +287,11 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
 
     if cambios.get("nombre_encargado") and not _tiene_contrato_encargado_activo(db, rat_id):
         _validar_contrato_encargado(db, rat)
+
+    rat_dict_validacion = {c.name: getattr(rat, c.name) for c in rat.__table__.columns}
+    rat_dict_validacion.update(cambios)
+    if rat_dict_validacion.get("datos_sensibles") or rat_dict_validacion.get("transferencia_internacional"):
+        _validar_eipd_obligatoria(rat_dict_validacion)
 
     log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
     db.commit()
@@ -299,22 +347,14 @@ def download_rat_file(db: Session, rat_id: int, usuario: str, ip_origen: Optiona
         from app.core.storage import get_storage_backend
         backend = get_storage_backend()
 
-        # Intento 1: PAR (pre-signed URL pública)
-        if hasattr(backend, 'create_presigned_url'):
-            try:
-                presigned_url = backend.create_presigned_url(storage_url, expires_in_seconds=300)
-                return {
-                    "type": "presigned_url",
-                    "url": presigned_url,
-                    "nombre": nombre,
-                    "content_type": rat.archivo_base_legal_tipo or "application/pdf",
-                }
-            except Exception as e:
-                logger.warning(f"PAR generation failed, trying direct download: {e}")
-
-        # Intento 2: Download directo desde OCI (request firmado con API key)
+        # Download directo desde OCI (request firmado con API key) + descifrado.
+        # No se usa pre-signed URL porque los archivos ahora se suben cifrados a OCI
+        # (cifrado E2E con Fernet via ENCRYPTION_KEY). La pre-signed URL entregaria
+        # ciphertext illegible para el usuario.
         try:
+            from app.core.crypto import decrypt
             content = backend.download(storage_url)
+            content = decrypt(content)
             return {
                 "type": "bytes",
                 "content": base64.b64encode(content).decode(),

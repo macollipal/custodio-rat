@@ -30,13 +30,18 @@ def _generate_token(db: Session, ip_address: Optional[str] = None) -> str:
 
 
 def _validate_token(db: Session, token: str) -> bool:
-    result = db.query(SolicitudToken).filter(
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(minutes=5)
+    row = db.query(SolicitudToken).filter(
         SolicitudToken.token == token,
         SolicitudToken.used == False,
-        SolicitudToken.created_at > datetime.now(timezone.utc) - timedelta(minutes=5)
-    ).update({SolicitudToken.used: True})
-    db.commit()
-    return result > 0
+        SolicitudToken.created_at > cutoff
+    ).first()
+    if not row:
+        return False
+    row.used = True
+    db.flush()
+    return True
 
 
 class SolicitudCreate(BaseModel):
@@ -171,7 +176,7 @@ async def crear_solicitud(
 
     company = db.query(Company).filter(Company.id == company_id_int).first()
     if not company:
-        return JSONResponse(status_code=404, content={"detail": "Empresa no encontrada"})
+        return JSONResponse(status_code=400, content={"detail": "Datos inválidos. Verificá los datos ingresados e intentá de nuevo."})
 
     ahora = datetime.now(timezone.utc)
 
@@ -363,13 +368,18 @@ def responder_solicitud(
 ):
     from datetime import datetime, timezone
 
-    s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
-    if not s:
-        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
-        if s.company_id not in empresas:
+        s = db.query(SolicitudDerecho).filter(
+            SolicitudDerecho.id == solicitud_id,
+            SolicitudDerecho.company_id.in_(empresas)
+        ).first()
+        if not s:
             raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
+    else:
+        s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
+        if not s:
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada")
 
     historial = SolicitudHistorial(
         solicitud_id=s.id,

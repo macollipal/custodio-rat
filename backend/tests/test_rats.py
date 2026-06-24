@@ -36,7 +36,7 @@ class TestCrearRAT:
         assert resp.status_code in (404, 400)
 
     def test_crear_rat_con_datos_sensibles(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "datos_sensibles": True, "evaluacion_impacto": True}
+        payload = {**rat_base, "datos_sensibles": True, "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         data = resp.json()
@@ -44,7 +44,7 @@ class TestCrearRAT:
         assert data["evaluacion_impacto"] is True
 
     def test_crear_rat_con_transferencia_internacional(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "transferencia_internacional": True, "pais_destino": "Estados Unidos"}
+        payload = {**rat_base, "transferencia_internacional": True, "evaluacion_impacto": True, "estado_eipd": "pendiente", "pais_destino": "Estados Unidos"}
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         assert resp.json()["pais_destino"] == "Estados Unidos"
@@ -204,7 +204,8 @@ class TestCompletitud:
             "pais_destino": "España",
             "garantias_transferencia_int": "Cláusulas Contractuales Tipo (SCC)",
             "datos_sensibles": False,
-            "evaluacion_impacto": False,
+            "evaluacion_impacto": True,
+            "estado_eipd": "pendiente",
             "decisiones_automatizadas": False,
             "observaciones_auditoria": "Proceso auditado y aprobado",
             "transferencia_datos": "Proveedor de email marketing",
