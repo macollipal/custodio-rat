@@ -110,6 +110,7 @@ export default function ConsentimientosPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
+          aria-label="Crear nuevo consentimiento"
           className="px-4 py-2 rounded-lg text-white font-medium text-sm"
           style={{ background: '#2563EB' }}
         >
@@ -136,6 +137,7 @@ export default function ConsentimientosPage() {
         <select
           value={filtroRat}
           onChange={(e) => setFiltroRat(e.target.value)}
+          aria-label="Filtrar consentimientos por RAT"
           className="px-3 py-2 border rounded-lg text-sm"
         >
           <option value="">Todos los RATs</option>
@@ -150,6 +152,7 @@ export default function ConsentimientosPage() {
             type="checkbox"
             checked={soloActivos}
             onChange={(e) => setSoloActivos(e.target.checked)}
+            aria-label="Mostrar solo consentimientos activos"
           />
           Solo activos
         </label>
@@ -214,6 +217,7 @@ export default function ConsentimientosPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setDetail(c)}
+                          aria-label={`Ver detalle de consentimiento de ${c.nombre_titular}`}
                           className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
                         >
                           Ver
@@ -221,6 +225,7 @@ export default function ConsentimientosPage() {
                         {c.activo && (
                           <button
                             onClick={() => handleRevoke(c)}
+                            aria-label={`Revocar consentimiento de ${c.nombre_titular}`}
                             className="text-xs px-2 py-1 rounded text-red-700 hover:bg-red-50"
                           >
                             Revocar
@@ -335,18 +340,21 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre del titular *</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="consent-nombre">Nombre del titular *</label>
             <input
+              id="consent-nombre"
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg"
+              aria-required="true"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Email del titular</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="consent-email">Email del titular</label>
             <input
+              id="consent-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -354,11 +362,13 @@ function CreateConsentimientoModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Canal de obtención *</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="consent-canal">Canal de obtención *</label>
             <select
+              id="consent-canal"
               value={canal}
               onChange={(e) => setCanal(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg"
+              aria-required="true"
             >
               {Object.entries(CANAL_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -366,13 +376,15 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Texto del consentimiento *</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="consent-texto">Texto del consentimiento *</label>
             <textarea
+              id="consent-texto"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border rounded-lg"
               placeholder="Por medio del presente autorizo el tratamiento de mis datos personales para..."
+              aria-required="true"
               required
             />
           </div>
@@ -380,6 +392,7 @@ function CreateConsentimientoModal({
             <button
               type="button"
               onClick={onClose}
+              aria-label="Cancelar creacion de consentimiento"
               className="px-4 py-2 rounded-lg border"
             >
               Cancelar
@@ -387,6 +400,7 @@ function CreateConsentimientoModal({
             <button
               type="submit"
               disabled={saving}
+              aria-label="Guardar consentimiento"
               className="px-4 py-2 rounded-lg text-white font-medium"
               style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
             >

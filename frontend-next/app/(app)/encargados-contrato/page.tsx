@@ -24,6 +24,8 @@ function fmtDate(val: string | null | undefined): string {
 
 interface FormData {
   nombre_encargado: string;
+  pais: string;
+  direccion: string;
   objeto: string;
   duracion_inicio: string;
   duracion_fin: string;
@@ -44,7 +46,7 @@ export default function EncargadosContratoPage() {
   const [editItem, setEditItem] = useState<EncargadoContrato | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormData>({
-    nombre_encargado: '', objeto: '', duracion_inicio: '', duracion_fin: '',
+    nombre_encargado: '', pais: '', direccion: '', objeto: '', duracion_inicio: '', duracion_fin: '',
     finalidad: '', tipo_datos: '', categorias_titulares: '', derechos_obligaciones: '',
     rat_id: '', activo: true,
   });
@@ -75,7 +77,7 @@ export default function EncargadosContratoPage() {
   function openNew() {
     setEditItem(null);
     setForm({
-      nombre_encargado: '', objeto: '', duracion_inicio: '', duracion_fin: '',
+      nombre_encargado: '', pais: '', direccion: '', objeto: '', duracion_inicio: '', duracion_fin: '',
       finalidad: '', tipo_datos: '', categorias_titulares: '', derechos_obligaciones: '',
       rat_id: '', activo: true,
     });
@@ -86,6 +88,8 @@ export default function EncargadosContratoPage() {
     setEditItem(c);
     setForm({
       nombre_encargado: c.nombre_encargado,
+      pais: c.pais ?? '',
+      direccion: c.direccion ?? '',
       objeto: c.objeto,
       duracion_inicio: c.duracion_inicio ? c.duracion_inicio.split('T')[0] : '',
       duracion_fin: c.duracion_fin ? c.duracion_fin.split('T')[0] : '',
@@ -101,6 +105,8 @@ export default function EncargadosContratoPage() {
 
   async function handleSave() {
     if (!form.nombre_encargado.trim()) { toast.error('El nombre del encargado es obligatorio.'); return; }
+    if (!form.pais.trim()) { toast.error('El pais del encargado es obligatorio.'); return; }
+    if (!form.direccion.trim()) { toast.error('La direccion del encargado es obligatoria.'); return; }
     if (!form.objeto.trim()) { toast.error('El objeto del contrato es obligatorio.'); return; }
     if (!form.duracion_inicio) { toast.error('La fecha de inicio es obligatoria.'); return; }
     if (!form.finalidad.trim()) { toast.error('La finalidad es obligatoria.'); return; }
@@ -112,6 +118,8 @@ export default function EncargadosContratoPage() {
       const payload = {
         company_id: company!.id,
         nombre_encargado: form.nombre_encargado.trim(),
+        pais: form.pais.trim(),
+        direccion: form.direccion.trim(),
         objeto: form.objeto.trim(),
         duracion_inicio: new Date(form.duracion_inicio).toISOString(),
         duracion_fin: form.duracion_fin ? new Date(form.duracion_fin).toISOString() : undefined,
@@ -162,6 +170,7 @@ export default function EncargadosContratoPage() {
         </div>
         <button
           onClick={openNew}
+          aria-label="Crear nuevo contrato de encargado"
           className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
           style={{ background: '#2563EB' }}
         >
@@ -203,8 +212,8 @@ export default function EncargadosContratoPage() {
                 <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>{c.finalidad}</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => openEdit(c)} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Editar</button>
-                <button onClick={() => handleDelete(c.id)} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-red-50" style={{ borderColor: '#FCA5A5', color: '#DC2626' }}>Eliminar</button>
+                <button onClick={() => openEdit(c)} aria-label={`Editar contrato ${c.nombre_encargado}`} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Editar</button>
+                <button onClick={() => handleDelete(c.id)} aria-label={`Eliminar contrato ${c.nombre_encargado}`} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-red-50" style={{ borderColor: '#FCA5A5', color: '#DC2626' }}>Eliminar</button>
               </div>
             </div>
           ))}
@@ -220,61 +229,83 @@ export default function EncargadosContratoPage() {
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre del Encargado *</label>
-            <input value={form.nombre_encargado} onChange={e => set('nombre_encargado', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Razón social o nombre completo" />
+            <input value={form.nombre_encargado} onChange={e => set('nombre_encargado', e.target.value)} aria-label="Nombre del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Razón social o nombre completo" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Pais *</label>
+              <select value={form.pais} onChange={e => set('pais', e.target.value)} aria-label="Pais del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }}>
+                <option value="">Seleccionar pais</option>
+                <option value="CL">Chile</option>
+                <option value="AR">Argentina</option>
+                <option value="BR">Brasil</option>
+                <option value="CO">Colombia</option>
+                <option value="ES">Espana</option>
+                <option value="MX">Mexico</option>
+                <option value="PE">Peru</option>
+                <option value="US">Estados Unidos</option>
+                <option value="OT">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Direccion *</label>
+              <input value={form.direccion} onChange={e => set('direccion', e.target.value)} aria-label="Direccion del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Calle, numero, ciudad" />
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Objeto del Tratamiento *</label>
-            <textarea value={form.objeto} onChange={e => set('objeto', e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Describe el objeto del contrato de encargo..." />
+            <textarea value={form.objeto} onChange={e => set('objeto', e.target.value)} rows={3} aria-label="Objeto del tratamiento" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Describe el objeto del contrato de encargo..." />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha Inicio *</label>
-              <input type="date" value={form.duracion_inicio} onChange={e => set('duracion_inicio', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
+              <input type="date" value={form.duracion_inicio} onChange={e => set('duracion_inicio', e.target.value)} aria-label="Fecha de inicio del contrato" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
             </div>
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha Fin</label>
-              <input type="date" value={form.duracion_fin} onChange={e => set('duracion_fin', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
+              <input type="date" value={form.duracion_fin} onChange={e => set('duracion_fin', e.target.value)} aria-label="Fecha de fin del contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Finalidad</label>
-            <input value={form.finalidad} onChange={e => set('finalidad', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Finalidad del tratamiento" />
+            <input value={form.finalidad} onChange={e => set('finalidad', e.target.value)} aria-label="Finalidad del tratamiento" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Finalidad del tratamiento" />
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Tipo de Datos</label>
-            <input value={form.tipo_datos} onChange={e => set('tipo_datos', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Datos identificativos, financieros..." />
+            <input value={form.tipo_datos} onChange={e => set('tipo_datos', e.target.value)} aria-label="Tipo de datos tratados" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Datos identificativos, financieros..." />
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Categorías de Titulares</label>
-            <input value={form.categorias_titulares} onChange={e => set('categorias_titulares', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Trabajadores, clientes..." />
+            <input value={form.categorias_titulares} onChange={e => set('categorias_titulares', e.target.value)} aria-label="Categorias de titulares" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Trabajadores, clientes..." />
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Derechos y Obligaciones</label>
-            <textarea value={form.derechos_obligaciones} onChange={e => set('derechos_obligaciones', e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Derechos del responsable y obligaciones del encargado..." />
+            <textarea value={form.derechos_obligaciones} onChange={e => set('derechos_obligaciones', e.target.value)} rows={2} aria-label="Derechos y obligaciones del contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Derechos del responsable y obligaciones del encargado..." />
           </div>
 
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RAT Asociado</label>
-            <select value={form.rat_id} onChange={e => set('rat_id', e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }}>
+            <select value={form.rat_id} onChange={e => set('rat_id', e.target.value)} aria-label="RAT asociado al contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }}>
               <option value="">Sin RAT asociado</option>
               {rats.map(r => <option key={r.id} value={r.id}>{r.nombre_proceso}</option>)}
             </select>
           </div>
 
           <label className="flex items-center gap-2 text-sm" style={{ color: '#374151' }}>
-            <input type="checkbox" checked={form.activo} onChange={e => set('activo', e.target.checked)} />
+            <input type="checkbox" checked={form.activo} onChange={e => set('activo', e.target.checked)} aria-label="Contrato activo" />
             Contrato activo
           </label>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setDrawerOpen(false)} className="flex-1 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-            <button onClick={handleSave} disabled={saving} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: '#2563EB' }}>
+            <button onClick={() => setDrawerOpen(false)} aria-label="Cancelar creacion de contrato" className="flex-1 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
+            <button onClick={handleSave} disabled={saving} aria-label="Guardar contrato de encargado" className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: '#2563EB' }}>
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
           </div>

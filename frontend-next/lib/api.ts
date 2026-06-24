@@ -819,6 +819,8 @@ export interface EncargadoContrato {
   company_id: number;
   rat_id?: number;
   nombre_encargado: string;
+  pais?: string;
+  direccion?: string;
   objeto: string;
   duracion_inicio: string;
   duracion_fin?: string;

@@ -7,6 +7,8 @@ class EncargadoContratoCreate(BaseModel):
     company_id: int
     rat_id: Optional[int] = None
     nombre_encargado: str
+    pais: Optional[str] = None
+    direccion: Optional[str] = None
     objeto: str
     duracion_inicio: datetime
     duracion_fin: Optional[datetime] = None
@@ -20,6 +22,8 @@ class EncargadoContratoCreate(BaseModel):
 
 
 class EncargadoContratoUpdate(BaseModel):
+    pais: Optional[str] = None
+    direccion: Optional[str] = None
     objeto: Optional[str] = None
     duracion_inicio: Optional[datetime] = None
     duracion_fin: Optional[datetime] = None
@@ -38,6 +42,8 @@ class EncargadoContratoOut(BaseModel):
     company_id: int
     rat_id: Optional[int] = None
     nombre_encargado: str
+    pais: Optional[str] = None
+    direccion: Optional[str] = None
     objeto: str
     duracion_inicio: datetime
     duracion_fin: Optional[datetime] = None

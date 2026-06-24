@@ -154,12 +154,12 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
             <label htmlFor="filtroSensibles" className="text-xs" style={{ color: '#6B7280' }}>Solo con datos sensibles</label>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs" style={{ color: '#6B7280' }}>Buscar</label>
-            <input type="text" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar proceso..." className="px-3.5 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 180 }} />
+            <label className="text-xs" htmlFor="rat-buscar" style={{ color: '#6B7280' }}>Buscar</label>
+            <input id="rat-buscar" type="text" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar proceso..." aria-label="Buscar procesos RAT" className="px-3.5 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 180 }} />
           </div>
           <div className="flex gap-2 pb-1">
-            <button onClick={aplicarFiltros} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar</button>
-            {filtersActive && <button onClick={limpiarFiltros} className="px-4 py-2 rounded-lg text-sm font-semibold border transition" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Limpiar</button>}
+            <button onClick={aplicarFiltros} aria-label="Aplicar filtros de busqueda" className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar</button>
+            {filtersActive && <button onClick={limpiarFiltros} aria-label="Limpiar filtros aplicados" className="px-4 py-2 rounded-lg text-sm font-semibold border transition" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Limpiar</button>}
           </div>
         </div>
       </details>

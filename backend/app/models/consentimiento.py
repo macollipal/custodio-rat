@@ -1,10 +1,14 @@
 """
 Modelo de Consentimiento de Titulares de Datos Personales.
+
+PII fields (nombre_titular, email_titular) se almacenan cifrados con Fernet
+en columnas *_cipher BYTEA. La columna legacy (String) queda nullable para
+backward compatibility durante la transicion (Arts. 11, 19 Ley 21.719).
 """
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -36,6 +40,11 @@ class Consentimiento(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    nombre_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    email_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    texto_consentimiento_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    ip_origen_masked: Mapped[str] = mapped_column(String(18), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="consentimientos")  # noqa: F821
     rat: Mapped["RAT"] = relationship("RAT", back_populates="consentimientos")  # noqa: F821

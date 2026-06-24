@@ -72,3 +72,31 @@ class AsesorChunk(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class AsesorConversacion(Base):
+    """Registro de conversaciones con el Asesor IA (Arts. 19, 20 Ley 21.719).
+
+    Permite trazabilidad de las consultas y respuestas generadas por el LLM
+    para demostrar compliance ante la autoridad.
+    """
+    __tablename__ = "asesor_conversaciones"
+    __table_args__ = (
+        Index("ix_asesor_conversaciones_user", "user_id"),
+        Index("ix_asesor_conversaciones_company", "company_id"),
+        Index("ix_asesor_conversaciones_created", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    sources_json: Mapped[str] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    provider: Mapped[str] = mapped_column(String(50), nullable=True)
+    embedding_provider: Mapped[str] = mapped_column(String(50), nullable=True)
+    ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
