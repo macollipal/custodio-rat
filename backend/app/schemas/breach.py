@@ -18,6 +18,7 @@ class BreachBase(BaseModel):
     incluye_datos_sensibles: Optional[bool] = False
     incluye_datos_nna: Optional[bool] = False
     incluye_datos_financieros: Optional[bool] = False
+    naturaleza: Optional[Literal["confidencialidad", "integridad", "disponibilidad"]] = None
 
 
 class BreachCreate(BreachBase):
@@ -39,6 +40,7 @@ class BreachUpdate(BaseModel):
     incluye_datos_sensibles: Optional[bool] = None
     incluye_datos_nna: Optional[bool] = None
     incluye_datos_financieros: Optional[bool] = None
+    naturaleza: Optional[Literal["confidencialidad", "integridad", "disponibilidad"]] = None
 
 
 class BreachOut(BreachBase):
@@ -50,6 +52,7 @@ class BreachOut(BreachBase):
     horas_desde_deteccion: Optional[float] = None
     plazo_apdc_vencido: Optional[bool] = None
     reportable_apdc_calculado: Optional[bool] = None
+    naturaleza: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

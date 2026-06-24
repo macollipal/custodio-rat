@@ -5,7 +5,7 @@ Plazos: notificación APDC en 72 horas; titulares sin dilación si son datos sen
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -16,6 +16,12 @@ class NivelRiesgo(str, PyEnum):
     MEDIO = "medio"
     ALTO = "alto"
     CRITICO = "critico"
+
+
+class NaturalezaBreach(str, PyEnum):
+    CONFIDENCIALIDAD = "confidencialidad"
+    INTEGRIDAD = "integridad"
+    DISPONIBILIDAD = "disponibilidad"
 
 
 class SecurityBreach(Base):
@@ -48,6 +54,11 @@ class SecurityBreach(Base):
     incluye_datos_nna: Mapped[bool] = mapped_column(Boolean, default=False)
     incluye_datos_financieros: Mapped[bool] = mapped_column(Boolean, default=False)
     reportable_apdc_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Naturaleza de la brecha (Art. 14 bis) — requerida para notificacion APDP completa
+    naturaleza: Mapped[NaturalezaBreach] = mapped_column(
+        SAEnum(NaturalezaBreach), nullable=True
+    )
 
     creado_por: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

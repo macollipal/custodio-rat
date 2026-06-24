@@ -13,6 +13,9 @@ class EIPDOut(BaseModel):
     riesgos_identificados: Optional[str] = None
     medidas_propuestas: Optional[str] = None
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_aprobacion: Optional[date] = None
     resultado: str
@@ -31,6 +34,9 @@ class EIPDCreate(BaseModel):
     riesgos_identificados: Optional[str] = None
     medidas_propuestas: Optional[str] = None
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_aprobacion: Optional[date] = None
     resultado: str = "en_proceso"
@@ -43,6 +49,9 @@ class EIPDUpdate(BaseModel):
     riesgos_identificados: Optional[str] = None
     medidas_propuestas: Optional[str] = None
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_approbacion: Optional[date] = None
     resultado: Optional[str] = None

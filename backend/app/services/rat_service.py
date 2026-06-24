@@ -195,6 +195,8 @@ def _validar_eipd_obligatoria(data: dict) -> None:
 
     Si el RAT declara datos sensibles o transferencia internacional, debe existir una EIPD
     completada antes de treat the data. El RAT queda bloqueado en BORRADOR hasta que se complete la EIPD.
+
+    Acepta resultado='no_requerida_justificada' con justificacion_no_aplica (>=20 chars) como excepcion documentada.
     """
     datos_sensibles = data.get("datos_sensibles", False)
     transferencia_internacional = data.get("transferencia_internacional", False)
@@ -204,6 +206,7 @@ def _validar_eipd_obligatoria(data: dict) -> None:
 
     estado_eipd = data.get("estado_eipd", "no_requerida")
     evaluacion_impacto = data.get("evaluacion_impacto", False)
+    justificacion = (data.get("justificacion_no_aplica") or "").strip()
 
     if estado_eipd == "no_requerida":
         raise HTTPException(
@@ -215,6 +218,17 @@ def _validar_eipd_obligatoria(data: dict) -> None:
                 "Creá la EIPD mediante POST /eipd/ vinculada a este RAT."
             ),
         )
+
+    if estado_eipd == "no_requerida_justificada":
+        if len(justificacion) < 20:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Para que el resultado EIPD sea 'no_requerida_justificada' debe ingresar una "
+                    "justificacion documentada de al menos 20 caracteres (Art. 15 bis Ley 21.719)."
+                ),
+            )
+        return
 
     if not evaluacion_impacto:
         raise HTTPException(

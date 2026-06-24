@@ -29,6 +29,7 @@ interface BreachFormData {
   rats_afectados: string;
   datos_comprometidos: string;
   medidas_adoptadas: string;
+  naturaleza: '' | 'confidencialidad' | 'integridad' | 'disponibilidad';
   notificado_apdc: boolean;
   notificado_titulares: boolean;
   volumen_titulares_afectados: number;
@@ -54,6 +55,7 @@ function BreachForm({
     rats_afectados: initial?.rats_afectados ?? '',
     datos_comprometidos: initial?.datos_comprometidos ?? '',
     medidas_adoptadas: initial?.medidas_adoptadas ?? '',
+    naturaleza: (initial?.naturaleza as BreachFormData['naturaleza']) ?? '',
     notificado_apdc: initial?.notificado_apdc ?? false,
     notificado_titulares: initial?.notificado_titulares ?? false,
     volumen_titulares_afectados: initial?.volumen_titulares_afectados ?? 0,
@@ -142,6 +144,23 @@ function BreachForm({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Naturaleza de la brecha (Art. 14 bis) *</label>
+        <select
+          value={form.naturaleza}
+          onChange={e => set('naturaleza', e.target.value)}
+          className={inputCls}
+          style={inputStyle}
+          aria-label="Naturaleza de la brecha"
+        >
+          <option value="">— Seleccione la naturaleza —</option>
+          <option value="confidencialidad">Confidencialidad — acceso no autorizado a datos</option>
+          <option value="integridad">Integridad — modificación no autorizada de datos</option>
+          <option value="disponibilidad">Disponibilidad — indisponibilidad de datos/sistemas</option>
+        </select>
+        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Requerido por Art. 14 bis para notificación APDC.</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-3 rounded-lg p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -216,6 +235,7 @@ function BreachForm({
           onClick={() => {
             if (!form.descripcion.trim()) { toast.error('La descripción es obligatoria.'); return; }
             if (!form.fecha_deteccion) { toast.error('La fecha de detección es obligatoria.'); return; }
+            if (!form.naturaleza) { toast.error('Debe seleccionar la naturaleza de la brecha.'); return; }
             onSave(form);
           }}
           disabled={saving}
@@ -267,6 +287,7 @@ export default function BreachesPage() {
         rats_afectados: data.rats_afectados || undefined,
         datos_comprometidos: data.datos_comprometidos || undefined,
         medidas_adoptadas: data.medidas_adoptadas || undefined,
+        naturaleza: data.naturaleza,
         notificado_apdc: data.notificado_apdc,
         notificado_titulares: data.notificado_titulares,
         volumen_titulares_afectados: data.volumen_titulares_afectados,

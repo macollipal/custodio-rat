@@ -24,6 +24,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 from app.models.rat import RAT
 from app.models.company import Company
+from app.core.pii import sanitize_pii
 
 
 _DANGEROUS_CSV_PREFIXES = ("=", "+", "-", "\t", "\r")
@@ -87,8 +88,10 @@ def exportar_csv(rats: list[RAT]) -> bytes:
                 value = value.strftime("%d/%m/%Y %H:%M")
             elif hasattr(value, "value"):  # Enum
                 value = value.value
-            value = sanitize_csv_value(value or "")
-            fila.append(value)
+            text_value = value if isinstance(value, str) else (str(value) if value is not None else "")
+            text_value = sanitize_pii(text_value)
+            text_value = sanitize_csv_value(text_value)
+            fila.append(text_value)
         writer.writerow(fila)
 
     return ("\ufeff" + output.getvalue()).encode("utf-8")
@@ -170,9 +173,9 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
     for i, rat in enumerate(rats, 1):
         resumen_data.append([
             str(i),
-            _truncar(rat.nombre_proceso, 30),
-            _truncar(rat.categoria_datos, 35),
-            _truncar(rat.base_legal, 25),
+            _truncar(sanitize_pii(rat.nombre_proceso or ""), 30),
+            _truncar(sanitize_pii(rat.categoria_datos or ""), 35),
+            _truncar(sanitize_pii(rat.base_legal or ""), 25),
             rat.estado.value.upper(),
             "SÍ" if rat.datos_sensibles else "No",
         ])
@@ -203,21 +206,21 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         story.append(Spacer(1, 0.2 * cm))
 
         campos_ficha = [
-            ("Categoría de Datos Tratados", rat.categoria_datos),
-            ("Categorías de Titulares", rat.categoria_titulares or "No especificadas"),
-            ("Finalidad del Tratamiento", rat.finalidad),
-            ("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", rat.base_legal),
-            ("Fuente de los Datos", rat.fuente_datos),
-            ("Transferencia o Comunicación de Datos", rat.transferencia_datos or "No aplica"),
-            ("Plazo de Retención", rat.plazo_retencion),
-            ("Medidas de Seguridad", rat.medidas_seguridad or "No especificadas"),
-            ("Destinatarios / Encargados del Tratamiento", rat.destinatarios or "No especificados"),
+            ("Categoría de Datos Tratados", sanitize_pii(rat.categoria_datos)),
+            ("Categorías de Titulares", sanitize_pii(rat.categoria_titulares or "No especificadas")),
+            ("Finalidad del Tratamiento", sanitize_pii(rat.finalidad)),
+            ("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", sanitize_pii(rat.base_legal)),
+            ("Fuente de los Datos", sanitize_pii(rat.fuente_datos)),
+            ("Transferencia o Comunicación de Datos", sanitize_pii(rat.transferencia_datos or "No aplica")),
+            ("Plazo de Retención", sanitize_pii(rat.plazo_retencion)),
+            ("Medidas de Seguridad", sanitize_pii(rat.medidas_seguridad or "No especificadas")),
+            ("Destinatarios / Encargados del Tratamiento", sanitize_pii(rat.destinatarios or "No especificados")),
         ]
         if getattr(rat, "nombre_encargado", None):
             contrato_txt = "Sí" if getattr(rat, "tiene_contrato_encargado", False) else "NO DOCUMENTADO"
-            campos_ficha.append(("Encargado del Tratamiento", f"{rat.nombre_encargado} — Contrato: {contrato_txt}"))
+            campos_ficha.append(("Encargado del Tratamiento", f"{sanitize_pii(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
         if getattr(rat, "test_interes_legitimo", None):
-            campos_ficha.append(("Test Interés Legítimo (3 pasos)", rat.test_interes_legitimo))
+            campos_ficha.append(("Test Interés Legítimo (3 pasos)", sanitize_pii(rat.test_interes_legitimo)))
 
         ficha_data = []
         for label, valor in campos_ficha:
@@ -228,13 +231,13 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
 
         # Flags especiales
         if rat.datos_sensibles:
-            tipo_txt = f" — Tipo: {rat.tipo_dato_sensible}" if getattr(rat, "tipo_dato_sensible", None) else ""
+            tipo_txt = f" — Tipo: {sanitize_pii(rat.tipo_dato_sensible)}" if getattr(rat, "tipo_dato_sensible", None) else ""
             ficha_data.append([
                 Paragraph("Datos Sensibles (Art. 2 g)", estilo_label),
                 Paragraph(f"SÍ{tipo_txt} — Requiere base legal expresa y medidas reforzadas", estilo_alerta),
             ])
         if rat.transferencia_internacional:
-            garantias_txt = f" | Garantías: {rat.garantias_transferencia_int}" if getattr(rat, "garantias_transferencia_int", None) else " | Garantías: NO ESPECIFICADAS"
+            garantias_txt = f" | Garantías: {sanitize_pii(getattr(rat, 'garantias_transferencia_int', '') or '')}" if getattr(rat, "garantias_transferencia_int", None) else " | Garantías: NO ESPECIFICADAS"
             ficha_data.append([
                 Paragraph("Transferencia Internacional", estilo_label),
                 Paragraph(f"SÍ — País destino: {rat.pais_destino or 'No especificado'}{garantias_txt}", estilo_alerta),
@@ -268,7 +271,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
 
         if rat.observaciones_auditoria:
             story.append(Spacer(1, 0.2 * cm))
-            story.append(Paragraph(f"Observaciones de auditoría: {rat.observaciones_auditoria}", estilo_alerta))
+            story.append(Paragraph(f"Observaciones de auditoría: {sanitize_pii(rat.observaciones_auditoria)}", estilo_alerta))
 
         story.append(Spacer(1, 0.5 * cm))
 

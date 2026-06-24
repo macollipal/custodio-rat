@@ -6,14 +6,16 @@ Filtro de riesgo razonable (Art. 14 sexies — REC-05).
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.breach import SecurityBreach, NivelRiesgo
+from app.models.task import TaskType
 from app.schemas.breach import BreachCreate, BreachUpdate
+from app.services.task_service import enqueue_task
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,21 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
         usuario=usuario,
         detalle={"company_id": data.company_id, "nivel_riesgo": str(getattr(breach, "nivel_riesgo", ""))},
     )
+
+    fecha_det = breach.fecha_deteccion
+    if fecha_det.tzinfo is None:
+        fecha_det = fecha_det.replace(tzinfo=timezone.utc)
+    scheduled_for = fecha_det + timedelta(hours=72)
+    try:
+        enqueue_task(
+            db=db,
+            task_type=TaskType.NOTIFICAR_BRECHA_DPO.value,
+            payload={"breach_id": breach.id, "company_id": breach.company_id},
+            scheduled_for=scheduled_for,
+        )
+    except Exception as e:
+        logger.error(f"Brecha {breach.id}: fallo encolando notificación 72h: {e}")
+
     db.commit()
     db.refresh(breach)
 

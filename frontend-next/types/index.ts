@@ -102,6 +102,7 @@ export interface SecurityBreach {
   rats_afectados?: string;
   datos_comprometidos?: string;
   medidas_adoptadas?: string;
+  naturaleza?: 'confidencialidad' | 'integridad' | 'disponibilidad';
   notificado_apdc: boolean;
   fecha_notificacion_apdc?: string;
   notificado_titulares: boolean;
