@@ -215,6 +215,53 @@ def notificar_vencimiento_encargado(
     _send_raw(email_dpo, f"[Custodio] Contrato de encargado {estado} - {nombre_encargado}", html, text)
 
 
+def notificar_sla_alert_t2(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    tickets: list[dict],
+) -> None:
+    """
+    Notifica al DPO tickets ARCO próximos a vencer en T-2 días hábiles.
+    Agrupados por responsable para facilitar la gestión.
+    """
+    if not tickets:
+        return
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    total = len(tickets)
+    vencido_txt = "ya están vencidos" if any(t["dias_restantes"] < 0 for t in tickets) else f"vence(n) en los próximos {total} día(s)"
+    cuerpo = [
+        f"<p>Se gefunden <strong>{total}</strong> solicitud(es) ARCO que {vencido_txt}:</p>",
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;">',
+        "<tr style='background:#2563EB;color:white;'>",
+        "<th style='padding:8px;text-align:left;'>ID</th>",
+        "<th style='padding:8px;text-align:left;'>Tipo</th>",
+        "<th style='padding:8px;text-align:left;'>Titular</th>",
+        "<th style='padding:8px;text-align:left;'>Responsable</th>",
+        "<th style='padding:8px;text-align:center;'>Días</th>",
+        "<th style='padding:8px;text-align:left;'>Prioridad</th>",
+        "</tr>",
+    ]
+    for t in tickets:
+        dias = t["dias_restantes"]
+        color_fila = "#FEE2E2" if dias <= 0 else ("#FEF9C8" if dias <= 2 else "#DCFCE7")
+        badge = "🔴 VENCIDO" if dias < 0 else (f"🟡 T-{dias}d" if dias <= 2 else f"🟢 {dias}d")
+        cuerpo.append(f"<tr style='background:{color_fila};'>")
+        cuerpo.append(f"<td style='padding:6px;'>#{t['id']}</td>")
+        cuerpo.append(f"<td style='padding:6px;'>{t['tipo']}</td>")
+        cuerpo.append(f"<td style='padding:6px;'>{t['titular_nombre']}</td>")
+        cuerpo.append(f"<td style='padding:6px;'>{t.get('responsable_nombre') or 'Sin asignar'}</td>")
+        cuerpo.append(f"<td style='padding:6px;text-align:center;'>{badge}</td>")
+        cuerpo.append(f"<td style='padding:6px;'>{t['prioridad']}</td>")
+        cuerpo.append("</tr>")
+    cuerpo.append("</table>")
+    cuerpo.append(f"<p style='margin-top:16px;'>Recuerde que según el Art. 14 Ley 21.719, el plazo máximo de respuesta es de <strong>10 días hábiles</strong> desde la recepción.</p>")
+    footer = f"{total} solicitud(es) con deadline próximo · Custodio RAT Manager · Ley 21.719"
+    text_body = f"SLA Alert T-2: {total} solicitudes ARCO próximas a vencer en {nombre_empresa}"
+    text, html = _render_template("Alerta SLA: solicitudes ARCO próximas a vencer", saludo, "".join(cuerpo), footer)
+    _send_raw(email_dpo, f"[Custodio] Alerta SLA: {total} solicitudes ARCO próximas a vencer", html, text)
+
+
 def notificar_acuse_solicitud(
     email_titular: str,
     nombre_titular: Optional[str],

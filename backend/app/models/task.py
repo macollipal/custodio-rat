@@ -27,6 +27,7 @@ class TaskType(str, PyEnum):
     NOTIFICAR_VENCIMIENTO_RAT = "notificar_vencimiento_rat"
     CLEANUP_TOKENS = "cleanup_tokens"
     REVISAR_ENCARGADOS_VENCIDOS = "revisar_encargados_vencidos"
+    SLA_ALERT_T2 = "sla_alert_t2"
 
 
 class TaskQueue(Base):

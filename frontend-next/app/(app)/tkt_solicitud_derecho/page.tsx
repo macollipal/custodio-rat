@@ -20,6 +20,9 @@ import {
   solicitarSubsanacion,
   completarSubsanacion,
   prorrogarTicket,
+  descargarTktCsv,
+  descargarTktExcel,
+  descargarTktPdf,
   type TktTicket,
   type TktDashboard,
 } from '@/lib/api';
@@ -1363,8 +1366,35 @@ export default function TktSolicitudDerechoPage() {
   const [ticketDetail, setTicketDetail] = useState<TktTicket | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState<string | null>(null);
 
   const isAdmin = user?.rol_global === 'superadmin' || user?.rol_global === 'admin_empresa';
+
+  const slaAlertTickets = useMemo(() =>
+    tickets.filter(t => {
+      if (t.estado === 'resuelto' || t.estado === 'rechazado') return false;
+      const dias = t.dias_restantes ?? 999;
+      return dias <= 2;
+    }),
+    [tickets]
+  );
+
+  async function handleExport(format: 'csv' | 'excel' | 'pdf') {
+    if (!company?.id) return;
+    setExporting(format);
+    try {
+      if (format === 'csv') await descargarTktCsv(company.id, { estado: tab === 'todos' ? undefined : tab === 'vencido' ? undefined : tab });
+      else if (format === 'excel') await descargarTktExcel(company.id, { estado: tab === 'todos' ? undefined : tab === 'vencido' ? undefined : tab });
+      else await descargarTktPdf(company.id, { estado: tab === 'todos' ? undefined : tab === 'vencido' ? undefined : tab });
+      toast.success(`Exportación ${format.toUpperCase()} iniciada`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : `Error al exportar ${format.toUpperCase()}`);
+    } finally {
+      setExporting(null);
+      setExportOpen(false);
+    }
+  }
 
   const ticketCounts = useMemo(() => {
     return tickets.reduce<Record<string, number>>((acc, t) => {
@@ -1423,6 +1453,33 @@ export default function TktSolicitudDerechoPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
+      {slaAlertTickets.length > 0 && (
+        <div
+          className="rounded-xl p-4 flex items-center gap-3"
+          style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}
+          role="alert"
+          aria-label={`Alerta: ${slaAlertTickets.length} solicitudes próximo a vencer`}
+        >
+          <span className="text-xl">⚠️</span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>
+              {slaAlertTickets.length} solicitud(es) ARCO con SLA próximo a vencer
+            </p>
+            <p className="text-xs" style={{ color: '#B91C1C' }}>
+              {slaAlertTickets.filter(t => (t.dias_restantes ?? 999) <= 0).length} vencido(s) ·
+              {slaAlertTickets.filter(t => (t.dias_restantes ?? 999) > 0 && (t.dias_restantes ?? 999) <= 2).length} vence(n) en 2 días o menos
+            </p>
+          </div>
+          <button
+            onClick={() => setTab('abierto')}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition"
+            style={{ background: '#DC2626' }}
+          >
+            Ver tickets
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Solicitudes ARCO</h1>
         <div className="flex items-center gap-2">
@@ -1435,6 +1492,47 @@ export default function TktSolicitudDerechoPage() {
               + Nueva Solicitud
             </button>
           )}
+          <div className="relative">
+            <button
+              onClick={() => setExportOpen(o => !o)}
+              disabled={exporting !== null}
+              className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50 disabled:opacity-60"
+              style={{ borderColor: '#E5E7EB', color: '#374151' }}
+            >
+              {exporting ? `⏳ Exportando ${exporting.toUpperCase()}...` : '⬇ Exportar'}
+            </button>
+            {exportOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg z-50 border"
+                style={{ background: 'white', borderColor: '#E5E7EB' }}
+              >
+                <button
+                  onClick={() => handleExport('csv')}
+                  disabled={!!exporting}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
+                  style={{ color: '#374151' }}
+                >
+                  📄 CSV
+                </button>
+                <button
+                  onClick={() => handleExport('excel')}
+                  disabled={!!exporting}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
+                  style={{ color: '#374151' }}
+                >
+                  📊 Excel (.xlsx)
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  disabled={!!exporting}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
+                  style={{ color: '#374151' }}
+                >
+                  📑 PDF
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={fetchData}
             className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"

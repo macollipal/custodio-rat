@@ -1036,3 +1036,92 @@ export async function consultarSeguimiento(trackingToken: string): Promise<Segui
   }
   return handle<SeguimientoResponse>(res);
 }
+
+// ── ARCO-QW1: Exportación CSV/Excel/PDF ──────────────────────────────────────
+
+export async function exportarTktCsv(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/csv?${params}`);
+  if (!res.ok) throw new Error('Error al exportar CSV');
+  return res.blob();
+}
+
+export async function exportarTktExcel(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/excel?${params}`);
+  if (!res.ok) throw new Error('Error al exportar Excel');
+  return res.blob();
+}
+
+export async function exportarTktPdf(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/pdf?${params}`);
+  if (!res.ok) throw new Error('Error al exportar PDF');
+  return res.blob();
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function descargarTktCsv(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktCsv(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+export async function descargarTktExcel(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktExcel(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+export async function descargarTktPdf(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktPdf(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.pdf`);
+}

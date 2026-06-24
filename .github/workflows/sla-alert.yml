@@ -1,0 +1,29 @@
+name: SLA Alert T-2 (GitHub Actions)
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"  # Cada 4 horas
+  workflow_dispatch:  # Permitir ejecución manual
+
+jobs:
+  sla-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Encolar tarea SLA Alert T-2
+        env:
+          API_BASE: https://custodio-qa.vercel.app
+          SUPERADMIN_TOKEN: ${{ secrets.SUPERADMIN_TOKEN }}
+        run: |
+          curl -s -X POST "$API_BASE/admin/tasks/enqueue-sla-alerts" \
+            -H "Authorization: Bearer $SUPERADMIN_TOKEN" \
+            -H "Content-Type: application/json" \
+            | tee /tmp/enqueue_response.json
+          TASK_ID=$(cat /tmp/enqueue_response.json | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+          echo "Tarea encolada: $TASK_ID"
+
+          # Ejecutar inmediatamente
+          sleep 2
+          curl -s -X POST "$API_BASE/admin/tasks/run?max_tasks=1" \
+            -H "Authorization: Bearer $SUPERADMIN_TOKEN" \
+            | tee /tmp/run_response.json
+          echo "Resultado: $(cat /tmp/run_response.json)"

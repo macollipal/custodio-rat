@@ -187,6 +187,86 @@ def _run_revisar_encargados_vencidos(db: Session) -> int:
     return notificados
 
 
+def _run_sla_alert_t2(db: Session) -> int:
+    """
+    Revisa tickets ARCO con vencimiento en T-2 días hábiles (o menos)
+    y envía alerta grupal al DPO de cada empresa.
+    """
+    from datetime import timedelta
+    from app.models.encargado_contrato import EncargadoContrato
+    from app.models.company import Company
+    from app.models.user import User
+    from app.services.email_service import notificar_sla_alert_t2, EmailError
+    from app.services.ticket_service import calcular_dias_restantes
+
+    ahora = datetime.now(timezone.utc)
+    umbral_t2 = ahora + timedelta(days=2)
+
+    estados_activos = ["abierto", "en_proceso", "pendiente", "subsanacion", "prorroga"]
+    tickets = (
+        db.query(TktSolicitudDerecho)
+        .filter(
+            TktSolicitudDerecho.estado.in_(estados_activos),
+            TktSolicitudDerecho.fecha_vencimiento <= umbral_t2,
+            TktSolicitudDerecho.fecha_vencimiento >= ahora,
+        )
+        .all()
+    )
+
+    vencidos = (
+        db.query(TktSolicitudDerecho)
+        .filter(
+            TktSolicitudDerecho.estado.in_(estados_activos),
+            TktSolicitudDerecho.fecha_vencimiento < ahora,
+        )
+        .all()
+    )
+
+    tickets_vencidos = tickets + vencidos
+    if not tickets_vencidos:
+        return 0
+
+    por_empresa: dict[int, list] = {}
+    for t in tickets_vencidos:
+        por_empresa.setdefault(t.company_id, []).append(t)
+
+    notificados = 0
+    for company_id, tkt_list in por_empresa.items():
+        empresa = db.query(Company).filter(Company.id == company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+
+        tickets_data = []
+        for t in tkt_list:
+            dias = calcular_dias_restantes(t.fecha_vencimiento)
+            responsable_nombre = None
+            if t.responsable_id:
+                user = db.query(User).filter(User.id == t.responsable_id).first()
+                if user:
+                    responsable_nombre = user.full_name or user.username
+            tickets_data.append({
+                "id": t.id,
+                "tipo": t.tipo,
+                "titular_nombre": t.titular_nombre,
+                "prioridad": t.prioridad,
+                "dias_restantes": dias,
+                "responsable_nombre": responsable_nombre,
+            })
+
+        try:
+            notificar_sla_alert_t2(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                tickets=tickets_data,
+            )
+            notificados += 1
+        except EmailError as e:
+            logger.error(f"SLA Alert T2 empresa {company_id}: fallo: {e}")
+
+    return notificados
+
+
 def run_task(db: Session, task: TaskQueue) -> bool:
     """Ejecuta una tarea individual. Retorna True si fue exitosa."""
     task.status = TaskStatus.RUNNING
@@ -217,6 +297,10 @@ def run_task(db: Session, task: TaskQueue) -> bool:
             count = _run_revisar_encargados_vencidos(db)
             success = True
             detail = f"{count} encargados notificados"
+        elif task.task_type == TaskType.SLA_ALERT_T2.value:
+            count = _run_sla_alert_t2(db)
+            success = True
+            detail = f"{count} empresas notificadas (SLA T-2)"
         else:
             detail = f"Tipo de tarea desconocido: {task.task_type}"
             logger.warning(detail)

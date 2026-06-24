@@ -122,3 +122,21 @@ async def enqueue(
         max_attempts=data.max_attempts,
     )
     return TaskEnqueueResponse(id=task.id, task_type=task.task_type, status=task.status)
+
+
+@router.post("/enqueue-sla-alerts", summary="Encolar alerta SLA T-2 para todos los tickets próximos a vencer")
+async def enqueue_sla_alerts(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Encola tarea SLA_ALERT_T2 para ejecutar inmediatamente."""
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin puede encolar alertas SLA")
+
+    task = enqueue_task(
+        db=db,
+        task_type="sla_alert_t2",
+        payload={},
+        max_attempts=2,
+    )
+    return TaskEnqueueResponse(id=task.id, task_type=task.task_type, status=task.status)
