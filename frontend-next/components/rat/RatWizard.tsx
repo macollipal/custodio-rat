@@ -413,7 +413,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   <input
                     type="checkbox"
                     checked={data.datos_sensibles ?? false}
-                    onChange={e => setData(d => ({ ...d, datos_sensibles: e.target.checked, tipo_dato_sensible: e.target.checked ? d.tipo_dato_sensible : '' }))}
+                    onChange={e => setData(d => ({
+                      ...d,
+                      datos_sensibles: e.target.checked,
+                      tipo_dato_sensible: e.target.checked ? d.tipo_dato_sensible : '',
+                      evaluacion_impacto: e.target.checked ? true : d.evaluacion_impacto,
+                    }))}
                     className="mt-0.5 rounded"
                   />
                   <span className="text-sm font-medium" style={{ color: '#374151' }}>
@@ -441,18 +446,25 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
+                  <label className={`flex items-start gap-2.5 ${data.datos_sensibles ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                       type="checkbox"
                       checked={data.evaluacion_impacto ?? false}
+                      disabled={data.datos_sensibles}
                       onChange={e => setData(d => ({ ...d, evaluacion_impacto: e.target.checked }))}
                       className="mt-0.5 rounded"
                     />
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>
-                      📋 Requiere Evaluación de Impacto (EIPD)
+                      📋 Requiere Evaluación de Impacto (EIPD) {data.datos_sensibles ? '(obligatoria por datos sensibles — Art. 15 bis)' : ''}
                     </span>
                   </label>
-                  {data.evaluacion_impacto && (
+                  {data.datos_sensibles && (
+                    <AlertBanner
+                      message="EIPD obligatoria: el tratamiento de datos sensibles requiere evaluación de impacto documentada antes de iniciar (Art. 15 bis Ley 21.719)."
+                      type="warning"
+                    />
+                  )}
+                  {data.evaluacion_impacto && !data.datos_sensibles && (
                     <AlertBanner
                       message="La EIPD debe realizarse y documentarse antes de iniciar el tratamiento (Art. 15 bis)."
                       type="info"
