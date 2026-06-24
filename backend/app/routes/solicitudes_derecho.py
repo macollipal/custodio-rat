@@ -21,6 +21,15 @@ router = APIRouter(prefix="/solicitudes-derecho", tags=["Solicitudes de Derecho"
 logger = logging.getLogger(__name__)
 
 
+def _anonymize_ip(ip: str) -> str:
+    if not ip or ip in ('unknown', '127.0.0.1'):
+        return ip
+    parts = ip.split('.')
+    if len(parts) == 4:
+        return f"***.***.***.{parts[3]}"
+    return '***'
+
+
 def _generate_token(db: Session, ip_address: Optional[str] = None) -> str:
     token = str(uuid.uuid4())
     db_token = SolicitudToken(token=token, ip_address=ip_address)
@@ -215,7 +224,7 @@ async def crear_solicitud(
             db.add(adjunto)
         db.commit()
 
-    logger.info(f"Solicitud ARCO creada (TKT only): company={company_id_int} tipo={tipo} ticket_id={ticket.id} ip={request.client.host if request.client else 'unknown'}")
+    logger.info(f"Solicitud ARCO creada (TKT only): company={company_id_int} tipo={tipo} ticket_id={ticket.id} ip={_anonymize_ip(request.client.host if request.client else 'unknown')}")
     return {
         "id": ticket.id,
         "company_id": company_id_int,

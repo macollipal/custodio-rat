@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel
+from typing import Literal, Optional
+from pydantic import BaseModel, Field
 
 
 class BreachBase(BaseModel):
@@ -13,7 +13,7 @@ class BreachBase(BaseModel):
     fecha_notificacion_apdc: Optional[datetime] = None
     notificado_titulares: bool = False
     fecha_notificacion_titulares: Optional[datetime] = None
-    nivel_riesgo: Optional[str] = "bajo"
+    nivel_riesgo: Literal["bajo", "medio", "alto", "critico"] = "bajo"
     volumen_titulares_afectados: Optional[int] = 0
     incluye_datos_sensibles: Optional[bool] = False
     incluye_datos_nna: Optional[bool] = False
@@ -34,7 +34,7 @@ class BreachUpdate(BaseModel):
     fecha_notificacion_apdc: Optional[datetime] = None
     notificado_titulares: Optional[bool] = None
     fecha_notificacion_titulares: Optional[datetime] = None
-    nivel_riesgo: Optional[str] = None
+    nivel_riesgo: Optional[Literal["bajo", "medio", "alto", "critico"]] = None
     volumen_titulares_afectados: Optional[int] = None
     incluye_datos_sensibles: Optional[bool] = None
     incluye_datos_nna: Optional[bool] = None
