@@ -146,7 +146,69 @@ interface CreateTicketFormProps {
   isAdmin: boolean;
 }
 
-function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: CreateTicketFormProps) {
+const ARTICULOS: Record<string, string> = {
+  acceso: 'Art. 12 — El titular puede solicitar información sobre sus datos tratados.',
+  rectificacion: 'Art. 12 — El titular puede solicitar corrección de datos inexactos.',
+  cancelacion: 'Art. 12 — El titular puede solicitar eliminación de sus datos.',
+  oposicion: 'Art. 12 — El titular puede oponerse al tratamiento de sus datos.',
+  bloqueo: 'Art. 12 bis — Suspensión temporal del tratamiento.',
+  portabilidad: 'Art. 12 ter — El titular puede recibir sus datos en formato estructurado.',
+};
+
+const PLAZOS: Record<string, string> = {
+  urgente: '2 días hábiles (Art. 14 bis)',
+  normal: '10 días hábiles (plazo legal)',
+  baja: 'Sin urgencia. Máximo plazo legal.',
+};
+
+function FieldLabel({ label, required, htmlFor }: { label: string; required?: boolean; htmlFor?: string }) {
+  return (
+    <label htmlFor={htmlFor} className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
+      {label}
+      {required && <span style={{ color: '#DC2626' }}> *</span>}
+    </label>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#6B7280', letterSpacing: '0.08em' }}>
+        ▸ {label}
+      </span>
+      <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
+    </div>
+  );
+}
+
+function TooltipIcon({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex ml-1">
+      <button
+        type="button"
+        aria-label={`Ayuda: ${text}`}
+        onClick={() => setOpen(o => !o)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors"
+        style={{ background: '#E5E7EB', color: '#6B7280' }}
+      >
+        ⓘ
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 px-2.5 py-2 rounded-lg text-xs text-white z-50 shadow-lg"
+          style={{ background: '#1F2937' }}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function CreateTicketForm({ open, onClose, onSuccess, companyId }: CreateTicketFormProps) {
   const [tipo, setTipo] = useState('acceso');
   const [prioridad, setPrioridad] = useState('normal');
   const [origen, setOrigen] = useState('web');
@@ -162,6 +224,7 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
   const [pais, setPais] = useState('');
   const [reprNombre, setReprNombre] = useState('');
   const [reprRut, setReprRut] = useState('');
+  const [reprCollapsed, setReprCollapsed] = useState(true);
   const [ratId, setRatId] = useState<number | undefined>(undefined);
   const [ratSearch, setRatSearch] = useState('');
   const [rats, setRats] = useState<{ id: number; nombre_proceso: string }[]>([]);
@@ -191,6 +254,7 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
       setDuplicateWarning('');
       setShowDuplicados(false);
       setDuplicados([]);
+      setReprCollapsed(true);
     }
   }, [open]);
 
@@ -271,14 +335,14 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
   if (!open) return null;
 
   return (
-    <Drawer open={open} onClose={onClose} title="Nueva Solicitud ARCO" size="md">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <Drawer open={open} onClose={onClose} title="" size="lg">
+      <form onSubmit={handleSubmit} className="space-y-0">
         <div
-          className="rounded-xl p-4 flex items-center gap-3"
+          className="rounded-xl p-4 flex items-center gap-3 mb-5"
           style={{ background: 'linear-gradient(135deg, #1E40AF, #3730A3)' }}
         >
           <span
-            className="inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm flex-shrink-0"
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
           >
             + NUEVA
@@ -289,10 +353,35 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {duplicateWarning && (
+          <div className="mb-5 rounded-lg p-3 text-sm" style={{ background: '#FEF9C3', border: '1px solid #EAB308' }}>
+            <p className="font-medium" style={{ color: '#854D0E' }}>{duplicateWarning}</p>
+            {showDuplicados && duplicados.length > 0 && (
+              <div className="mt-2">
+                {duplicados.map(d => (
+                  <div key={d.id} className="text-xs mt-1" style={{ color: '#854D0E' }}>
+                    #{d.id} — {d.tipo} — {d.estado} — {new Date(d.fecha_recepcion || '').toLocaleDateString('es-CL')}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setShowDuplicados(false)} className="text-xs mt-1 underline" style={{ color: '#854D0E' }}>Ocultar</button>
+              </div>
+            )}
+            {!showDuplicados && duplicados.length > 0 && (
+              <button type="button" onClick={() => setShowDuplicados(true)} className="text-xs mt-1 underline" style={{ color: '#854D0E' }}>Ver detalle</button>
+            )}
+          </div>
+        )}
+
+        <SectionHeader label="Clasificación" />
+
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Tipo *</label>
+            <div className="flex items-center mb-1">
+              <FieldLabel htmlFor="tipo-select" label="Tipo" required />
+              <TooltipIcon text={ARTICULOS[tipo]} />
+            </div>
             <select
+              id="tipo-select"
               value={tipo}
               onChange={e => setTipo(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm border"
@@ -307,121 +396,105 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
               <option value="bloqueo">Bloqueo temporal</option>
               <option value="portabilidad">Portabilidad</option>
             </select>
-            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-              {tipo === 'acceso' && 'Art. 12 — El titular puede solicitar información sobre sus datos tratados.'}
-              {tipo === 'rectificacion' && 'Art. 12 — El titular puede solicitar corrección de datos inexactos.'}
-              {tipo === 'cancelacion' && 'Art. 12 — El titular puede solicitar eliminación de sus datos.'}
-              {tipo === 'oposicion' && 'Art. 12 — El titular puede oponerse al tratamiento de sus datos.'}
-              {tipo === 'bloqueo' && 'Art. 12 bis — Suspensión temporal del tratamiento.'}
-              {tipo === 'portabilidad' && 'Art. 12 ter — El titular puede recibir sus datos en formato estructurado.'}
-            </p>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Prioridad</label>
+            <div className="flex items-center mb-1">
+              <FieldLabel htmlFor="prioridad-select" label="Prioridad" />
+              <TooltipIcon text={`Plazo según prioridad: ${PLAZOS[prioridad]}`} />
+            </div>
             <select
+              id="prioridad-select"
               value={prioridad}
               onChange={e => setPrioridad(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm border"
               style={{ borderColor: '#E5E7EB' }}
               aria-label="Prioridad de la solicitud"
-              aria-required="false"
             >
               <option value="urgente">Urgente</option>
               <option value="normal">Normal</option>
               <option value="baja">Baja</option>
             </select>
-            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-              {prioridad === 'urgente' && 'Respuesta en 2 días hábiles (Art. 14 bis).'}
-              {prioridad === 'normal' && 'Respuesta en 10 días hábiles (plazo legal).'}
-              {prioridad === 'baja' && 'Sin urgencia. Máximo plazo legal.'}
-            </p>
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Origen</label>
-          <select
-            value={origen}
-            onChange={e => setOrigen(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: '#E5E7EB' }}
-          >
-            <option value="web">Web</option>
-            <option value="email">Email</option>
-            <option value="telefono">Teléfono</option>
-            <option value="presencial">Presencial</option>
-            <option value="manual">Manual</option>
-          </select>
-        </div>
+        <SectionHeader label="Datos del titular" />
 
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre del titular *</label>
-          <input
-            type="text"
-            value={titularNombre}
-            onChange={e => setTitularNombre(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: '#E5E7EB' }}
-            placeholder="Nombre completo"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Email del titular *</label>
-          <input
-            type="email"
-            value={titularEmail}
-            onChange={e => setTitularEmail(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: '#E5E7EB' }}
-            placeholder="email@ejemplo.cl"
-            aria-label="Email del titular"
-            aria-required="true"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Confirmar email</label>
-          <input
-            type="email"
-            value={confirmarEmail}
-            onChange={e => setConfirmarEmail(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: confirmarEmail && titularEmail !== confirmarEmail ? '#DC2626' : '#E5E7EB' }}
-            placeholder="Repita el email"
-            aria-label="Confirmar email del titular"
-          />
-          {confirmarEmail && titularEmail !== confirmarEmail && (
-            <p className="text-xs mt-1" style={{ color: '#DC2626' }}>Los emails no coinciden</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RUT del titular</label>
-          <input
-            type="text"
-            value={titularRut}
-            onChange={e => {
-              const formatted = e.target.value.toUpperCase().replace(/[^0-9K\-]/g, '').replace(/^(\d{1,2})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4').replace(/--/g, '-');
-              setTitularRut(formatted);
-              if (formatted) {
-                const { valido, mensaje } = validarRUT(formatted);
-                setRutError(valido ? '' : mensaje);
-              } else { setRutError(''); }
-            }}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: rutError ? '#DC2626' : '#E5E7EB' }}
-            placeholder="12.345.678-9"
-            aria-label="RUT del titular"
-          />
-          {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Teléfono</label>
+            <FieldLabel htmlFor="nombre-titular" label="Nombre completo" required />
             <input
+              id="nombre-titular"
+              type="text"
+              value={titularNombre}
+              onChange={e => setTitularNombre(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="Nombre completo"
+              aria-label="Nombre del titular"
+              aria-required="true"
+            />
+          </div>
+          <div>
+            <FieldLabel htmlFor="rut-titular" label="RUT del titular" />
+            <input
+              id="rut-titular"
+              type="text"
+              value={titularRut}
+              onChange={e => {
+                const formatted = e.target.value.toUpperCase().replace(/[^0-9K\-]/g, '').replace(/^(\d{1,2})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4').replace(/--/g, '-');
+                setTitularRut(formatted);
+                if (formatted) {
+                  const { valido, mensaje } = validarRUT(formatted);
+                  setRutError(valido ? '' : mensaje);
+                } else { setRutError(''); }
+              }}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: rutError ? '#DC2626' : '#E5E7EB' }}
+              placeholder="12.345.678-9"
+              aria-label="RUT del titular"
+            />
+            {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-5">
+          <div>
+            <FieldLabel htmlFor="email-titular" label="Email" required />
+            <input
+              id="email-titular"
+              type="email"
+              value={titularEmail}
+              onChange={e => setTitularEmail(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              placeholder="email@ejemplo.cl"
+              aria-label="Email del titular"
+              aria-required="true"
+            />
+          </div>
+          <div>
+            <FieldLabel htmlFor="email-confirmar" label="Confirmar email" />
+            <input
+              id="email-confirmar"
+              type="email"
+              value={confirmarEmail}
+              onChange={e => setConfirmarEmail(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: confirmarEmail && titularEmail !== confirmarEmail ? '#DC2626' : '#E5E7EB' }}
+              placeholder="Repita el email"
+              aria-label="Confirmar email del titular"
+            />
+            {confirmarEmail && titularEmail !== confirmarEmail && (
+              <p className="text-xs mt-1" style={{ color: '#DC2626' }}>Los emails no coinciden</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div>
+            <FieldLabel htmlFor="telefono-titular" label="Teléfono" />
+            <input
+              id="telefono-titular"
               type="tel"
               value={telefono}
               onChange={e => setTelefono(e.target.value)}
@@ -432,8 +505,9 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>País</label>
+            <FieldLabel htmlFor="pais-titular" label="País" />
             <input
+              id="pais-titular"
               type="text"
               value={pais}
               onChange={e => setPais(e.target.value)}
@@ -444,8 +518,9 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha nacimiento</label>
+            <FieldLabel htmlFor="fecha-nac-titular" label="Fecha nacimiento" />
             <input
+              id="fecha-nac-titular"
               type="date"
               value={fechaNacimiento}
               onChange={e => setFechaNacimiento(e.target.value)}
@@ -457,10 +532,13 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RAT asociado</label>
+        <SectionHeader label="Contexto" />
+
+        <div className="mb-5">
+          <FieldLabel htmlFor="rat-search" label="RAT asociado" />
           <div className="relative">
             <input
+              id="rat-search"
               type="text"
               value={ratSearch}
               onChange={e => { setRatSearch(e.target.value); setRatsOpen(true); }}
@@ -497,83 +575,90 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre representante</label>
-            <input
-              type="text"
-              value={reprNombre}
-              onChange={e => setReprNombre(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
-              style={{ borderColor: '#E5E7EB' }}
-              placeholder="Nombre del representante legal"
-              aria-label="Nombre del representante"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RUT representante</label>
-            <input
-              type="text"
-              value={reprRut}
-              onChange={e => setReprRut(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
-              style={{ borderColor: '#E5E7EB' }}
-              placeholder="RUT del representante"
-              aria-label="RUT del representante"
-            />
-          </div>
-        </div>
+        <SectionHeader label="Representante legal" />
 
-        {duplicateWarning && (
-          <div className="rounded-lg p-3 text-sm" style={{ background: '#FEF9C3', border: '1px solid #EAB308' }}>
-            <p className="font-medium" style={{ color: '#854D0E' }}>{duplicateWarning}</p>
-            {showDuplicados && duplicados.length > 0 && (
-              <div className="mt-2">
-                {duplicados.map(d => (
-                  <div key={d.id} className="text-xs mt-1" style={{ color: '#854D0E' }}>
-                    #{d.id} — {d.tipo} — {d.estado} — {new Date(d.fecha_recepcion || '').toLocaleDateString('es-CL')}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setShowDuplicados(false)}
-                  className="text-xs mt-1 underline"
-                  style={{ color: '#854D0E' }}
-                >
-                  Ocultar
-                </button>
+        <div className="mb-5">
+          <button
+            type="button"
+            onClick={() => setReprCollapsed(!reprCollapsed)}
+            className="flex items-center gap-2 text-xs font-medium mb-3 transition-colors"
+            style={{ color: '#2563EB' }}
+          >
+            <span className="text-[10px]">{reprCollapsed ? '▶' : '▼'}</span>
+            {reprCollapsed ? 'Agregar datos de representante' : 'Ocultar datos de representante'}
+          </button>
+          {!reprCollapsed && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FieldLabel htmlFor="repr-nombre" label="Nombre representante" />
+                <input
+                  id="repr-nombre"
+                  type="text"
+                  value={reprNombre}
+                  onChange={e => setReprNombre(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Nombre del representante legal"
+                  aria-label="Nombre del representante"
+                />
               </div>
-            )}
-            {!showDuplicados && duplicados.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowDuplicados(true)}
-                className="text-xs mt-1 underline"
-                style={{ color: '#854D0E' }}
-              >
-                Ver detalle
-              </button>
-            )}
-          </div>
-        )}
-
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Descripción</label>
-          <textarea
-            value={descripcion}
-            onChange={e => setDescripcion(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ borderColor: '#E5E7EB' }}
-            rows={3}
-            placeholder="Detalle de la solicitud..."
-          />
+              <div>
+                <FieldLabel htmlFor="repr-rut" label="RUT representante" />
+                <input
+                  id="repr-rut"
+                  type="text"
+                  value={reprRut}
+                  onChange={e => setReprRut(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="RUT del representante"
+                  aria-label="RUT del representante"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <SectionHeader label="Detalle" />
+
+        <div className="grid grid-cols-2 gap-4 mb-5">
+          <div>
+            <FieldLabel htmlFor="origen-select" label="Origen" />
+            <select
+              id="origen-select"
+              value={origen}
+              onChange={e => setOrigen(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              aria-label="Origen de la solicitud"
+            >
+              <option value="web">Web</option>
+              <option value="email">Email</option>
+              <option value="telefono">Teléfono</option>
+              <option value="presencial">Presencial</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div>
+            <FieldLabel htmlFor="descripcion-input" label="Descripción" />
+            <textarea
+              id="descripcion-input"
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              rows={3}
+              placeholder="Detalle de la solicitud..."
+              aria-label="Descripción de la solicitud"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-3" style={{ borderTop: '1px solid #E5E7EB' }}>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
             style={{ borderColor: '#E5E7EB', color: '#374151' }}
           >
             Cancelar
@@ -581,7 +666,7 @@ function CreateTicketForm({ open, onClose, onSuccess, companyId, isAdmin }: Crea
           <button
             type="submit"
             disabled={guardando}
-            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white transition"
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition"
             style={{ background: '#2563EB' }}
           >
             {guardando ? 'Guardando...' : 'Crear Solicitud'}
