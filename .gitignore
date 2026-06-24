@@ -119,6 +119,7 @@ paso/*
 # Misc
 *.tmp
 *.bak
+*.vbak
 *.swp
 *.swo
 *.so

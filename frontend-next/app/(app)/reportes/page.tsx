@@ -10,16 +10,8 @@ import { BASES_LEGALES as basesLegalesConst } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Drawer from '@/components/ui/Drawer';
-
-function Field({ label, value }: { label: string; value?: string | null }) {
-  const isEmpty = !value || value.trim() === '';
-  return (
-    <div className="flex flex-col gap-1 p-2 sm:p-3 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
-      <span className="text-xs font-semibold" style={{ color: '#6B7280' }}>{label}</span>
-      <span className="text-sm break-words" style={{ color: isEmpty ? '#9CA3AF' : '#111827' }}>{isEmpty ? <em style={{ color: '#DC2626' }}>** {label}</em> : value}</span>
-    </div>
-  );
-}
+import { ReportTable } from '@/components/report';
+import { Field } from '@/components/ui/Field';
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
 const BASES_LEGALES = basesLegalesConst;
@@ -59,77 +51,6 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
       <span className="text-xs font-medium" style={{ color: '#6B7280' }}>{label}</span>
       <span className="text-2xl font-bold mt-1" style={{ color }}>{value}</span>
     </div>
-  );
-}
-
-function renderCell(rat: RAT, col: string): React.ReactNode {
-  switch (col) {
-    case 'nombre_proceso': return <><span className="font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</span><br /><span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.categoria_titulares || '—'}</span></>;
-    case 'base_legal': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</span>;
-    case 'estado': return <Badge estado={rat.estado} />;
-    case 'created_by': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.created_by ?? '—'}</span>;
-    case 'completitud': return <div className="w-24"><CompletitudBar pct={rat.completitud ?? 0} /></div>;
-    case 'flags': return <div className="flex gap-1 flex-wrap">{rat.datos_sensibles && <span title="Datos sensibles" className="text-sm">⚠️</span>}{rat.evaluacion_impacto && <span title="EIPD" className="text-sm">📋</span>}{rat.transferencia_internacional && <span title="Transf. internacional" className="text-sm">🌐</span>}{rat.decisiones_automatizadas && <span title="Dec. automatizadas" className="text-sm">🤖</span>}</div>;
-    case 'categoria_titulares': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.categoria_titulares || '—'}</span>;
-    case 'fuente_datos': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.fuente_datos ?? '—').slice(0, 25)}</span>;
-    case 'finalidad': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.finalidad ?? '—').slice(0, 40)}</span>;
-    case 'plazo_retencion': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.plazo_retencion || '—'}</span>;
-    case 'medidas_seguridad': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.medidas_seguridad ?? '—').slice(0, 30)}</span>;
-    case 'destinatarios': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.destinatarios ?? '—').slice(0, 25)}</span>;
-    case 'pais_destino': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.pais_destino || '—'}</span>;
-    case 'nivel_riesgo': {
-      const isCritico = rat.nivel_riesgo === 'Crítico';
-      return (
-        <div className="flex items-center gap-1">
-          {isCritico && (
-            <span className="relative flex h-2 w-2" title="Riesgo crítico — acción requerida">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#DC2626' }} />
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#DC2626' }} />
-            </span>
-          )}
-          <span className="text-xs font-medium" style={{ color: isCritico || rat.nivel_riesgo === 'Alto' ? '#DC2626' : '#374151' }}>{rat.nivel_riesgo || '—'}</span>
-        </div>
-      );
-    }
-    default: return null;
-  }
-}
-
-function GroupedRows({ rats: ratList, columns, groupBy, openDrawer }: { rats: RAT[]; columns: string[]; groupBy: string; openDrawer: (rat: RAT) => void }) {
-  if (groupBy === 'none') {
-    return (
-      <tbody>
-        {ratList.map((rat) => (
-          <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
-            {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
-          </tr>
-        ))}
-      </tbody>
-    );
-  }
-  const groups: Record<string, RAT[]> = {};
-  ratList.forEach(r => {
-    const key = groupBy === 'estado' ? r.estado : groupBy === 'base_legal' ? (r.base_legal ?? 'Sin base legal') : (r.nivel_riesgo ?? 'Sin riesgo');
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(r);
-  });
-  return (
-    <tbody>
-      {Object.entries(groups).map(([groupKey, groupRats]) => (
-        <React.Fragment key={groupKey}>
-          <tr style={{ background: '#F9FAFB' }}>
-            <td colSpan={columns.length} className="px-4 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: '#374151', borderBottom: '1px solid #E5E7EB', textAlign: 'left' }}>
-              {groupBy === 'estado' ? groupKey.replace('_', ' ') : groupKey} ({groupRats.length})
-            </td>
-          </tr>
-          {groupRats.map((rat) => (
-            <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
-              {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
-            </tr>
-          ))}
-        </React.Fragment>
-      ))}
-    </tbody>
   );
 }
 
@@ -622,7 +543,7 @@ export default function ReportesPage() {
                   {columns.map(col => <th key={col} role="columnheader" scope="col" className="px-4 py-3 text-left whitespace-nowrap">{COLUMN_OPTIONS.find(c => c.key === col)?.label ?? col}</th>)}
                 </tr>
               </thead>
-              <GroupedRows rats={rats} columns={columns} groupBy={groupBy} openDrawer={openDrawer} />
+              <ReportTable rats={rats} columns={columns} groupBy={groupBy} onRowClick={openDrawer} />
             </table>
           </div>
         </div>
