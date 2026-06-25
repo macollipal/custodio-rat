@@ -46,9 +46,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const u = localStorage.getItem(STORAGE_KEYS.USER);
     const c = localStorage.getItem(STORAGE_KEYS.COMPANY);
+    const cs = localStorage.getItem(STORAGE_KEYS.COMPANIES);
     if (t) setTokenState(t);
     if (u) try { setUserState(JSON.parse(u)); } catch {}
     if (c) try { setCompanyState(JSON.parse(c)); } catch {}
+    if (cs) try { setCompaniesState(JSON.parse(cs)); } catch {}
   }, []);
 
   useEffect(() => {
@@ -82,9 +84,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER);
       localStorage.removeItem(STORAGE_KEYS.COMPANY);
+      localStorage.removeItem(STORAGE_KEYS.COMPANIES);
       setTokenState(null);
       setUserState(null);
       setCompanyState(null);
+      setCompaniesState([]);
     });
   }, [token]);
 
@@ -106,6 +110,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCompanies = useCallback((cs: Company[]) => {
+    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(cs));
     setCompaniesState(cs);
   }, []);
 

@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   TOKEN: 'custodio_token',
   USER: 'custodio_user',
   COMPANY: 'custodio_company',
+  COMPANIES: 'custodio_companies',
 } as const;
 export const DRAFT_KEY_PREFIX = 'custodio_wizard_draft_';
 export const DIAS_REVISION = 180;

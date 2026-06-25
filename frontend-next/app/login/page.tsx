@@ -8,7 +8,7 @@ import * as api from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setToken, setUser } = useApp();
+  const { setToken, setUser, setCompanies, setCompany } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,9 +25,11 @@ export default function LoginPage() {
       setToken(result.access_token);
       setUser(result.user);
       const empresas = await api.listarEmpresas();
+      setCompanies(empresas);
       if (empresas.length === 0) {
         router.push('/onboarding');
       } else {
+        setCompany(empresas[0]);
         router.push('/dashboard');
       }
     } catch (err: unknown) {
