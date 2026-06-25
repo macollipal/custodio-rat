@@ -199,6 +199,9 @@ export default function RatDetailView({
         {rat.decisiones_automatizadas && (
           <FieldRow label="Decisiones automatizadas" value="Sí — requiere supervisión" />
         )}
+        {rat.logica_automatizada && (
+          <FieldRow label="Lógica automatizada" value={rat.logica_automatizada} />
+        )}
       </Section>
 
       <Section title="Base legal y finalidad">
@@ -235,6 +238,24 @@ export default function RatDetailView({
           </>
         )}
       </Section>
+
+      {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+      {(rat.sistema_almacenamiento || rat.volumen_titulares_estimado || (rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0) || rat.responsable_tratamiento_email) && (
+        <Section title="Compliance · Ley 21.719">
+          {rat.sistema_almacenamiento && (
+            <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
+          )}
+          {rat.volumen_titulares_estimado !== undefined && rat.volumen_titulares_estimado !== null && (
+            <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado.toLocaleString('es-CL')} />
+          )}
+          {rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 && (
+            <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento.join(', ')} />
+          )}
+          {rat.responsable_tratamiento_email && (
+            <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
+          )}
+        </Section>
+      )}
 
       {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
         <div className="mb-5">

@@ -219,6 +219,12 @@ def crear_ticket(
     telefono: Optional[str] = None,
     fecha_nacimiento: Optional[str] = None,
     pais: Optional[str] = None,
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Optional[str] = None,
+    evidencia_identidad: Optional[str] = None,
+    evidencia_respuesta_hash: Optional[str] = None,
+    causal_rechazo: Optional[str] = None,
+    medio_respuesta: Optional[str] = None,
 ) -> "TktSolicitudDerecho":
     """Crea un ticket TKT (para uso interno/admin)."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
@@ -245,6 +251,12 @@ def crear_ticket(
         representante_rut=representante_rut,
         telefono=telefono,
         pais=pais,
+        # Campos nuevos gaps Ley 21.719 (Iter 10)
+        metodo_verificacion_identidad=metodo_verificacion_identidad,
+        evidencia_identidad=evidencia_identidad,
+        evidencia_respuesta_hash=evidencia_respuesta_hash,
+        causal_rechazo=causal_rechazo,
+        medio_respuesta=medio_respuesta,
     )
     if fecha_nacimiento:
         from datetime import date

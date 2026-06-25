@@ -1,5 +1,5 @@
 ﻿from datetime import datetime, date
-from typing import Optional
+from typing import Any, Optional, Union
 from pydantic import BaseModel, field_validator
 
 from app.models.rat import EstadoRAT
@@ -25,6 +25,12 @@ class RATBase(BaseModel):
     estado_eipd: Optional[str] = "no_requerida"
     fecha_eipd: Optional[date] = None
     decisiones_automatizadas: bool = False
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: Optional[str] = None
+    volumen_titulares_estimado: Optional[int] = None
+    operaciones_tratamiento: Optional[Any] = None
+    logica_automatizada: Optional[str] = None
+    responsable_tratamiento_email: Optional[str] = None
     nombre_encargado: Optional[str] = None
     tiene_contrato_encargado: bool = False
     test_interes_legitimo: Optional[str] = None
@@ -90,6 +96,12 @@ class RATUpdate(BaseModel):
     estado_eipd: Optional[str] = None
     fecha_eipd: Optional[date] = None
     decisiones_automatizadas: Optional[bool] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: Optional[str] = None
+    volumen_titulares_estimado: Optional[int] = None
+    operaciones_tratamiento: Optional[Any] = None
+    logica_automatizada: Optional[str] = None
+    responsable_tratamiento_email: Optional[str] = None
     nombre_encargado: Optional[str] = None
     tiene_contrato_encargado: Optional[bool] = None
     test_interes_legitimo: Optional[str] = None

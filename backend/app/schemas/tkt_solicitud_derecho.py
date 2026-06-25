@@ -27,6 +27,12 @@ class TktTicketCreate(BaseModel):
     pais: Optional[str] = Field(default=None, max_length=100)
     representante_nombre: Optional[str] = Field(default=None, max_length=255)
     representante_rut: Optional[str] = Field(default=None, max_length=20)
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Optional[str] = Field(default=None, max_length=50, description="Enum: cedula, firma_digital, video_call, otro")
+    evidencia_identidad: Optional[str] = Field(default=None, description="Descripción de docs/verificación usada")
+    evidencia_respuesta_hash: Optional[str] = Field(default=None, max_length=64, description="SHA-256 de la respuesta enviada")
+    causal_rechazo: Optional[str] = Field(default=None, max_length=50, description="Enum: falta_identidad, solicitud_manifiestamente_infundada, excesiva, otro")
+    medio_respuesta: Optional[str] = Field(default=None, max_length=50, description="Enum: email, domicilio, portal, telefono")
 
 
 class TktTicketUpdate(BaseModel):
@@ -36,6 +42,12 @@ class TktTicketUpdate(BaseModel):
     respuesta_texto: Optional[str] = None
     plantilla_id: Optional[int] = None
     subsanacion_detalle: Optional[str] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Optional[str] = None
+    evidencia_identidad: Optional[str] = None
+    evidencia_respuesta_hash: Optional[str] = None
+    causal_rechazo: Optional[str] = None
+    medio_respuesta: Optional[str] = None
 
 
 class TktSubsanarRequest(BaseModel):
@@ -97,6 +109,12 @@ class TktTicketResponse(BaseModel):
     dias_restantes: Optional[int] = None
     sla_color: Optional[str] = None
     estado_sla: Optional[str] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Optional[str] = None
+    evidencia_identidad: Optional[str] = None
+    evidencia_respuesta_hash: Optional[str] = None
+    causal_rechazo: Optional[str] = None
+    medio_respuesta: Optional[str] = None
 
 
 class TktBloquearRequest(BaseModel):

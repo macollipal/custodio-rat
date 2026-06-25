@@ -90,6 +90,12 @@ export interface RAT {
   archivo_base_legal_nombre?: string;
   archivo_base_legal_tipo?: string;
   tiene_archivo_base_legal?: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  sistema_almacenamiento?: string;
+  volumen_titulares_estimado?: number;
+  operaciones_tratamiento?: string[];
+  logica_automatizada?: string;
+  responsable_tratamiento_email?: string;
 }
 
 export type EstadoEIPD = 'no_requerida' | 'pendiente' | 'en_proceso' | 'completada';
@@ -118,6 +124,13 @@ export interface SecurityBreach {
   incluye_datos_nna?: boolean;
   incluye_datos_financieros?: boolean;
   reportable_apdc_calculado?: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  fecha_ocurrencia_estimada?: string;
+  efectos_probables?: string;
+  causa_raiz?: string;
+  evidencia_notificacion_apdc_folio?: string;
+  estado_cierre?: string;
+  fecha_cierre?: string;
 }
 
 export interface DashboardStats {

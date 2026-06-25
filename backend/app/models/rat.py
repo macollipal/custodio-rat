@@ -5,7 +5,7 @@ Basado en los requisitos del Art. 16 de la Ley 21.719 de Chile.
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String, Text, Boolean, LargeBinary
+from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String, Text, Boolean, LargeBinary, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -58,6 +58,13 @@ class RAT(Base):
     estado_eipd: Mapped[str] = mapped_column(String(50), nullable=True, default="no_requerida")
     fecha_eipd: Mapped[datetime] = mapped_column(Date, nullable=True)
     decisiones_automatizadas: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: Mapped[str] = mapped_column(String(500), nullable=True)
+    volumen_titulares_estimado: Mapped[int] = mapped_column(Integer, nullable=True)
+    operaciones_tratamiento: Mapped[dict] = mapped_column(JSON, nullable=True)
+    logica_automatizada: Mapped[str] = mapped_column(Text, nullable=True)
+    responsable_tratamiento_email: Mapped[str] = mapped_column(String(200), nullable=True)
 
     # Encargado del tratamiento (Art. 16 Ley 21.719)
     nombre_encargado: Mapped[str] = mapped_column(String(500), nullable=True)

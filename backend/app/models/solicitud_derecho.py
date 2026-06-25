@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,6 +43,13 @@ class SolicitudDerecho(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
     plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Mapped[str] = mapped_column(String(50), nullable=True)
+    evidencia_identidad: Mapped[str] = mapped_column(Text, nullable=True)
+    evidencia_respuesta_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    causal_rechazo: Mapped[str] = mapped_column(String(50), nullable=True)
+    medio_respuesta: Mapped[str] = mapped_column(String(50), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="solicitudes_derecho")  # noqa: F821
     rat: Mapped["RAT"] = relationship("RAT")  # noqa: F821

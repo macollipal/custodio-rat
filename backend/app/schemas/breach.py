@@ -19,6 +19,13 @@ class BreachBase(BaseModel):
     incluye_datos_nna: Optional[bool] = False
     incluye_datos_financieros: Optional[bool] = False
     naturaleza: Optional[Literal["confidencialidad", "integridad", "disponibilidad"]] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: Optional[datetime] = None
+    efectos_probables: Optional[str] = None
+    causa_raiz: Optional[str] = Field(default=None, max_length=50, description="Enum: error_humano, malware, acceso_no_autorizado, proveedor, perdida_equipo, otro")
+    evidencia_notificacion_apdc_folio: Optional[str] = Field(default=None, max_length=100, description="Folio/ID de la notificación a APDC")
+    estado_cierre: Optional[str] = Field(default=None, max_length=20, description="Enum: abierta, investigando, contenida, notificada, cerrada")
+    fecha_cierre: Optional[datetime] = None
 
 
 class BreachCreate(BreachBase):
@@ -41,6 +48,13 @@ class BreachUpdate(BaseModel):
     incluye_datos_nna: Optional[bool] = None
     incluye_datos_financieros: Optional[bool] = None
     naturaleza: Optional[Literal["confidencialidad", "integridad", "disponibilidad"]] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: Optional[datetime] = None
+    efectos_probables: Optional[str] = None
+    causa_raiz: Optional[str] = None
+    evidencia_notificacion_apdc_folio: Optional[str] = None
+    estado_cierre: Optional[str] = None
+    fecha_cierre: Optional[datetime] = None
 
 
 class BreachOut(BreachBase):
@@ -53,6 +67,13 @@ class BreachOut(BreachBase):
     plazo_apdc_vencido: Optional[bool] = None
     reportable_apdc_calculado: Optional[bool] = None
     naturaleza: Optional[str] = None
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: Optional[datetime] = None
+    efectos_probables: Optional[str] = None
+    causa_raiz: Optional[str] = None
+    evidencia_notificacion_apdc_folio: Optional[str] = None
+    estado_cierre: Optional[str] = None
+    fecha_cierre: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 

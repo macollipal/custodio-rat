@@ -60,6 +60,14 @@ class SecurityBreach(Base):
         SAEnum(NaturalezaBreach), nullable=True
     )
 
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    efectos_probables: Mapped[str] = mapped_column(Text, nullable=True)
+    causa_raiz: Mapped[str] = mapped_column(String(50), nullable=True)
+    evidencia_notificacion_apdc_folio: Mapped[str] = mapped_column(String(100), nullable=True)
+    estado_cierre: Mapped[str] = mapped_column(String(20), nullable=True)
+    fecha_cierre: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
     creado_por: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

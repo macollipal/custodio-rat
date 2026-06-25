@@ -83,6 +83,13 @@ class TktSolicitudDerecho(Base):
     fecha_nacimiento: Mapped[datetime] = mapped_column(Date, nullable=True)
     pais: Mapped[str] = mapped_column(String(100), nullable=True)
 
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Mapped[str] = mapped_column(String(50), nullable=True)
+    evidencia_identidad: Mapped[str] = mapped_column(Text, nullable=True)
+    evidencia_respuesta_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    causal_rechazo: Mapped[str] = mapped_column(String(50), nullable=True)
+    medio_respuesta: Mapped[str] = mapped_column(String(50), nullable=True)
+
     company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
     responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821
     rat: Mapped["RAT"] = relationship("RAT", foreign_keys=[rat_id])  # noqa: F821

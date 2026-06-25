@@ -67,6 +67,10 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
   const [duplicateWarning, setDuplicateWarning] = useState('');
   const [showDuplicados, setShowDuplicados] = useState(false);
   const [duplicados, setDuplicados] = useState<TktTicket[]>([]);
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  const [metodoVerificacion, setMetodoVerificacion] = useState('');
+  const [evidenciaIdentidad, setEvidenciaIdentidad] = useState('');
+  const [medioRespuesta, setMedioRespuesta] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -90,6 +94,9 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
       setShowDuplicados(false);
       setDuplicados([]);
       setReprCollapsed(true);
+      setMetodoVerificacion('');
+      setEvidenciaIdentidad('');
+      setMedioRespuesta('');
     }
   }, [open]);
 
@@ -157,6 +164,10 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
         telefono: telefono ? sanitize(telefono) : undefined,
         fecha_nacimiento: fechaNacimiento || undefined,
         pais: pais || undefined,
+        // Campos nuevos gaps Ley 21.719 (Iter 10)
+        metodo_verificacion_identidad: metodoVerificacion || undefined,
+        evidencia_identidad: evidenciaIdentidad || undefined,
+        medio_respuesta: medioRespuesta || undefined,
       });
       toast.success('Solicitud creada');
       onSuccess();
@@ -485,6 +496,60 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               rows={3}
               placeholder="Detalle de la solicitud..."
               aria-label="Descripción de la solicitud"
+            />
+          </div>
+        </div>
+
+        {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+        <SectionHeader label="Verificación y respuesta" />
+        <div className="rounded-lg p-4 mb-5 space-y-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <FieldLabel htmlFor="metodo-verificacion" label="Método verificación identidad" />
+              <select
+                id="metodo-verificacion"
+                value={metodoVerificacion}
+                onChange={e => setMetodoVerificacion(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm border"
+                style={{ borderColor: '#E5E7EB' }}
+                aria-label="Método de verificación de identidad"
+              >
+                <option value="">— No especificado —</option>
+                <option value="cedula">Cédula de identidad</option>
+                <option value="firma_digital">Firma digital</option>
+                <option value="video_call">Videollamada</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <FieldLabel htmlFor="medio-respuesta" label="Medio de respuesta" />
+              <select
+                id="medio-respuesta"
+                value={medioRespuesta}
+                onChange={e => setMedioRespuesta(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm border"
+                style={{ borderColor: '#E5E7EB' }}
+                aria-label="Medio de respuesta elegido por el titular"
+              >
+                <option value="">— No especificado —</option>
+                <option value="email">Email</option>
+                <option value="domicilio">Domicilio</option>
+                <option value="portal">Portal</option>
+                <option value="telefono">Teléfono</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <FieldLabel htmlFor="evidencia-identidad" label="Evidencia de verificación" />
+            <textarea
+              id="evidencia-identidad"
+              value={evidenciaIdentidad}
+              onChange={e => setEvidenciaIdentidad(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+              rows={2}
+              placeholder="Descripción de documentos o método usado para verificar la identidad..."
+              aria-label="Evidencia de verificación de identidad"
             />
           </div>
         </div>

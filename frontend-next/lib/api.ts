@@ -608,6 +608,12 @@ export interface TktTicket {
   rat_id?: number;
   plazo_bloqueo_vencimiento?: string;
   estado_original?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad?: string;
+  evidencia_identidad?: string;
+  evidencia_respuesta_hash?: string;
+  causal_rechazo?: string;
+  medio_respuesta?: string;
 }
 
 export interface TktDashboard {
@@ -664,6 +670,10 @@ export async function crearTktTicket(data: {
   telefono?: string;
   fecha_nacimiento?: string;
   pais?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad?: string;
+  evidencia_identidad?: string;
+  medio_respuesta?: string;
 }): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/`, {
     method: 'POST',

@@ -36,6 +36,13 @@ interface BreachFormData {
   incluye_datos_sensibles: boolean;
   incluye_datos_nna: boolean;
   incluye_datos_financieros: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  fecha_ocurrencia_estimada?: string;
+  efectos_probables?: string;
+  causa_raiz?: string;
+  evidencia_notificacion_apdc_folio?: string;
+  estado_cierre?: string;
+  fecha_cierre?: string;
 }
 
 function BreachForm({
@@ -62,6 +69,13 @@ function BreachForm({
     incluye_datos_sensibles: initial?.incluye_datos_sensibles ?? false,
     incluye_datos_nna: initial?.incluye_datos_nna ?? false,
     incluye_datos_financieros: initial?.incluye_datos_financieros ?? false,
+    // Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: initial?.fecha_ocurrencia_estimada ?? '',
+    efectos_probables: initial?.efectos_probables ?? '',
+    causa_raiz: initial?.causa_raiz ?? '',
+    evidencia_notificacion_apdc_folio: initial?.evidencia_notificacion_apdc_folio ?? '',
+    estado_cierre: initial?.estado_cierre ?? '',
+    fecha_cierre: initial?.fecha_cierre ?? '',
   });
 
   function set(k: keyof BreachFormData, v: string | number | boolean | undefined) {
@@ -226,6 +240,92 @@ function BreachForm({
         </div>
       </div>
 
+      {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+      <div className="rounded-lg p-4 space-y-3" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+        <p className="text-sm font-semibold" style={{ color: '#0369A1' }}>📋 Compliance · Ley 21.719</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha ocurrencia estimada</label>
+            <input
+              type="datetime-local"
+              value={form.fecha_ocurrencia_estimada ?? ''}
+              onChange={e => set('fecha_ocurrencia_estimada', e.target.value || undefined)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Causa raíz</label>
+            <select
+              value={form.causa_raiz ?? ''}
+              onChange={e => set('causa_raiz', e.target.value || undefined)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="">— No especificada —</option>
+              <option value="error_humano">Error humano</option>
+              <option value="malware">Malware</option>
+              <option value="acceso_no_autorizado">Acceso no autorizado</option>
+              <option value="proveedor">Proveedor</option>
+              <option value="perdida_equipo">Pérdida de equipo</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Efectos probables para los titulares</label>
+          <textarea
+            value={form.efectos_probables ?? ''}
+            onChange={e => set('efectos_probables', e.target.value || undefined)}
+            rows={2}
+            placeholder="Ej: Robo de identidad, fraude financiero, daño reputacional..."
+            className="w-full px-3 py-2 rounded-lg text-sm border"
+            style={{ borderColor: '#E5E7EB' }}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Folio notificación APDC</label>
+            <input
+              type="text"
+              value={form.evidencia_notificacion_apdc_folio ?? ''}
+              onChange={e => set('evidencia_notificacion_apdc_folio', e.target.value || undefined)}
+              placeholder="Ej: APDC-2026-001234"
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Estado de cierre</label>
+            <select
+              value={form.estado_cierre ?? ''}
+              onChange={e => set('estado_cierre', e.target.value || undefined)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="">— No especificado —</option>
+              <option value="abierta">Abierta</option>
+              <option value="investigando">Investigando</option>
+              <option value="contenida">Contenida</option>
+              <option value="notificada">Notificada</option>
+              <option value="cerrada">Cerrada</option>
+            </select>
+          </div>
+        </div>
+        {form.estado_cierre === 'cerrada' && (
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha de cierre</label>
+            <input
+              type="datetime-local"
+              value={form.fecha_cierre ?? ''}
+              onChange={e => set('fecha_cierre', e.target.value || undefined)}
+              className="w-full px-3 py-2 rounded-lg text-sm border"
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-between pt-2">
         <button
           onClick={onCancel}
@@ -297,6 +397,13 @@ export default function BreachesPage() {
         incluye_datos_sensibles: data.incluye_datos_sensibles,
         incluye_datos_nna: data.incluye_datos_nna,
         incluye_datos_financieros: data.incluye_datos_financieros,
+        // Campos nuevos gaps Ley 21.719 (Iter 10)
+        fecha_ocurrencia_estimada: data.fecha_ocurrencia_estimada ? new Date(data.fecha_ocurrencia_estimada).toISOString() : undefined,
+        efectos_probables: data.efectos_probables || undefined,
+        causa_raiz: data.causa_raiz || undefined,
+        evidencia_notificacion_apdc_folio: data.evidencia_notificacion_apdc_folio || undefined,
+        estado_cierre: data.estado_cierre || undefined,
+        fecha_cierre: data.fecha_cierre ? new Date(data.fecha_cierre).toISOString() : undefined,
       };
       if (editingBreach) {
         await api.actualizarBrecha(editingBreach.id, payload);
@@ -428,6 +535,16 @@ export default function BreachesPage() {
                       </div>
                     )}
 
+                    {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+                    {(b.fecha_ocurrencia_estimada || b.efectos_probables || b.causa_raiz || b.evidencia_notificacion_apdc_folio || b.estado_cierre) && (
+                      <div className="text-xs mb-3 p-2 rounded" style={{ background: '#F0F9FF', color: '#0369A1' }}>
+                        <span className="font-semibold">📋 Compliance: </span>
+                        {b.causa_raiz && <span>Causa: {b.causa_raiz} · </span>}
+                        {b.estado_cierre && <span>Estado: {b.estado_cierre} · </span>}
+                        {b.evidencia_notificacion_apdc_folio && <span>Folio: {b.evidencia_notificacion_apdc_folio}</span>}
+                      </div>
+                    )}
+
                     <div className="flex gap-3 mb-3">
                       <div className="flex items-center gap-1.5">
                         <div className={`w-3 h-3 rounded-full ${b.notificado_apdc ? '' : ''}`} style={{ background: b.notificado_apdc ? '#059669' : '#D97706' }} />
@@ -497,6 +614,13 @@ export default function BreachesPage() {
               medidas_adoptadas: editingBreach.medidas_adoptadas ?? '',
               notificado_apdc: editingBreach.notificado_apdc,
               notificado_titulares: editingBreach.notificado_titulares,
+              // Campos nuevos gaps Ley 21.719 (Iter 10)
+              fecha_ocurrencia_estimada: editingBreach.fecha_ocurrencia_estimada ? new Date(editingBreach.fecha_ocurrencia_estimada).toISOString().slice(0, 16) : '',
+              efectos_probables: editingBreach.efectos_probables ?? '',
+              causa_raiz: editingBreach.causa_raiz ?? '',
+              evidencia_notificacion_apdc_folio: editingBreach.evidencia_notificacion_apdc_folio ?? '',
+              estado_cierre: editingBreach.estado_cierre ?? '',
+              fecha_cierre: editingBreach.fecha_cierre ? new Date(editingBreach.fecha_cierre).toISOString().slice(0, 16) : '',
             } : undefined}
             onSave={handleSave}
             onCancel={() => { setView('list'); setEditingBreach(null); }}

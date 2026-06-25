@@ -412,6 +412,45 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
           </div>
         )}
 
+        {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+        {(ticket.metodo_verificacion_identidad || ticket.evidencia_identidad || ticket.evidencia_respuesta_hash || ticket.causal_rechazo || ticket.medio_respuesta) && (
+          <div className="rounded-lg p-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+            <p className="text-xs font-semibold mb-2" style={{ color: '#0369A1' }}>📋 Compliance · Ley 21.719</p>
+            <div className="space-y-2">
+              {ticket.metodo_verificacion_identidad && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-medium w-36 flex-shrink-0" style={{ color: '#6B7280' }}>Método verificación:</span>
+                  <span className="text-xs" style={{ color: '#111827' }}>{ticket.metodo_verificacion_identidad}</span>
+                </div>
+              )}
+              {ticket.evidencia_identidad && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-medium w-36 flex-shrink-0" style={{ color: '#6B7280' }}>Evidencia identidad:</span>
+                  <span className="text-xs" style={{ color: '#111827' }}>{ticket.evidencia_identidad}</span>
+                </div>
+              )}
+              {ticket.evidencia_respuesta_hash && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-medium w-36 flex-shrink-0" style={{ color: '#6B7280' }}>Hash respuesta:</span>
+                  <span className="text-xs font-mono" style={{ color: '#111827' }}>{ticket.evidencia_respuesta_hash}</span>
+                </div>
+              )}
+              {ticket.causal_rechazo && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-medium w-36 flex-shrink-0" style={{ color: '#6B7280' }}>Causal rechazo:</span>
+                  <span className="text-xs" style={{ color: '#DC2626' }}>{ticket.causal_rechazo}</span>
+                </div>
+              )}
+              {ticket.medio_respuesta && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-medium w-36 flex-shrink-0" style={{ color: '#6B7280' }}>Medio respuesta:</span>
+                  <span className="text-xs" style={{ color: '#111827' }}>{ticket.medio_respuesta}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div>
           <p className="text-xs font-semibold mb-2" style={{ color: '#374151' }}>Respuesta formal</p>
           {isAdmin ? (

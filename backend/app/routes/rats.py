@@ -226,7 +226,6 @@ async def crear(
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
-
 @router.post("/{rat_id}/consentimientos", response_model=ConsentimientoOut, status_code=201, summary="Registrar consentimiento expreso para datos sensibles (REC-06)")
 async def crear_consentimiento(
     request: Request,
@@ -235,42 +234,28 @@ async def crear_consentimiento(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Registra un consentimiento expreso del titular para un RAT que trata datos sensibles (Art. 16 Ley 21.719)."""
-    from app.models.rat import RAT as RATModel
-    from app.models.consentimiento import Consentimiento
+    """Registra un consentimiento expreso del titular para un RAT que trata datos sensibles (Art. 16 Ley 21.719).
 
+    Delega en consentimiento_service.crear_consentimiento() para aplicar el cifrado
+    PII (Fernet) y hash SHA-256 de texto_consentimiento (Arts. 11, 12, 19 Ley 21.719).
+    """
+    from app.models.rat import RAT as RATModel
     rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
 
-    if data.rat_id != rat_id:
-        raise HTTPException(status_code=400, detail="El rat_id del consentimiento no coincide con la URL.")
+    from app.services.consentimiento_service import crear_consentimiento as crear_consentimiento_service
+    from app.services.consentimiento_service import RATNotFoundError
 
-    consentimiento = Consentimiento(
-        company_id=rat.company_id,
-        rat_id=rat_id,
-        nombre_titular=data.nombre_titular,
-        email_titular=data.email_titular,
-        canal=data.canal,
-        texto_consentimiento=data.texto_consentimiento,
-        fecha_obtencion=data.fecha_obtencion,
-        ip_origen=data.ip_origen or get_client_ip(request),
-        activo=True,
-    )
-    db.add(consentimiento)
-    db.flush()
-    from app.services.audit_service import log_audit
-    log_audit(
-        db=db,
-        entidad="consentimiento",
-        entidad_id=consentimiento.id,
-        accion="create",
-        usuario=current_user.username,
-        detalle={"rat_id": rat_id, "titular": data.nombre_titular, "canal": data.canal},
-    )
-    db.commit()
-    db.refresh(consentimiento)
+    if not data.ip_origen:
+        data.ip_origen = get_client_ip(request)
+
+    try:
+        consentimiento = crear_consentimiento_service(db=db, data=data, usuario=current_user.username)
+    except RATNotFoundError:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    return consentimiento
     return consentimiento
 
 

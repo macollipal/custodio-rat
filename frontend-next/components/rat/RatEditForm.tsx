@@ -10,7 +10,16 @@ import type { RAT } from '@/types';
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
 const ESTADOS: RAT['estado'][] = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias'];
+const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
+const OPERACIONES_TRATAMIENTO_OPCIONES = [
+  'recoleccion',
+  'almacenamiento',
+  'consulta',
+  'uso',
+  'comunicacion',
+  'cesion',
+  'eliminacion',
+];
 
 interface RatEditFormProps {
   rat: RAT;
@@ -51,6 +60,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     consentimiento_nombre:  '',
     consentimiento_email:  '',
     consentimiento_texto:  '',
+    // Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: rat.sistema_almacenamiento ?? '',
+    volumen_titulares_estimado: rat.volumen_titulares_estimado ?? '',
+    operaciones_tratamiento: rat.operaciones_tratamiento ?? [],
+    logica_automatizada: rat.logica_automatizada ?? '',
+    responsable_tratamiento_email: rat.responsable_tratamiento_email ?? '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -238,7 +253,17 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>🤖 Involucra decisiones automatizadas</span>
                   </label>
                   {form.decisiones_automatizadas && (
-                    <AlertBanner message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8)." type="info" />
+                    <div className="pl-6 space-y-2">
+                      <AlertBanner message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8)." type="info" />
+                      <textarea
+                        value={form.logica_automatizada}
+                        onChange={e => set('logica_automatizada', e.target.value)}
+                        rows={3}
+                        placeholder="Describa la lógica aplicada, consecuencias para el titular y posibilidad de revisión humana..."
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
@@ -458,6 +483,76 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Observaciones de auditoría</label>
               <textarea value={form.observaciones_auditoria} onChange={e => set('observaciones_auditoria', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
+            </div>
+
+            {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#0369A1' }}>📋 Campos de Compliance (Ley 21.719)</h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
+                  <input
+                    type="text"
+                    value={form.sistema_almacenamiento}
+                    onChange={e => set('sistema_almacenamiento', e.target.value)}
+                    placeholder="Ej: CRM Salesforce, Excel, Google Drive, Sistema clínico..."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
+                  <input
+                    type="number"
+                    value={form.volumen_titulares_estimado}
+                    onChange={e => set('volumen_titulares_estimado', e.target.value ? parseInt(e.target.value) : '')}
+                    placeholder="Ej: 50000"
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
+                <div className="flex flex-wrap gap-2">
+                  {OPERACIONES_TRATAMIENTO_OPCIONES.map(op => (
+                    <label key={op} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full text-xs font-medium border transition" style={{
+                      backgroundColor: (form.operaciones_tratamiento as string[])?.includes(op) ? '#DBEAFE' : 'white',
+                      borderColor: (form.operaciones_tratamiento as string[])?.includes(op) ? '#2563EB' : '#D1D5DB',
+                      color: (form.operaciones_tratamiento as string[])?.includes(op) ? '#1D4ED8' : '#6B7280',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={(form.operaciones_tratamiento as string[])?.includes(op) || false}
+                        onChange={e => {
+                          const current = (form.operaciones_tratamiento as string[]) || [];
+                          if (e.target.checked) {
+                            set('operaciones_tratamiento', [...current, op]);
+                          } else {
+                            set('operaciones_tratamiento', current.filter((x: string) => x !== op));
+                          }
+                        }}
+                        className="sr-only"
+                      />
+                      {op}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Responsable del tratamiento (email)</label>
+                <input
+                  type="email"
+                  value={form.responsable_tratamiento_email}
+                  onChange={e => set('responsable_tratamiento_email', e.target.value)}
+                  placeholder="Ej: responsable@empresa.cl"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
             </div>
 
             <div className="flex justify-between pt-2">

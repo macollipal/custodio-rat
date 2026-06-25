@@ -87,6 +87,12 @@ def _ticket_to_response(ticket: TktSolicitudDerecho) -> dict:
         dias_restantes=dias_rest,
         sla_color=sla_color,
         estado_sla=estado_sla,
+        # Campos nuevos gaps Ley 21.719 (Iter 10)
+        metodo_verificacion_identidad=ticket.metodo_verificacion_identidad,
+        evidencia_identidad=ticket.evidencia_identidad,
+        evidencia_respuesta_hash=ticket.evidencia_respuesta_hash,
+        causal_rechazo=ticket.causal_rechazo,
+        medio_respuesta=ticket.medio_respuesta,
     ).model_dump()
 
 
@@ -181,6 +187,12 @@ def crear_ticket_endpoint(
         telefono=data.telefono,
         fecha_nacimiento=data.fecha_nacimiento,
         pais=data.pais,
+        # Campos nuevos gaps Ley 21.719 (Iter 10)
+        metodo_verificacion_identidad=data.metodo_verificacion_identidad,
+        evidencia_identidad=data.evidencia_identidad,
+        evidencia_respuesta_hash=data.evidencia_respuesta_hash,
+        causal_rechazo=data.causal_rechazo,
+        medio_respuesta=data.medio_respuesta,
     )
     log_audit(
         db=db,
@@ -349,6 +361,18 @@ def actualizar_ticket(
             )
             if error:
                 raise HTTPException(status_code=400, detail=error)
+
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    if data.metodo_verificacion_identidad is not None:
+        ticket.metodo_verificacion_identidad = data.metodo_verificacion_identidad
+    if data.evidencia_identidad is not None:
+        ticket.evidencia_identidad = data.evidencia_identidad
+    if data.evidencia_respuesta_hash is not None:
+        ticket.evidencia_respuesta_hash = data.evidencia_respuesta_hash
+    if data.causal_rechazo is not None:
+        ticket.causal_rechazo = data.causal_rechazo
+    if data.medio_respuesta is not None:
+        ticket.medio_respuesta = data.medio_respuesta
 
     db.commit()
     db.refresh(ticket)
