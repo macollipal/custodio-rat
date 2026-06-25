@@ -345,7 +345,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   {rat.tiene_archivo_base_legal && !form.archivo_base_legal_base64 && (
                     <button
                       type="button"
-                      onClick={() => window.open(`/api/rats/${rat.id}/archivo`, '_blank')}
+                      onClick={async () => {
+                        try {
+                          const blob = await api.descargarArchivoRAT(rat.id);
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                          setTimeout(() => URL.revokeObjectURL(url), 60000);
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : 'Error al abrir el documento');
+                        }
+                      }}
                       className="mt-2 text-xs font-medium underline"
                       style={{ color: '#2563EB' }}
                     >

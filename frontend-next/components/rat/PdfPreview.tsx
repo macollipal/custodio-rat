@@ -67,15 +67,23 @@ export default function PdfPreview({ ratId, filename }: PdfPreviewProps) {
       {error && (
         <div className="flex flex-col items-center justify-center gap-2 p-4" style={{ height: 200 }}>
           <div className="text-xs font-medium" style={{ color: '#DC2626' }}>No se pudo cargar el documento</div>
-          <a
-            href={`${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8002'}/rats/${ratId}/archivo`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const blob = await api.descargarArchivoRAT(ratId);
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank', 'noopener,noreferrer');
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : 'Error al abrir el documento');
+              }
+            }}
             className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition"
             style={{ background: '#2563EB' }}
           >
             Abrir en nueva pestaña
-          </a>
+          </button>
         </div>
       )}
       {blobUrl && !loading && !error && (
