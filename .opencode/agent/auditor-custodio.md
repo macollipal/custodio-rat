@@ -50,6 +50,29 @@ Para cada auditoría:
 5. **Hallazgos** con severidad, evidencia, impacto legal, remediación.
 6. **Regeneración documental** v1.6-BETA en formato APDC.
 
+## ⚠️ Validación de migraciones (OBLIGATORIO)
+
+**Antes de cerrar la auditoría, validar que toda modificación a `backend/app/models/*.py` tenga su correspondiente migración en `backend/migrations/`.** Sin esta validación, los endpoints quedan rotos en producción.
+
+Procedimiento:
+
+1. Comparar `git log --diff-filter=A --name-only -- 'backend/app/models/*.py' <commit_anterior>..HEAD` — detecta archivos nuevos o modificados.
+2. Comparar `git log --diff-filter=A --name-only -- 'backend/migrations/*.sql' <commit_anterior>..HEAD` — detecta migraciones nuevas.
+3. Si hay modelos nuevos/modificados sin migración nueva → **bloqueante severidad CRÍTICA**.
+
+Plantilla de validación:
+
+```bash
+# En el orquestador del loop, antes de invocar al auditor final:
+MODIFIED=$(git diff --name-only HEAD~N..HEAD -- 'backend/app/models/')
+MIGRATIONS=$(git diff --name-only HEAD~N..HEAD -- 'backend/migrations/' | grep -E '\.sql$')
+
+# Si MODIFIED no está vacío y MIGRATIONS está vacío:
+# → BLOQUEANTE: falta migración
+```
+
+Reportar este hallazgo en la sección "Hallazgos de auditoría operativa" del reporte con severidad CRÍTICA si se detecta la discrepancia.
+
 ## Stack y dominio
 
 - **Backend:** Python · FastAPI · SQLAlchemy · Alembic

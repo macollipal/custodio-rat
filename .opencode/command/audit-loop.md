@@ -73,6 +73,75 @@ exit_criterion_met: [yes|no]
 - **Si en una iteración NO se aplicaron fixes**, igual seguí al paso 6 — el auditor puede encontrar nuevos hallazgos.
 - **Si una iteración empeora el score**, no insistas: tomá nota, dejá el commit, y avisá al usuario antes de la próxima.
 
+## ⚠️ REGLA CRÍTICA: Validar y ejecutar migración de BD cuando hay cambios de schema
+
+**Incidente documentado:** El 2026-06-24 los endpoints de Brechas, Encargados, Consentimientos y EIPD quedaron rotos porque se modificaron modelos SQLAlchemy en iter 7 y 8 sin generar/ejecutar la migración SQL correspondiente. El error "column does not exist" se replicó en QA y producción.
+
+### Procedimiento obligatorio en CADA iteración
+
+Después del paso 5a/5b (arquitecto/frontend) y ANTES del paso 6 (auditor final), el orquestador DEBE:
+
+1. **Detectar cambios en modelos:**
+
+```bash
+git diff --name-only HEAD~1..HEAD -- 'backend/app/models/'
+```
+
+Si la salida está vacía, no se cambió ningún modelo → saltar al paso 6.
+
+2. **Detectar si hay migración nueva en el commit:**
+
+```bash
+git diff --name-only HEAD~1..HEAD -- 'backend/migrations/' | Select-String -Pattern '\.sql$'
+```
+
+3. **Validar paridad:**
+
+   - **Si hay modelos modificados PERO no hay migración nueva → BLOQUEANTE: abortar iteración.**
+     Reportar al usuario: "Falta migración SQL para los cambios en `models/<archivo>.py>`. Revisar la regla crítica en `.opencode/agent/arquitecto-custodio.md`."
+
+   - **Si hay modelos modificados Y hay migración nueva → ejecutar migración contra Neon QA:**
+
+```bash
+cd backend
+python -c "
+import psycopg2
+from app.core.config import settings
+conn = psycopg2.connect(settings.DATABASE_URL)
+conn.autocommit = False
+cur = conn.cursor()
+with open('migrations/<archivo_nuevo>.sql', 'r', encoding='utf-8') as f:
+    cur.execute(f.read())
+conn.commit()
+print('Migracion ejecutada OK')
+"
+```
+
+4. **Verificar columnas** después de la migración:
+
+```bash
+cd backend
+python -c "
+import psycopg2
+from app.core.config import settings
+conn = psycopg2.connect(settings.DATABASE_URL)
+cur = conn.cursor()
+cur.execute(\"SELECT column_name FROM information_schema.columns WHERE table_name = '<tabla>' AND column_name IN ('<col1>', '<col2>')\")
+print(cur.fetchall())
+"
+```
+
+5. **Solo entonces avanzar al paso 6** (auditor final).
+
+### Convenciones de migraciones
+
+- **Naming:** `backend/migrations/YYYY_MM_DD_NNN_<descripcion>.sql`
+- **Idempotencia:** SIEMPRE `ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`
+- **Atomicidad:** SIEMPRE `BEGIN; ... COMMIT;`
+- **Documentación:** `COMMENT ON COLUMN` en cada columna nueva
+- **NO DROP/DELETE** — preservar datos (Art. 19 Ley 21.719)
+- **Solo Neon QA** — nunca SQLite
+
 ## Recursos adicionales
 
 - Si necesitás inspeccionar el repo antes de delegar, usá `read`, `grep`, `glob`, `bash`.

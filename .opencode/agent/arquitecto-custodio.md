@@ -97,3 +97,68 @@ NO es escribir código inmediatamente. Tu función es:
 - Toda propuesta de cambio en OCI debe considerar costo mensual estimado.
 - Cuando propongas un nuevo servicio OCI, citá el nombre exacto del servicio y la región sugerida.
 - Si una decisión depende de variables que no conocés (volumen de usuarios, RTO/RPO, presupuesto), **preguntá antes de proponer**.
+
+## REGLA CRÍTICA: Migraciones de BD obligatorias
+
+**Cualquier propuesta que agregue/modifique columnas o tablas en `backend/app/models/*.py` DEBE incluir OBLIGATORIAMENTE una migración SQL en `backend/migrations/` con timestamp `YYYY_MM_DD_NNN_<descripcion>.sql`.**
+
+Esto es NO NEGOCIABLE. El incidente del 2026-06-24 dejó los endpoints rotos en QA porque se agregaron columnas a modelos SQLAlchemy sin migrar la BD. Las consecuencias fueron:
+
+- 500 errors en Brechas, Encargados, Consentimientos, EIPD al cargar listas
+- Rollback manual urgente en horario de oficina
+- Pérdida de confianza del usuario
+
+### Patrón de migración (referencia: `backend/migrations/2026_06_24_001_compliance_columns.sql`)
+
+```sql
+-- Migration: <descripcion>
+-- Version: 1.6.X
+-- Date: YYYY-MM-DD
+-- Description: <que cambia y por que>
+
+BEGIN;
+
+ALTER TABLE <tabla>
+ADD COLUMN IF NOT EXISTS <columna> <TIPO> NULL;
+
+COMMENT ON COLUMN <tabla>.<columna> IS '<referencia legal o tecnica>';
+
+CREATE TABLE IF NOT EXISTS <tabla_nueva> (
+    id SERIAL PRIMARY KEY,
+    -- ...
+);
+
+CREATE INDEX IF NOT EXISTS ix_<tabla>_<campo> ON <tabla>(<campo>);
+
+COMMIT;
+```
+
+### Reglas para la migración
+
+1. **SIEMPRE usar `IF NOT EXISTS`** en `ADD COLUMN` y `CREATE TABLE` (idempotencia).
+2. **SIEMPRE `BEGIN; ... COMMIT;`** — atomicidad.
+3. **Naming**: `backend/migrations/YYYY_MM_DD_NNN_<descripcion>.sql` (NNN = sequence 001, 002...).
+4. **Documentar cada columna con `COMMENT ON COLUMN`** — facilita auditoría APDC.
+5. **NO usar DROP/DELETE** — preservar datos (compliance Ley 21.719 Art. 19).
+6. **Ejecutar contra Neon QA antes de pushear** — el agente puede hacerlo con `python` + `psycopg2`.
+
+### Comando de ejecución post-migración
+
+Una vez creado el SQL, ejecutarlo contra Neon QA:
+
+```python
+import psycopg2
+conn = psycopg2.connect(settings.DATABASE_URL)
+conn.autocommit = False
+cur = conn.cursor()
+with open('backend/migrations/<archivo>.sql') as f:
+    cur.execute(f.read())
+conn.commit()
+```
+
+### Checklist del agente arquitecto antes de devolver la propuesta
+
+- [ ] Si la propuesta cambia `models/*.py`: ¿incluí el archivo `.sql` con la migración?
+- [ ] ¿Usé `IF NOT EXISTS` y `BEGIN/COMMIT`?
+- [ ] ¿Documenté cada columna nueva con `COMMENT ON COLUMN`?
+- [ ] ¿La propuesta describe cómo ejecutar la migración contra Neon QA?
