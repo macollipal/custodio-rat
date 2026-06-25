@@ -21,7 +21,11 @@ def generate_key() -> str:
 def _get_fernet() -> Optional[Fernet]:
     """Retorna instancia Fernet o None si no hay clave válida."""
     from app.core.config import settings
-    key = settings.resolved_encryption_key
+    try:
+        key = settings.resolved_encryption_key
+    except ValueError as e:
+        logger.warning(f"ENCRYPTION_KEY no disponible — tratando datos como no cifrados: {e}")
+        return None
     if not key:
         logger.warning("ENCRYPTION_KEY no configurada — datos se almacenarán sin cifrar")
         return None
