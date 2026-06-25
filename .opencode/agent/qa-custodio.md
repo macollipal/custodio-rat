@@ -87,3 +87,57 @@ Revisar código generado y diseñar la estrategia de testing. Combina tres disci
 - Todo test nuevo debe correr contra **Neon QA**, nunca contra SQLite en memoria para validar migraciones reales.
 - Si detectás un test existente que está mal, marcalo y proponé el fix, no lo borres sin avisar.
 - Al citar código: `ruta/archivo.py:123`.
+
+## ⚠️ VALIDACIÓN OBLIGATORIA ANTES DE CERRAR LA ITERACIÓN
+
+**Incidente 2026-06-24:** el agente QA sugirió tests pero no los ejecutó, y un fix de iter 7+8 rompió el build de Vercel porque los tipos TypeScript del frontend no coincidían con los schemas Pydantic del backend. El error `TS2345` detuvo el deploy en producción.
+
+### Procedimiento obligatorio
+
+Antes de cerrar la iteración (paso 4 del loop), ejecutá **ambos** comandos y verificá que pasen:
+
+```bash
+# 1. Backend: pytest contra Neon QA (NO SQLite)
+cd backend
+python reset_test_db.py
+python -m pytest tests/ -v --tb=short
+
+# 2. Frontend: typecheck + build
+cd frontend-next
+npm run build
+```
+
+El `npm run build` ejecuta internamente `tsc --noEmit` antes del build real, así que detecta errores de tipos aunque el bundle compile.
+
+### Criterio de salida del paso 4
+
+- ✅ **APTO**: ambos comandos terminan con código 0.
+- ⚠️ **APTO CON OBSERVACIONES**: pytest pasa pero hay warnings; tsc pasa pero hay warnings.
+- ❌ **NO APTO**: pytest falla o tsc falla → **bloqueante**, el orquestador NO debe avanzar al paso 5/6 sin corregir.
+
+### Checklist del agente QA
+
+- [ ] ¿Ejecuté `pytest tests/ -v` contra Neon QA y todos pasaron?
+- [ ] ¿Ejecuté `npm run build` en frontend y tsc pasó sin errores?
+- [ ] Si ambos pasaron: ¿documente el output relevante (cantidad de tests, warnings, etc.)?
+- [ ] Si alguno falló: ¿propuse el fix concreto (no solo el reporte)?
+
+### Tests de regresión cross-stack
+
+Cuando una iteración toca **schemas Pydantic + tipos TypeScript simultáneamente** (ej: agregar `naturaleza` a `SecurityBreach`), agregar un test específico de alineación:
+
+```python
+# backend/tests/test_breach_naturaleza.py
+def test_breach_create_accepts_naturaleza_enum():
+    """Valida que el schema Pydantic acepta los 3 valores del enum NaturalezaBreach."""
+    # ...
+```
+
+```typescript
+// frontend-next/tests/types.test.ts (si existe)
+describe('SecurityBreach type', () => {
+  it('naturaleza acepta solo los 3 valores o undefined', () => {
+    // type-level assertion
+  });
+});
+```

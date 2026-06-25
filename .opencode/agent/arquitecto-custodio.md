@@ -162,3 +162,52 @@ conn.commit()
 - [ ] ¿Usé `IF NOT EXISTS` y `BEGIN/COMMIT`?
 - [ ] ¿Documenté cada columna nueva con `COMMENT ON COLUMN`?
 - [ ] ¿La propuesta describe cómo ejecutar la migración contra Neon QA?
+
+## REGLA CRÍTICA: Type-safety cross-stack (frontend ↔ backend)
+
+**Cualquier propuesta que agregue un campo a un schema Pydantic (`backend/app/schemas/*.py`) DEBE reflejarse en el tipo TypeScript correspondiente (`frontend-next/types/index.ts` o `frontend-next/lib/api.ts`).** Lo mismo vale en sentido inverso.
+
+**Incidente 2026-06-24:** se agregó `naturaleza` al modelo `SecurityBreach` y schema Pydantic, pero el tipo del form en `frontend-next/app/(app)/breaches/page.tsx` quedó como `'' | 'confidencialidad' | 'integridad' | 'disponibilidad'` (con string vacío para "no seleccionado") mientras el tipo `SecurityBreach.naturaleza` solo permite los 3 valores del enum o `undefined`. Build de Next.js falló en Vercel con `TS2345`.
+
+### Reglas de alineación
+
+1. **Schemas Pydantic (backend):**
+   - Campo opcional: `Optional[Literal[...]] = None`
+   - Campo requerido: `Literal[...]` (sin Optional, sin default)
+   - **No usar `''` como sentinel** — usar `None` y `Optional`.
+
+2. **Tipos TypeScript (frontend):**
+   - Para campos con valor "no seleccionado": `tipo | undefined`
+   - **Nunca `'' | tipo`** como sentinel de "no seleccionado". El string vacío no es compatible con `Literal[...]` y rompe el build.
+   - Si necesitás valor inicial `''` para inputs HTML, hacelo en el useState y convertí a `undefined` antes de enviar al backend.
+
+3. **Formularios frontend:**
+   - El estado interno del form puede tener `string` vacío para inputs.
+   - El payload al backend debe omitir el campo o mandarlo como `undefined` cuando no hay selección.
+   - Validación TypeScript: el tipo del `payload` debe coincidir con `Partial<TipoEntidad>` del frontend.
+
+### Patrón recomendado para selects con opción "no seleccionado"
+
+```typescript
+const [form, setForm] = useState<{ naturaleza: 'confidencialidad' | 'integridad' | 'disponibilidad' | undefined }>({
+  naturaleza: undefined,
+});
+
+<input
+  value={form.naturaleza ?? ''}  // Para que el DOM no se queje
+  onChange={e => {
+    const v = e.target.value;
+    setForm(f => ({ ...f, naturaleza: v === '' ? undefined : v }));
+  }}
+/>
+
+// Payload al backend: incluir el campo solo si tiene valor
+const payload = form.naturaleza ? { ...resto, naturaleza: form.naturaleza } : resto;
+```
+
+### Checklist cross-stack
+
+- [ ] Si la propuesta cambia `schemas/*.py`: ¿actualicé `types/index.ts` o `lib/api.ts`?
+- [ ] ¿Los tipos de los forms (interfaces `*FormData`) coinciden con `Partial<TipoEntidad>`?
+- [ ] ¿Los valores iniciales de los selects usan `undefined` en lugar de `''`?
+- [ ] ¿El payload al backend omite campos `undefined` o los convierte correctamente?

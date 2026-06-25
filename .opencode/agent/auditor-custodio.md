@@ -73,6 +73,48 @@ MIGRATIONS=$(git diff --name-only HEAD~N..HEAD -- 'backend/migrations/' | grep -
 
 Reportar este hallazgo en la sección "Hallazgos de auditoría operativa" del reporte con severidad CRÍTICA si se detecta la discrepancia.
 
+## ⚠️ Validación de paridad cross-stack (frontend ↔ backend)
+
+**Antes de cerrar la auditoría, validar que toda modificación a `backend/app/schemas/*.py` se refleje en los tipos TypeScript de `frontend-next/types/` o `frontend-next/lib/api.ts`.** Sin esta validación, el build de Vercel puede fallar con `TS2345`.
+
+Procedimiento:
+
+1. Detectar cambios en schemas Pydantic:
+
+```bash
+git diff --name-only HEAD~N..HEAD -- 'backend/app/schemas/'
+```
+
+2. Detectar cambios en tipos TypeScript:
+
+```bash
+git diff --name-only HEAD~N..HEAD -- 'frontend-next/types/' 'frontend-next/lib/api.ts'
+```
+
+3. Si hay schemas modificados sin tipos actualizados → **bloqueante severidad ALTA**.
+
+4. Si hay formularios frontend que usan los tipos modificados, validar manualmente que el `payload` enviado coincide con `Partial<TipoEntidad>`:
+
+```bash
+grep -rn "FormData\|interface.*Form" frontend-next/app/\(app\)/
+```
+
+Verificar que cada campo del form esté tipado con el tipo correcto (sin sentinel `''`).
+
+### Plantilla de validación
+
+```bash
+SCHEMAS=$(git diff --name-only HEAD~N..HEAD -- 'backend/app/schemas/')
+TS_TYPES=$(git diff --name-only HEAD~N..HEAD -- 'frontend-next/types/' 'frontend-next/lib/api.ts')
+
+# Si SCHEMAS no está vacío y TS_TYPES está vacío:
+# → BLOQUEANTE: falta actualizar tipos TypeScript
+```
+
+Reportar este hallazgo con severidad ALTA si se detecta la discrepancia.
+
+**Incidente 2026-06-24:** tipo `naturaleza` en `BreachFormData` permitía `''` pero el schema backend `SecurityBreach.naturaleza` solo aceptaba los 3 valores del enum o `undefined`. Build de Vercel falló con `TS2345`.
+
 ## Stack y dominio
 
 - **Backend:** Python · FastAPI · SQLAlchemy · Alembic
