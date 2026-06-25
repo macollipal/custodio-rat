@@ -112,3 +112,46 @@ python reset_admin.py
 ```bash
 python test_users.py
 ```
+
+---
+
+# Incidentes 2026-06-24 / 2026-06-25 — Sesión de auditoría compliance
+
+> Tres incidentes encadenados descubiertos durante el audit-loop iter 7+8. Todos resueltos.
+
+## Incidente A: Columnas de modelos no migradas a BD (CRÍTICO)
+
+**Síntoma:** Endpoints de Brechas, Encargados, Consentimientos y EIPD retornaban 500 con `column does not exist` en QA y prod.
+
+**Causa raíz:** Las iteraciones 7 y 8 del audit-loop agregaron columnas a modelos SQLAlchemy (`consentimiento.py`, `encargado_contrato.py`, `eipd.py`, `breach.py`) y un modelo nuevo (`AsesorConversacion`), pero **no se generó ni ejecutó la migración SQL** correspondiente.
+
+**Fix:**
+- Commit `e98411e`: `backend/migrations/2026_06_24_001_compliance_columns.sql` con todas las columnas y la tabla nueva. Ejecutada contra Neon QA.
+- Safeguards en agentes: `arquitecto-custodio.md`, `auditor-custodio.md`, `audit-loop.md` ahora requieren y validan que toda modificación de schema tenga su migración.
+
+**Lección:** Cualquier cambio de schema debe ir acompañado de una migración SQL en `backend/migrations/` con timestamp + verificación contra Neon QA.
+
+## Incidente B: Build de Vercel con TS2345 por tipos desincronizados (ALTO)
+
+**Síntoma:** `npm run build` fallaba en Vercel con `TS2345: Argument of type ... is not assignable to parameter of type 'Partial<SecurityBreach>'` en `breaches/page.tsx:299,302`.
+
+**Causa raíz:** El tipo `BreachFormData.naturaleza` permitía string vacío `''` como sentinel de "no seleccionado", pero el tipo `SecurityBreach.naturaleza` solo aceptaba los 3 valores del enum o `undefined`. TypeScript detectó la incompatibilidad. El build local pasó por cache; Vercel ejecutó tsc sobre la app completa y reportó el error.
+
+**Fix:**
+- Commit `9aaf808`: `BreachFormData.naturaleza` ahora es `'confidencialidad' | 'integridad' | 'disponibilidad' | undefined`. El `<select>` usa `value={form.naturaleza ?? ''}` para DOM, y `onChange` convierte `''` → `undefined` explícitamente.
+- Safeguards cross-stack en `arquitecto-custodio.md`, `qa-custodio.md`, `auditor-custodio.md` que exigen build de FE (`npm run build`) + pytest contra Neon QA antes de cerrar iteración.
+
+**Lección:** Nunca usar `''` como sentinel de "no seleccionado" en tipos que van al backend. Usar `undefined` con `Optional[Literal[...]]`.
+
+## Incidente C: Endpoint OCI descarga tira 500 sin ENCRYPTION_KEY (CRÍTICO)
+
+**Síntoma:** GET `/rats/34/archivo` retornaba 500 después de iter 7. Log de Vercel mostraba: `OCI direct download failed: ENCRYPTION_KEY es obligatoria en producción`.
+
+**Causa raíz:** La iter 7 cambió el flujo de descarga de archivos OCI de `presigned_url` (público) a `download + decrypt` (Fernet E2E). Si `ENCRYPTION_KEY` no estaba configurada en Vercel, `settings.resolved_encryption_key` lanzaba `ValueError`, que se propagaba al endpoint sin ser capturado por el try/except de `_get_fernet()`.
+
+**Fix:**
+- Commit `6743549`: `_get_fernet()` envuelve la llamada a `settings.resolved_encryption_key` en try/except. Si la property lanza `ValueError`, retorna `None` y `encrypt()`/`decrypt()` operan como no-op.
+- Se generó clave Fernet: `9M-27hR_oDuYeGfW6KcUXpttO3HJCl87AKe1fVXtpKg=` (guardada en backup seguro, NO en el repo).
+- Clave configurada en Vercel QA (`custodio-api-qa`) y producción.
+
+**Lección:** Cuando se cambia el modelo de seguridad de archivos (cifrado E2E), documentar claramente que se requiere `ENCRYPTION_KEY` configurada. El flujo previo con presigned_url no la necesitaba.
