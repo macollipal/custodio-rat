@@ -8,6 +8,25 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 
 ---
 
+## LEY DIVINA DE SEGURIDAD ⚠️
+
+```
+1. NUNCA hardcodear credenciales en código fuente
+2. Todas las passwords/tokens/keys van en variables de entorno (.env)
+3. NO hacer fallback con valores por defecto que expongan secretos
+4. Los archivos .env están en .gitignore y NUNCA se commitear
+5. Si una credencial se expone, ROTARLA inmediatamente
+6. Usar Secrets Manager en producción (Vercel Env Variables)
+7. Antes de commitear, verificar que no haya secretos con: grep -r "password\|secret\|key\|token" --include="*.py" --include="*.ts" --include="*.tsx"
+```
+
+**Si detectas una credencial expuesta:**
+1. Informar inmediatamente
+2. La credencial debe ser rotada
+3. Remover del historial de git con `git filter-repo`
+
+---
+
 ## Sistema de roles (3 niveles)
 
 | Rol global | Descripción | is_admin |
