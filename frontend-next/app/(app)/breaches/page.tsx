@@ -29,7 +29,7 @@ interface BreachFormData {
   rats_afectados: string;
   datos_comprometidos: string;
   medidas_adoptadas: string;
-  naturaleza: '' | 'confidencialidad' | 'integridad' | 'disponibilidad';
+  naturaleza: 'confidencialidad' | 'integridad' | 'disponibilidad' | undefined;
   notificado_apdc: boolean;
   notificado_titulares: boolean;
   volumen_titulares_afectados: number;
@@ -55,7 +55,7 @@ function BreachForm({
     rats_afectados: initial?.rats_afectados ?? '',
     datos_comprometidos: initial?.datos_comprometidos ?? '',
     medidas_adoptadas: initial?.medidas_adoptadas ?? '',
-    naturaleza: (initial?.naturaleza as BreachFormData['naturaleza']) ?? '',
+    naturaleza: initial?.naturaleza ?? undefined,
     notificado_apdc: initial?.notificado_apdc ?? false,
     notificado_titulares: initial?.notificado_titulares ?? false,
     volumen_titulares_afectados: initial?.volumen_titulares_afectados ?? 0,
@@ -64,7 +64,7 @@ function BreachForm({
     incluye_datos_financieros: initial?.incluye_datos_financieros ?? false,
   });
 
-  function set(k: keyof BreachFormData, v: string | number | boolean) {
+  function set(k: keyof BreachFormData, v: string | number | boolean | undefined) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
@@ -147,8 +147,11 @@ function BreachForm({
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Naturaleza de la brecha (Art. 14 bis) *</label>
         <select
-          value={form.naturaleza}
-          onChange={e => set('naturaleza', e.target.value)}
+          value={form.naturaleza ?? ''}
+          onChange={e => {
+            const v = e.target.value;
+            set('naturaleza', (v === '' ? undefined : v) as BreachFormData['naturaleza']);
+          }}
           className={inputCls}
           style={inputStyle}
           aria-label="Naturaleza de la brecha"
