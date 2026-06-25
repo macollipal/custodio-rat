@@ -238,4 +238,10 @@ export interface RATWizardData {
   archivo_base_legal_base64?: string;
   archivo_base_legal_nombre?: string;
   archivo_base_legal_tipo?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  sistema_almacenamiento?: string;
+  volumen_titulares_estimado?: number;
+  operaciones_tratamiento?: string[];
+  logica_automatizada?: string;
+  responsable_tratamiento_email?: string;
 }

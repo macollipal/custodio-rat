@@ -27,7 +27,8 @@ const DESCRIPCIONES_BASE: Record<string, string> = {
     'Requiere EIPD previa. En contextos laborales, el consentimiento NO es base válida — use obligación legal y justifique la necesidad.',
 };
 
-const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias'];
+const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
+const OPERACIONES_TRATAMIENTO_OPCIONES = ['recoleccion','almacenamiento','consulta','uso','comunicacion','cesion','eliminacion'];
 
 interface RatWizardProps {
   company: Company;
@@ -169,6 +170,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         evaluacion_impacto:          data.evaluacion_impacto ?? false,
         decisiones_automatizadas:    data.decisiones_automatizadas ?? false,
         test_interes_legitimo:        testIL,
+        // Campos nuevos gaps Ley 21.719 (Iter 10)
+        sistema_almacenamiento:       data.sistema_almacenamiento || undefined,
+        volumen_titulares_estimado:   data.volumen_titulares_estimado || undefined,
+        operaciones_tratamiento:      (data.operaciones_tratamiento?.length ?? 0) > 0 ? data.operaciones_tratamiento : undefined,
+        logica_automatizada:          data.logica_automatizada || undefined,
+        responsable_tratamiento_email: data.responsable_tratamiento_email || undefined,
       };
       const result = await api.crearRat(payload);
       toast.success(`Proceso "${result.nombre_proceso}" registrado exitosamente en el RAT.`);
@@ -876,6 +883,60 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* PASO 5 */}
+        {step === 5 && (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 - Compliance (Ley 21.719)</h3>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps de compliance - opcionales.</p>
+            </div>
+
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#0369A1' }}>Campos de Compliance (Ley 21.719)</h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
+                  <input type="text" value={data.sistema_almacenamiento ?? ''} onChange={e => setData(d => ({ ...d, sistema_almacenamiento: e.target.value }))} placeholder="Ej: CRM Salesforce, Excel, Google Drive..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
+                  <input type="number" value={data.volumen_titulares_estimado ?? ''} onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? parseInt(e.target.value) : undefined }))} placeholder="Ej: 50000" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
+                <div className="flex flex-wrap gap-2">
+                  {OPERACIONES_TRATAMIENTO_OPCIONES.map(op => (
+                    <label key={op} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full text-xs font-medium border transition" style={{ backgroundColor: (data.operaciones_tratamiento as string[])?.includes(op) ? '#DBEAFE' : 'white', borderColor: (data.operaciones_tratamiento as string[])?.includes(op) ? '#2563EB' : '#D1D5DB', color: (data.operaciones_tratamiento as string[])?.includes(op) ? '#1D4ED8' : '#6B7280' }}>
+                      <input type="checkbox" checked={(data.operaciones_tratamiento as string[])?.includes(op) || false} onChange={e => { const current = (data.operaciones_tratamiento as string[]) || []; if (e.target.checked) { setData(d => ({ ...d, operaciones_tratamiento: [...current, op] })); } else { setData(d => ({ ...d, operaciones_tratamiento: current.filter((x: string) => x !== op) })); } }} className="sr-only" />
+                      {op}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {data.decisiones_automatizadas && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Logica de decisiones automatizadas</label>
+                  <textarea value={data.logica_automatizada ?? ''} onChange={e => setData(d => ({ ...d, logica_automatizada: e.target.value }))} rows={3} placeholder="Describa la logica aplicada, consecuencias para el titular e intervencion humana disponible" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Responsable del tratamiento (email)</label>
+                <input type="email" value={data.responsable_tratamiento_email ?? ''} onChange={e => setData(d => ({ ...d, responsable_tratamiento_email: e.target.value }))} placeholder="Ej: responsable@empresa.cl" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+              </div>
+            </div>
+
+            <div className="flex justify-between pt-2">
+              <button onClick={() => cambiarStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>Anterior</button>
+              <button onClick={() => { if (!data.plazo_retencion?.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; } guardar(); }} disabled={saving} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60" style={{ background: '#059669' }}>{saving ? 'Guardando...' : 'Guardar en el RAT'}</button>
             </div>
           </div>
         )}
