@@ -162,6 +162,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         transferencia_datos:         data.transferencia_datos || undefined,
         medidas_seguridad:           data.medidas_seguridad || undefined,
         destinatarios:               data.destinatarios || undefined,
+        nombre_encargado:           data.nombre_encargado || undefined,
+        tiene_contrato_encargado:   data.tiene_contrato_encargado ?? false,
         transferencia_internacional: data.transferencia_internacional ?? false,
         pais_destino:                data.pais_destino || undefined,
         garantias_transferencia_int: data.garantias_transferencia_int || undefined,
@@ -195,6 +197,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         fecha_levantamiento:          data.fecha_levantamiento || undefined,
       };
       const result = await api.crearRat(payload);
+      if (data.datos_sensibles && data.consentimiento_nombre && data.consentimiento_email) {
+        await api.registrarConsentimiento({
+          rat_id: result.id,
+          nombre_titular: data.consentimiento_nombre,
+          email_titular: data.consentimiento_email,
+          canal: 'sistema',
+          texto_consentimiento: data.consentimiento_texto || 'Consentimiento expreso para tratamiento de datos sensibles.',
+          datos_sensibles: true,
+        });
+      }
       toast.success(`Proceso "${result.nombre_proceso}" registrado exitosamente en el RAT.`);
       limpiarDraft();
       onDone();
@@ -383,6 +395,33 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                Nombre del encargado del tratamiento
+              </label>
+              <input
+                type="text"
+                value={data.nombre_encargado ?? ''}
+                onChange={e => setData(d => ({ ...d, nombre_encargado: e.target.value }))}
+                placeholder="Ej: Proveedor CRM, asesora laboral..."
+                className={inputCls}
+                style={inputStyle}
+              />
+              <div className="mt-2">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={data.tiene_contrato_encargado ?? false}
+                    onChange={e => setData(d => ({ ...d, tiene_contrato_encargado: e.target.checked }))}
+                    className="mt-0.5 rounded"
+                  />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>
+                    ✓ Tiene contrato de encargo (Art. 14 quáter Ley 21.719)
+                  </span>
+                </label>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
                 onClick={() => {
@@ -467,6 +506,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       message="Dato sensible: requiere base legal expresa y medidas de seguridad reforzadas. Si es biometría, aplica Art. 16 BIS y la EIPD es obligatoria."
                       type="warning"
                     />
+                    <div className="rounded-lg p-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: '#1E40AF' }}>B-06: Consentimiento Expreso (Art. 12)</p>
+                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registre el consentimiento del titular.</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input type="text" value={data.consentimiento_nombre ?? ''} onChange={e => setData(d => ({ ...d, consentimiento_nombre: e.target.value }))} placeholder="Nombre del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                        <input type="email" value={data.consentimiento_email ?? ''} onChange={e => setData(d => ({ ...d, consentimiento_email: e.target.value }))} placeholder="Email del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                      </div>
+                      <textarea value={data.consentimiento_texto ?? ''} onChange={e => setData(d => ({ ...d, consentimiento_texto: e.target.value }))} rows={2} placeholder="Texto del consentimiento expreso..." className="w-full mt-2 px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -511,10 +559,20 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     </span>
                   </label>
                   {data.decisiones_automatizadas && (
-                    <AlertBanner
-                      message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8). Documente la lógica del sistema."
-                      type="info"
-                    />
+                    <>
+                      <AlertBanner
+                        message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8). Documente la lógica del sistema."
+                        type="info"
+                      />
+                      <textarea
+                        value={data.logica_automatizada ?? ''}
+                        onChange={e => setData(d => ({ ...d, logica_automatizada: e.target.value }))}
+                        rows={3}
+                        placeholder="Describa la lógica aplicada, consecuencias para el titular y posibilidad de revisión humana..."
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </>
                   )}
                 </div>
               </div>

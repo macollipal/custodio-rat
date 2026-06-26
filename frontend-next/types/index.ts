@@ -241,6 +241,10 @@ export interface RATWizardData {
   estado_eipd?: string;
   fecha_eipd?: string;
   decisiones_automatizadas?: boolean;
+  logica_automatizada?: string;
+  consentimiento_nombre?: string;
+  consentimiento_email?: string;
+  consentimiento_texto?: string;
   finalidad?: string;
   base_legal?: string;
   test_interes_legitimo?: string;
@@ -259,7 +263,6 @@ export interface RATWizardData {
   sistema_almacenamiento?: string;
   volumen_titulares_estimado?: number;
   operaciones_tratamiento?: string[];
-  logica_automatizada?: string;
   responsable_tratamiento_email?: string;
   // Campos Tier 1 - Gaps criticos (Iter 11)
   datos_nna?: 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' | null;
