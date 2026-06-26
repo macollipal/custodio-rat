@@ -41,6 +41,16 @@ class OrigenTicket(str, enum.Enum):
     MANUAL = "manual"
 
 
+class CausalRechazo(str, enum.Enum):
+    FALTA_IDENTIDAD = "falta_identidad"
+    SOLICITUD_INFUNDADA = "solicitud_manifiestamente_infundada"
+    SOLICITUD_EXCESIVA = "solicitud_excesiva"
+    FALTA_PODER_NOTORIO = "falta_poder_notorial"
+    PLAZO_VENCIDO = "plazo_vencido"
+    IDENTIDAD_NO_VERIFICADA = "identidad_no_verificada"
+    OTRO = "otro"
+
+
 class TktSolicitudDerecho(Base):
     __tablename__ = "tkt_solicitud_derecho"
     __table_args__ = (

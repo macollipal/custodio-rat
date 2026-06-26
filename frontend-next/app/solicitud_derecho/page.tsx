@@ -525,11 +525,11 @@ export default function SolicitudDerechoPage() {
                   style={{ color: '#374151' }}
                 >
                   <div
-                    className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+                    className="w-11 h-11 rounded border flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: form.actAsRepresentative ? '#2563EB' : 'white', borderColor: form.actAsRepresentative ? '#2563EB' : '#D1D5DB' }}
                   >
                     {form.actAsRepresentative && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}

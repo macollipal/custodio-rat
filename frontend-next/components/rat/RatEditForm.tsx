@@ -97,6 +97,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     if (!form.base_legal.trim()) { toast.error('La base legal es obligatoria.'); return; }
     if (!form.fuente_datos.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
     if (!form.plazo_retencion.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
+    if (form.base_legal === 'Interés legítimo' && (!form.test_interes_legitimo || form.test_interes_legitimo.trim().length < 50)) {
+      toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+    }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {};
@@ -422,7 +425,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   className={inputCls}
                   style={inputStyle}
                 />
-                <AlertBanner message="Sin este test documentado, la base 'Interés legítimo' no sirve como defensa ante la APDC." type="warning" />
+                <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Mínimo 50 caracteres necesarios para ser válido como documentación ante la APDC." type="warning" />
               </div>
             )}
 
@@ -431,6 +434,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <button
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+                  if (form.base_legal === 'Interés legítimo' && (!form.test_interes_legitimo || form.test_interes_legitimo.trim().length < 50)) {
+                    toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+                  }
                   setStep(4);
                 }}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"

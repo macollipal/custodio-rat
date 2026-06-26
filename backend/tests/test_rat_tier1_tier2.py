@@ -288,21 +288,21 @@ class TestRATTier1Tier2Persistence:
             pytest.fail(f"POST /rats/ falló: {resp.status_code} {resp.text}")
         rat_id = resp.json()["id"]
         update_payload = {
-            datos_nna="ambos",
-            nivel_confidencialidad="DC1",
-            estructura_dato="fisico",
-            datos_anonimizados=True,
-            datos_seudonimizados=True,
-            ciclo_procesamiento="archivo",
-            automatizacion="100% automatizado",
-            frecuencia="puntual",
-            transferencia_nacional=True,
-            doc_clausulas="Términos y condiciones",
-            medidas_organizativas="Auditoría anual",
-            mecanismos_eliminacion="Devolución a proveedor",
-            tecnica_anonimizacion="pseudonimizacion",
-            origen_dato_portabilidad="Fuentes públicas",
-            fecha_levantamiento="2026-05-01",
+            "datos_nna": "ambos",
+            "nivel_confidencialidad": "DC1",
+            "estructura_dato": "fisico",
+            "datos_anonimizados": True,
+            "datos_seudonimizados": True,
+            "ciclo_procesamiento": "archivo",
+            "automatizacion": "100% automatizado",
+            "frecuencia": "puntual",
+            "transferencia_nacional": True,
+            "doc_clausulas": "Términos y condiciones",
+            "medidas_organizativas": "Auditoría anual",
+            "mecanismos_eliminacion": "Devolución a proveedor",
+            "tecnica_anonimizacion": "pseudonimizacion",
+            "origen_dato_portabilidad": "Fuentes públicas",
+            "fecha_levantamiento": "2026-05-01",
         }
         resp2 = client.put(f"/rats/{rat_id}", json=update_payload, headers=auth_headers)
         if resp2.status_code != 200:

@@ -89,6 +89,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
   const [guardandoNota, setGuardandoNota] = useState(false);
   const [respuesta, setRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState('');
+  const [causalRechazo, setCausalRechazo] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [rats, setRats] = useState<RAT[]>([]);
   const [selectedRatId, setSelectedRatId] = useState<number | null>(null);
@@ -105,6 +106,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
     if (open && ticket) {
       setRespuesta(ticket.respuesta_texto ?? '');
       setNuevoEstado(ticket.estado);
+      setCausalRechazo(ticket.causal_rechazo ?? '');
       setNuevaNota('');
       setNotas([]);
       setHistorial([]);
@@ -156,11 +158,16 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
 
   async function handleGuardarRespuesta() {
     if (!ticket?.id) return;
+    if (nuevoEstado === 'rechazado' && !causalRechazo) {
+      toast.error('Seleccione una causal de rechazo válida (Art. 29 RL).');
+      return;
+    }
     setGuardando(true);
     try {
       await actualizarTktTicket(ticket.id, {
         estado: nuevoEstado,
         respuesta_texto: respuesta,
+        ...(nuevoEstado === 'rechazado' && { causal_rechazo: causalRechazo }),
       });
       toast.success('Respuesta guardada');
       onClose();
@@ -470,14 +477,36 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 <option value="subsanacion">Subsanación</option>
                 <option value="prorroga">Prórroga</option>
               </select>
+              {nuevoEstado === 'rechazado' && (
+                <select
+                  value={causalRechazo}
+                  onChange={e => setCausalRechazo(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  style={{ borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' }}
+                  aria-required="true"
+                >
+                  <option value="">Seleccione causal de rechazo (Art. 29 RL) *</option>
+                  <option value="identidad_no_verificada">Identidad del titular no pudo ser verificada</option>
+                  <option value="falta_poder_notorial">Falta poder notarial del representante</option>
+                  <option value="solicitud_manifiestamente_infundada">Solicitud manifiestamente infundada</option>
+                  <option value="solicitud_excesiva">Solicitud excesiva (reiteración injustificada)</option>
+                  <option value="plazo_vencido">Plazo vencido para ejercer el derecho</option>
+                  <option value="otro">Otro motivo fundado</option>
+                </select>
+              )}
               <textarea
                 value={respuesta}
                 onChange={e => setRespuesta(e.target.value)}
                 rows={3}
-                placeholder="Escribe la respuesta formal para el titular..."
+                placeholder={nuevoEstado === 'rechazado' ? 'Fundamente la causal seleccionada de manera clara y Respecto al titular...' : 'Escribe la respuesta formal para el titular...'}
                 className="w-full px-3 py-2 rounded-lg text-sm border"
                 style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
               />
+              {nuevoEstado === 'rechazado' && (
+                <p className="text-xs mt-1" style={{ color: '#92400E' }}>
+                  La causal debe estar justificada conforme a la Ley 21.719 para ser válida ante la APDC.
+                </p>
+              )}
               <button
                 onClick={handleGuardarRespuesta}
                 disabled={guardando}

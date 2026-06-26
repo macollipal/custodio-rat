@@ -668,7 +668,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 <summary className="px-4 py-3 text-sm font-medium cursor-pointer" style={{ color: '#374151' }}>
                   📋 Test de interés legítimo (3 pasos)
                 </summary>
-                <div className="px-4 pb-4 space-y-3">
+                <div className="px-4 pt-2 pb-4 space-y-3">
+                  <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDC." type="warning" />
                   <div>
                     <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
                       Paso 1 — ¿Existe un interés legítimo real?
@@ -726,6 +727,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
                   if (data.base_legal === 'Interés legítimo' && (!data._testIL?.paso1 || !data._testIL?.paso2 || !data._testIL?.paso3)) {
                     toast.error('Complete los 3 pasos del test de interés legítimo.'); return;
+                  }
+                  if (data.base_legal === 'Interés legítimo') {
+                    const totalTest = [data._testIL?.paso1, data._testIL?.paso2, data._testIL?.paso3].join(' ').trim();
+                    if (totalTest.length < 50) {
+                      toast.error('El test de interés legítimo debe tener al menos 50 caracteres para ser válido (Art. 16).'); return;
+                    }
                   }
                   // documento de base legal ahora es opcional
                   cambiarStep(4);

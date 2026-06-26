@@ -101,7 +101,7 @@ class RAT(Base):
     # Tipo MIME del archivo
     archivo_base_legal_tipo: Mapped[str] = mapped_column(String(100), nullable=True)
     # Contenido del archivo como binario (PostgreSQL BYTEA)
-    archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary(10_000_000), nullable=True)
     # Hash SHA-256 para verificar integridad
     archivo_base_legal_hash: Mapped[str] = mapped_column(String(64), nullable=True)
     # URL en OCI Object Storage (cuando se migra el archivo fuera de la BD)

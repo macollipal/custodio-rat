@@ -1,6 +1,6 @@
 ﻿from datetime import datetime, date
 from typing import Any, Optional, Union
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.rat import EstadoRAT
 
@@ -50,7 +50,11 @@ class RATBase(BaseModel):
     fecha_levantamiento: Optional[date] = None
     nombre_encargado: Optional[str] = None
     tiene_contrato_encargado: bool = False
-    test_interes_legitimo: Optional[str] = None
+    test_interes_legitimo: Optional[str] = Field(
+        default=None,
+        description="Test de interés legítimo (Art. 16). Mínimo 50 caracteres para que sea válido como documentación.",
+        min_length=50,
+    )
     observaciones_auditoria: Optional[str] = None
     # Documento de base legal (base64 para transporte; se almacena como binary en BD)
     archivo_base_legal_nombre: Optional[str] = None

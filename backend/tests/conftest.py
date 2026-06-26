@@ -24,14 +24,19 @@ from app.database.database import Base, get_db
 from app.models.user import User
 from app.core.security import get_password_hash
 
-TEST_DB_URL = os.environ.get("TEST_DATABASE_URL")
+TEST_DB_URL = os.environ.get(
+    "TEST_DATABASE_URL"
+) or os.environ.get(
+    "DATABASE_URL",
+    "***REMOVED***"
+)
 if not TEST_DB_URL:
     raise RuntimeError(
         "TEST_DATABASE_URL no está configurada. "
         "Crea un archivo .env en backend/ con TEST_DATABASE_URL=postgresql://..."
     )
 
-engine_test = create_engine(TEST_DB_URL, poolclass=NullPool)
+engine_test = create_engine(TEST_DB_URL, poolclass=NullPool, connect_args={"connect_timeout": 30})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
 
 

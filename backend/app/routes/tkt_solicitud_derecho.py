@@ -291,6 +291,21 @@ def actualizar_ticket(
         if ticket.company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
 
+    if data.estado == "resuelto" and not ticket.evidencia_respuesta_hash:
+        from app.models.tkt_adjunto import TktAdjunto
+        adjuntos = db.query(TktAdjunto).filter(TktAdjunto.ticket_id == ticket_id).all()
+        if adjuntos:
+            import hashlib
+            sha = hashlib.sha256()
+            for adj in sorted(adjuntos, key=lambda a: a.id):
+                sha.update(adj.data)
+            ticket.evidencia_respuesta_hash = sha.hexdigest()
+        elif not data.respuesta_texto and not data.plantilla_id:
+            raise HTTPException(
+                status_code=400,
+                detail="No se puede resolver sin evidencia: adjunte documentos o informe antes de cerrar.",
+            )
+
     if data.responsable_id is not None:
         from app.models.user import User
         if data.responsable_id > 0:

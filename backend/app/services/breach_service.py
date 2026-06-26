@@ -95,10 +95,33 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
 
 def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: Optional[str] = None) -> SecurityBreach:
     from app.services.audit_service import log_audit
+    from app.models.company import Company
     breach = get_breach(db, breach_id)
+    empresa = db.query(Company).filter(Company.id == breach.company_id).first()
     cambios = data.model_dump(exclude_none=True)
+
+    _notificado_apdc_prev = breach.notificado_apdc
+    _notificado_titulares_prev = breach.notificado_titulares
+
     for field, value in cambios.items():
         setattr(breach, field, value)
+
+    if data.notificado_apdc and not _notificado_apdc_prev and empresa and empresa.email_dpo:
+        from app.services.email_service import notificar_nueva_brecha, EmailError
+        try:
+            notificar_nueva_brecha(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                descripcion=breach.descripcion or "Sin descripción",
+                fecha_deteccion=breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M"),
+            )
+        except EmailError as e:
+            logger.error(f"Brecha {breach_id}: fallo enviando notificación APDC: {e}")
+
+    if data.notificado_titulares and not _notificado_titulares_prev:
+        logger.info(f"Brecha {breach_id}: notificación a titulares activada (automatizar según canal disponible)")
+
     log_audit(
         db=db,
         entidad="brecha",

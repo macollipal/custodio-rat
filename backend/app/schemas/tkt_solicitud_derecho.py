@@ -10,6 +10,15 @@ TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion", "bl
 TktEstadoEnum = Literal["abierto", "en_proceso", "pendiente", "resuelto", "bloqueado", "rechazado", "subsanacion", "prorroga"]
 TktPrioridadEnum = Literal["urgente", "normal", "baja"]
 TktOrigenEnum = Literal["web", "email", "telefono", "presencial", "manual"]
+CausalRechazoEnum = Literal[
+    "falta_identidad",
+    "solicitud_manifiestamente_infundada",
+    "solicitud_excesiva",
+    "falta_poder_notorial",
+    "plazo_vencido",
+    "identidad_no_verificada",
+    "otro",
+]
 
 
 class TktTicketCreate(BaseModel):
@@ -31,7 +40,7 @@ class TktTicketCreate(BaseModel):
     metodo_verificacion_identidad: Optional[str] = Field(default=None, max_length=50, description="Enum: cedula, firma_digital, video_call, otro")
     evidencia_identidad: Optional[str] = Field(default=None, description="Descripción de docs/verificación usada")
     evidencia_respuesta_hash: Optional[str] = Field(default=None, max_length=64, description="SHA-256 de la respuesta enviada")
-    causal_rechazo: Optional[str] = Field(default=None, max_length=50, description="Enum: falta_identidad, solicitud_manifiestamente_infundada, excesiva, otro")
+    causal_rechazo: Optional[CausalRechazoEnum] = Field(default=None, description="Causal de rechazo (Art. 29 RL): falta_identidad, solicitud_manifiestamente_infundada, solicitud_excesiva, falta_poder_notorial, plazo_vencido, identidad_no_verificada, otro")
     medio_respuesta: Optional[str] = Field(default=None, max_length=50, description="Enum: email, domicilio, portal, telefono")
 
 
@@ -46,7 +55,7 @@ class TktTicketUpdate(BaseModel):
     metodo_verificacion_identidad: Optional[str] = None
     evidencia_identidad: Optional[str] = None
     evidencia_respuesta_hash: Optional[str] = None
-    causal_rechazo: Optional[str] = None
+    causal_rechazo: Optional[CausalRechazoEnum] = None
     medio_respuesta: Optional[str] = None
 
 
