@@ -1,52 +1,37 @@
+"""
+Crear base de datos custodio_test en Neon.
+Uso:
+    python create_test_db.py --database-url "postgresql://user:pass@host/neondb?sslmode=require"
+    DATABASE_URL="..." python create_test_db.py
+"""
 import psycopg2
+import os
+import time
+import argparse
 
-# Connect to Neon QA - create test database
-conn = psycopg2.connect(
-    '***REMOVED***/neondb?sslmode=require'
-)
+parser = argparse.ArgumentParser(description="Create custodio_test database")
+parser.add_argument("--database-url", default=os.environ.get("DATABASE_URL"))
+args = parser.parse_args()
+
+if not args.database_url:
+    raise SystemExit(
+        "ERROR: DATABASE_URL no configurada.\n"
+        "Use: --database-url <URL> o variable de entorno DATABASE_URL=<URL>"
+    )
+
+TEST_DB = "custodio_test"
+conn = psycopg2.connect(args.database_url)
 conn.autocommit = True
 cur = conn.cursor()
-
-# Check if test db exists
-cur.execute("SELECT 1 FROM pg_database WHERE datname = 'custodio_test'")
+cur.execute(f"SELECT 1 FROM pg_database WHERE datname = '{TEST_DB}'")
 exists = cur.fetchone()
-if not exists:
-    cur.execute('CREATE DATABASE custodio_test')
-    print('Created custodio_test database')
-else:
-    print('custodio_test already exists - will reset it')
-
+if exists:
+    cur.execute(f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{TEST_DB}' AND pid <> pg_backend_pid()")
+    time.sleep(1)
+    cur.execute(f"DROP DATABASE {TEST_DB}")
+    print("Dropped existing")
+cur.execute(f"CREATE DATABASE {TEST_DB}")
+print(f"Created {TEST_DB}")
 cur.close()
 conn.close()
-
-# Now connect to custodio_test and create all tables
-print('Creating schema in custodio_test...')
-conn2 = psycopg2.connect(
-    '***REMOVED***/custodio_test?sslmode=require'
-)
-conn2.autocommit = True
-cur2 = conn2.cursor()
-
-# Create all tables by importing the models
-import os
-os.environ['ENV'] = 'test'
-os.environ['DATABASE_URL'] = '***REMOVED***/custodio_test?sslmode=require'
-
-# Import all models to register them with Base
-from app.database.database import Base, engine
-from app.models import (
-    company, rat, user, audit_log, user_company, breach, eipd,
-    consentimiento, rubro, rats_sugerido, solicitud_derecho,
-    token_blacklist, solicitud_token,
-    tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial,
-    tkt_plantilla, tkt_regla_asignacion,
-    asesor,
-)
-
-# Create all tables
-Base.metadata.create_all(bind=engine)
-print('Schema created successfully in custodio_test')
-
-cur2.close()
-conn2.close()
-print('Done!')
+print("Done")

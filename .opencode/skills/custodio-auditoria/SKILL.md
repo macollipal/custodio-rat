@@ -36,6 +36,7 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 8. **Regla divina**: regenerar `.docx` es obligatorio si hay cambios en código
 9. **Ubicación builds**: builds por auditoría van en `docs/auditorias/<FECHA>_auditoria_vX.Y/_scripts/` (NO en `paso/_build/`)
 10. **Score**: usar siempre el score del audit-loop (RAT/ARCO/Brechas) como score oficial — no recalcular con metodología Escalabilidad/Mantenibilidad/etc
+11. **Regla divina — Secretos**: NUNCA hardcodear credenciales en código. SIEMPRE usar variables de entorno o argparse CLI. Pre-commit hook con gitleaks es OBLIGATORIO. Si se detecta un secret expuesto: rotarlo inmediatamente + limpiar historial con `git filter-repo`.
 
 ---
 

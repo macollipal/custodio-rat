@@ -24,12 +24,7 @@ from app.database.database import Base, get_db
 from app.models.user import User
 from app.core.security import get_password_hash
 
-TEST_DB_URL = os.environ.get(
-    "TEST_DATABASE_URL"
-) or os.environ.get(
-    "DATABASE_URL",
-    "***REMOVED***"
-)
+TEST_DB_URL = os.environ.get("TEST_DATABASE_URL")
 if not TEST_DB_URL:
     raise RuntimeError(
         "TEST_DATABASE_URL no está configurada. "

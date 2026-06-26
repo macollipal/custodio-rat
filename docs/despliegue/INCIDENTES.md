@@ -79,7 +79,7 @@
 ## Variables de entorno configuradas en Vercel (QA)
 
 ### custodio-api-qa
-- `DATABASE_URL` = `***REMOVED***`
+- `DATABASE_URL` = `***REDACTED***` (rotada 26-Jun-2026 tras incidente GitGuardian)
 - `SECRET_KEY` = `f6ce35af6ca704aa5481a13ff429b8b59930319b1a2ab1e49773034a860ec5ef200ebef9718e3561e73c0dace736e357e643f097fa0e62ddb99a6a5f6b6b9168`
 - `SEED_ADMIN` = `true`
 - `SEED_ADMIN_PASSWORD` = `Admin1234!`

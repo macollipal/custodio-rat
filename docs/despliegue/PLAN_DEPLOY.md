@@ -163,7 +163,7 @@ Ir al dashboard de Vercel → Proyecto `custodio-api-prod` → Settings → Envi
 
 | Variable | Valor | Notas |
 |----------|-------|-------|
-| `DATABASE_URL` | `postgresql://neondb_owner:.../Custodio_prod?sslmode=require` | Neon PROD |
+| `DATABASE_URL` | `***REDACTED***` (ver .env.example para formato) | Neon PROD |
 | `SECRET_KEY` | (openssl rand -hex 64) | Distinto de QA |
 | `ALLOWED_ORIGINS` | `https://custodio-prod.vercel.app` | **CRÍTICO** |
 | `ENVIRONMENT` | `production` | Activa rate limiting, JSON logs |

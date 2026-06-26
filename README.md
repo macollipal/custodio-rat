@@ -103,6 +103,10 @@ pip install -r requirements.txt
 # Frontend (usa Bun)
 cd ..\frontend-next
 bun install
+
+# Pre-commit hook (detecta secretos antes de push)
+pip install pre-commit
+pre-commit install
 ```
 
 ### Scripts de inicio rápido

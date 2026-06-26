@@ -1,0 +1,36 @@
+title = "Custodio RAT - Secret Detection"
+
+[[rules]]
+id = "neondb-postgresql-uri"
+description = "PostgreSQL connection string with Neon password"
+regex = '''postgresql://[a-zA-Z0-9_]+:npg_[A-Za-z0-9]+@[a-zA-Z0-9.-]+'''
+tags = ["secret", "database", "neon"]
+allowlist_paths = [
+    '''docs/despliegue/PLAN_DEPLOY\.md$''',
+    '''backend/migrations/.*\.sql$''',
+]
+
+[[rules]]
+id = "generic-postgresql-uri"
+description = "Generic PostgreSQL connection string with password"
+regex = '''postgres(ql)?://[a-zA-Z0-9_]+:[a-zA-Z0-9_!@#$%^&*()]+@[a-zA-Z0-9.-]+'''
+tags = ["secret", "database"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key or token"
+regex = '''[a-zA-Z0-9_]{20,}['"]?\s*[:=]\s*['"]?[a-zA-Z0-9_.-]{20,}['"]?'''
+tags = ["secret", "api-key"]
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT secret or secret key"
+regex = '''SECRET_KEY['"]?\s*[:=]\s*['"]?[a-f0-9]{40,}'''
+tags = ["secret", "jwt"]
+
+[allowlist]
+paths = [
+    '''\.env\.example$''',
+    '''README\.md$''',
+    '''docs/.*\.md$''',
+]
