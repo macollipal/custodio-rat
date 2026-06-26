@@ -84,6 +84,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     return () => clearInterval(id);
   }, [draftSavedAt]);
 
+  // Auto-save silencioso cada 30s (solo si hay datos)
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (Object.keys(data).length > 0) {
+        const now = Date.now();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step, savedAt: now }));
+        setDraftSavedAt(now);
+      }
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [data, step, DRAFT_KEY]);
+
   useEffect(() => {
     api.listarTiposProceso().then(setTipos).catch(() => {});
   }, []);
@@ -348,7 +360,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Nombre y tipo de actividad de tratamiento que deseas registrar.</p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Nombre y tipo de actividad de tratamiento que deseas registrar.</p>
+              {validation.requiredCount > 0 && (
+                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
+                </p>
+              )}
             </div>
 
             {/* Sugerencias */}
@@ -487,6 +504,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
+                    if (validation.firstErrorField) {
+                      const el = document.getElementById(`rw-${validation.firstErrorField}`);
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      el?.focus();
+                    }
                     return;
                   }
                   cambiarStep(2);
@@ -507,7 +529,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
+              {validation.requiredCount > 0 && (
+                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
+                </p>
+              )}
             </div>
 
             <FormField label="Categoría de datos tratados" required htmlFor="rw-categoria_datos" error={fieldErrors.categoria_datos}>
@@ -652,6 +679,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
+                    if (validation.firstErrorField) {
+                      const el = document.getElementById(`rw-${validation.firstErrorField}`);
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      el?.focus();
+                    }
                     return;
                   }
                   cambiarStep(3);
@@ -672,7 +704,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+              {validation.requiredCount > 0 && (
+                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
+                </p>
+              )}
             </div>
 
             <FormField label="Finalidad del tratamiento" required htmlFor="rw-finalidad" error={fieldErrors.finalidad}>
@@ -858,6 +895,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
+                    if (validation.firstErrorField) {
+                      const el = document.getElementById(`rw-${validation.firstErrorField}`);
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      el?.focus();
+                    }
                     return;
                   }
                   if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
@@ -879,7 +921,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+              {validation.requiredCount > 0 && (
+                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
