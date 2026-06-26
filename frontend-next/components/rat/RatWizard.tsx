@@ -284,15 +284,17 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         </div>
       )}
 
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => setConfirmCancel(true)}
-          className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
-          style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
-        >
-          ← Volver al listado
-        </button>
-        <h2 className="text-lg font-bold" style={{ color: '#111827' }}>Nuevo proceso RAT</h2>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setConfirmCancel(true)}
+            className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
+            style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
+          >
+            ← Volver al listado
+          </button>
+          <h2 className="text-lg font-bold" style={{ color: '#111827' }}>Nuevo proceso RAT</h2>
+        </div>
       </div>
 
       <StepIndicator steps={STEPS} current={step} />
@@ -438,13 +440,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
-                onClick={() => setConfirmCancel(true)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-              >
-                Cancelar
-              </button>
               <button
                 onClick={() => {
                   if (!stepIsValid) {
@@ -624,13 +619,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
-              </button>
-              <button
-                onClick={() => setConfirmCancel(true)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-              >
-                Cancelar
               </button>
             </div>
           </div>
@@ -839,13 +827,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               >
                 Siguiente →
               </button>
-              <button
-                onClick={() => setConfirmCancel(true)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-              >
-                Cancelar
-              </button>
             </div>
           </div>
         )}
@@ -1013,13 +994,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 style={{ background: '#059669' }}
               >
                 {saving ? 'Guardando...' : '✓ Guardar en el RAT'}
-              </button>
-              <button
-                onClick={() => setConfirmCancel(true)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
-              >
-                Cancelar
               </button>
             </div>
           </div>
