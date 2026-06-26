@@ -6,6 +6,8 @@ import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import FormField from '@/components/ui/FormField';
+import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 
 import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
@@ -48,6 +50,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [mostrarPaso0, setMostrarPaso0] = useState(false);
   const [rubroNombre, setRubroNombre] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
+
+  const validation = useStepValidation(step, data);
+  const fieldErrors = validation.errors;
+  const stepIsValid = validation.isValid;
 
   const DRAFT_KEY = `${DRAFT_KEY_PREFIX}${company.id}`;
 
@@ -332,51 +338,63 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Nombre del proceso *
-              </label>
+            <FormField label="Nombre del proceso" required htmlFor="rw-nombre_proceso" error={fieldErrors.nombre_proceso}>
               <input
+                id="rw-nombre_proceso"
                 type="text"
                 value={data.nombre_proceso ?? ''}
                 onChange={e => setData(d => ({ ...d, nombre_proceso: e.target.value }))}
                 placeholder="Ej: Gestión de datos de clientes, Nómina de empleados"
                 aria-required="true"
+                aria-invalid={!!fieldErrors.nombre_proceso}
                 className={inputCls}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: fieldErrors.nombre_proceso ? '#DC2626' : '#D1D5DB',
+                }}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 16 Ley 21.719 — campo mínimo)</span>
-              </label>
+            <FormField
+              label="Categorías de titulares"
+              required
+              htmlFor="rw-categoria_titulares"
+              hint="Art. 16 Ley 21.719 — campo mínimo"
+              error={fieldErrors.categoria_titulares}
+            >
               <input
+                id="rw-categoria_titulares"
                 type="text"
                 value={data.categoria_titulares ?? ''}
                 onChange={e => setData(d => ({ ...d, categoria_titulares: e.target.value }))}
                 placeholder="Ej: Clientes, empleados, proveedores, pacientes, postulantes..."
                 aria-required="true"
+                aria-invalid={!!fieldErrors.categoria_titulares}
                 className={inputCls}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: fieldErrors.categoria_titulares ? '#DC2626' : '#D1D5DB',
+                }}
               />
-            </div>
+            </FormField>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                  Fuente de los datos *
-                </label>
+              <FormField label="Fuente de los datos" required htmlFor="rw-fuente_datos" error={fieldErrors.fuente_datos}>
                 <input
+                  id="rw-fuente_datos"
                   type="text"
                   value={data.fuente_datos ?? ''}
                   onChange={e => { setData(d => { const n = { ...d, fuente_datos: e.target.value }; guardarDraft(); return n; }); }}
                   placeholder="Ej: Directamente del titular, base interna, terceros"
                   aria-required="true"
+                  aria-invalid={!!fieldErrors.fuente_datos}
                   className={inputCls}
-                  style={inputStyle}
+                  style={{
+                    ...inputStyle,
+                    borderColor: fieldErrors.fuente_datos ? '#DC2626' : '#D1D5DB',
+                  }}
                 />
-              </div>
+              </FormField>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                   Destinatarios / Encargados del tratamiento
@@ -429,12 +447,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </button>
               <button
                 onClick={() => {
-                  if (!data.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
-                  if (!data.categoria_titulares?.trim()) { toast.error('Las categorías de titulares son obligatorias (Art. 16 Ley 21.719).'); return; }
-                  if (!data.fuente_datos?.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
+                  if (!stepIsValid) {
+                    toast.error('Completa los campos obligatorios antes de continuar.');
+                    return;
+                  }
                   cambiarStep(2);
                 }}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                disabled={!stepIsValid}
+                aria-disabled={!stepIsValid}
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -451,19 +472,22 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Categoría de datos tratados *
-              </label>
+            <FormField label="Categoría de datos tratados" required htmlFor="rw-categoria_datos" error={fieldErrors.categoria_datos}>
               <textarea
+                id="rw-categoria_datos"
                 value={data.categoria_datos ?? ''}
                 onChange={e => setData(d => ({ ...d, categoria_datos: e.target.value }))}
                 rows={3}
                 placeholder="Ej: Datos identificativos (nombre, RUT, email), datos laborales, datos de salud..."
+                aria-required="true"
+                aria-invalid={!!fieldErrors.categoria_datos}
                 className={inputCls}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: fieldErrors.categoria_datos ? '#DC2626' : '#D1D5DB',
+                }}
               />
-            </div>
+            </FormField>
 
             <div className="space-y-4">
               <div className="space-y-2">
@@ -485,15 +509,23 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 </label>
                 {data.datos_sensibles && (
                   <div className="space-y-2 pl-6">
-                    <select
-                      value={data.tipo_dato_sensible ?? ''}
-                      onChange={e => setData(d => ({ ...d, tipo_dato_sensible: e.target.value }))}
-                      className={inputCls}
-                      style={inputStyle}
-                    >
-                      <option value="">— Seleccione el tipo de dato sensible (Art. 2 g) —</option>
-                      {TIPOS_DATO_SENSIBLE.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                    <FormField label="Tipo de dato sensible (Art. 2 g)" required htmlFor="rw-tipo_dato_sensible" error={fieldErrors.tipo_dato_sensible}>
+                      <select
+                        id="rw-tipo_dato_sensible"
+                        value={data.tipo_dato_sensible ?? ''}
+                        onChange={e => setData(d => ({ ...d, tipo_dato_sensible: e.target.value }))}
+                        aria-required="true"
+                        aria-invalid={!!fieldErrors.tipo_dato_sensible}
+                        className={inputCls}
+                        style={{
+                          ...inputStyle,
+                          borderColor: fieldErrors.tipo_dato_sensible ? '#DC2626' : '#D1D5DB',
+                        }}
+                      >
+                        <option value="">— Seleccione el tipo de dato sensible (Art. 2 g) —</option>
+                        {TIPOS_DATO_SENSIBLE.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </FormField>
                     <AlertBanner
                       message="Dato sensible: requiere base legal expresa y medidas de seguridad reforzadas. Si es biometría, aplica Art. 16 BIS y la EIPD es obligatoria."
                       type="warning"
@@ -580,10 +612,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </button>
               <button
                 onClick={() => {
-                  if (!data.categoria_datos?.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
+                  if (!stepIsValid) {
+                    toast.error('Completa los campos obligatorios antes de continuar.');
+                    return;
+                  }
                   cambiarStep(3);
                 }}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                disabled={!stepIsValid}
+                aria-disabled={!stepIsValid}
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -607,33 +644,47 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Finalidad del tratamiento *
-              </label>
+            <FormField label="Finalidad del tratamiento" required htmlFor="rw-finalidad" error={fieldErrors.finalidad}>
               <textarea
+                id="rw-finalidad"
                 value={data.finalidad ?? ''}
                 onChange={e => setData(d => ({ ...d, finalidad: e.target.value }))}
                 rows={3}
                 placeholder="Ej: Gestión de la relación comercial, liquidación de remuneraciones..."
                 aria-required="true"
+                aria-invalid={!!fieldErrors.finalidad}
                 className={inputCls}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: fieldErrors.finalidad ? '#DC2626' : '#D1D5DB',
+                }}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 13 Ley 21.719)</span>
-              </label>
+            <FormField
+              label="Base legal del tratamiento"
+              required
+              htmlFor="rw-base_legal"
+              hint="Art. 13 Ley 21.719"
+              error={fieldErrors.base_legal}
+            >
               <select
+                id="rw-base_legal"
                 value={data.base_legal ?? BASES_LEGALES[0]}
                 onChange={e => setData(d => ({ ...d, base_legal: e.target.value }))}
+                aria-required="true"
+                aria-invalid={!!fieldErrors.base_legal}
                 className={inputCls}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: fieldErrors.base_legal ? '#DC2626' : '#D1D5DB',
+                }}
               >
                 {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
+            </FormField>
+
+            <div className="space-y-3">
               {data.base_legal && DESCRIPCIONES_BASE[data.base_legal] && (
                 <div className="mt-2">
                   <AlertBanner
@@ -755,6 +806,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     />
                   </div>
                 </div>
+                {fieldErrors._testIL && (
+                  <p role="alert" className="text-xs flex items-center gap-1 mt-2" style={{ color: '#DC2626' }}>
+                    <span aria-hidden="true">⚠</span>
+                    {fieldErrors._testIL}
+                  </p>
+                )}
               </details>
             )}
 
@@ -768,21 +825,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </button>
               <button
                 onClick={() => {
-                  if (!data.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+                  if (!stepIsValid) {
+                    toast.error('Completa los campos obligatorios antes de continuar.');
+                    return;
+                  }
                   if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
-                  if (data.base_legal === 'Interés legítimo' && (!data._testIL?.paso1 || !data._testIL?.paso2 || !data._testIL?.paso3)) {
-                    toast.error('Complete los 3 pasos del test de interés legítimo.'); return;
-                  }
-                  if (data.base_legal === 'Interés legítimo') {
-                    const totalTest = [data._testIL?.paso1, data._testIL?.paso2, data._testIL?.paso3].join(' ').trim();
-                    if (totalTest.length < 50) {
-                      toast.error('El test de interés legítimo debe tener al menos 50 caracteres para ser válido (Art. 16).'); return;
-                    }
-                  }
-                  // documento de base legal ahora es opcional
                   cambiarStep(4);
                 }}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                disabled={!stepIsValid}
+                aria-disabled={!stepIsValid}
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
                 style={{ background: '#2563EB' }}
               >
                 Siguiente →
@@ -808,20 +860,22 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                    Plazo de retención *
-                  </label>
+                <FormField label="Plazo de retención" required htmlFor="rw-plazo_retencion" error={fieldErrors.plazo_retencion}>
                   <input
+                    id="rw-plazo_retencion"
                     type="text"
                     value={data.plazo_retencion ?? ''}
                     onChange={e => setData(d => ({ ...d, plazo_retencion: e.target.value }))}
                     placeholder="Ej: 5 años desde el último contacto comercial"
                     aria-required="true"
+                    aria-invalid={!!fieldErrors.plazo_retencion}
                     className={inputCls}
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      borderColor: fieldErrors.plazo_retencion ? '#DC2626' : '#D1D5DB',
+                    }}
                   />
-                </div>
+                </FormField>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                     Medidas de seguridad implementadas
@@ -864,28 +918,44 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   </label>
                   {data.transferencia_internacional && (
                     <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={data.pais_destino ?? ''}
-                        onChange={e => setData(d => ({ ...d, pais_destino: e.target.value }))}
-                        placeholder="Ej: Estados Unidos, España, Brasil"
-                        className={inputCls}
-                        style={inputStyle}
-                      />
-                      <select
-                        value={data.garantias_transferencia_int ?? ''}
-                        onChange={e => setData(d => ({ ...d, garantias_transferencia_int: e.target.value }))}
-                        className={inputCls}
-                        style={inputStyle}
-                      >
-                        <option value="">— Garantías aplicables (obligatorio) —</option>
-                        <option value="Nivel adecuado de protección (decisión APDC o UE)">Nivel adecuado de protección (decisión APDC o UE)</option>
-                        <option value="Cláusulas Contractuales Tipo (SCC)">Cláusulas Contractuales Tipo (SCC)</option>
-                        <option value="Normas Corporativas Vinculantes (BCR)">Normas Corporativas Vinculantes (BCR)</option>
-                        <option value="Consentimiento explícito del titular para la transferencia">Consentimiento explícito del titular para la transferencia</option>
-                        <option value="Contrato con cláusulas de protección equivalentes">Contrato con cláusulas de protección equivalentes</option>
-                        <option value="Otra garantía adecuada">Otra garantía adecuada (especificar en transferencia de datos)</option>
-                      </select>
+                      <FormField label="País destino" required htmlFor="rw-pais_destino" error={fieldErrors.pais_destino}>
+                        <input
+                          id="rw-pais_destino"
+                          type="text"
+                          value={data.pais_destino ?? ''}
+                          onChange={e => setData(d => ({ ...d, pais_destino: e.target.value }))}
+                          placeholder="Ej: Estados Unidos, España, Brasil"
+                          aria-required="true"
+                          aria-invalid={!!fieldErrors.pais_destino}
+                          className={inputCls}
+                          style={{
+                            ...inputStyle,
+                            borderColor: fieldErrors.pais_destino ? '#DC2626' : '#D1D5DB',
+                          }}
+                        />
+                      </FormField>
+                      <FormField label="Garantías aplicables" required htmlFor="rw-garantias_transferencia_int" error={fieldErrors.garantias_transferencia_int}>
+                        <select
+                          id="rw-garantias_transferencia_int"
+                          value={data.garantias_transferencia_int ?? ''}
+                          onChange={e => setData(d => ({ ...d, garantias_transferencia_int: e.target.value }))}
+                          aria-required="true"
+                          aria-invalid={!!fieldErrors.garantias_transferencia_int}
+                          className={inputCls}
+                          style={{
+                            ...inputStyle,
+                            borderColor: fieldErrors.garantias_transferencia_int ? '#DC2626' : '#D1D5DB',
+                          }}
+                        >
+                          <option value="">— Garantías aplicables (obligatorio) —</option>
+                          <option value="Nivel adecuado de protección (decisión APDC o UE)">Nivel adecuado de protección (decisión APDC o UE)</option>
+                          <option value="Cláusulas Contractuales Tipo (SCC)">Cláusulas Contractuales Tipo (SCC)</option>
+                          <option value="Normas Corporativas Vinculantes (BCR)">Normas Corporativas Vinculantes (BCR)</option>
+                          <option value="Consentimiento explícito del titular para la transferencia">Consentimiento explícito del titular para la transferencia</option>
+                          <option value="Contrato con cláusulas de protección equivalentes">Contrato con cláusulas de protección equivalentes</option>
+                          <option value="Otra garantía adecuada">Otra garantía adecuada (especificar en transferencia de datos)</option>
+                        </select>
+                      </FormField>
                       <AlertBanner
                         message="Chile NO está en la lista de adecuación de la UE. Si el destinatario es europeo, se requieren SCC u otras garantías. Documente siempre las garantías aplicadas (Art. 28 Ley 21.719)."
                         type="warning"
@@ -931,10 +1001,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </button>
               <button
                 onClick={() => {
-                  if (!data.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
+                  if (!stepIsValid) {
+                    toast.error('Completa los campos obligatorios antes de guardar.');
+                    return;
+                  }
                   guardar();
                 }}
-                disabled={saving}
+                disabled={!stepIsValid || saving}
+                aria-disabled={!stepIsValid || saving}
                 className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
                 style={{ background: '#059669' }}
               >
@@ -1102,7 +1176,21 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
             <div className="flex justify-between pt-2">
               <button onClick={() => cambiarStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>Anterior</button>
-              <button onClick={() => { if (!data.plazo_retencion?.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; } guardar(); }} disabled={saving} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60" style={{ background: '#059669' }}>{saving ? 'Guardando...' : 'Guardar en el RAT'}</button>
+              <button
+                onClick={() => {
+                  if (!data.plazo_retencion?.trim()) {
+                    toast.error('Vuelve al paso 4 y completa el plazo de retención.');
+                    setStep(4);
+                    return;
+                  }
+                  guardar();
+                }}
+                disabled={saving}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
+                style={{ background: '#059669' }}
+              >
+                {saving ? 'Guardando...' : 'Guardar en el RAT'}
+              </button>
             </div>
           </div>
         )}
