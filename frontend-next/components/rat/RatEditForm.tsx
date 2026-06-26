@@ -158,20 +158,20 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                 Nombre del proceso *
               </label>
-              <input type="text" value={form.nombre_proceso} onChange={e => set('nombre_proceso', e.target.value)} className={inputCls} style={inputStyle} />
+              <input type="text" value={form.nombre_proceso} onChange={e => set('nombre_proceso', e.target.value)} aria-required="true" className={inputCls} style={inputStyle} />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                 Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 16 Ley 21.719)</span>
               </label>
-              <input type="text" value={form.categoria_titulares} onChange={e => set('categoria_titulares', e.target.value)} placeholder="Ej: Clientes, empleados, proveedores..." className={inputCls} style={inputStyle} />
+              <input type="text" value={form.categoria_titulares} onChange={e => set('categoria_titulares', e.target.value)} placeholder="Ej: Clientes, empleados, proveedores..." aria-required="true" className={inputCls} style={inputStyle} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fuente de los datos *</label>
-                <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} className={inputCls} style={inputStyle} />
+                <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} aria-required="true" className={inputCls} style={inputStyle} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Destinatarios / Encargados</label>
@@ -312,7 +312,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Finalidad del tratamiento *</label>
-              <textarea value={form.finalidad} onChange={e => set('finalidad', e.target.value)} rows={3} className={inputCls} style={inputStyle} />
+              <textarea value={form.finalidad} onChange={e => set('finalidad', e.target.value)} rows={3} aria-required="true" className={inputCls} style={inputStyle} />
             </div>
 
             <div>
@@ -454,7 +454,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Plazo de retención *</label>
-                  <input type="text" value={form.plazo_retencion} onChange={e => set('plazo_retencion', e.target.value)} placeholder="Ej: 5 años desde el último contacto" className={inputCls} style={inputStyle} />
+                  <input type="text" value={form.plazo_retencion} onChange={e => set('plazo_retencion', e.target.value)} placeholder="Ej: 5 años desde el último contacto" aria-required="true" className={inputCls} style={inputStyle} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas de seguridad</label>
@@ -609,7 +609,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                     Nivel de confidencialidad
                   </label>
-                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} className={inputCls} style={inputStyle}>
+                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} aria-describedby="nivel-conf-tooltip-edit" className={inputCls} style={inputStyle}>
                     <option value="">— Seleccionar —</option>
                     {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -618,7 +618,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   {form.nivel_confidencialidad && (() => {
                     const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === form.nivel_confidencialidad);
                     return opt?.tooltip ? (
-                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</p>
+                      <div role="tooltip" id="nivel-conf-tooltip-edit" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div>
                     ) : null;
                   })()}
                 </div>

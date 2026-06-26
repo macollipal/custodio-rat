@@ -332,6 +332,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 value={data.nombre_proceso ?? ''}
                 onChange={e => setData(d => ({ ...d, nombre_proceso: e.target.value }))}
                 placeholder="Ej: Gestión de datos de clientes, Nómina de empleados"
+                aria-required="true"
                 className={inputCls}
                 style={inputStyle}
               />
@@ -346,6 +347,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 value={data.categoria_titulares ?? ''}
                 onChange={e => setData(d => ({ ...d, categoria_titulares: e.target.value }))}
                 placeholder="Ej: Clientes, empleados, proveedores, pacientes, postulantes..."
+                aria-required="true"
                 className={inputCls}
                 style={inputStyle}
               />
@@ -361,6 +363,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   value={data.fuente_datos ?? ''}
                   onChange={e => { setData(d => { const n = { ...d, fuente_datos: e.target.value }; guardarDraft(); return n; }); }}
                   placeholder="Ej: Directamente del titular, base interna, terceros"
+                  aria-required="true"
                   className={inputCls}
                   style={inputStyle}
                 />
@@ -568,6 +571,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 onChange={e => setData(d => ({ ...d, finalidad: e.target.value }))}
                 rows={3}
                 placeholder="Ej: Gestión de la relación comercial, liquidación de remuneraciones..."
+                aria-required="true"
                 className={inputCls}
                 style={inputStyle}
               />
@@ -766,6 +770,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     value={data.plazo_retencion ?? ''}
                     onChange={e => setData(d => ({ ...d, plazo_retencion: e.target.value }))}
                     placeholder="Ej: 5 años desde el último contacto comercial"
+                    aria-required="true"
                     className={inputCls}
                     style={inputStyle}
                   />
@@ -960,13 +965,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Nivel de confidencialidad</label>
-                  <select value={(data.nivel_confidencialidad as string) ?? ''} onChange={e => setData(d => ({ ...d, nivel_confidencialidad: e.target.value as 'DC0' | 'DC1' | 'DC2' | 'DC3' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                  <select value={(data.nivel_confidencialidad as string) ?? ''} onChange={e => setData(d => ({ ...d, nivel_confidencialidad: e.target.value as 'DC0' | 'DC1' | 'DC2' | 'DC3' }))} aria-describedby="nivel-conf-tooltip" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
                     <option value="">— Seleccionar —</option>
                     {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                   {(data.nivel_confidencialidad as string) && (() => {
                     const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === data.nivel_confidencialidad);
-                    return opt?.tooltip ? <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</p> : null;
+                    return opt?.tooltip ? <div role="tooltip" id="nivel-conf-tooltip" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div> : null;
                   })()}
                 </div>
                 <div>

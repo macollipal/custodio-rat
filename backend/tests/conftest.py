@@ -9,6 +9,8 @@ NO hardcodear credenciales en este archivo. Ver .env.example para configuración
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 os.environ["ENV"] = "test"
 
 import pytest
