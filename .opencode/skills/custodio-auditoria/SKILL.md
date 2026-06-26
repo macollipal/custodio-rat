@@ -18,8 +18,8 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 | **Ubicación** | `C:\Users\chelo\Desktop\RAT_opencode` |
 | **Bucket Activo** | `custodio-documents-qa` |
 | **Bucket Archive** | `custodio-documents-qa-archive` |
-| **Última Auditoría** | 2026-06-13 post-fix OCI |
-| **Score Actual** | 7.6/10 |
+| **Última Auditoría** | 2026-06-26 v1.8 (Iter 11+12) |
+| **Score Actual** | 6.3/10 (audit-loop RAT 6.2, ARCO 6.8, Brechas 5.9) |
 | **Madurez** | Beta → Producción Inicial |
 
 ---
@@ -33,7 +33,9 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 5. **NO subrayar texto reorganizado** — solo contenido nuevo lleva `_subrayado_`
 6. **NO trabajar en `main`** — usar la rama actual (qa)
 7. **NO crear PR ni merge a `main`** — solo el humano decide el paso a `main`
-8. **Regla divina**: regenerar `.docx` v1.6 es obligatorio si hay cambios en código
+8. **Regla divina**: regenerar `.docx` es obligatorio si hay cambios en código
+9. **Ubicación builds**: builds por auditoría van en `docs/auditorias/<FECHA>_auditoria_vX.Y/_scripts/` (NO en `paso/_build/`)
+10. **Score**: usar siempre el score del audit-loop (RAT/ARCO/Brechas) como score oficial — no recalcular con metodología Escalabilidad/Mantenibilidad/etc
 
 ---
 
@@ -238,6 +240,7 @@ PAR → backend.download() (signed GET) → BYTEA
 
 | Fecha | Versión | Score | Ubicación |
 |-------|---------|-------|-----------|
+| 2026-06-26 | v1.8 (Iter 11+12) | 6.3/10 | `docs/auditorias/2026-06-26_auditoria_v1.8/` |
 | 2026-06-15 | v1.6-BETA | 8.7/10 | `docs/auditorias/2026-06-15_cierre_sesion_v1.6-BETA/` |
 | 2026-06-14 | v1.5 | 8.3/10 | `docs/auditorias/2026-06-14_auditoria_v1.5/` |
 | 2026-06-13 | v1.3 post-OCI | 7.6/10 | `docs/auditorias/` |

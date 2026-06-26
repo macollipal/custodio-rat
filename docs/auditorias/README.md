@@ -11,6 +11,7 @@
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
 | 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
+| 2026-06-26 | Cierre sesión v1.8 (Iter 11+12) | ✅ Documentación | 6.3/10 |
 | 2026-06-24 | Cierre sesión v1.7 | ✅ Documentación | 9.0/10 |
 | 2026-06-15 | Cierre sesión v1.6-BETA | ✅ Activo | 8.7/10 |
 | 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
@@ -23,6 +24,15 @@
 - **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
 - **Carpeta:** `2026-06-24_auditoria_v1.7/`
 - **Gap cerrado:** G1 (doc 08 API estaba en v1.4, ahora en v1.7)
+
+### 2026-06-26 — Cierre sesión v1.8 (Iter 11 + Iter 12)
+- **Estado:** ✅ Documentación generada
+- **Score:** 6.3/10 (audit-loop RAT 6.2, ARCO 6.8, Brechas 5.9)
+- **Tema:** Iter 11 (15 campos Tier 1+Tier 2) + Iter 12 (9 fixes CRÍTICOS+ALTOS)
+- **Commits:** `1c91d6c` (Iter 11), `1c63a8d` (quick fixes), `2c9615c` (Iter 12)
+- **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
+- **Carpeta:** `2026-06-26_auditoria_v1.8/`
+- **Hallazgos resueltos:** BYTEA 10MB, Test IL min 50chars, Hash SHA-256 auto, causal_rechazo enum, toggle 44px, notificaciones APDC+titulares auto, HTTP 400 sin evidencia
 
 ### 2026-06-15 — Cierre sesión v1.6-BETA
 - **Estado:** ✅ Documentación generada
@@ -92,6 +102,11 @@
 
 ## Ver También
 
+- [AUDITORIA_v1.8.md](2026-06-26_auditoria_v1.8/AUDITORIA_v1.8.md)
+- [HALLAZGOS.md](2026-06-26_auditoria_v1.8/HALLAZGOS.md)
+- [CIERRE_SESION_v1.8.md](2026-06-26_auditoria_v1.8/CIERRE_SESION_v1.8.md)
+- [INVENTARIO_v1.8.md](2026-06-26_auditoria_v1.8/INVENTARIO_v1.8.md)
+- [diff_codigo_vs_docs_v1.8.md](2026-06-26_auditoria_v1.8/diff_codigo_vs_docs_v1.8.md)
 - [AUDITORIA_V1.7.md](2026-06-24_auditoria_v1.7/AUDITORIA_V1.7.md)
 - [HALLAZGOS.md](2026-06-24_auditoria_v1.7/HALLAZGOS.md)
 - [CIERRE_SESION_v1.7.md](2026-06-24_auditoria_v1.7/CIERRE_SESION_v1.7.md)
@@ -107,4 +122,4 @@
 
 ---
 
-*Última actualización: 2026-06-24*
+*Última actualización: 2026-06-26*
