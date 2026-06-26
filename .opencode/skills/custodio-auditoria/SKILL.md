@@ -37,6 +37,7 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 9. **Ubicación builds**: builds por auditoría van en `docs/auditorias/<FECHA>_auditoria_vX.Y/_scripts/` (NO en `paso/_build/`)
 10. **Score**: usar siempre el score del audit-loop (RAT/ARCO/Brechas) como score oficial — no recalcular con metodología Escalabilidad/Mantenibilidad/etc
 11. **Regla divina — Secretos**: NUNCA hardcodear credenciales en código. SIEMPRE usar variables de entorno o argparse CLI. Pre-commit hook con gitleaks es OBLIGATORIO. Si se detecta un secret expuesto: rotarlo inmediatamente + limpiar historial con `git filter-repo`.
+12. **Preguntar antes de push — REGLA DIVINA**: Antes de cualquier `git push` (incluso a `qa`), confirmar con el humano. Para force-push o `git filter-repo`, DOBLE confirmación obligatoria. Excepción: solo si el usuario dijo explícitamente "haz push" o "commit y push".
 
 ---
 
@@ -249,6 +250,13 @@ PAR → backend.download() (signed GET) → BYTEA
 ---
 
 ## Límites del Agente (Política de Merge)
+
+**⚠️ ANTES DE CADA PUSH — PREGUNTAR:**
+- Mostrar al humano qué archivos y commits se van a pushear (resumen)
+- Preguntar: **"¿Confirmas el push a `qa`?"**
+- Para force-push o `git filter-repo`: **DOBLE confirmación obligatoria**
+  1. Primera: "Voy a hacer force-push, ¿confirmas?"
+  2. Segunda: "¿Confirmas que entiendes que esto reescribe el historial y requiere coordinación con otros contribuidores?"
 
 El agente **NO** debe:
 - Crear PRs hacia `main` (de ninguna rama)

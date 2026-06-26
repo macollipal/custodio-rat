@@ -4,7 +4,17 @@ description: Diagnostica problemas de login en Custodio RAT. Detecta credenciale
 ---
 # Debug Login — Custodio RAT
 
-Skill para diagnosticar login fallido en Custodio RAT. Úsalo cuando el usuario no pueda entrar o reporte errores de autenticación.
+## Push policy (NO PUSH sin confirmar)
+
+Antes de cualquier `git push` a `qa`:
+1. Hacer commit local
+2. **Mostrar al humano qué se va a pushear** (archivos + diff resumido)
+3. **Preguntar: "¿Confirmas el push?"**
+4. Solo entonces ejecutar `git push origin qa`
+
+Excepción: si el usuario dijo literalmente "haz push", "commit y push", "push a qa" — proceder directamente.
+
+---
 
 ## Cuándo invocar
 
