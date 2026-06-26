@@ -9,6 +9,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import FormField from '@/components/ui/FormField';
 import Spinner from '@/components/ui/Spinner';
 import CategoryChips from '@/components/ui/CategoryChips';
+import OnboardingTour from '@/components/ui/OnboardingTour';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 
@@ -54,6 +55,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const validation = useStepValidation(step, data);
   const fieldErrors = validation.errors;
@@ -96,6 +98,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     }, 30_000);
     return () => clearInterval(id);
   }, [data, step, DRAFT_KEY]);
+
+  // Onboarding tour — solo la primera vez
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('rat_wizard_onboarding_seen');
+      if (!seen) setShowOnboarding(true);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     api.listarTiposProceso().then(setTipos).catch(() => {});
@@ -1267,6 +1277,29 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           </div>
         )}
       </div>
+
+      <OnboardingTour
+        open={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        storageKey="rat_wizard_onboarding_seen"
+        steps={[
+          {
+            icon: '📋',
+            title: 'Bienvenido al wizard de RAT',
+            description: 'Vamos a registrar un nuevo proceso de tratamiento conforme a la Ley 21.719.\n\nTe tomará unos 5 minutos. Tus datos se guardan automáticamente como borrador.',
+          },
+          {
+            icon: '🧭',
+            title: '5 pasos guiados',
+            description: '1. Identificación del proceso\n2. Datos personales tratados\n3. Finalidad y base legal\n4. Almacenamiento y transferencias\n5. Compliance avanzado (Tier 1+2)',
+          },
+          {
+            icon: '💡',
+            title: 'Tips útiles',
+            description: '• Usa "🤖 Sugerencias inteligentes" en el paso 1 para autocompletar\n• Si el checkbox "Interés legítimo" está activo, el test guiado aparece\n• El botón "💾 Guardar borrador" guarda sin enviar\n• El ícono 🚧 junto a cada paso te dice cuántos campos obligatorios faltan',
+          },
+        ]}
+      />
 
       <ConfirmDialog
         open={confirmCancel}
