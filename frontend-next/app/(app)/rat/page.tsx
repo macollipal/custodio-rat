@@ -52,8 +52,8 @@ export default function RatPage() {
 
   async function handleDuplicate(rat: RAT) {
     try {
-      await api.duplicarRat(rat);
-      toast.success(`"${rat.nombre_proceso}" duplicado correctamente.`);
+      const nuevo = await api.duplicarRat(rat);
+      toast.success(`RAT "Copia de ${rat.nombre_proceso}" creado · ID #${nuevo.id}`);
       await loadRats();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Error al duplicar.');

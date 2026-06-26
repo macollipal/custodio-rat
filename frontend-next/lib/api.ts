@@ -371,6 +371,29 @@ export async function duplicarRat(rat: RAT): Promise<RAT> {
     estado_eipd:                 rat.evaluacion_impacto ? 'pendiente' : 'no_requerida',
     decisiones_automatizadas:    rat.decisiones_automatizadas,
     test_interes_legitimo:       rat.test_interes_legitimo,
+    // Campos Iter 10 — Compliance Ley 21.719
+    sistema_almacenamiento:       rat.sistema_almacenamiento,
+    volumen_titulares_estimado:   rat.volumen_titulares_estimado,
+    operaciones_tratamiento:      rat.operaciones_tratamiento,
+    logica_automatizada:          rat.logica_automatizada,
+    responsable_tratamiento_email: rat.responsable_tratamiento_email,
+    // Campos Tier 1
+    datos_nna:                    rat.datos_nna,
+    nivel_confidencialidad:       rat.nivel_confidencialidad,
+    estructura_dato:              rat.estructura_dato,
+    datos_anonimizados:           rat.datos_anonimizados,
+    datos_seudonimizados:         rat.datos_seudonimizados,
+    // Campos Tier 2
+    ciclo_procesamiento:          rat.ciclo_procesamiento,
+    automatizacion:               rat.automatizacion,
+    frecuencia:                   rat.frecuencia,
+    transferencia_nacional:       rat.transferencia_nacional,
+    doc_clausulas:                rat.doc_clausulas,
+    medidas_organizativas:        rat.medidas_organizativas,
+    mecanismos_eliminacion:       rat.mecanismos_eliminacion,
+    tecnica_anonimizacion:        rat.tecnica_anonimizacion,
+    origen_dato_portabilidad:     rat.origen_dato_portabilidad,
+    fecha_levantamiento:          rat.fecha_levantamiento,
   };
   return crearRat(payload);
 }
