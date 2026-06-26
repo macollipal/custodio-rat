@@ -51,6 +51,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [mostrarPaso0, setMostrarPaso0] = useState(false);
   const [rubroNombre, setRubroNombre] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
+  const [, forceUpdate] = useState({});
 
   const validation = useStepValidation(step, data);
   const fieldErrors = validation.errors;
@@ -66,6 +68,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         const parsed = JSON.parse(saved);
         setData(parsed.data ?? {});
         setStep(parsed.step ?? 1);
+        if (typeof parsed.savedAt === 'number') setDraftSavedAt(parsed.savedAt);
         if (parsed.data && Object.keys(parsed.data).length > 0 && !draftToastShown) {
           toast.success('Borrador restaurado automáticamente', { id: 'draft-restored' });
           setDraftToastShown(true);
@@ -73,6 +76,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
       } catch {}
     }
   }, [DRAFT_KEY]);
+
+  // Re-render cada 30s para actualizar el "Guardado hace X min"
+  useEffect(() => {
+    if (!draftSavedAt) return;
+    const id = setInterval(() => forceUpdate({}), 30_000);
+    return () => clearInterval(id);
+  }, [draftSavedAt]);
 
   useEffect(() => {
     api.listarTiposProceso().then(setTipos).catch(() => {});
@@ -113,16 +123,32 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     setStep(1);
   }
 
-  function guardarDraft() {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step }));
-    if (!draftToastShown) {
-      toast.success('Borrador guardado automáticamente', { id: 'draft-saved', duration: 2000 });
+  function guardarDraft(manual = false) {
+    const now = Date.now();
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step, savedAt: now }));
+    setDraftSavedAt(now);
+    if (!draftToastShown || manual) {
+      toast.success('💾 Borrador guardado', { id: 'draft-saved', duration: 2000 });
       setDraftToastShown(true);
     }
   }
 
   function limpiarDraft() {
     localStorage.removeItem(DRAFT_KEY);
+    setDraftSavedAt(null);
+  }
+
+  /** Tiempo relativo desde el último guardado (e.g. "hace 2 min") */
+  function tiempoRelativo(): string {
+    if (!draftSavedAt) return '';
+    const diff = Math.floor((Date.now() - draftSavedAt) / 1000);
+    if (diff < 10) return 'hace un momento';
+    if (diff < 60) return `hace ${diff}s`;
+    const min = Math.floor(diff / 60);
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h} h`;
+    return `hace ${Math.floor(h / 24)} d`;
   }
 
   function cambiarStep(n: number) {
@@ -285,7 +311,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 mb-6">
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setConfirmCancel(true)}
@@ -295,6 +321,22 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             ← Volver al listado
           </button>
           <h2 className="text-lg font-bold" style={{ color: '#111827' }}>Nuevo proceso RAT</h2>
+        </div>
+        <div className="flex items-center gap-3">
+          {draftSavedAt && (
+            <span className="text-xs font-medium" style={{ color: '#6B7280' }} aria-live="polite">
+              💾 Guardado {tiempoRelativo()}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => guardarDraft(true)}
+            disabled={saving}
+            className="text-sm font-semibold px-3 py-1.5 rounded-lg border transition hover:bg-blue-50 disabled:opacity-50"
+            style={{ color: '#2563EB', borderColor: '#BFDBFE' }}
+          >
+            💾 Guardar borrador
+          </button>
         </div>
       </div>
 
