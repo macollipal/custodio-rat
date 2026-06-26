@@ -7,7 +7,7 @@ import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import type { Company, RAT, RATWizardData } from '@/types';
 
-import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX } from '@/lib/constants';
+import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
 
 const DESCRIPCIONES_BASE: Record<string, string> = {
   'Consentimiento del titular':
@@ -176,6 +176,23 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         operaciones_tratamiento:      (data.operaciones_tratamiento?.length ?? 0) > 0 ? data.operaciones_tratamiento : undefined,
         logica_automatizada:          data.logica_automatizada || undefined,
         responsable_tratamiento_email: data.responsable_tratamiento_email || undefined,
+        // Campos Tier 1 - Gaps criticos (Iter 11)
+        datos_nna:                    data.datos_nna || undefined,
+        nivel_confidencialidad:       data.nivel_confidencialidad || undefined,
+        estructura_dato:               data.estructura_dato || undefined,
+        datos_anonimizados:           data.datos_anonimizados ?? false,
+        datos_seudonimizados:          data.datos_seudonimizados ?? false,
+        // Campos Tier 2 - Operativos (Iter 11)
+        ciclo_procesamiento:          data.ciclo_procesamiento || undefined,
+        automatizacion:               data.automatizacion || undefined,
+        frecuencia:                   data.frecuencia || undefined,
+        transferencia_nacional:       data.transferencia_nacional ?? false,
+        doc_clausulas:                data.doc_clausulas || undefined,
+        medidas_organizativas:        data.medidas_organizativas || undefined,
+        mecanismos_eliminacion:        data.mecanismos_eliminacion || undefined,
+        tecnica_anonimizacion:        data.tecnica_anonimizacion || undefined,
+        origen_dato_portabilidad:     data.origen_dato_portabilidad || undefined,
+        fecha_levantamiento:          data.fecha_levantamiento || undefined,
       };
       const result = await api.crearRat(payload);
       toast.success(`Proceso "${result.nombre_proceso}" registrado exitosamente en el RAT.`);
@@ -891,13 +908,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 - Compliance (Ley 21.719)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps de compliance - opcionales.</p>
+              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos criticos y operativos del template ProBest para compliance total Ley 21.719.</p>
             </div>
 
+            {/* Iter 10 fields + new Tier 1 + Tier 2 */}
             <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#0369A1' }}>Campos de Compliance (Ley 21.719)</h4>
-
+              <h4 className="text-sm font-bold" style={{ color: '#0369A1' }}>Campos de Compliance (Iter 10)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
@@ -908,7 +925,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   <input type="number" value={data.volumen_titulares_estimado ?? ''} onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? parseInt(e.target.value) : undefined }))} placeholder="Ej: 50000" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
                 <div className="flex flex-wrap gap-2">
@@ -920,17 +936,120 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   ))}
                 </div>
               </div>
-
               {data.decisiones_automatizadas && (
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Logica de decisiones automatizadas</label>
                   <textarea value={data.logica_automatizada ?? ''} onChange={e => setData(d => ({ ...d, logica_automatizada: e.target.value }))} rows={3} placeholder="Describa la logica aplicada, consecuencias para el titular e intervencion humana disponible" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
               )}
-
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Responsable del tratamiento (email)</label>
                 <input type="email" value={data.responsable_tratamiento_email ?? ''} onChange={e => setData(d => ({ ...d, responsable_tratamiento_email: e.target.value }))} placeholder="Ej: responsable@empresa.cl" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+              </div>
+            </div>
+
+            {/* Tier 1 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#991B1B' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tratamiento de NNA</label>
+                  <select value={(data.datos_nna as string) ?? 'ninguno'} onChange={e => setData(d => ({ ...d, datos_nna: e.target.value as 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Nivel de confidencialidad</label>
+                  <select value={(data.nivel_confidencialidad as string) ?? ''} onChange={e => setData(d => ({ ...d, nivel_confidencialidad: e.target.value as 'DC0' | 'DC1' | 'DC2' | 'DC3' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    <option value="">— Seleccionar —</option>
+                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  {(data.nivel_confidencialidad as string) && (() => {
+                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === data.nivel_confidencialidad);
+                    return opt?.tooltip ? <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</p> : null;
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
+                  <select value={(data.estructura_dato as string) ?? ''} onChange={e => setData(d => ({ ...d, estructura_dato: e.target.value as 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    <option value="">— Seleccionar —</option>
+                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={data.datos_anonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_anonimizados: e.target.checked }))} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={data.datos_seudonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_seudonimizados: e.target.checked }))} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Tier 2 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#166534' }}>Tier 2 — Operativos (ProBest template)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Ciclo de procesamiento</label>
+                  <select value={data.ciclo_procesamiento ?? ''} onChange={e => setData(d => ({ ...d, ciclo_procesamiento: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    <option value="">— Seleccionar —</option>
+                    {CICLO_PROCESAMIENTO_OPCIONES.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatizacion</label>
+                  <select value={data.automatizacion ?? ''} onChange={e => setData(d => ({ ...d, automatizacion: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    <option value="">— Seleccionar —</option>
+                    {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Frecuencia del tratamiento</label>
+                  <select value={data.frecuencia ?? ''} onChange={e => setData(d => ({ ...d, frecuencia: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
+                    <option value="">— Seleccionar —</option>
+                    {FRECUENCIA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={data.transferencia_nacional ?? false} onChange={e => setData(d => ({ ...d, transferencia_nacional: e.target.checked }))} className="mt-0.5 rounded" />
+                <span className="text-sm font-medium" style={{ color: '#374151' }}>Existe transferencia de datos a nivel nacional (dentro de Chile)</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentacion de clausulas</label>
+                  <textarea value={data.doc_clausulas ?? ''} onChange={e => setData(d => ({ ...d, doc_clausulas: e.target.value }))} rows={2} placeholder="Politica de privacidad, aviso de privacidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas organizativas</label>
+                  <textarea value={data.medidas_organizativas ?? ''} onChange={e => setData(d => ({ ...d, medidas_organizativas: e.target.value }))} rows={2} placeholder="Designacion RAI, procedimientos de acceso..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminacion</label>
+                  <textarea value={data.mecanismos_eliminacion ?? ''} onChange={e => setData(d => ({ ...d, mecanismos_eliminacion: e.target.value }))} rows={2} placeholder="Borrado seguro NIST 800-88, destruccion fisica..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tecnica de anonimizacion</label>
+                  <input value={data.tecnica_anonimizacion ?? ''} onChange={e => setData(d => ({ ...d, tecnica_anonimizacion: e.target.value }))} placeholder="Pseudonimizacion, k-anonimidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Origen del dato (portabilidad)</label>
+                  <input value={data.origen_dato_portabilidad ?? ''} onChange={e => setData(d => ({ ...d, origen_dato_portabilidad: e.target.value }))} placeholder="Directamente del titular, de otro responsable..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fecha de levantamiento</label>
+                  <input type="date" value={data.fecha_levantamiento ?? ''} onChange={e => setData(d => ({ ...d, fecha_levantamiento: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                </div>
               </div>
             </div>
 

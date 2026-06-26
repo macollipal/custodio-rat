@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
-import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE } from '@/lib/constants';
+import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
@@ -66,6 +66,23 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     operaciones_tratamiento: rat.operaciones_tratamiento ?? [],
     logica_automatizada: rat.logica_automatizada ?? '',
     responsable_tratamiento_email: rat.responsable_tratamiento_email ?? '',
+    // Campos Tier 1 - Gaps criticos (Iter 11)
+    datos_nna: rat.datos_nna ?? 'ninguno',
+    nivel_confidencialidad: rat.nivel_confidencialidad ?? '',
+    estructura_dato: rat.estructura_dato ?? '',
+    datos_anonimizados: rat.datos_anonimizados ?? false,
+    datos_seudonimizados: rat.datos_seudonimizados ?? false,
+    // Campos Tier 2 - Operativos (Iter 11)
+    ciclo_procesamiento: rat.ciclo_procesamiento ?? '',
+    automatizacion: rat.automatizacion ?? '',
+    frecuencia: rat.frecuencia ?? '',
+    transferencia_nacional: rat.transferencia_nacional ?? false,
+    doc_clausulas: rat.doc_clausulas ?? '',
+    medidas_organizativas: rat.medidas_organizativas ?? '',
+    mecanismos_eliminacion: rat.mecanismos_eliminacion ?? '',
+    tecnica_anonimizacion: rat.tecnica_anonimizacion ?? '',
+    origen_dato_portabilidad: rat.origen_dato_portabilidad ?? '',
+    fecha_levantamiento: rat.fecha_levantamiento ?? '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -558,8 +575,140 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             <div className="flex justify-between pt-2">
               <button onClick={() => setStep(3)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
               <button
+                onClick={() => setStep(5)}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+                style={{ background: '#7C3AED' }}
+              >
+                Siguiente →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PASO 5 */}
+        {step === 5 && (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps criticos y operativos - ProBest template.</p>
+            </div>
+
+            {/* Tier 1 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#991B1B' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Tratamiento de NNA
+                  </label>
+                  <select value={form.datos_nna ?? 'ninguno'} onChange={e => set('datos_nna', e.target.value)} className={inputCls} style={inputStyle}>
+                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Nivel de confidencialidad
+                  </label>
+                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  {form.nivel_confidencialidad && (() => {
+                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === form.nivel_confidencialidad);
+                    return opt?.tooltip ? (
+                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</p>
+                    ) : null;
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
+                  <select value={form.estructura_dato ?? ''} onChange={e => set('estructura_dato', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_anonimizados} onChange={e => set('datos_anonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_seudonimizados} onChange={e => set('datos_seudonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Tier 2 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#166534' }}>Tier 2 — Operativos (ProBest template)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Ciclo de procesamiento</label>
+                  <select value={form.ciclo_procesamiento ?? ''} onChange={e => set('ciclo_procesamiento', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {CICLO_PROCESAMIENTO_OPCIONES.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatizacion</label>
+                  <select value={form.automatizacion ?? ''} onChange={e => set('automatizacion', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Frecuencia del tratamiento</label>
+                  <select value={form.frecuencia ?? ''} onChange={e => set('frecuencia', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {FRECUENCIA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.transferencia_nacional} onChange={e => set('transferencia_nacional', e.target.checked)} className="mt-0.5 rounded" />
+                <span className="text-sm font-medium" style={{ color: '#374151' }}>Existe transferencia de datos a nivel nacional (dentro de Chile)</span>
+              </label>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentacion de clausulas informativas</label>
+                <textarea value={form.doc_clausulas ?? ''} onChange={e => set('doc_clausulas', e.target.value)} rows={2} placeholder="Ej: Politica de privacidad en sitio web, aviso de privacidad en formularios..." className={inputCls} style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas organizativas</label>
+                <textarea value={form.medidas_organizativas ?? ''} onChange={e => set('medidas_organizativas', e.target.value)} rows={2} placeholder="Ej: Designacion RAI, procedimientos de acceso, politicas internas..." className={inputCls} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminacion</label>
+                  <textarea value={form.mecanismos_eliminacion ?? ''} onChange={e => set('mecanismos_eliminacion', e.target.value)} rows={2} placeholder="Ej: Borrado seguro NIST 800-88, destruccion fisica, retencion hasta fin de plazo..." className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tecnica de anonimizacion</label>
+                  <input value={form.tecnica_anonimizacion ?? ''} onChange={e => set('tecnica_anonimizacion', e.target.value)} placeholder="Ej: Pseudonimizacion, k-anonimidad, agregacion..." className={inputCls} style={inputStyle} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Origen del dato (portabilidad)</label>
+                  <input value={form.origen_dato_portabilidad ?? ''} onChange={e => set('origen_dato_portabilidad', e.target.value)} placeholder="Ej: Directamente del titular, de otro responsable..." className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fecha de levantamiento</label>
+                  <input type="date" value={form.fecha_levantamiento ?? ''} onChange={e => set('fecha_levantamiento', e.target.value)} className={inputCls} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between pt-2">
+              <button onClick={() => setStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
+              <button
                 onClick={() => {
-                  if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
+                  if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
                   handleSave();
                 }}
                 disabled={saving}

@@ -240,8 +240,8 @@ export default function RatDetailView({
       </Section>
 
       {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
-      {(rat.sistema_almacenamiento || rat.volumen_titulares_estimado || (rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0) || rat.responsable_tratamiento_email) && (
-        <Section title="Compliance · Ley 21.719">
+      {(rat.sistema_almacenamiento || rat.volumen_titulares_estimado || (rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0) || rat.responsable_tratamiento_email || rat.datos_nna || rat.nivel_confidencialidad || rat.estructura_dato || rat.datos_anonimizados || rat.datos_seudonimizados || rat.ciclo_procesamiento || rat.automatizacion || rat.frecuencia || rat.transferencia_nacional || rat.doc_clausulas || rat.medidas_organizativas || rat.mecanismos_eliminacion || rat.tecnica_anonimizacion || rat.origen_dato_portabilidad || rat.fecha_levantamiento) && (
+        <Section title="Compliance · Ley 21.719 (Tier 1 + Tier 2)">
           {rat.sistema_almacenamiento && (
             <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
           )}
@@ -253,6 +253,50 @@ export default function RatDetailView({
           )}
           {rat.responsable_tratamiento_email && (
             <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
+          )}
+          {/* Tier 1 */}
+          {rat.datos_nna && (
+            <FieldRow label="Tratamiento NNA" value={rat.datos_nna === 'ninguno' ? 'Sin datos de NNA' : rat.datos_nna === 'ninos' ? 'Ninos (< 14 anos)' : rat.datos_nna === 'adolescentes' ? 'Adolescentes (14-17 anos)' : 'Ambos'} />
+          )}
+          {rat.nivel_confidencialidad && (
+            <FieldRow label="Nivel confidencialidad" value={rat.nivel_confidencialidad} />
+          )}
+          {rat.estructura_dato && (
+            <FieldRow label="Estructura del dato" value={rat.estructura_dato} />
+          )}
+          {(rat.datos_anonimizados || rat.datos_seudonimizados) && (
+            <FieldRow label="Anonimizacion" value={[rat.datos_anonimizados ? 'Anonimizados' : '', rat.datos_seudonimizados ? 'Seudonimizados' : ''].filter(Boolean).join(', ') || 'No'} />
+          )}
+          {/* Tier 2 */}
+          {rat.ciclo_procesamiento && (
+            <FieldRow label="Ciclo procesamiento" value={rat.ciclo_procesamiento} />
+          )}
+          {rat.automatizacion && (
+            <FieldRow label="Grado automatizacion" value={rat.automatizacion} />
+          )}
+          {rat.frecuencia && (
+            <FieldRow label="Frecuencia" value={rat.frecuencia} />
+          )}
+          {rat.transferencia_nacional && (
+            <FieldRow label="Transferencia nacional" value="Si — dentro del territorio chileno" />
+          )}
+          {rat.doc_clausulas && (
+            <FieldRow label="Doc. clausulas" value={rat.doc_clausulas} />
+          )}
+          {rat.medidas_organizativas && (
+            <FieldRow label="Medidas organizativas" value={rat.medidas_organizativas} />
+          )}
+          {rat.mecanismos_eliminacion && (
+            <FieldRow label="Mecanismos eliminacion" value={rat.mecanismos_eliminacion} />
+          )}
+          {rat.tecnica_anonimizacion && (
+            <FieldRow label="Tecnica anonimizacion" value={rat.tecnica_anonimizacion} />
+          )}
+          {rat.origen_dato_portabilidad && (
+            <FieldRow label="Origen dato (portabilidad)" value={rat.origen_dato_portabilidad} />
+          )}
+          {rat.fecha_levantamiento && (
+            <FieldRow label="Fecha levantamiento" value={fmtDate(rat.fecha_levantamiento)} />
           )}
         </Section>
       )}

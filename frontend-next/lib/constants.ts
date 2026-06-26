@@ -51,3 +51,44 @@ export const DESCRIPCIONES_BASE: Record<string, string> = {
   'Datos biometricos de identificacion (Art. 16 BIS)':
     'Art. 16 BIS - Base especifica para datos biometricos. Requiere EIPD previa.',
 };
+
+export const DATOS_NNA_OPCIONES = [
+  { value: 'ninguno', label: 'Ninguno' },
+  { value: 'ninos', label: 'Ninos (< 14 anos)' },
+  { value: 'adolescentes', label: 'Adolescentes (14-17 anos)' },
+  { value: 'ambos', label: 'Ambos' },
+] as const;
+
+export const NIVEL_CONFIDENCIALIDAD_OPCIONES = [
+  { value: 'DC0', label: 'DC0 — Publico', tooltip: 'Informacion publicada o de dominio publico. Sin restricciones de privacidad.' },
+  { value: 'DC1', label: 'DC1 — Uso Interno', tooltip: 'Informacion interna de la organizacion. Acceso restringido a empleados.' },
+  { value: 'DC2', label: 'DC2 — Uso Restringido', tooltip: 'Informacion sensible internamente. Acceso solo a personal autorizado con necesidad de conocer.' },
+  { value: 'DC3', label: 'DC3 — Confidencial', tooltip: 'Informacion altamente sensible. Requiere medidas de seguridad reforzadas. Incluye datos biometricos, de salud, NNA y financieros.' },
+] as const;
+
+export const ESTRUCTURA_DATO_OPCIONES = [
+  { value: 'estructurado', label: 'Estructurado (DB, Excel, CSV)' },
+  { value: 'semiestructurado', label: 'Semi-estructurado (JSON, XML, Emails)' },
+  { value: 'no_estructurado', label: 'No estructurado (Documentos, imagenes, audio)' },
+  { value: 'fisico', label: 'Fisico (papel, formularios)' },
+] as const;
+
+export const CICLO_PROCESAMIENTO_OPCIONES = [
+  'recopilacion', 'almacenamiento', 'uso', 'comunicacion', 'eliminacion', 'archivo'
+] as const;
+
+export const AUTOMATIZACION_OPCIONES = [
+  { value: '100% manual', label: '100% Manual' },
+  { value: 'mayoritariamente manual', label: 'Mayoritariamente Manual' },
+  { value: 'mayoritariamente automatizado', label: 'Mayoritariamente Automatizado' },
+  { value: '100% automatizado', label: '100% Automatizado' },
+] as const;
+
+export const FRECUENCIA_OPCIONES = [
+  { value: 'diaria', label: 'Diaria' },
+  { value: 'semanal', label: 'Semanal' },
+  { value: 'mensual', label: 'Mensual' },
+  { value: 'trimestral', label: 'Trimestral' },
+  { value: 'anual', label: 'Anual' },
+  { value: 'puntual', label: 'Puntual / Eventual' },
+] as const;

@@ -31,6 +31,23 @@ class RATBase(BaseModel):
     operaciones_tratamiento: Optional[Any] = None
     logica_automatizada: Optional[str] = None
     responsable_tratamiento_email: Optional[str] = None
+    # Campos Tier 1 - Gaps criticos (Iter 11)
+    datos_nna: Optional[str] = None
+    nivel_confidencialidad: Optional[str] = None
+    estructura_dato: Optional[str] = None
+    datos_anonimizados: bool = False
+    datos_seudonimizados: bool = False
+    # Campos Tier 2 - Operativos (Iter 11)
+    ciclo_procesamiento: Optional[str] = None
+    automatizacion: Optional[str] = None
+    frecuencia: Optional[str] = None
+    transferencia_nacional: bool = False
+    doc_clausulas: Optional[str] = None
+    medidas_organizativas: Optional[str] = None
+    mecanismos_eliminacion: Optional[str] = None
+    tecnica_anonimizacion: Optional[str] = None
+    origen_dato_portabilidad: Optional[str] = None
+    fecha_levantamiento: Optional[date] = None
     nombre_encargado: Optional[str] = None
     tiene_contrato_encargado: bool = False
     test_interes_legitimo: Optional[str] = None
@@ -102,6 +119,23 @@ class RATUpdate(BaseModel):
     operaciones_tratamiento: Optional[Any] = None
     logica_automatizada: Optional[str] = None
     responsable_tratamiento_email: Optional[str] = None
+    # Campos Tier 1 - Gaps criticos (Iter 11)
+    datos_nna: Optional[str] = None
+    nivel_confidencialidad: Optional[str] = None
+    estructura_dato: Optional[str] = None
+    datos_anonimizados: Optional[bool] = None
+    datos_seudonimizados: Optional[bool] = None
+    # Campos Tier 2 - Operativos (Iter 11)
+    ciclo_procesamiento: Optional[str] = None
+    automatizacion: Optional[str] = None
+    frecuencia: Optional[str] = None
+    transferencia_nacional: Optional[bool] = None
+    doc_clausulas: Optional[str] = None
+    medidas_organizativas: Optional[str] = None
+    mecanismos_eliminacion: Optional[str] = None
+    tecnica_anonimizacion: Optional[str] = None
+    origen_dato_portabilidad: Optional[str] = None
+    fecha_levantamiento: Optional[date] = None
     nombre_encargado: Optional[str] = None
     tiene_contrato_encargado: Optional[bool] = None
     test_interes_legitimo: Optional[str] = None

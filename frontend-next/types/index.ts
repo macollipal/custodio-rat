@@ -96,6 +96,23 @@ export interface RAT {
   operaciones_tratamiento?: string[];
   logica_automatizada?: string;
   responsable_tratamiento_email?: string;
+  // Campos Tier 1 - Gaps criticos (Iter 11)
+  datos_nna?: 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' | null;
+  nivel_confidencialidad?: 'DC0' | 'DC1' | 'DC2' | 'DC3' | null;
+  estructura_dato?: 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' | null;
+  datos_anonimizados?: boolean;
+  datos_seudonimizados?: boolean;
+  // Campos Tier 2 - Operativos (Iter 11)
+  ciclo_procesamiento?: string;
+  automatizacion?: string;
+  frecuencia?: string;
+  transferencia_nacional?: boolean;
+  doc_clausulas?: string;
+  medidas_organizativas?: string;
+  mecanismos_eliminacion?: string;
+  tecnica_anonimizacion?: string;
+  origen_dato_portabilidad?: string;
+  fecha_levantamiento?: string | null;
 }
 
 export type EstadoEIPD = 'no_requerida' | 'pendiente' | 'en_proceso' | 'completada';
@@ -244,4 +261,21 @@ export interface RATWizardData {
   operaciones_tratamiento?: string[];
   logica_automatizada?: string;
   responsable_tratamiento_email?: string;
+  // Campos Tier 1 - Gaps criticos (Iter 11)
+  datos_nna?: 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' | null;
+  nivel_confidencialidad?: 'DC0' | 'DC1' | 'DC2' | 'DC3' | null;
+  estructura_dato?: 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' | null;
+  datos_anonimizados?: boolean;
+  datos_seudonimizados?: boolean;
+  // Campos Tier 2 - Operativos (Iter 11)
+  ciclo_procesamiento?: string;
+  automatizacion?: string;
+  frecuencia?: string;
+  transferencia_nacional?: boolean;
+  doc_clausulas?: string;
+  medidas_organizativas?: string;
+  mecanismos_eliminacion?: string;
+  tecnica_anonimizacion?: string;
+  origen_dato_portabilidad?: string;
+  fecha_levantamiento?: string | null;
 }
