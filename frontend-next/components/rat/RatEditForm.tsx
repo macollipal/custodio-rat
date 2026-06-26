@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
+import Spinner from '@/components/ui/Spinner';
 import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -147,7 +148,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
           datos_sensibles: true,
         });
  }
-      toast.success(`"${form.nombre_proceso}" actualizado correctamente.`);
+      toast.success(`RAT "${form.nombre_proceso}" actualizado correctamente`);
       onDone();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Error al actualizar.');
@@ -786,10 +787,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   handleSave();
                 }}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 style={{ background: '#059669' }}
               >
-                {saving ? 'Guardando...' : '✓ Guardar cambios'}
+                {saving ? (
+                  <>
+                    <Spinner size="sm" /> Guardando…
+                  </>
+                ) : (
+                  '✓ Guardar cambios'
+                )}
               </button>
             </div>
           </div>

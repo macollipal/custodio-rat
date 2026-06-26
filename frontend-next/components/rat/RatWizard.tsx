@@ -7,6 +7,7 @@ import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import FormField from '@/components/ui/FormField';
+import Spinner from '@/components/ui/Spinner';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 
@@ -215,7 +216,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           datos_sensibles: true,
         });
       }
-      toast.success(`Proceso "${result.nombre_proceso}" registrado exitosamente en el RAT.`);
+      toast.success(`RAT "${result.nombre_proceso}" creado · ID #${result.id}`);
       limpiarDraft();
       onDone();
     } catch (e: unknown) {
@@ -990,10 +991,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 }}
                 disabled={!stepIsValid || saving}
                 aria-disabled={!stepIsValid || saving}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
+                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 style={{ background: '#059669' }}
               >
-                {saving ? 'Guardando...' : '✓ Guardar en el RAT'}
+                {saving ? (
+                  <>
+                    <Spinner size="sm" /> Guardando…
+                  </>
+                ) : (
+                  '✓ Guardar en el RAT'
+                )}
               </button>
             </div>
           </div>
@@ -1160,10 +1167,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   guardar();
                 }}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 style={{ background: '#059669' }}
               >
-                {saving ? 'Guardando...' : 'Guardar en el RAT'}
+                {saving ? (
+                  <>
+                    <Spinner size="sm" /> Guardando…
+                  </>
+                ) : (
+                  'Guardar en el RAT'
+                )}
               </button>
             </div>
           </div>

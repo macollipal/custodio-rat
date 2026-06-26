@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import PdfPreview from './PdfPreview';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Spinner from '@/components/ui/Spinner';
 import { DIAS_REVISION } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -165,7 +166,7 @@ export default function RatDetailView({
     dispatch({ type: 'SET_APPROVING', value: true });
     try {
       await api.aprobarRat(rat.id);
-      toast.success(`RAT "${rat.nombre_proceso}" aprobado correctamente.`);
+      toast.success(`RAT "${rat.nombre_proceso}" aprobado correctamente · ID #${rat.id}`);
       onRefresh();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Error al aprobar.');
@@ -368,10 +369,16 @@ export default function RatDetailView({
                 <button
                   onClick={handleApprove}
                   disabled={approving}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50 inline-flex items-center justify-center gap-2"
                   style={{ background: '#059669' }}
                 >
-                  {approving ? 'Aprobando...' : '✓ Aprobar RAT'}
+                  {approving ? (
+                    <>
+                      <Spinner size="sm" /> Aprobando…
+                    </>
+                  ) : (
+                    '✓ Aprobar RAT'
+                  )}
                 </button>
               ) : (
                 <div
