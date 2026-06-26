@@ -39,8 +39,50 @@ function localReducer(_: LocalState, action: LocalAction): LocalState {
   }
 }
 
-interface SectionProps { title: string; children: React.ReactNode }
-function Section({ title, children }: SectionProps) {
+interface FieldRowProps {
+  label: string;
+  value: string | null | undefined;
+  warning?: boolean;
+  /** Marca el campo como crítico pendiente si está vacío */
+  criticalIfEmpty?: boolean;
+}
+function FieldRow({ label, value, warning, criticalIfEmpty }: FieldRowProps) {
+  const isEmpty = !value || value === '—' || value === '';
+  const isWarning = warning || (typeof value === 'string' && value.startsWith('⚠️'));
+  const isCriticalEmpty = isEmpty && criticalIfEmpty;
+  let display = value;
+  let bgColor = 'transparent';
+  let valueColor = isWarning ? '#DC2626' : '#111827';
+
+  if (isCriticalEmpty) {
+    display = '⚠️ Pendiente';
+    valueColor = '#DC2626';
+    bgColor = '#FEF2F2';
+  } else if (isEmpty) {
+    display = '—';
+    valueColor = '#9CA3AF';
+  }
+
+  return (
+    <div
+      className="flex items-start gap-3 px-4 py-2.5"
+      style={{ borderBottom: '1px solid #F3F4F6', backgroundColor: bgColor }}
+    >
+      <span className="text-xs font-medium w-40 flex-shrink-0 pt-0.5" style={{ color: '#6B7280' }}>{label}</span>
+      <span
+        className="text-sm flex-1 break-words font-medium"
+        style={{ color: valueColor }}
+      >
+        {display}
+      </span>
+    </div>
+  );
+}
+
+/** Section que solo se muestra si tiene al menos un FieldRow visible */
+interface SectionProps { title: string; children: React.ReactNode; isEmpty?: boolean }
+function Section({ title, children, isEmpty }: SectionProps) {
+  if (isEmpty) return null;
   return (
     <div className="mb-5">
       <p className="text-xs font-bold mb-2 px-1" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -49,23 +91,6 @@ function Section({ title, children }: SectionProps) {
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
         {children}
       </div>
-    </div>
-  );
-}
-
-interface FieldRowProps { label: string; value: string | null | undefined; warning?: boolean }
-function FieldRow({ label, value, warning }: FieldRowProps) {
-  const display = value || '—';
-  const isWarning = warning || (typeof display === 'string' && display.startsWith('⚠️'));
-  return (
-    <div className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: '1px solid #F3F4F6' }}>
-      <span className="text-xs font-medium w-40 flex-shrink-0 pt-0.5" style={{ color: '#6B7280' }}>{label}</span>
-      <span
-        className="text-sm flex-1 break-words"
-        style={{ color: isWarning ? '#DC2626' : '#111827' }}
-      >
-        {display}
-      </span>
     </div>
   );
 }
@@ -93,6 +118,26 @@ function fmtDate(d: string | null | undefined): string {
   const date = new Date(d);
   if (isNaN(date.getTime())) return '—';
   return date.toLocaleDateString('es-CL', { dateStyle: 'short' });
+}
+
+function CompletitudBar({ completitud }: { completitud: number }) {
+  const pct = Math.round(completitud || 0);
+  const color = pct >= 75 ? '#059669' : pct >= 50 ? '#D97706' : '#DC2626';
+  const bgSoft = pct >= 75 ? '#DCFCE7' : pct >= 50 ? '#FEF3C7' : '#FEE2E2';
+  const label = pct >= 75 ? '✓ Completo' : pct >= 50 ? '⚠️ Avanzado' : '🚧 En progreso';
+  return (
+    <div className="rounded-xl p-3 mb-4 flex items-center gap-3" style={{ background: bgSoft, border: `1px solid ${color}33` }}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs font-semibold" style={{ color }}>{label}</span>
+          <span className="text-xs font-bold" style={{ color }}>{pct}%</span>
+        </div>
+        <div className="h-1.5 rounded-full" style={{ background: '#FFFFFF' }}>
+          <div className="h-1.5 rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%`, background: color }} />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function fmtDateTime(d: string | null | undefined): string {
@@ -157,9 +202,12 @@ export default function RatDetailView({
         </div>
       )}
 
+      {/* Indicador de completitud — semáforo */}
+      <CompletitudBar completitud={rat.completitud} />
+
       <Section title="Identificación">
-        <FieldRow label="Categoría titulares" value={rat.categoria_titulares} />
-        <FieldRow label="Fuente de datos" value={rat.fuente_datos} />
+        <FieldRow label="Categoría titulares" value={rat.categoria_titulares} criticalIfEmpty />
+        <FieldRow label="Fuente de datos" value={rat.fuente_datos} criticalIfEmpty />
         <FieldRow label="Destinatarios" value={rat.destinatarios} />
         <FieldRow label="Encargado tratamiento" value={rat.nombre_encargado} />
         {rat.tiene_contrato_encargado !== undefined && (
@@ -171,8 +219,8 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Datos tratados">
-        <FieldRow label="Categoría datos" value={rat.categoria_datos} />
+      <Section title="Datos tratados" isEmpty={!rat.categoria_datos && !rat.datos_sensibles && !rat.evaluacion_impacto && !rat.decisiones_automatizadas && !rat.logica_automatizada}>
+        <FieldRow label="Categoría datos" value={rat.categoria_datos} criticalIfEmpty />
         {rat.datos_sensibles && (
           <FieldRow
             label="Tipo dato sensible"
@@ -205,9 +253,9 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Base legal y finalidad">
-        <FieldRow label="Base legal" value={rat.base_legal} />
-        <FieldRow label="Finalidad" value={rat.finalidad} />
+      <Section title="Base legal y finalidad" isEmpty={!rat.base_legal && !rat.finalidad && !rat.test_interes_legitimo && !rat.observaciones_auditoria}>
+        <FieldRow label="Base legal" value={rat.base_legal} criticalIfEmpty />
+        <FieldRow label="Finalidad" value={rat.finalidad} criticalIfEmpty />
         {rat.base_legal === 'Interés legítimo' && (
           <FieldRow
             label="Test interés legítimo"
@@ -220,8 +268,8 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Almacenamiento y transferencias">
-        <FieldRow label="Plazo retención" value={rat.plazo_retencion} />
+      <Section title="Almacenamiento y transferencias" isEmpty={!rat.plazo_retencion && !rat.medidas_seguridad && !rat.transferencia_datos && !rat.transferencia_internacional}>
+        <FieldRow label="Plazo retención" value={rat.plazo_retencion} criticalIfEmpty />
         <FieldRow label="Medidas de seguridad" value={rat.medidas_seguridad} />
         <FieldRow label="Transferencia datos" value={rat.transferencia_datos} />
         {rat.transferencia_internacional && (
