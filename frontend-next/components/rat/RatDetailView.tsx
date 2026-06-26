@@ -7,6 +7,7 @@ import * as api from '@/lib/api';
 import PdfPreview from './PdfPreview';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Spinner from '@/components/ui/Spinner';
+import Tooltip from '@/components/ui/Tooltip';
 import { DIAS_REVISION } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -114,11 +115,63 @@ function Badge({ variant, children }: BadgeProps) {
   );
 }
 
+const ESTADO_BADGE: Record<string, { bg: string; color: string; icon: string; label: string }> = {
+  borrador:    { bg: '#F3F4F6', color: '#374151', icon: '📝', label: 'Borrador' },
+  completo:    { bg: '#DBEAFE', color: '#1E40AF', icon: '✓',  label: 'Completo' },
+  en_revision: { bg: '#FEF3C7', color: '#92400E', icon: '⏳', label: 'En revisión' },
+  aprobado:     { bg: '#DCFCE7', color: '#166534', icon: '✓',  label: 'Aprobado' },
+};
+
+const RIESGO_BADGE: Record<string, { bg: string; color: string; icon: string }> = {
+  Bajo:    { bg: '#DCFCE7', color: '#166534', icon: '🟢' },
+  Medio:   { bg: '#FEF3C7', color: '#92400E', icon: '🟡' },
+  Alto:    { bg: '#FEE2E2', color: '#991B1B', icon: '🟠' },
+  'Crítico': { bg: '#FEE2E2', color: '#7F1D1D', icon: '🔴' },
+};
+
+function EstadoBadge({ estado }: { estado: RAT['estado'] }) {
+  const s = ESTADO_BADGE[estado] ?? ESTADO_BADGE.borrador;
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+      <span aria-hidden="true">{s.icon}</span>
+      {s.label}
+    </span>
+  );
+}
+
+function RiesgoBadge({ nivel }: { nivel?: string }) {
+  if (!nivel) return null;
+  const s = RIESGO_BADGE[nivel];
+  if (!s) return null;
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+      <span aria-hidden="true">{s.icon}</span>
+      Riesgo {nivel}
+    </span>
+  );
+}
+
 function fmtDate(d: string | null | undefined): string {
   if (!d) return '—';
   const date = new Date(d);
   if (isNaN(date.getTime())) return '—';
   return date.toLocaleDateString('es-CL', { dateStyle: 'short' });
+}
+
+function SectionWithTooltip({ title, tooltipText, children }: { title: string; tooltipText: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-5">
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <p className="text-xs font-bold" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {title}
+        </p>
+        <Tooltip text={tooltipText} />
+      </div>
+      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function CompletitudBar({ completitud }: { completitud: number }) {
@@ -206,7 +259,29 @@ export default function RatDetailView({
       {/* Indicador de completitud — semáforo */}
       <CompletitudBar completitud={rat.completitud} />
 
+      <Section title="Resumen">
+        <FieldRow label="Nombre del proceso" value={rat.nombre_proceso} />
+        <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid #F3F4F6' }}>
+          <span className="text-xs font-medium w-40 flex-shrink-0 pt-0.5" style={{ color: '#6B7280' }}>Estado</span>
+          <EstadoBadge estado={rat.estado} />
+          {rat.nivel_riesgo && (
+            <span className="ml-2"><RiesgoBadge nivel={rat.nivel_riesgo} /></span>
+          )}
+        </div>
+        <FieldRow label="Creado por" value={rat.created_by} />
+        <FieldRow label="Fecha de creación" value={fmtDateTime(rat.created_at)} />
+        <FieldRow label="Actualizado por" value={rat.updated_by} />
+        <FieldRow label="Última actualización" value={fmtDateTime(rat.updated_at)} />
+        {rat.estado === 'aprobado' && (
+          <>
+            <FieldRow label="Aprobado por" value={rat.aprobado_por} />
+            <FieldRow label="Fecha de aprobación" value={fmtDateTime(rat.fecha_aprobacion)} />
+          </>
+        )}
+      </Section>
+
       <Section title="Identificación">
+        <FieldRow label="Nombre del proceso" value={rat.nombre_proceso} />
         <FieldRow label="Categoría titulares" value={rat.categoria_titulares} criticalIfEmpty />
         <FieldRow label="Fuente de datos" value={rat.fuente_datos} criticalIfEmpty />
         <FieldRow label="Destinatarios" value={rat.destinatarios} />
@@ -220,7 +295,7 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Datos tratados" isEmpty={!rat.categoria_datos && !rat.datos_sensibles && !rat.evaluacion_impacto && !rat.decisiones_automatizadas && !rat.logica_automatizada}>
+      <Section title="Datos tratados">
         <FieldRow label="Categoría datos" value={rat.categoria_datos} criticalIfEmpty />
         {rat.datos_sensibles && (
           <FieldRow
@@ -229,7 +304,7 @@ export default function RatDetailView({
             warning={!rat.tipo_dato_sensible}
           />
         )}
-        {rat.evaluacion_impacto && (
+        {(rat.evaluacion_impacto || (rat.estado_eipd && rat.estado_eipd !== 'no_requerida')) && (
           <>
             <FieldRow label="EIPD" value={rat.estado_eipd ? `• ${rat.estado_eipd.replace('_', ' ')}` : 'Pendiente'} />
             {rat.fecha_eipd && <FieldRow label="Fecha EIPD" value={fmtDate(rat.fecha_eipd)} />}
@@ -254,7 +329,7 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Base legal y finalidad" isEmpty={!rat.base_legal && !rat.finalidad && !rat.test_interes_legitimo && !rat.observaciones_auditoria}>
+      <Section title="Base legal y finalidad">
         <FieldRow label="Base legal" value={rat.base_legal} criticalIfEmpty />
         <FieldRow label="Finalidad" value={rat.finalidad} criticalIfEmpty />
         {rat.base_legal === 'Interés legítimo' && (
@@ -269,10 +344,14 @@ export default function RatDetailView({
         )}
       </Section>
 
-      <Section title="Almacenamiento y transferencias" isEmpty={!rat.plazo_retencion && !rat.medidas_seguridad && !rat.transferencia_datos && !rat.transferencia_internacional}>
+      <Section title="Almacenamiento y transferencias">
         <FieldRow label="Plazo retención" value={rat.plazo_retencion} criticalIfEmpty />
         <FieldRow label="Medidas de seguridad" value={rat.medidas_seguridad} />
         <FieldRow label="Transferencia datos" value={rat.transferencia_datos} />
+        {rat.volumen_titulares_estimado !== undefined && rat.volumen_titulares_estimado !== null && (
+          <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado.toLocaleString('es-CL')} />
+        )}
+        <FieldRow label="Transferencia nacional" value={rat.transferencia_nacional ? 'Sí — dentro del territorio chileno' : 'No'} />
         {rat.transferencia_internacional && (
           <>
             <FieldRow
@@ -289,75 +368,61 @@ export default function RatDetailView({
         )}
       </Section>
 
-      {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
-      {(rat.sistema_almacenamiento || rat.volumen_titulares_estimado || (rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0) || rat.responsable_tratamiento_email || rat.datos_nna || rat.nivel_confidencialidad || rat.estructura_dato || rat.datos_anonimizados || rat.datos_seudonimizados || rat.ciclo_procesamiento || rat.automatizacion || rat.frecuencia || rat.transferencia_nacional || rat.doc_clausulas || rat.medidas_organizativas || rat.mecanismos_eliminacion || rat.tecnica_anonimizacion || rat.origen_dato_portabilidad || rat.fecha_levantamiento) && (
-        <Section title="Compliance · Ley 21.719 (Tier 1 + Tier 2)">
-          {rat.sistema_almacenamiento && (
-            <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
-          )}
-          {rat.volumen_titulares_estimado !== undefined && rat.volumen_titulares_estimado !== null && (
-            <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado.toLocaleString('es-CL')} />
-          )}
-          {rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 && (
-            <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento.join(', ')} />
-          )}
-          {rat.responsable_tratamiento_email && (
-            <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
-          )}
-          {/* Tier 1 */}
-          {rat.datos_nna && (
-            <FieldRow label="Tratamiento NNA" value={rat.datos_nna === 'ninguno' ? 'Sin datos de NNA' : rat.datos_nna === 'ninos' ? 'Ninos (< 14 anos)' : rat.datos_nna === 'adolescentes' ? 'Adolescentes (14-17 anos)' : 'Ambos'} />
-          )}
-          {rat.nivel_confidencialidad && (
-            <FieldRow label="Nivel confidencialidad" value={rat.nivel_confidencialidad} />
-          )}
-          {rat.estructura_dato && (
-            <FieldRow label="Estructura del dato" value={rat.estructura_dato} />
-          )}
-          {(rat.datos_anonimizados || rat.datos_seudonimizados) && (
-            <FieldRow label="Anonimizacion" value={[rat.datos_anonimizados ? 'Anonimizados' : '', rat.datos_seudonimizados ? 'Seudonimizados' : ''].filter(Boolean).join(', ') || 'No'} />
-          )}
-          {/* Tier 2 */}
-          {rat.ciclo_procesamiento && (
-            <FieldRow label="Ciclo procesamiento" value={rat.ciclo_procesamiento} />
-          )}
-          {rat.automatizacion && (
-            <FieldRow label="Grado automatizacion" value={rat.automatizacion} />
-          )}
-          {rat.frecuencia && (
-            <FieldRow label="Frecuencia" value={rat.frecuencia} />
-          )}
-          {rat.transferencia_nacional && (
-            <FieldRow label="Transferencia nacional" value="Si — dentro del territorio chileno" />
-          )}
-          {rat.doc_clausulas && (
-            <FieldRow label="Doc. clausulas" value={rat.doc_clausulas} />
-          )}
-          {rat.medidas_organizativas && (
-            <FieldRow label="Medidas organizativas" value={rat.medidas_organizativas} />
-          )}
-          {rat.mecanismos_eliminacion && (
-            <FieldRow label="Mecanismos eliminacion" value={rat.mecanismos_eliminacion} />
-          )}
-          {rat.tecnica_anonimizacion && (
-            <FieldRow label="Tecnica anonimizacion" value={rat.tecnica_anonimizacion} />
-          )}
-          {rat.origen_dato_portabilidad && (
-            <FieldRow label="Origen dato (portabilidad)" value={rat.origen_dato_portabilidad} />
-          )}
-          {rat.fecha_levantamiento && (
-            <FieldRow label="Fecha levantamiento" value={fmtDate(rat.fecha_levantamiento)} />
+      {/* Compliance (Iter 10) — siempre visible */}
+      <Section title="Compliance · Ley 21.719">
+        <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
+        <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado != null ? rat.volumen_titulares_estimado.toLocaleString('es-CL') : null} />
+        <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 ? rat.operaciones_tratamiento.join(', ') : null} />
+        <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
+        {rat.decisiones_automatizadas && (
+          <FieldRow label="Lógica automatizada" value={rat.logica_automatizada} />
+        )}
+      </Section>
+
+      {/* Tier 1 — siempre visible con tooltip */}
+      <SectionWithTooltip
+        title="Datos sensibles y clasificación"
+        tooltipText="Datos NNA, clasificación de confidencialidad, estructura del dato, anonimización (AUDIT_LOG Iter 11, Tier 1)"
+      >
+        <FieldRow label="Tratamiento NNA" value={rat.datos_nna === 'ninguno' ? 'Sin datos de NNA' : rat.datos_nna === 'ninos' ? 'Niños (< 14 años)' : rat.datos_nna === 'adolescentes' ? 'Adolescentes (14-17 años)' : rat.datos_nna === 'ambos' ? 'Ambos' : null} />
+        <FieldRow label="Nivel confidencialidad" value={rat.nivel_confidencialidad} />
+        <FieldRow label="Estructura del dato" value={rat.estructura_dato} />
+        <FieldRow
+          label="Anonimización"
+          value={
+            rat.datos_anonimizados || rat.datos_seudonimizados
+              ? [rat.datos_anonimizados ? 'Anonimizados' : '', rat.datos_seudonimizados ? 'Seudonimizados' : ''].filter(Boolean).join(', ')
+              : null
+          }
+        />
+      </SectionWithTooltip>
+
+      {/* Tier 2 — siempre visible con tooltip */}
+      <SectionWithTooltip
+        title="Operativos y técnicos"
+        tooltipText="Campos operativos del template ProBest (AUDIT_LOG Iter 11, Tier 2)"
+      >
+        <FieldRow label="Ciclo procesamiento" value={rat.ciclo_procesamiento} />
+        <FieldRow label="Grado automatización" value={rat.automatizacion} />
+        <FieldRow label="Frecuencia" value={rat.frecuencia} />
+        <FieldRow label="Doc. cláusulas" value={rat.doc_clausulas} />
+        <FieldRow label="Medidas organizativas" value={rat.medidas_organizativas} />
+        <FieldRow label="Mecanismos eliminación" value={rat.mecanismos_eliminacion} />
+        <FieldRow label="Técnica anonimización" value={rat.tecnica_anonimizacion} />
+        <FieldRow label="Origen dato (portabilidad)" value={rat.origen_dato_portabilidad} />
+        <FieldRow label="Fecha levantamiento" value={fmtDate(rat.fecha_levantamiento)} />
+      </SectionWithTooltip>
+
+      {/* Documento base legal — siempre visible */}
+      {(rat.tiene_archivo_base_legal || rat.archivo_base_legal_nombre) && (
+        <Section title="Documento base legal">
+          <FieldRow label="Nombre archivo" value={rat.archivo_base_legal_nombre || 'Sin nombre'} />
+          {rat.tiene_archivo_base_legal && (
+            <div className="px-4 py-3">
+              <PdfPreview ratId={rat.id} filename={rat.archivo_base_legal_nombre} />
+            </div>
           )}
         </Section>
-      )}
-
-      {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
-        <div className="mb-5">
-          <p className="text-xs font-bold mb-2 px-1" style={{ color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Documento base legal
-          </p>
-          <PdfPreview ratId={rat.id} filename={rat.archivo_base_legal_nombre} />
-        </div>
       )}
 
       <div className="border-t pt-4 mt-4" style={{ borderColor: '#E5E7EB' }}>
