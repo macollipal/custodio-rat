@@ -8,6 +8,8 @@ import PdfPreview from './PdfPreview';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Spinner from '@/components/ui/Spinner';
 import Tooltip from '@/components/ui/Tooltip';
+import CategoryChips from '@/components/ui/CategoryChips';
+import ReadOnlyChips from '@/components/ui/ReadOnlyChips';
 import { DIAS_REVISION } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -43,20 +45,24 @@ function localReducer(_: LocalState, action: LocalAction): LocalState {
 
 interface FieldRowProps {
   label: string;
-  value: string | null | undefined;
+  value?: string | null | undefined;
   warning?: boolean;
   /** Marca el campo como crítico pendiente si está vacío */
   criticalIfEmpty?: boolean;
+  /** Contenido custom que reemplaza el value (ej. ReadOnlyChips) */
+  children?: React.ReactNode;
 }
-function FieldRow({ label, value, warning, criticalIfEmpty }: FieldRowProps) {
+function FieldRow({ label, value, warning, criticalIfEmpty, children }: FieldRowProps) {
   const isEmpty = !value || value === '—' || value === '';
   const isWarning = warning || (typeof value === 'string' && value.startsWith('⚠️'));
   const isCriticalEmpty = isEmpty && criticalIfEmpty;
-  let display = value;
+  let display: React.ReactNode = value;
   let bgColor = 'transparent';
   let valueColor = isWarning ? '#DC2626' : '#111827';
 
-  if (isCriticalEmpty) {
+  if (children) {
+    display = children;
+  } else if (isCriticalEmpty) {
     display = '⚠️ Pendiente';
     valueColor = '#DC2626';
     bgColor = '#FEF2F2';
@@ -282,7 +288,9 @@ export default function RatDetailView({
 
       <Section title="Identificación">
         <FieldRow label="Nombre del proceso" value={rat.nombre_proceso} />
-        <FieldRow label="Categoría titulares" value={rat.categoria_titulares} criticalIfEmpty />
+        <FieldRow label="Categoría titulares" value={rat.categoria_titulares} criticalIfEmpty>
+          <ReadOnlyChips value={rat.categoria_titulares} />
+        </FieldRow>
         <FieldRow label="Fuente de datos" value={rat.fuente_datos} criticalIfEmpty />
         <FieldRow label="Destinatarios" value={rat.destinatarios} />
         <FieldRow label="Encargado tratamiento" value={rat.nombre_encargado} />
@@ -372,11 +380,11 @@ export default function RatDetailView({
       <Section title="Compliance · Ley 21.719">
         <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
         <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado != null ? rat.volumen_titulares_estimado.toLocaleString('es-CL') : null} />
-        <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 ? rat.operaciones_tratamiento.join(', ') : null} />
+        <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 ? rat.operaciones_tratamiento.join(', ') : null}>
+          <ReadOnlyChips value={rat.operaciones_tratamiento?.join(', ')} />
+        </FieldRow>
         <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
-        {rat.decisiones_automatizadas && (
-          <FieldRow label="Lógica automatizada" value={rat.logica_automatizada} />
-        )}
+        <FieldRow label="Lógica automatizada" value={rat.logica_automatizada} />
       </Section>
 
       {/* Tier 1 — siempre visible con tooltip */}
