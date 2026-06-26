@@ -29,6 +29,21 @@ interface RatEditFormProps {
 
 export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps) {
   const [step, setStep] = useState(1);
+
+  // Parsear el test_interes_legitimo existente (formato "Paso 1: ...\nPaso 2: ...\nPaso 3: ...")
+  const initialTestIL = (() => {
+    const raw = rat.test_interes_legitimo ?? '';
+    const m1 = raw.match(/Paso 1:\s*([\s\S]*?)(?=\nPaso 2:|$)/);
+    const m2 = raw.match(/Paso 2:\s*([\s\S]*?)(?=\nPaso 3:|$)/);
+    const m3 = raw.match(/Paso 3:\s*([\s\S]*?)$/);
+    return {
+      paso1: m1 ? m1[1].trim() : '',
+      paso2: m2 ? m2[1].trim() : '',
+      paso3: m3 ? m3[1].trim() : '',
+    };
+  })();
+  const [testIL, setTestIL] = useState(initialTestIL);
+
   const [form, setForm] = useState({
     nombre_proceso:               rat.nombre_proceso ?? '',
     categoria_titulares:          rat.categoria_titulares ?? '',
@@ -97,8 +112,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     if (!form.base_legal.trim()) { toast.error('La base legal es obligatoria.'); return; }
     if (!form.fuente_datos.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
     if (!form.plazo_retencion.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
-    if (form.base_legal === 'Interés legítimo' && (!form.test_interes_legitimo || form.test_interes_legitimo.trim().length < 50)) {
-      toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+    if (form.base_legal === 'Interés legítimo') {
+      const totalTestIL = [testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim();
+      if (!totalTestIL) {
+        toast.error('Complete los 3 pasos del test de interés legítimo.');
+        return;
+      }
+      if (totalTestIL.length < 50) {
+        toast.error(`El test de interés legítimo debe tener al menos 50 caracteres (actual: ${totalTestIL.length}).`);
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -106,6 +129,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
       for (const [k, v] of Object.entries(form)) {
         if (typeof v === 'string') payload[k] = v?.trim() || null;
         else payload[k] = v ?? null;
+      }
+      // Reemplazar test_interes_legitimo con el formato combinado de los 3 pasos
+      if (form.base_legal === 'Interés legítimo') {
+        payload.test_interes_legitimo = `Paso 1: ${testIL.paso1.trim()}\nPaso 2: ${testIL.paso2.trim()}\nPaso 3: ${testIL.paso3.trim()}`;
+      } else {
+        payload.test_interes_legitimo = null;
       }
       await api.actualizarRat(rat.id, payload as Partial<RAT>);
       if (form.datos_sensibles && form.consentimiento_nombre && form.consentimiento_email) {
@@ -413,19 +442,58 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             {(form.base_legal === 'Interés legítimo') && (
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                  Test de interés legítimo (3 pasos) <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(obligatorio para esta base legal)</span>
-                </label>
-                <textarea
-                  value={form.test_interes_legitimo}
-                  onChange={e => set('test_interes_legitimo', e.target.value)}
-                  rows={4}
-                  placeholder="Documente los 3 pasos: (1) ¿existe interés legítimo real? (2) ¿el tratamiento es necesario? (3) ¿prevalece sobre los derechos del titular?"
-                  className={inputCls}
-                  style={inputStyle}
-                />
+              <div className="rounded-lg p-4 space-y-3" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold" style={{ color: '#374151' }}>
+                    Test de interés legítimo (3 pasos)
+                  </p>
+                  <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                    {[testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim().length} / 50+ caracteres
+                  </span>
+                </div>
                 <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Mínimo 50 caracteres necesarios para ser válido como documentación ante la APDC." type="warning" />
+                <div>
+                  <label htmlFor="ef-testil-paso1" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 1 — ¿Existe un interés legítimo real?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso1"
+                    rows={2}
+                    value={testIL.paso1}
+                    onChange={e => setTestIL(t => ({ ...t, paso1: e.target.value }))}
+                    placeholder="Describa el interés legítimo: marketing directo, seguridad, prevención de fraude..."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="ef-testil-paso2" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 2 — ¿El tratamiento es necesario para ese interés?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso2"
+                    rows={2}
+                    value={testIL.paso2}
+                    onChange={e => setTestIL(t => ({ ...t, paso2: e.target.value }))}
+                    placeholder="Justifique por qué el tratamiento es necesario y no hay alternativa menos invasiva."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="ef-testil-paso3" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 3 — ¿Prevalece sobre los derechos del titular?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso3"
+                    rows={3}
+                    value={testIL.paso3}
+                    onChange={e => setTestIL(t => ({ ...t, paso3: e.target.value }))}
+                    placeholder="Considere expectativas razonables del titular, impacto en su privacidad, medidas mitigadoras..."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
               </div>
             )}
 
