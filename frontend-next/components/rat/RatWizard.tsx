@@ -8,6 +8,7 @@ import StepIndicator from '@/components/ui/StepIndicator';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import FormField from '@/components/ui/FormField';
 import Spinner from '@/components/ui/Spinner';
+import CategoryChips from '@/components/ui/CategoryChips';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 
@@ -421,22 +422,17 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               label="Categorías de titulares"
               required
               htmlFor="rw-categoria_titulares"
-              hint="Art. 16 Ley 21.719 — campo mínimo"
+              hint="Art. 16 Ley 21.719 — campo mínimo. Selecciona chips o escribe los tuyos separados por comas."
               error={fieldErrors.categoria_titulares}
             >
-              <input
+              <CategoryChips
                 id="rw-categoria_titulares"
-                type="text"
                 value={data.categoria_titulares ?? ''}
-                onChange={e => setData(d => ({ ...d, categoria_titulares: e.target.value }))}
-                placeholder="Ej: Clientes, empleados, proveedores, pacientes, postulantes..."
-                aria-required="true"
-                aria-invalid={!!fieldErrors.categoria_titulares}
-                className={inputCls}
-                style={{
-                  ...inputStyle,
-                  borderColor: fieldErrors.categoria_titulares ? '#DC2626' : '#D1D5DB',
-                }}
+                onChange={v => setData(d => ({ ...d, categoria_titulares: v }))}
+                suggestions={['Clientes', 'Empleados', 'Proveedores', 'Pacientes', 'Postulantes', 'Estudiantes', 'Usuarios web', 'Menores de edad', 'Acreedores']}
+                placeholder="Ej: Clientes, empleados, proveedores..."
+                ariaLabel="Categorías de titulares"
+                hasError={!!fieldErrors.categoria_titulares}
               />
             </FormField>
 

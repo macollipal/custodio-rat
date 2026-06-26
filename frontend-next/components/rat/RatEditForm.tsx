@@ -6,6 +6,7 @@ import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import Spinner from '@/components/ui/Spinner';
+import CategoryChips from '@/components/ui/CategoryChips';
 import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -198,7 +199,13 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                 Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 16 Ley 21.719)</span>
               </label>
-              <input type="text" value={form.categoria_titulares} onChange={e => set('categoria_titulares', e.target.value)} placeholder="Ej: Clientes, empleados, proveedores..." aria-required="true" className={inputCls} style={inputStyle} />
+              <CategoryChips
+                value={form.categoria_titulares}
+                onChange={v => set('categoria_titulares', v)}
+                suggestions={['Clientes', 'Empleados', 'Proveedores', 'Pacientes', 'Postulantes', 'Estudiantes', 'Usuarios web', 'Menores de edad', 'Acreedores']}
+                placeholder="Ej: Clientes, empleados, proveedores..."
+                ariaLabel="Categorías de titulares"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
