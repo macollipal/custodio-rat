@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { Company, RAT, RATWizardData } from '@/types';
 
 import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
@@ -46,6 +47,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [sugerencias, setSugerencias] = useState<import('@/types').RATSugerido[]>([]);
   const [mostrarPaso0, setMostrarPaso0] = useState(false);
   const [rubroNombre, setRubroNombre] = useState('');
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const DRAFT_KEY = `${DRAFT_KEY_PREFIX}${company.id}`;
 
@@ -278,12 +280,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => {
-            if (confirm('¿Estás seguro de que quieres salir?\n\nLos datos no guardados se perderán.')) {
-              limpiarDraft();
-              onCancel();
-            }
-          }}
+          onClick={() => setConfirmCancel(true)}
           className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
           style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
         >
@@ -424,12 +421,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
-                onClick={() => {
-                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
-                    limpiarDraft();
-                    onCancel();
-                  }
-                }}
+                onClick={() => setConfirmCancel(true)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
                 style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
               >
@@ -597,12 +589,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 Siguiente →
               </button>
               <button
-                onClick={() => {
-                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
-                    limpiarDraft();
-                    onCancel();
-                  }
-                }}
+                onClick={() => setConfirmCancel(true)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
                 style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
               >
@@ -801,12 +788,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 Siguiente →
               </button>
               <button
-                onClick={() => {
-                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
-                    limpiarDraft();
-                    onCancel();
-                  }
-                }}
+                onClick={() => setConfirmCancel(true)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
                 style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
               >
@@ -959,12 +941,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 {saving ? 'Guardando...' : '✓ Guardar en el RAT'}
               </button>
               <button
-                onClick={() => {
-                  if (confirm('¿Estás seguro de que quieres cancelar?\n\nSe perderán los datos ingresados en este paso.')) {
-                    limpiarDraft();
-                    onCancel();
-                  }
-                }}
+                onClick={() => setConfirmCancel(true)}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
                 style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
               >
@@ -1130,6 +1107,21 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        onClose={() => setConfirmCancel(false)}
+        onConfirm={() => {
+          limpiarDraft();
+          setConfirmCancel(false);
+          onCancel();
+        }}
+        title="¿Salir del wizard?"
+        message="Los datos no guardados se perderán.\nSi tienes un borrador, no se restaurará al volver a entrar."
+        confirmText="Sí, salir"
+        cancelText="Continuar aquí"
+        variant="danger"
+      />
     </div>
   );
 }

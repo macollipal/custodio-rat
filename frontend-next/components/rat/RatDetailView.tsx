@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import PdfPreview from './PdfPreview';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { DIAS_REVISION } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -364,29 +365,17 @@ export default function RatDetailView({
         </div>
       </div>
 
-      {confirmDel && (
-        <div className="mt-3 rounded-xl p-4" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
-          <p className="text-sm font-semibold mb-3" style={{ color: '#7F1D1D' }}>
-            ¿Eliminar <strong>{rat.nombre_proceso}</strong>? Esta acción es irreversible.
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { onDelete(rat.id); dispatch({ type: 'SET_CONFIRM_DEL', value: false }); }}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-white"
-              style={{ background: '#DC2626' }}
-            >
-              Confirmar eliminación
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'SET_CONFIRM_DEL', value: false })}
-              className="px-4 py-2 rounded-xl text-xs font-semibold border"
-              style={{ borderColor: '#E5E7EB', color: '#374151' }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmDel}
+        onClose={() => dispatch({ type: 'SET_CONFIRM_DEL', value: false })}
+        onConfirm={() => { onDelete(rat.id); dispatch({ type: 'SET_CONFIRM_DEL', value: false }); }}
+        title={`Eliminar "${rat.nombre_proceso}"`}
+        message="Esta acción es irreversible. Se eliminará el RAT, sus consentimientos asociados y todo el historial de auditoría."
+        confirmText="Eliminar definitivamente"
+        cancelText="Cancelar"
+        variant="danger"
+        requireTyping={rat.nombre_proceso}
+      />
 
       {auditLogs && auditLogs.length > 0 && (
         <div className="mt-4">
