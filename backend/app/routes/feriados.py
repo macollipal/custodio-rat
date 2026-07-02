@@ -56,7 +56,12 @@ async def upload_feriados(
     db: Session = Depends(get_db),
     current_user=Depends(_require_admin),
 ):
-    raw = await file.read()
+    from app.services.file_validation import validate_upload
+    raw = validate_upload(
+        file,
+        allowed_extensions=["csv"],
+        max_bytes=2 * 1024 * 1024,  # 2MB para CSV de feriados
+    )
     try:
         result = feriado_service.upload_feriados(db, anio, raw)
     except ValueError as e:

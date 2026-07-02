@@ -146,7 +146,12 @@ async def upload_document_endpoint(
     """Sube un archivo al corpus y lo indexa automáticamente."""
     require_superadmin(current_user)
 
-    content = await file.read()
+    from app.services.file_validation import validate_upload
+    content = validate_upload(
+        file,
+        allowed_extensions=["md", "txt"],
+        max_bytes=5 * 1024 * 1024,  # 5MB
+    )
     content_type = file.content_type or "text/plain"
 
     try:
