@@ -45,6 +45,7 @@ def db():
         tkt_plantilla,
         tkt_regla_asignacion,
         asesor,
+        module_permission,
     )
     connection = engine_test.connect()
     transaction = connection.begin()

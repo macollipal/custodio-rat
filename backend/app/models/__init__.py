@@ -17,6 +17,7 @@ from app.models.tkt_plantilla import TktPlantilla
 from app.models.tkt_regla_asignacion import TktReglaAsignacion
 from app.models.feriado import Feriado
 from app.models.task import TaskQueue, TaskStatus, TaskType
+from app.models.module_permission import ModulePermission, ModuloEnum
 
 __all__ = [
     "User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido",
@@ -25,4 +26,5 @@ __all__ = [
     "TktNota", "TktAdjunto", "TktHistorial", "TktPlantilla", "TktReglaAsignacion",
     "Feriado",
     "TaskQueue", "TaskStatus", "TaskType",
+    "ModulePermission", "ModuloEnum",
 ]
