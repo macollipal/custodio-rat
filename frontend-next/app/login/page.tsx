@@ -97,7 +97,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-5">
+          <p className="text-center text-xs text-gray-500 mt-5">
             Acceso restringido · Ley 21.719 de Protección de Datos
           </p>
         </div>

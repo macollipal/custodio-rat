@@ -197,7 +197,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 16 Ley 21.719)</span>
+                Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 16 Ley 21.719)</span>
               </label>
               <CategoryChips
                 value={form.categoria_titulares}
@@ -357,7 +357,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 13 Ley 21.719)</span>
+                Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 13 Ley 21.719)</span>
               </label>
               <select value={form.base_legal} onChange={e => set('base_legal', e.target.value)} className={inputCls} style={inputStyle}>
                 {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
@@ -412,7 +412,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                       <span className="text-lg">📎</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{form.archivo_base_legal_nombre}</p>
-                        <p className="text-xs" style={{ color: '#9CA3AF' }}>{form.archivo_base_legal_tipo}</p>
+                        <p className="text-xs" style={{ color: '#6B7280' }}>{form.archivo_base_legal_tipo}</p>
                       </div>
                       <button
                         type="button"

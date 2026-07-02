@@ -266,7 +266,7 @@ export default function SolicitudDerechoPage() {
                   Copiar
                 </button>
               </div>
-              <p className="text-xs mt-2" style={{ color: '#9CA3AF' }}>
+              <p className="text-xs mt-2" style={{ color: '#6B7280' }}>
                 Guardá este número para consultar el estado de tu solicitud.
               </p>
             </div>
@@ -511,7 +511,7 @@ export default function SolicitudDerechoPage() {
                 {touched.descripcion && errors.descripcion ? (
                   <p id="descripcion-error" className="text-xs mt-1" style={{ color: '#DC2626' }}>{errors.descripcion}</p>
                 ) : (
-                  <p id="descripcion-hint" className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                  <p id="descripcion-hint" className="text-xs mt-1" style={{ color: '#6B7280' }}>
                     Opcional pero recomendable. ({form.descripcion.length}/2000)
                   </p>
                 )}
@@ -603,7 +603,7 @@ export default function SolicitudDerechoPage() {
                   <span className="text-sm" style={{ color: '#6B7280' }}>
                     {files && files.length > 0 ? `${files.length} archivo(s) seleccionado(s)` : 'Hacé click para adjuntar archivos'}
                   </span>
-                  <span className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                  <span className="text-xs mt-1" style={{ color: '#6B7280' }}>
                     PDF, JPEG, PNG o GIF — máx 5 archivos de 5MB c/u
                   </span>
                   <input
@@ -641,7 +641,7 @@ export default function SolicitudDerechoPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <span className="truncate">{f.name}</span>
-                        <span className="flex-shrink-0" style={{ color: '#9CA3AF' }}>{(f.size / 1024).toFixed(0)}KB</span>
+                        <span className="flex-shrink-0" style={{ color: '#6B7280' }}>{(f.size / 1024).toFixed(0)}KB</span>
                       </li>
                     ))}
                   </ul>
@@ -670,7 +670,7 @@ export default function SolicitudDerechoPage() {
           )}
         </form>
 
-        <div className="mt-6 text-center text-xs" style={{ color: '#9CA3AF' }}>
+        <div className="mt-6 text-center text-xs" style={{ color: '#6B7280' }}>
           <p>El responsable de tratamiento debe responder en un plazo máximo de <strong>10 días hábiles</strong> (Art. 14 Ley 21.719).</p>
         </div>
       </div>

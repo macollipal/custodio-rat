@@ -163,9 +163,9 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
             Resumen de cumplimiento · <strong>{company.nombre}</strong>
-            {refreshing && <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>actualizando...</span>}
+            {refreshing && <span className="ml-2 text-xs" style={{ color: '#6B7280' }}>actualizando...</span>}
             {lastSync && !refreshing && (
-              <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>· Actualizado {formatLastSync(lastSync)}</span>
+              <span className="ml-2 text-xs" style={{ color: '#6B7280' }}>· Actualizado {formatLastSync(lastSync)}</span>
             )}
           </p>
         </div>
@@ -248,7 +248,7 @@ export default function DashboardPage() {
               Nivel de completitud global
             </h3>
             <CompletitudBar pct={completitud_promedio} />
-            <p className="text-xs mt-3" style={{ color: '#9CA3AF' }}>
+            <p className="text-xs mt-3" style={{ color: '#6B7280' }}>
               Promedio de {total_procesos} proceso(s) registrado(s) en el RAT de {company.nombre}.
             </p>
           </div>
@@ -288,7 +288,7 @@ export default function DashboardPage() {
           <div className="text-center py-8">
             <div className="text-3xl mb-2">📋</div>
             <p className="text-sm font-medium" style={{ color: '#374151' }}>Sin procesos registrados</p>
-            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
               Crea el primer proceso de tratamiento de datos para esta empresa.
             </p>
           </div>
@@ -318,7 +318,7 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
-                    <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.created_at?.slice(0, 10)}</div>
+                    <div className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id} · {rat.created_at?.slice(0, 10)}</div>
                   </div>
                   <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</div>
                   <div><Badge estado={rat.estado} /></div>
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge estado={rat.estado} />
                         <CompletitudBar pct={rat.completitud ?? 0} />
-                        <span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id}</span>
+                        <span className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id}</span>
                       </div>
                     </div>
                   </div>

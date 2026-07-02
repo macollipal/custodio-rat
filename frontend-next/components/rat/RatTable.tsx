@@ -164,7 +164,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
         </div>
       </details>
 
-      <p className="text-xs" style={{ color: '#9CA3AF' }}>
+      <p className="text-xs" style={{ color: '#6B7280' }}>
         {filtrados.length < rats.length ? `Mostrando ${filtrados.length} de ${rats.length} procesos` : `${rats.length} proceso${rats.length !== 1 ? 's' : ''} registrado${rats.length !== 1 ? 's' : ''}`}
       </p>
 
@@ -189,7 +189,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
             </button>
           )}
           {rats.length === 0 && !puedeEditar && (
-            <p className="text-xs" style={{ color: '#9CA3AF' }}>Contacta al administrador para crear procesos RAT.</p>
+            <p className="text-xs" style={{ color: '#6B7280' }}>Contacta al administrador para crear procesos RAT.</p>
           )}
         </div>
       ) : (
@@ -206,7 +206,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
               >
                 <div>
                   <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
-                  <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
+                  <div className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
                 </div>
                 <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.categoria_datos ?? '').slice(0, 45)}{(rat.categoria_datos ?? '').length > 45 ? '...' : ''}</div>
                 <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '').slice(0, 30)}</div>
@@ -253,7 +253,7 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge estado={rat.estado} />
                       <CompletitudBar pct={rat.completitud ?? 0} />
-                      <span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id}</span>
+                      <span className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id}</span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-wrap flex-shrink-0">

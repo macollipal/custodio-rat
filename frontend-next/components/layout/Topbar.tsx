@@ -81,7 +81,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
               {filtered.length === 0 ? (
-                <p className="text-xs px-3 py-2" style={{ color: '#9CA3AF' }}>Sin resultados</p>
+                <p className="text-xs px-3 py-2" style={{ color: '#6B7280' }}>Sin resultados</p>
               ) : (
                 filtered.map(emp => (
                   <button
@@ -96,7 +96,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                   >
                     <div>
                       <div className="text-sm font-medium" style={{ color: '#111827' }}>{emp.nombre}</div>
-                      <div className="text-xs" style={{ color: '#9CA3AF' }}>{emp.rut}</div>
+                      <div className="text-xs" style={{ color: '#6B7280' }}>{emp.rut}</div>
                     </div>
                     {emp.id === company?.id && (
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>✓</span>
@@ -157,7 +157,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                 </div>
                 <div className="py-1 max-h-64 overflow-y-auto">
                   {alertItems.length === 0 ? (
-                    <p className="text-xs px-4 py-3" style={{ color: '#9CA3AF' }}>Sin alertas</p>
+                    <p className="text-xs px-4 py-3" style={{ color: '#6B7280' }}>Sin alertas</p>
                   ) : (
                     alertItems.map((item, i) => (
                       <div key={i} className="flex items-start gap-2 px-4 py-2 hover:bg-gray-50">
