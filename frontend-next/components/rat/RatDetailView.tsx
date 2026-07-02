@@ -565,6 +565,7 @@ function ConsentimientoAlert({ ratId }: { ratId: number }) {
         email_titular: email.trim(),
         canal: 'sistema',
         texto_consentimiento: texto.trim(),
+        fecha_obtencion: new Date().toISOString(),
         datos_sensibles: true,
       });
       toast.success('Consentimiento registrado correctamente.');

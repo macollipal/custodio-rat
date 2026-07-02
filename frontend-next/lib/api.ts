@@ -876,7 +876,8 @@ export interface ConsentimientoCreate {
   email_titular: string;
   canal: string;
   texto_consentimiento: string;
-  datos_sensibles: boolean;
+  fecha_obtencion?: string;
+  datos_sensibles?: boolean;
 }
 
 export async function registrarConsentimiento(data: ConsentimientoCreate): Promise<void> {
