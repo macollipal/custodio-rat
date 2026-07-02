@@ -9,6 +9,7 @@ import StorageTab from '@/components/configuracion/StorageTab';
 import AsesorCorpusTab from '@/components/configuracion/AsesorCorpusTab';
 import { EmpresasManagementTab } from '@/components/configuracion/EmpresasManagementTab';
 import { FeriadosTab } from '@/components/configuracion/FeriadosTab';
+import ModulosTab from '@/components/configuracion/ModulosTab';
 
 interface AuditEntry {
   id: number;
@@ -33,6 +34,7 @@ function getTabs(isSuperadmin: boolean) {
     ...BASE_TABS.slice(0, 2),
     { key: 'asesor_corpus', label: 'Asesor · Corpus' },
     { key: 'empresas', label: 'Gestión Empresas' },
+    { key: 'modulos', label: 'Módulos' },
     ...BASE_TABS.slice(2),
   ];
 }
@@ -399,6 +401,8 @@ export default function ConfiguracionPage() {
       {tab === 'asesor_corpus' && isSuperadmin && <AsesorCorpusTab />}
 
       {tab === 'empresas' && isSuperadmin && <EmpresasManagementTab />}
+
+      {tab === 'modulos' && isSuperadmin && <ModulosTab />}
 
       {tab === 'feriados' && <FeriadosTab currentTab={tab} />}
     </div>

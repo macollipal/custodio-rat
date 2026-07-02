@@ -317,6 +317,49 @@ export async function getAuditoriaGlobal(companyId: number): Promise<Array<{
   }>>(res);
 }
 
+export interface CompanyModules {
+  company_id: number;
+  modules: Record<string, boolean>;
+}
+
+export interface ActiveModules {
+  company_id: number;
+  active_modules: string[];
+}
+
+export async function getCompanyModules(companyId: number): Promise<CompanyModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}`);
+  return handle<CompanyModules>(res);
+}
+
+export async function getActiveCompanyModules(companyId: number): Promise<ActiveModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}/active`);
+  return handle<ActiveModules>(res);
+}
+
+export async function toggleCompanyModule(
+  companyId: number,
+  modulo: string,
+  enabled: boolean,
+): Promise<{ modulo: string; enabled: boolean }> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}/${modulo}`, {
+    method: 'PUT',
+    body: JSON.stringify({ modulo, enabled }),
+  });
+  return handle<{ modulo: string; enabled: boolean }>(res);
+}
+
+export async function bulkUpdateCompanyModules(
+  companyId: number,
+  modules: Record<string, boolean>,
+): Promise<CompanyModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ modules }),
+  });
+  return handle<CompanyModules>(res);
+}
+
 export async function exportarCsv(companyId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/export/csv?company_id=${companyId}`);
   if (!res.ok) throw new Error('Error al exportar CSV');
