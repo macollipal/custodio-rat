@@ -11,7 +11,7 @@ export default function StepIndicator({ steps, current }: StepIndicatorProps) {
   const currentLabel = steps[current - 1] || '';
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 sticky top-0 z-20 sm:static bg-white/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-0 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 sm:py-0 border-b border-gray-100 sm:border-0">
       {/* Mobile: solo numeritos en círculos + label del paso actual + barra de progreso */}
       <div className="sm:hidden">
         <div className="flex items-center justify-between mb-2">
