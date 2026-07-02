@@ -2,6 +2,19 @@
 
 ## [Unreleased] - 2026-07-01
 
+### Track D — Security gaps restantes (Z-01, Z-03)
+- ✅ **(Z-01) RESUELTO**: Content-Security-Policy + HSTS en backend y frontend.
+  - Backend: `default-src 'none'; frame-ancestors 'none'` (API restrictiva)
+  - Frontend: CSP permite self, connect-src a backends QA/prod
+  - HSTS: max-age=31536000; includeSubDomains (1 año)
+  - Tests: 6 backend + 10 frontend = 16 tests
+- ✅ **(Z-03) RESUELTO**: File upload validation (extension + tamano).
+  - Nuevo service `file_validation.py` reutilizable
+  - `validate_upload(file, allowed_extensions, max_bytes, content_type_prefix)`
+  - 400 si extension invalida, 413 si tamano excede
+  - Integrado en POST /admin/asesor/upload (md/txt, 5MB) y POST /feriados/upload (csv, 2MB)
+  - Tests: 13 nuevos en `test_file_validation.py`
+
 ### Track C — N-02 Feature Gates
 - ✅ **(N-02) RESUELTO**: Feature gates por empresa y modulo.
   Permite activar/desactivar modulos completos (RAT, ARCO, Brechas,
