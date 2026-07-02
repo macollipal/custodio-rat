@@ -12,6 +12,7 @@ import {
   CreateUserModal,
   CompanyUsersModal,
   CompanyAlertsBanner,
+  CompanyAuditDrawer,
 } from '@/components/companies';
 
 type View = 'list' | 'create';
@@ -25,6 +26,7 @@ export default function CompaniesPage() {
   const [accessPanelId, setAccessPanelId] = useState<number | null>(null);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState<number | null>(null);
+  const [auditCompany, setAuditCompany] = useState<Company | null>(null);
 
   async function loadCompanies() {
     setLoading(true);
@@ -210,6 +212,14 @@ export default function CompaniesPage() {
                           Listado usuarios
                         </button>
                         <button
+                          onClick={() => setAuditCompany(emp)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
+                          style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                          title="Ver historial de auditoría de los RATs de esta empresa"
+                        >
+                          📋 Auditoría
+                        </button>
+                        <button
                           onClick={() => handleExportarApdc(emp)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
                           style={{ background: '#7C3AED' }}
@@ -286,6 +296,12 @@ export default function CompaniesPage() {
           onClose={() => setShowUsersModal(null)}
         />
       )}
+
+      <CompanyAuditDrawer
+        company={auditCompany}
+        open={auditCompany !== null}
+        onClose={() => setAuditCompany(null)}
+      />
     </div>
   );
 }
