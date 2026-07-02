@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
@@ -264,6 +264,11 @@ export default function RatDetailView({
 
       {/* Indicador de completitud — semáforo */}
       <CompletitudBar completitud={rat.completitud} />
+
+      {/* Alerta de consentimiento faltante para datos sensibles */}
+      {rat.datos_sensibles && puedeEditar && (
+        <ConsentimientoAlert ratId={rat.id} />
+      )}
 
       <Section title="Resumen">
         <FieldRow label="Nombre del proceso" value={rat.nombre_proceso} />
@@ -535,6 +540,124 @@ export default function RatDetailView({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ConsentimientoAlert({ ratId }: { ratId: number }) {
+  const [showForm, setShowForm] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
+  const [texto, setTexto] = useState('Consentimiento expreso para tratamiento de datos sensibles conforme al Art. 16 de la Ley 21.719.');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nombre.trim() || !email.trim()) {
+      toast.error('Ingrese el nombre y email del titular.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.registrarConsentimiento({
+        rat_id: ratId,
+        nombre_titular: nombre.trim(),
+        email_titular: email.trim(),
+        canal: 'sistema',
+        texto_consentimiento: texto.trim(),
+        datos_sensibles: true,
+      });
+      toast.success('Consentimiento registrado correctamente.');
+      setShowForm(false);
+      setNombre('');
+      setEmail('');
+    } catch {
+      toast.error('Error al registrar el consentimiento.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (showForm) {
+    return (
+      <form onSubmit={handleSubmit} className="rounded-xl p-4 mb-4 space-y-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold" style={{ color: '#1E40AF' }}>📋 Registrar consentimiento expreso</p>
+          <button type="button" onClick={() => setShowForm(false)} className="text-xs px-2 py-1 rounded hover:bg-blue-100" style={{ color: '#6B7280' }}>✕</button>
+        </div>
+        <p className="text-xs" style={{ color: '#374151' }}>
+          Ingrese los datos del titular cuyo consentimiento expreso habilita el tratamiento de datos sensibles (Art. 16 Ley 21.719).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            placeholder="Nombre del titular *"
+            className="w-full px-3 py-2 rounded-lg text-sm border transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
+            required
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Email del titular *"
+            className="w-full px-3 py-2 rounded-lg text-sm border transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
+            required
+          />
+        </div>
+        <textarea
+          value={texto}
+          onChange={e => setTexto(e.target.value)}
+          rows={2}
+          placeholder="Texto del consentimiento..."
+          className="w-full px-3 py-2 rounded-lg text-sm border transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setShowForm(false)}
+            className="px-4 py-2 rounded-lg text-xs font-medium border transition hover:bg-gray-50"
+            style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition disabled:opacity-50"
+            style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
+          >
+            {saving ? 'Guardando...' : 'Registrar'}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="rounded-xl p-4 mb-4" style={{ background: '#FEF3C7', border: '1px solid #FCD34D' }}>
+      <div className="flex items-start gap-3">
+        <span className="text-lg mt-0.5">⚠️</span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold" style={{ color: '#92400E' }}>
+            Consentimiento expreso requerido
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: '#B45309' }}>
+            Este RAT trata datos sensibles y requiere el consentimiento expreso del titular conforme al Art. 16 de la Ley 21.719. El RAT no puede operar sin un consentimiento activo registrado.
+          </p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
+            style={{ background: '#D97706' }}
+          >
+            📋 Registrar consentimiento
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
