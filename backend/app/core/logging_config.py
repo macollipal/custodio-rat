@@ -110,10 +110,12 @@ class JSONFormatter(logging.Formatter):
 
 
 def setup_logging() -> logging.Logger:
-    is_production = os.getenv("ENVIRONMENT") == "production"
+    env = os.getenv("ENVIRONMENT", "development").lower()
+    is_json_env = env in ("production", "qa", "staging")
+    is_verbose_level = env not in ("production", "qa", "staging")
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO if is_production else logging.DEBUG)
+    root_logger.setLevel(logging.INFO if not is_verbose_level else logging.DEBUG)
 
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
@@ -121,7 +123,7 @@ def setup_logging() -> logging.Logger:
     handler = logging.StreamHandler(sys.stdout)
     handler.addFilter(PIIMaskingFilter())
     handler.addFilter(RequestIdFilter())
-    if is_production:
+    if is_json_env:
         handler.setFormatter(JSONFormatter())
     else:
         handler.setFormatter(
