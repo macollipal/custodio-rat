@@ -1,18 +1,56 @@
 # Changelog — Custodio RAT Manager
 
-## [Unreleased] - 2026-06-17
+## [Unreleased] - 2026-07-01
 
 ### Security
-- (N-01) **PENDIENTE**: Asesor module — 9 constantes `ASESOR_*` faltantes en `backend/app/core/config.py` bloquean 14 tests y generan riesgo de crash en producción
+- ✅ **(Z-02) RESUELTO**: CORS restrictivo con `allow_methods` y `allow_headers` específicos
+  (defense-in-depth). Métodos: GET, POST, PUT, PATCH, DELETE, OPTIONS. Headers:
+  Authorization, Content-Type, X-Requested-With, X-Request-ID, Accept, Origin.
+  Test: 11 nuevos en `backend/tests/test_cors_restrictivo.py`
+- ✅ **(Z-06) RESUELTO**: JSONFormatter activo también en QA y staging
+  (no solo production). Test: 7 nuevos en `backend/tests/test_logging_json.py`
+- ✅ **(N-01) RESUELTO**: Test `test_delete_document_existente` corregido.
+  Las 9 constantes `ASESOR_*` ya existían en `config.py:47-55` desde el
+  16-Jun-2026; el único test que fallaba era por un bug de diseño (creaba
+  `AsesorChunk` pero el endpoint requiere `AsesorCorpusDocument`).
+
+### UX
+- ✅ **(A11y-1) RESUELTO**: Contraste WCAG AA en texto secundario.
+  Color `#9CA3AF` (gray-400, ratio 2.9:1) reemplazado por `#6B7280`
+  (gray-500, ratio 4.5:1) en 6 archivos: dashboard, Topbar, login,
+  solicitud_derecho, RatTable, RatEditForm. Test de regresión:
+  `frontend-next/__tests__/wcag-contrast.test.ts` (8 tests)
+- ✅ **(UX-mobile-2) RESUELTO**: StepIndicator sticky en mobile con
+  `sticky top-0 z-20` + `backdrop-blur-sm` para efecto glass. En desktop
+  sigue estático (`sm:static`). Test:
+  `frontend-next/__tests__/step-indicator-sticky.test.ts` (7 tests)
 
 ### Features
-- (N-02) **PENDIENTE**: Feature gates por módulo (RAT/ARCO/Brechas) — tabla `module_permissions` + endpoints + UI superadmin en `/configuracion`
+- ❌ **(N-02) PENDIENTE**: Feature gates por módulo (RAT/ARCO/Brechas) —
+  tabla `module_permissions` + endpoints + UI superadmin en `/configuracion`
+- ❌ **(Z-01) PENDIENTE**: Security headers — falta CSP (Content-Security-Policy)
+  en backend y `next.config.ts`. Otros 5 headers ya están OK.
+- ❌ **(Z-03) PENDIENTE**: File upload validation (extensión + max size) — BYTEA
+  tiene límite 10MB pero falta validar tipo/extensión en endpoint.
 
-### Pending (from v1.5 audit — Z-01/Z-02/Z-03/Z-06)
-- (Z-01) Security headers: CSP, X-Frame-Options, X-Content-Type-Options
-- (Z-02) CORS restrictivo: `allow_methods` y `allow_headers` específicos
-- (Z-03) File upload validation: extensión y max size
-- (Z-06) Backups documentados
+### Tests
+- 43 tests agregados en este ciclo (28 backend + 15 frontend), todos pasando.
+
+### Files (Track A — 6 commits)
+- `backend/tests/test_asesor_endpoints.py` (test fix)
+- `backend/app/main.py` (CORS)
+- `backend/tests/test_cors_restrictivo.py` (nuevo)
+- `backend/app/core/logging_config.py` (JSON en QA/staging)
+- `backend/tests/test_logging_json.py` (nuevo)
+- `frontend-next/app/(app)/dashboard/page.tsx` (contraste)
+- `frontend-next/app/login/page.tsx` (contraste)
+- `frontend-next/app/solicitud_derecho/page.tsx` (contraste)
+- `frontend-next/components/layout/Topbar.tsx` (contraste)
+- `frontend-next/components/rat/RatTable.tsx` (contraste)
+- `frontend-next/components/rat/RatEditForm.tsx` (contraste)
+- `frontend-next/__tests__/wcag-contrast.test.ts` (nuevo)
+- `frontend-next/components/ui/StepIndicator.tsx` (sticky mobile)
+- `frontend-next/__tests__/step-indicator-sticky.test.ts` (nuevo)
 
 ---
 
