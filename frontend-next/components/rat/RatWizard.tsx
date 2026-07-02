@@ -228,6 +228,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         datos_sensibles:             data.datos_sensibles ?? false,
         tipo_dato_sensible:          data.tipo_dato_sensible || undefined,
         evaluacion_impacto:          data.evaluacion_impacto ?? false,
+        estado_eipd:                 data.evaluacion_impacto ? 'pendiente' : 'no_requerida',
         decisiones_automatizadas:    data.decisiones_automatizadas ?? false,
         test_interes_legitimo:        testIL,
         // Campos nuevos gaps Ley 21.719 (Iter 10)
@@ -986,7 +987,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     <input
                       type="checkbox"
                       checked={data.transferencia_internacional ?? false}
-                      onChange={e => setData(d => ({ ...d, transferencia_internacional: e.target.checked, pais_destino: e.target.checked ? d.pais_destino : undefined }))}
+                      onChange={e => setData(d => ({ ...d, transferencia_internacional: e.target.checked, pais_destino: e.target.checked ? d.pais_destino : undefined, evaluacion_impacto: e.target.checked ? true : (d.datos_sensibles ? true : d.evaluacion_impacto) }))}
                       className="mt-0.5 rounded"
                     />
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>
