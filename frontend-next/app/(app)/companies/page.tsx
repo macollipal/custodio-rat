@@ -11,6 +11,7 @@ import {
   UserAccessPanel,
   CreateUserModal,
   CompanyUsersModal,
+  CompanyAlertsBanner,
 } from '@/components/companies';
 
 type View = 'list' | 'create';
@@ -91,17 +92,19 @@ export default function CompaniesPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-16 text-sm" style={{ color: '#9CA3AF' }}>Cargando...</div>
+            <div className="text-center py-16 text-sm" style={{ color: '#6B7280' }}>Cargando...</div>
           ) : companies.length === 0 ? (
             <div className="text-center py-14 bg-white rounded-xl" style={{ border: '1px solid #E5E7EB' }}>
               <div className="text-3xl mb-2">🏢</div>
               <p className="text-sm font-medium" style={{ color: '#374151' }}>Sin empresas registradas</p>
-              <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+              <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
                 Crea la primera empresa responsable del tratamiento para comenzar.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <>
+              <CompanyAlertsBanner companies={companies} />
+              <div className="space-y-4">
               {companies.map(emp => {
                 const esActiva = emp.id === activeCompany?.id;
                 const panelAbierto = accessPanelId === emp.id;
@@ -232,7 +235,8 @@ export default function CompaniesPage() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
         </>
       )}
