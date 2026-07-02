@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { API_BASE } from '@/lib/constants';
@@ -39,6 +39,7 @@ const RESULTADO_COLORS: Record<string, { bg: string; fg: string }> = {
 
 export default function EIPDPage() {
   const { company, user } = useApp();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const ratIdParam = searchParams.get('rat_id');
   const [items, setItems] = useState<EIPD[]>([]);
@@ -221,7 +222,11 @@ export default function EIPDPage() {
           onSaved={() => {
             setEditing(null);
             setCreating(false);
-            load();
+            if (ratIdParam) {
+              router.push(`/rat?selected=${ratIdParam}`);
+            } else {
+              load();
+            }
           }}
         />
       )}
