@@ -56,6 +56,28 @@ export default function CompaniesPage() {
     }
   }
 
+  async function handleExportarApdc(emp: Company) {
+    if ((emp.total_rats ?? 0) === 0) {
+      toast.error('Esta empresa no tiene RATs para exportar.');
+      return;
+    }
+    try {
+      const blob = await api.exportarCni(emp.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeName = emp.nombre.replace(/[^a-zA-Z0-9-_]/g, '_').slice(0, 40);
+      a.download = `RAT_APDC_${safeName}_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Reporte APDC de ${emp.nombre} descargado.`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Error al exportar reporte APDC.');
+    }
+  }
+
   return (
     <div className="p-8">
       {showCreateUser && <CreateUserModal onClose={() => setShowCreateUser(false)} />}
@@ -186,6 +208,16 @@ export default function CompaniesPage() {
                           style={{ borderColor: '#D1D5DB', color: '#374151' }}
                         >
                           Listado usuarios
+                        </button>
+                        <button
+                          onClick={() => handleExportarApdc(emp)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
+                          style={{ background: '#7C3AED' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#6D28D9')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '#7C3AED')}
+                          title="Descargar reporte en formato APDC (Ley 21.719) — JSON estructurado para presentar ante la autoridad"
+                        >
+                          📄 Reporte APDC
                         </button>
                         {user?.rol_global === 'superadmin' ? (
                           <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ color: '#9CA3AF', background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
