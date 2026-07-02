@@ -35,6 +35,8 @@ async def listar(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, company_id, "BRECHAS")
     brechas, total = listar_brechas(db, company_id, skip=skip, limit=limit)
     return BreachListResponse(brechas=[_out(b) for b in brechas], total=total, skip=skip, limit=limit)
 

@@ -221,6 +221,11 @@ def listar_tickets(
     """Lista tickets con filtros."""
     limit = min(limit, MAX_TKT_LIMIT)
 
+    # Feature gate N-02: modulo ARCO debe estar habilitado
+    if company_id is not None:
+        from app.services.module_permission_service import require_module_enabled
+        require_module_enabled(db, company_id, "ARCO")
+
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
         if not empresas:

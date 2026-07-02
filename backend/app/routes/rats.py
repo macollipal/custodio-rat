@@ -145,6 +145,10 @@ async def listar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # Feature gate N-02: modulo RAT debe estar habilitado
+    if company_id is not None:
+        from app.services.module_permission_service import require_module_enabled
+        require_module_enabled(db, company_id, "RAT")
     # No-admin: solo puede ver RATs de sus empresas
     if not current_user.rol_global == "superadmin" and company_id is None:
         ids = get_empresas_usuario(db, current_user.id)

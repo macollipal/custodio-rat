@@ -169,3 +169,53 @@ class TestModulePermissionsEndpoints:
         """Sin token retorna 401."""
         resp = client.get(f"/module-permissions/{empresa['id']}")
         assert resp.status_code == 401
+
+
+# ============================================================
+# Integration: gate enforcement en rutas criticas
+# ============================================================
+
+class TestFeatureGateEnforcement:
+    def test_rats_listar_403_when_module_disabled(self, client, auth_headers, db, empresa):
+        """GET /rats/ retorna 403 cuando modulo RAT esta deshabilitado."""
+        svc.set_module_enabled(db, empresa["id"], "RAT", False)
+        resp = client.get(f"/rats/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 403
+        assert "RAT" in resp.json()["detail"]
+
+    def test_rats_listar_200_when_module_enabled(self, client, auth_headers, db, empresa):
+        """GET /rats/ retorna 200 cuando modulo RAT esta habilitado (default)."""
+        resp = client.get(f"/rats/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 200
+
+    def test_brechas_listar_403_when_module_disabled(self, client, auth_headers, db, empresa):
+        """GET /brechas/ retorna 403 cuando modulo BRECHAS esta deshabilitado."""
+        svc.set_module_enabled(db, empresa["id"], "BRECHAS", False)
+        resp = client.get(f"/brechas/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 403
+        assert "BRECHAS" in resp.json()["detail"]
+
+    def test_brechas_listar_200_when_module_enabled(self, client, auth_headers, db, empresa):
+        """GET /brechas/ retorna 200 cuando modulo BRECHAS esta habilitado (default)."""
+        resp = client.get(f"/brechas/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 200
+
+    def test_tkt_listar_403_when_module_disabled(self, client, auth_headers, db, empresa):
+        """GET /tkt-solicitud-derecho/ retorna 403 cuando modulo ARCO esta deshabilitado."""
+        svc.set_module_enabled(db, empresa["id"], "ARCO", False)
+        resp = client.get(f"/tkt-solicitud-derecho/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 403
+        assert "ARCO" in resp.json()["detail"]
+
+    def test_tkt_listar_200_when_module_enabled(self, client, auth_headers, db, empresa):
+        """GET /tkt-solicitud-derecho/ retorna 200 cuando ARCO esta habilitado."""
+        resp = client.get(f"/tkt-solicitud-derecho/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 200
+
+    def test_disabling_rat_does_not_affect_brechas(self, client, auth_headers, db, empresa):
+        """Deshabilitar RAT no afecta brechas (modulos son independientes)."""
+        svc.set_module_enabled(db, empresa["id"], "RAT", False)
+        resp = client.get(f"/brechas/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 200
+        resp = client.get(f"/tkt-solicitud-derecho/?company_id={empresa['id']}", headers=auth_headers)
+        assert resp.status_code == 200
