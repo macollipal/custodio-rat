@@ -152,6 +152,13 @@ class SecurityHeadersMiddleware:
                 headers[b"X-XSS-Protection"] = b"1; mode=block"
                 headers[b"Referrer-Policy"] = b"strict-origin-when-cross-origin"
                 headers[b"Permissions-Policy"] = b"geolocation=(), microphone=(), camera=()"
+                # Content-Security-Policy (Z-01): API no renderiza HTML
+                # pero igual devolvemos CSP restrictiva para defense-in-depth.
+                headers[b"Content-Security-Policy"] = (
+                    b"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+                )
+                # Strict-Transport-Security (HSTS) — solo si HTTPS (Vercel)
+                headers[b"Strict-Transport-Security"] = b"max-age=31536000; includeSubDomains"
                 message = {**message, "headers": list(headers.items())}
             await send(message)
         return patched_send
