@@ -4,7 +4,7 @@ Tests de los endpoints del Asesor.
 import json
 import pytest
 
-from app.models.asesor import AsesorChunk
+from app.models.asesor import AsesorChunk, AsesorCorpusDocument
 
 
 def test_ask_sin_auth_retorna_401(client):
@@ -86,27 +86,41 @@ def test_stats_con_auth_retorna_200(client, auth_headers):
     assert data["total_documents"] == 0
 
 
-def test_delete_chunk_existente(client, auth_headers, db):
-    chunk = AsesorChunk(
-        source="test.txt",
-        source_type="manual",
-        content="test",
-        content_hash="x" * 64,
-        chunk_index=0,
-        token_count=1,
-        embedding_json=json.dumps([0.0] * 1536),
-    )
-    db.add(chunk)
-    db.commit()
-    cid = chunk.id
+def test_delete_document_existente(client, auth_headers, db):
+    """Elimina un AsesorCorpusDocument existente (soft delete + cascadea chunks por source).
 
-    resp = client.delete(f"/admin/asesor/documents/{cid}", headers=auth_headers)
+    Antes este test se llamaba test_delete_chunk_existente pero creaba un
+    AsesorChunk en vez de un AsesorCorpusDocument, lo que causaba 404 porque
+    el endpoint DELETE /admin/asesor/documents/{id} busca AsesorCorpusDocument.
+    Adicionalmente, delete_document hace soft delete (status='deleted'),
+    no hard delete, por lo que la fila permanece con status actualizado.
+    """
+    unique_hash = "a" * 63 + "b"
+    doc = AsesorCorpusDocument(
+        object_name="test_unique_object_name_zzz.txt",
+        original_filename="test.txt",
+        content_type="text/plain",
+        size_bytes=4,
+        content_hash=unique_hash,
+        source_type="manual",
+        chunks_indexed=0,
+        status="active",
+    )
+    db.add(doc)
+    db.commit()
+    doc_id = doc.id
+
+    resp = client.delete(f"/admin/asesor/documents/{doc_id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["ok"] is True
 
-    assert db.query(AsesorChunk).filter(AsesorChunk.id == cid).first() is None
+    db.expire_all()
+    deleted = db.query(AsesorCorpusDocument).filter(AsesorCorpusDocument.id == doc_id).first()
+    assert deleted is not None
+    assert deleted.status == "deleted"
 
 
-def test_delete_chunk_inexistente_retorna_404(client, auth_headers):
+def test_delete_document_inexistente_retorna_404(client, auth_headers):
+    """DELETE /admin/asesor/documents/{id} con id inexistente retorna 404."""
     resp = client.delete("/admin/asesor/documents/99999", headers=auth_headers)
     assert resp.status_code == 404
