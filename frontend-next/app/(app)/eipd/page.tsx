@@ -267,6 +267,15 @@ function EIPDForm({
   const [resultado, setResultado] = useState(eipd?.resultado || 'en_proceso');
   const [saving, setSaving] = useState(false);
 
+  const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
+  const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+  const labelCls = 'block text-sm font-medium mb-1.5';
+  const labelStyle = { color: '#374151' };
+  const panelIdent = { background: '#F9FAFB', border: '1px solid #E5E7EB' };
+  const panelBlue = { background: '#EFF6FF', border: '1px solid #BFDBFE' };
+  const panelRed = { background: '#FEF2F2', border: '1px solid #FECACA' };
+  const panelGreen = { background: '#F0FDF4', border: '1px solid #BBF7D0' };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!ratId) {
@@ -328,134 +337,177 @@ function EIPDForm({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div
-        className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4">
-          {eipd ? 'Editar EIPD' : 'Nueva EIPD'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {!eipd && (
+        {/* Header con gradiente */}
+        <div className="rounded-t-xl px-6 py-4" style={{ background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)' }}>
+          <h2 className="text-lg font-bold text-white">
+            {eipd ? '📋 Editar EIPD' : '🆕 Nueva EIPD'}
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Art. 15 bis Ley 21.719 — Evaluación de Impacto en Protección de Datos
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Panel 1: Identificación */}
+          <div className="rounded-xl p-5 space-y-4" style={panelIdent}>
+            <h3 className="text-sm font-semibold" style={{ color: '#1E40AF' }}>1. Identificación del proceso</h3>
+            {!eipd && (
+              <div>
+                <label className={labelCls} style={labelStyle}>RAT *</label>
+                <select
+                  value={ratId}
+                  onChange={(e) => setRatId(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                  required
+                >
+                  <option value="">Seleccionar RAT</option>
+                  {allRats.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nombre_proceso}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium mb-1">RAT *</label>
+              <label className={labelCls} style={labelStyle}>Metodología</label>
+              <input
+                type="text"
+                value={metodologia}
+                onChange={(e) => setMetodologia(e.target.value)}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Ej: NIST Privacy Framework, ISO 29134"
+              />
+            </div>
+          </div>
+
+          {/* Panel 2: Evaluación */}
+          <div className="rounded-xl p-5 space-y-4" style={panelBlue}>
+            <h3 className="text-sm font-semibold" style={{ color: '#1D4ED8' }}>2. Evaluación del tratamiento</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Objetivos</label>
+              <textarea
+                value={objetivos}
+                onChange={(e) => setObjetivos(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="¿Qué se busca evaluar con esta EIPD?"
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Necesidad y proporcionalidad</label>
+              <textarea
+                value={necesidad}
+                onChange={(e) => setNecesidad(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="¿Por qué el tratamiento es necesario y proporcionado?"
+              />
+            </div>
+          </div>
+
+          {/* Panel 3: Riesgos y Medidas */}
+          <div className="rounded-xl p-5 space-y-4" style={panelRed}>
+            <h3 className="text-sm font-semibold" style={{ color: '#B91C1C' }}>3. Riesgos y medidas</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Riesgos identificados</label>
+              <textarea
+                value={riesgos}
+                onChange={(e) => setRiesgos(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Lista de riesgos para los derechos de los titulares"
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Medidas propuestas</label>
+              <textarea
+                value={medidas}
+                onChange={(e) => setMedidas(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Medidas para mitigar los riesgos identificados"
+              />
+            </div>
+          </div>
+
+          {/* Panel 4: Conclusiones */}
+          <div className="rounded-xl p-5 space-y-4" style={panelGreen}>
+            <h3 className="text-sm font-semibold" style={{ color: '#065F46' }}>4. Conclusiones y aprobación</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Parecer del DPO</label>
+              <textarea
+                value={parecerDpo}
+                onChange={(e) => setParecerDpo(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Opinión del Delegado de Protección de Datos"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha elaboración</label>
+                <input
+                  type="date"
+                  value={fechaElaboracion}
+                  onChange={(e) => setFechaElaboracion(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha aprobación</label>
+                <input
+                  type="date"
+                  value={fechaAprobacion}
+                  onChange={(e) => setFechaAprobacion(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Resultado *</label>
               <select
-                value={ratId}
-                onChange={(e) => setRatId(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-                required
+                value={resultado}
+                onChange={(e) => setResultado(e.target.value as EIPD['resultado'])}
+                className={inputCls}
+                style={inputStyle}
               >
-                <option value="">Seleccionar RAT</option>
-                {allRats.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.nombre_proceso}
-                  </option>
+                {Object.entries(RESULTADO_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
                 ))}
               </select>
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium mb-1">Metodología</label>
-            <input
-              type="text"
-              value={metodologia}
-              onChange={(e) => setMetodologia(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Ej: NIST Privacy Framework, ISO 29134"
-            />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Objetivos</label>
-            <textarea
-              value={objetivos}
-              onChange={(e) => setObjetivos(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="¿Qué se busca evaluar con esta EIPD?"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Necesidad y proporcionalidad</label>
-            <textarea
-              value={necesidad}
-              onChange={(e) => setNecesidad(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="¿Por qué el tratamiento es necesario y proporcionado?"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Riesgos identificados</label>
-            <textarea
-              value={riesgos}
-              onChange={(e) => setRiesgos(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Lista de riesgos para los derechos de los titulares"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Medidas propuestas</label>
-            <textarea
-              value={medidas}
-              onChange={(e) => setMedidas(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Medidas para mitigar los riesgos identificados"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Parecer del DPO</label>
-            <textarea
-              value={parecerDpo}
-              onChange={(e) => setParecerDpo(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Opinión del Delegado de Protección de Datos"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Fecha elaboración</label>
-              <input
-                type="date"
-                value={fechaElaboracion}
-                onChange={(e) => setFechaElaboracion(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Fecha aprobación</label>
-              <input
-                type="date"
-                value={fechaAprobacion}
-                onChange={(e) => setFechaAprobacion(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Resultado *</label>
-            <select
-              value={resultado}
-              onChange={(e) => setResultado(e.target.value as EIPD['resultado'])}
-              className="w-full px-3 py-2 border rounded-lg"
+
+          {/* Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-between pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+              style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
             >
-              {Object.entries(RESULTADO_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border">
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded-lg text-white font-medium"
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
               style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
             >
-              {saving ? 'Guardando...' : 'Guardar'}
+              {saving ? 'Guardando...' : 'Guardar EIPD'}
             </button>
           </div>
         </form>
