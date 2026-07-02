@@ -2,55 +2,47 @@
 
 ## [Unreleased] - 2026-07-01
 
-### Security
+### Track B — Módulo Empresas (QW7, QW2, QW1)
+- ✅ **(QW7) RESUELTO**: Banner de alertas de cumplimiento en lista de empresas.
+  Muestra 4 tipos de alertas agregadas: RATs vencidos, solicitudes ARCO
+  con SLA vencido, empresas con completitud <50%, empresas sin DPO.
+  Si no hay alertas, no se renderiza. Accesible (role=region + aria-label).
+  Test: 10 nuevos en `frontend-next/__tests__/company-alerts-banner.test.ts`
+- ✅ **(QW2) RESUELTO**: Botón "Reporte APDC" en cada empresa.
+  Conecta `api.exportarCni()` con la UI. Descarga JSON estructurado
+  para presentar ante la autoridad (Ley 21.719). Valida que la empresa
+  tenga RATs antes de exportar. Test: 14 nuevos en
+  `frontend-next/__tests__/company-export-apdc.test.ts`
+- ✅ **(QW1) RESUELTO**: Drawer de auditoría per-empresa.
+  Componente `CompanyAuditDrawer` con timeline de eventos de auditoría
+  de los RATs de la empresa, filtrable por acción, con colores
+  semánticos. Test: 15 nuevos en
+  `frontend-next/__tests__/company-audit-drawer.test.ts`
+
+### Track A — Security, UX, Tests (commits previos)
 - ✅ **(Z-02) RESUELTO**: CORS restrictivo con `allow_methods` y `allow_headers` específicos
-  (defense-in-depth). Métodos: GET, POST, PUT, PATCH, DELETE, OPTIONS. Headers:
-  Authorization, Content-Type, X-Requested-With, X-Request-ID, Accept, Origin.
-  Test: 11 nuevos en `backend/tests/test_cors_restrictivo.py`
 - ✅ **(Z-06) RESUELTO**: JSONFormatter activo también en QA y staging
-  (no solo production). Test: 7 nuevos en `backend/tests/test_logging_json.py`
-- ✅ **(N-01) RESUELTO**: Test `test_delete_document_existente` corregido.
-  Las 9 constantes `ASESOR_*` ya existían en `config.py:47-55` desde el
-  16-Jun-2026; el único test que fallaba era por un bug de diseño (creaba
-  `AsesorChunk` pero el endpoint requiere `AsesorCorpusDocument`).
+- ✅ **(N-01) RESUELTO**: Test `test_delete_document_existente` corregido
+- ✅ **(A11y-1) RESUELTO**: Contraste WCAG AA en texto secundario
+- ✅ **(UX-mobile-2) RESUELTO**: StepIndicator sticky en mobile
 
-### UX
-- ✅ **(A11y-1) RESUELTO**: Contraste WCAG AA en texto secundario.
-  Color `#9CA3AF` (gray-400, ratio 2.9:1) reemplazado por `#6B7280`
-  (gray-500, ratio 4.5:1) en 6 archivos: dashboard, Topbar, login,
-  solicitud_derecho, RatTable, RatEditForm. Test de regresión:
-  `frontend-next/__tests__/wcag-contrast.test.ts` (8 tests)
-- ✅ **(UX-mobile-2) RESUELTO**: StepIndicator sticky en mobile con
-  `sticky top-0 z-20` + `backdrop-blur-sm` para efecto glass. En desktop
-  sigue estático (`sm:static`). Test:
-  `frontend-next/__tests__/step-indicator-sticky.test.ts` (7 tests)
-
-### Features
-- ❌ **(N-02) PENDIENTE**: Feature gates por módulo (RAT/ARCO/Brechas) —
-  tabla `module_permissions` + endpoints + UI superadmin en `/configuracion`
-- ❌ **(Z-01) PENDIENTE**: Security headers — falta CSP (Content-Security-Policy)
-  en backend y `next.config.ts`. Otros 5 headers ya están OK.
-- ❌ **(Z-03) PENDIENTE**: File upload validation (extensión + max size) — BYTEA
-  tiene límite 10MB pero falta validar tipo/extensión en endpoint.
+### Pendientes
+- ❌ **(N-02)**: Feature gates por módulo (RAT/ARCO/Brechas)
+- ❌ **(Z-01)**: Security headers — falta CSP
+- ❌ **(Z-03)**: File upload validation (extensión + max size)
 
 ### Tests
-- 43 tests agregados en este ciclo (28 backend + 15 frontend), todos pasando.
+- 82 tests agregados en Tracks A+B (28 backend + 54 frontend), todos pasando.
+- Total: 172 tests passing (28 backend + 144 frontend incluyendo tests preexistentes).
 
-### Files (Track A — 6 commits)
-- `backend/tests/test_asesor_endpoints.py` (test fix)
-- `backend/app/main.py` (CORS)
-- `backend/tests/test_cors_restrictivo.py` (nuevo)
-- `backend/app/core/logging_config.py` (JSON en QA/staging)
-- `backend/tests/test_logging_json.py` (nuevo)
-- `frontend-next/app/(app)/dashboard/page.tsx` (contraste)
-- `frontend-next/app/login/page.tsx` (contraste)
-- `frontend-next/app/solicitud_derecho/page.tsx` (contraste)
-- `frontend-next/components/layout/Topbar.tsx` (contraste)
-- `frontend-next/components/rat/RatTable.tsx` (contraste)
-- `frontend-next/components/rat/RatEditForm.tsx` (contraste)
-- `frontend-next/__tests__/wcag-contrast.test.ts` (nuevo)
-- `frontend-next/components/ui/StepIndicator.tsx` (sticky mobile)
-- `frontend-next/__tests__/step-indicator-sticky.test.ts` (nuevo)
+### Files (Track B — 3 commits)
+- `frontend-next/components/companies/CompanyAlertsBanner.tsx` (nuevo)
+- `frontend-next/components/companies/CompanyAuditDrawer.tsx` (nuevo)
+- `frontend-next/components/companies/index.ts` (exports)
+- `frontend-next/app/(app)/companies/page.tsx` (integra QW7, QW2, QW1)
+- `frontend-next/__tests__/company-alerts-banner.test.ts` (nuevo)
+- `frontend-next/__tests__/company-export-apdc.test.ts` (nuevo)
+- `frontend-next/__tests__/company-audit-drawer.test.ts` (nuevo)
 
 ---
 
