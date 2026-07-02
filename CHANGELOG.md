@@ -2,6 +2,28 @@
 
 ## [Unreleased] - 2026-07-01
 
+### Track C — N-02 Feature Gates
+- ✅ **(N-02) RESUELTO**: Feature gates por empresa y modulo.
+  Permite activar/desactivar modulos completos (RAT, ARCO, Brechas,
+  EIPD, Consentimientos, Encargados, Transparencia, Reportes, Asesor)
+  para cada empresa de forma granular.
+  
+  Componentes:
+  - **Backend** (3 commits):
+    - Modelo `ModulePermission` con UNIQUE(company_id, modulo)
+    - Service con `is_module_enabled`, `get_company_modules`,
+      `set_module_enabled`, `bulk_update_modules`, `require_module_enabled`
+    - Endpoints REST: GET /module-permissions/{id}, GET .../active,
+      PUT .../{modulo}, PUT ... (bulk)
+    - Wire-up en rutas criticas: /rats/, /brechas/, /tkt-solicitud-derecho/
+      retornan 403 cuando modulo esta deshabilitado
+  - **Frontend** (1 commit):
+    - Tab "Módulos" en /configuracion (solo superadmin)
+    - 4 funciones API nuevas en lib/api.ts
+    - Dropdown empresa + 9 toggles con role=switch + aria-checked
+  
+  Tests: 24 nuevos (10 service + 7 endpoints + 7 integration gate).
+
 ### Track B — Módulo Empresas (QW7, QW2, QW1)
 - ✅ **(QW7) RESUELTO**: Banner de alertas de cumplimiento en lista de empresas.
   Muestra 4 tipos de alertas agregadas: RATs vencidos, solicitudes ARCO
