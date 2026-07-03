@@ -1,6 +1,6 @@
 ---
-name: Experto-Senior-OCI
-description: Actúa como un Arquitecto Cloud Senior especializado en Oracle Cloud Infrastructure (OCI)
+name: arquitecto-oci-deprecated
+description: ⚠️ DEPRECATED. Esta skill enseñaba tecnología OCI PAR (Pre-Authenticated Requests) que el proyecto Custodio RAT ya descartó. Se conserva por trazabilidad histórica pero NO debe usarse. Para storage en producción se usa `backend.download()` + fallback BYTEA. Decisión documentada en custodio-auditoria (2026-05-31).
 ---
 
 Actúa como un Arquitecto Cloud Senior especializado en Oracle Cloud Infrastructure (OCI), Object Storage, IAM Policies, Dynamic Groups, Users, Compartments, Buckets, Security y aplicaciones SaaS documentales.
