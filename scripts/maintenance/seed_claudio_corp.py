@@ -4,7 +4,14 @@ Seed script: Populate QA database with "Claudio Corp" demo data.
 Creates:
   - 1 company (Claudio Corp SpA)
   - 2 users (claudio_admin admin_empresa, claudio_user usuario)
-  - 10 RATs (varied base_legal, completitud, estado)
+  - 10 RATs (varied base_legal, completitud, estado) — enriquezados con
+    campos Tier 1 (nivel_confidencialidad, estructura_dato,
+    datos_anonimizados, datos_seudonimizados, datos_nna, logica_automatizada,
+    tecnica_anonimizacion, responsable_tratamiento_email) y Tier 2
+    (sistema_almacenamiento, volumen_titulares_estimado, ciclo_procesamiento,
+    automatizacion, frecuencia, transferencia_nacional, doc_clausulas,
+    medidas_organizativas, mecanismos_eliminacion, origen_dato_portabilidad,
+    fecha_levantamiento, aprobado_por). Ver docs/ENRICHMENT_2026-07-03.md.
   - 5 brechas (varied nivel_riesgo, notificaciones)
   - 14 tickets ARCO (varied tipo/estado/prioridad/origen)
 
@@ -206,6 +213,14 @@ def create_user(client: httpx.Client, headers: dict, *, username: str, full_name
 
 
 # ---------- RAT data (10) ----------
+# Enriquezado con campos Tier 1 (nivel_confidencialidad, estructura_dato,
+# datos_anonimizados, datos_seudonimizados, datos_nna, logica_automatizada,
+# tecnica_anonimizacion, responsable_tratamiento_email) y Tier 2
+# (sistema_almacenamiento, volumen_titulares_estimado, ciclo_procesamiento,
+# automatizacion, frecuencia, transferencia_nacional, doc_clausulas,
+# medidas_organizativas, mecanismos_eliminacion, origen_dato_portabilidad,
+# fecha_levantamiento, aprobado_por, fecha_aprobacion).
+# Ver docs/ENRICHMENT_2026-07-03.md para detalle de cambios.
 
 RATS = [
     dict(
@@ -224,10 +239,28 @@ RATS = [
         garantias_transferencia_int="Cláusulas Contractuales Tipo (CCT) UE 2021 + DPA firmado",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC2",
+        estructura_dato="estructurado",
+        datos_anonimizados=True,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="PostgreSQL (on-prem) + Salesforce (SaaS)",
+        volumen_titulares_estimado=5000,
+        ciclo_procesamiento="Captura → Almacenamiento → Análisis → Reporte",
+        automatizacion="asistido",
+        frecuencia="diaria",
+        transferencia_nacional=False,
+        mecanismos_eliminacion="Supresión lógica + respaldo durante 30 días + verificación final",
+        tecnica_anonimizacion="Hash + agregación para reportes analíticos",
+        fecha_levantamiento="2026-01-15",
+        aprobado_por="claudio_admin",
     ),
     dict(
         nombre_proceso="Procesamiento de Nómina",
-        categoria_datos="RUT, nombre, datos bancarios, AFP, salud, ISAPRE, cargas familiares",
+        categoria_datos="RUT, nombre, datos bancarios, AFP, ISAPRE, cargas familiares",
         categoria_titulares="Empleados activos y ex-empleados",
         finalidad="Liquidación de remuneraciones, cotizaciones previsionales y cumplimiento tributario",
         base_legal="Obligación legal",
@@ -238,6 +271,25 @@ RATS = [
         transferencia_datos="No se realizan transferencias internacionales",
         transferencia_internacional=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC3",
+        estructura_dato="estructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=True,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="PostgreSQL on-prem cifrado AES-256 + sistema payroll SAP",
+        volumen_titulares_estimado=850,
+        ciclo_procesamiento="Captura → Liquidación → Aprobación dual → Pago → Archivo",
+        automatizacion="automatico",
+        frecuencia="mensual",
+        transferencia_nacional=True,
+        doc_clausulas="N/A — comunicación a organismos públicos al amparo de obligaciones legales",
+        medidas_organizativas="Acceso RBAC + aprobación dual de jefe y gerencia + logs auditados trimestralmente",
+        mecanismos_eliminacion="Supresión + verificación legal + acta de eliminación firmada por DPO",
+        fecha_levantamiento="2026-01-15",
+        aprobado_por="claudio_admin",
     ),
     dict(
         nombre_proceso="Onboarding de Empleados",
@@ -251,6 +303,25 @@ RATS = [
         destinatarios="Equipo de RRHH, gerencia del área, Mutual de Seguridad",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC2",
+        estructura_dato="semiestructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="Google Drive cifrado + ATS interno (BambooHR)",
+        volumen_titulares_estimado=300,
+        ciclo_procesamiento="Postulación → Verificación → Alta contractual → Archivo",
+        automatizacion="asistido",
+        frecuencia="continua",
+        transferencia_nacional=True,
+        doc_clausulas="N/A — RRHH interno",
+        medidas_organizativas="Verificación manual de identidad + carta de oferta firmada",
+        mecanismos_eliminacion="Supresión + respaldo durante 5 años posteriores al egreso",
+        origen_dato_portabilidad="Portal de empleo corporativo + email directo",
+        fecha_levantamiento="2026-02-01",
     ),
     dict(
         nombre_proceso="Analítica Web con Cookies",
@@ -268,6 +339,23 @@ RATS = [
         garantias_transferencia_int="Adequacy decision Privacy Framework + DPA",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC1",
+        estructura_dato="semiestructurado",
+        datos_anonimizados=True,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="Google Analytics 4 + BigQuery agregado",
+        volumen_titulares_estimado=50000,
+        ciclo_procesamiento="Captura → Agregación → Reporte",
+        automatizacion="automatico",
+        frecuencia="continua",
+        transferencia_nacional=False,
+        mecanismos_eliminacion="Purga automática a los 26 meses (Google retention default + política interna)",
+        tecnica_anonimizacion="Anonimización de IP (último octeto) + agregación mínima de n=10",
+        fecha_levantamiento="2026-02-10",
     ),
     dict(
         nombre_proceso="Marketing por Email",
@@ -281,6 +369,23 @@ RATS = [
         destinatarios="Proveedor de email marketing (Mailchimp)",
         datos_sensibles=False,
         decisiones_automatizadas=True,
+        # Tier 1
+        nivel_confidencialidad="DC1",
+        estructura_dato="estructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        logica_automatizada="Segmentación por comportamiento (aperturas, clicks, engagement score) + A/B testing automático de asunto y contenido. Decisión final: equipo de marketing revisa antes de envío masivo.",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="Mailchimp + CRM interno",
+        volumen_titulares_estimado=8000,
+        ciclo_procesamiento="Suscripción → Segmentación → Campaña → Métricas",
+        automatizacion="automatico",
+        frecuencia="diaria",
+        transferencia_nacional=False,
+        mecanismos_eliminacion="Eliminación inmediata al recibir desuscripción + purga anual de inactivos >12 meses",
+        fecha_levantamiento="2026-02-15",
     ),
     dict(
         nombre_proceso="Verificación de Identidad Biométrica",
@@ -294,6 +399,25 @@ RATS = [
         destinatarios="Proveedor de biometría (Onfido) con DPA firmado",
         datos_sensibles=False,  # Set False: requiere Consentimiento activo previo. Cambiar a True + crear consent si se necesita.
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC3",
+        estructura_dato="semiestructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=True,
+        datos_nna="ninguno",
+        logica_automatizada="Matching 1:1 con threshold 0.85. No se usa para decisiones finales — siempre hay revisión humana posterior por analista de cumplimiento.",
+        tecnica_anonimizacion="Hash unidireccional del template biométrico (SHA-256 con sal)",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="PostgreSQL + template cifrado en Onfido (SaaS)",
+        volumen_titulares_estimado=2000,
+        ciclo_procesamiento="Enrolamiento → Verificación → Match 1:1 → Revisión humana → Decisión",
+        automatizacion="automatico",
+        frecuencia="continua",
+        transferencia_nacional=False,
+        mecanismos_eliminacion="Eliminación del template al año + verificación de no-réplica en sistemas secundarios",
+        fecha_levantamiento="2026-02-20",
+        aprobado_por="claudio_admin",
     ),
     dict(
         nombre_proceso="Reclutamiento y Selección",
@@ -307,6 +431,24 @@ RATS = [
         destinatarios="Empresa de head hunting externa (caso senior) y equipo interno de RRHH",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC2",
+        estructura_dato="semiestructurado",
+        datos_anonimizados=True,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="Google Drive cifrado + ATS externo (Workable)",
+        volumen_titulares_estimado=2500,
+        ciclo_procesamiento="Postulación → Screening → Entrevista → Decisión → Archivo",
+        automatizacion="asistido",
+        frecuencia="continua",
+        transferencia_nacional=True,
+        doc_clausulas="DPA con Workable conforme Art. 14 quater — cláusulas de confidencialidad y sub-procesadores",
+        mecanismos_eliminacion="Supresión tras 2 años + oferta de actualización al candidato vía email",
+        origen_dato_portabilidad="LinkedIn (scraping autorizado) + portal de empleo corporativo + referidos",
+        fecha_levantamiento="2026-03-01",
     ),
     dict(
         nombre_proceso="Encuestas de Satisfacción (NPS)",
@@ -321,6 +463,23 @@ RATS = [
         test_interes_legitimo="1) Finalidad: mejorar servicio - 2) Necesidad: feedback directo de clientes - 3) Balance: bajo riesgo, no afecta derechos",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC1",
+        estructura_dato="estructurado",
+        datos_anonimizados=True,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="Typeform + BigQuery agregado",
+        volumen_titulares_estimado=4000,
+        ciclo_procesamiento="Envío → Respuesta → Agregación → Reporte trimestral",
+        automatizacion="automatico",
+        frecuencia="trimestral",
+        transferencia_nacional=False,
+        mecanismos_eliminacion="Eliminación de respuestas individuales a los 3 años, conservando solo agregados",
+        tecnica_anonimizacion="Agregación mínima n=10 + eliminación de comentarios identificables",
+        fecha_levantamiento="2026-03-15",
     ),
     dict(
         nombre_proceso="Gestión de Proveedores",
@@ -334,6 +493,24 @@ RATS = [
         destinatarios="Tesorería, SII, bancos para pagos",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC2",
+        estructura_dato="estructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=False,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="PostgreSQL on-prem + sistema contable SAP",
+        volumen_titulares_estimado=400,
+        ciclo_procesamiento="Registro → Cotización → Contrato → Pago → Archivo",
+        automatizacion="asistido",
+        frecuencia="continua",
+        transferencia_nacional=True,
+        doc_clausulas="Contrato tipo con cláusulas de confidencialidad Art. 14 quater + DPA cuando hay sub-procesamiento",
+        medidas_organizativas="Validación de proveedor por compliance + due diligence inicial + revisión anual",
+        mecanismos_eliminacion="Archivo legal durante 7 años + bloqueo para operaciones + eliminación posterior",
+        fecha_levantamiento="2026-04-01",
     ),
     dict(
         nombre_proceso="Logs de Auditoría del Sistema",
@@ -348,6 +525,24 @@ RATS = [
         test_interes_legitimo="1) Finalidad: detectar accesos no autorizados - 2) Necesidad: trazabilidad legal - 3) Balance: técnica estándar, no invasiva",
         datos_sensibles=False,
         decisiones_automatizadas=False,
+        # Tier 1
+        nivel_confidencialidad="DC3",
+        estructura_dato="semiestructurado",
+        datos_anonimizados=False,
+        datos_seudonimizados=True,
+        datos_nna="ninguno",
+        responsable_tratamiento_email="dpo@claudiocorp.cl",
+        # Tier 2
+        sistema_almacenamiento="PostgreSQL append-only + hash chain SHA256 + respaldo cifrado en AWS S3",
+        volumen_titulares_estimado=10000,
+        ciclo_procesamiento="Generación → Almacenamiento inmutable → Análisis forense → Archivo legal",
+        automatizacion="automatico",
+        frecuencia="continua",
+        transferencia_nacional=False,
+        medidas_organizativas="Acceso exclusivo del equipo de seguridad + alertas automáticas por anomalías",
+        mecanismos_eliminacion="Retención legal completa + respaldo cifrado offline + eliminación física al cumplir 10 años",
+        fecha_levantamiento="2026-04-15",
+        aprobado_por="claudio_admin",
     ),
 ]
 
@@ -634,13 +829,16 @@ def main():
         print("=" * 70)
         rats = create_rats(client, headers, company_id)
 
-        # Approve 2 of them for realism
-        if len(rats) >= 2:
+        # Approve 5 of them for realism (los que tienen aprobado_por en el seed)
+        if len(rats) >= 5:
             print()
-            print("  Aprobando 2 RATs (CRM y Nómina):")
-            approve_rat(client, headers, rats[0]["id"])
-            approve_rat(client, headers, rats[1]["id"])
-            print(f"  [OK] RATs {rats[0]['id']} y {rats[1]['id']} aprobados")
+            print("  Aprobando 5 RATs (CRM, Nómina, Biométrico, Logs, Marketing):")
+            approve_rat(client, headers, rats[0]["id"])   # CRM
+            approve_rat(client, headers, rats[1]["id"])   # Nómina
+            approve_rat(client, headers, rats[4]["id"])   # Marketing
+            approve_rat(client, headers, rats[5]["id"])   # Biométrico
+            approve_rat(client, headers, rats[9]["id"])   # Logs
+            print(f"  [OK] RATs {rats[0]['id']}, {rats[1]['id']}, {rats[4]['id']}, {rats[5]['id']}, {rats[9]['id']} aprobados")
         print()
 
         # Step 5: create 5 brechas
