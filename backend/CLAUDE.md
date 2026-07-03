@@ -48,6 +48,11 @@ Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto
 - **architect-senior**: para auditorías arquitectónicas (score de madurez del producto)
 - **deploy-cors-multienv**: para configurar CORS multi-ambiente (Dev/QA/Prod)
 - **debug-login**: para diagnosticar problemas de login (401, credenciales, BD)
+- **rat-compliance**: para validar compliance de un RAT (Art. 16, campos obligatorios 7+3, EIPD)
+- **breach-management**: para gestionar brechas de seguridad (72h APDC, notificación titulares)
+- **arco-rights**: para validar workflow ARCO (10 días hábiles, verificación identidad, causal rechazo)
+- **multi-tenant-security**: para auditar aislamiento multi-tenant (IDOR, RBAC, acceso cruzado)
+- **api-review**: para revisar nuevos endpoints antes de deploy (seguridad, compliance, REST)
 
 ---
 
