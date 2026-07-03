@@ -1,5 +1,45 @@
 # Changelog — Custodio RAT Manager
 
+## [Unreleased] - 2026-07-03
+
+### Mejora Continua — Higiene y Compliance
+
+#### Infraestructura y Seguridad
+- Agregado CI/CD con `secret-scan.yml` (gitleaks en push/PR)
+- Configurado `pytest-cov` y `vitest --coverage` para medicion de cobertura
+- Reforzado `.pre-commit-config.yaml` (pre-commit-hooks + gitleaks v8.18.2)
+- Creado `scripts/security_audit.py` (runner local de auditoria de seguridad)
+- Creado `SECURITY.md` (politica de seguridad standard)
+
+#### Limpieza del Repositorio
+- Eliminados 61 archivos del tracking (violaban .gitignore): __pycache__, .coverage, logs, capturas debug
+- Eliminadas carpetas basura: test/ raiz, latest_logs/, .opencode_backup/, .pytest_cache/ raiz
+- Reorganizados scripts de backend/ a backend/scripts/migration/
+- Movido TEST_EXECUTION_REPORT_ARCO a docs/auditorias/
+- Reforzado .gitignore: frontend coverage, diag-*, bpmn.vbak, lock files, test-results
+
+#### Skills de Compliance (13 total)
+- Corregidos bugs en debug-login, custodio-auditoria, api-review
+- Normalizado APDC -> APDP en todas las skills y tests
+- Creadas 4 skills criticas de compliance:
+  - `eipd-management` (Art. 15 bis)
+  - `consentimiento-management` (Art. 12)
+  - `politica-transparencia` (Art. 14 ter)
+  - `encargado-tratamiento` (Art. 14 quater)
+
+#### Documentacion
+- Creado `docs/cumplimiento/INCIDENT_RESPONSE.md` (protocolo 72h APDP)
+- Creado `docs/CLEANUP_2026-07-03.md` (bitacora de esta mejora)
+- Eliminada docs/legacy/ (vacia)
+
+#### Nota de Seguridad
+- **Incidente de secrets (2026-06-XX)**: 4 passwords Neon rotados, git filter-repo ejecutado.
+  LEY DIVINA formalizada: skill security-secret-scan + pre-commit hook.
+  Nota: commit historico 48e0d08 menciona "hardcode DATABASE_URL and SECRET_KEY" —
+  NO contiene secretos reales (eran placeholders), pero el mensaje de commit es misleading.
+
+---
+
 ## [Unreleased] - 2026-07-01
 
 ### Track D — Security gaps restantes (Z-01, Z-03)
