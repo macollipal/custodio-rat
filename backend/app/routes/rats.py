@@ -34,13 +34,18 @@ async def reportes(
     search: Optional[str] = Query(None, description="Buscar por nombre de proceso"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
     base_legal: Optional[str] = Query(None, description="Filtrar por base legal"),
-    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categor├¡a de titulares"),
+    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categoría de titulares"),
     datos_sensibles: Optional[bool] = Query(None, description="Solo procesos con datos sensibles"),
     evaluacion_impacto: Optional[bool] = Query(None, description="Solo procesos que requieren EIPD"),
     transferencia_internacional: Optional[bool] = Query(None, description="Solo con transferencia internacional"),
     created_by: Optional[str] = Query(None, description="Filtrar por creador (username)"),
+    categoria_datos: Optional[str] = Query(None, description="Filtrar por categoría de datos"),
+    datos_nna: Optional[str] = Query(None, description="Filtrar por datos NNA"),
+    transferencia_nacional: Optional[bool] = Query(None, description="Solo con transferencia nacional"),
+    nivel_confidencialidad: Optional[str] = Query(None, description="Filtrar por nivel de confidencialidad"),
+    decisiones_automatizadas: Optional[bool] = Query(None, description="Solo con decisiones automatizadas"),
     sort_by: Optional[str] = Query("created_at", description="Campo de ordenamiento"),
-    sort_order: Optional[str] = Query("desc", description="Direcci├│n: asc o desc"),
+    sort_order: Optional[str] = Query("desc", description="Direccion: asc o desc"),
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
@@ -58,6 +63,9 @@ async def reportes(
         "created_at", "updated_at", "nombre_proceso", "estado",
         "completitud", "nivel_riesgo", "base_legal", "datos_sensibles",
         "evaluacion_impacto", "transferencia_internacional",
+        "categoria_datos", "categoria_titulares", "plazo_retencion",
+        "datos_nna", "transferencia_nacional", "nivel_confidencialidad",
+        "decisiones_automatizadas", "evaluacion_impacto",
     }
 
     def escape_like(s: str) -> str:
@@ -98,6 +106,21 @@ async def reportes(
     if created_by:
         query = query.filter(RATModel.created_by == created_by)
 
+    if categoria_datos:
+        query = query.filter(RATModel.categoria_datos.ilike(f"%{escape_like(categoria_datos)}%"))
+
+    if datos_nna:
+        query = query.filter(RATModel.datos_nna.ilike(f"%{escape_like(datos_nna)}%"))
+
+    if transferencia_nacional is not None:
+        query = query.filter(RATModel.transferencia_nacional == transferencia_nacional)
+
+    if nivel_confidencialidad:
+        query = query.filter(RATModel.nivel_confidencialidad.ilike(f"%{escape_like(nivel_confidencialidad)}%"))
+
+    if decisiones_automatizadas is not None:
+        query = query.filter(RATModel.decisiones_automatizadas == decisiones_automatizadas)
+
     total_filtered = query.count()
 
     sort_column = getattr(RATModel, sort_col, RATModel.created_at)
@@ -132,6 +155,11 @@ async def reportes(
             "evaluacion_impacto": evaluacion_impacto,
             "transferencia_internacional": transferencia_internacional,
             "created_by": created_by,
+            "categoria_datos": categoria_datos,
+            "datos_nna": datos_nna,
+            "transferencia_nacional": transferencia_nacional,
+            "nivel_confidencialidad": nivel_confidencialidad,
+            "decisiones_automatizadas": decisiones_automatizadas,
         },
         "rats": result,
     }
