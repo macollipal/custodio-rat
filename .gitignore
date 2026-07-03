@@ -140,6 +140,9 @@ htmlcov/
 # Generadores locales (no versionar)
 generar_ppt*.py
 
+# Utilitarios locales en raíz
+check_users.py
+
 # Local API keys (no subir)
 *.local.key
 .minimax_key.txt
