@@ -36,6 +36,21 @@ Reglas absolutas (resumen; ver skill para detalles):
 
 ---
 
+## Skills disponibles para backend
+
+Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto:
+
+- **security-secret-scan**: para detectar/prevenir exposición de credenciales (OBLIGATORIA antes de commit)
+- **commit-helper**: para mensajes de commit con conventional commits
+- **tester-rat**: para diseñar planes de prueba (pytest + Playwright) y validar compliance Ley 21.719
+- **custodio-auditoria**: para regenerar documentación oficial v1.x y validar compliance
+- **qa-senior**: para revisión de calidad de código, seguridad y compliance RAT
+- **architect-senior**: para auditorías arquitectónicas (score de madurez del producto)
+- **deploy-cors-multienv**: para configurar CORS multi-ambiente (Dev/QA/Prod)
+- **debug-login**: para diagnosticar problemas de login (401, credenciales, BD)
+
+---
+
 ## Sistema de roles (3 niveles)
 
 | Rol global | Descripción | is_admin |
