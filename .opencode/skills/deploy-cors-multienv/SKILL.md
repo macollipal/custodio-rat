@@ -1,6 +1,6 @@
 ---
-name: soluciona_cors
-description: solución que soporte Development → QA → Staging → Production sin volver a tocar CORS en cada despliegue.
+name: deploy-cors-multienv
+description: Configurar CORS para soportar Development → QA → Staging → Production sin volver a tocar CORS en cada despliegue. Genera ALLOWED_ORIGINS por ambiente, valida que ALLOWED_ORIGINS sea la única fuente de verdad, y previene regresiones de CORS en deploys.
 ---
 
 Actúa como un equipo compuesto por:
