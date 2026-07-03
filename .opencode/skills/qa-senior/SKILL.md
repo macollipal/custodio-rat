@@ -72,7 +72,7 @@ Calificar de 1 a 10:
 
 Verificar:
 
-- Cumplimiento Ley 21.663.
+- Cumplimiento Ley 21.719.
 - Flujo de reportes.
 - Trazabilidad de acciones.
 - Integridad de auditoría.
