@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import type { Company, Rubro } from '@/types';
 
-const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
 
 interface CompanyEditFormProps {
   empresa: Company;
@@ -53,30 +52,30 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
       <p className="text-sm font-semibold" style={{ color: '#111827' }}>Editar: {empresa.nombre}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Razón social</label>
+          <label className={labelCls} style={labelStyle}>Razón social</label>
           <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} className={inputCls} style={inputStyle} />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Rubro</label>
+          <label className={labelCls} style={labelStyle}>Rubro</label>
           <select value={form.rubro_id} onChange={e => set('rubro_id', e.target.value)} className={inputCls} style={inputStyle}>
             <option value="">— Sin rubro —</option>
             {rubros.map(r => <option key={r.id} value={String(r.id)}>{r.nombre}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Dirección</label>
+          <label className={labelCls} style={labelStyle}>Dirección</label>
           <input type="text" value={form.direccion} onChange={e => set('direccion', e.target.value)} className={inputCls} style={inputStyle} />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>DPO</label>
+          <label className={labelCls} style={labelStyle}>DPO</label>
           <input type="text" value={form.contacto_dpo} onChange={e => set('contacto_dpo', e.target.value)} className={inputCls} style={inputStyle} />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Email DPO</label>
+          <label className={labelCls} style={labelStyle}>Email DPO</label>
           <input type="email" value={form.email_dpo} onChange={e => set('email_dpo', e.target.value)} className={inputCls} style={inputStyle} />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Descripción</label>
+          <label className={labelCls} style={labelStyle}>Descripción</label>
           <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
         </div>
       </div>
@@ -89,3 +88,4 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
     </div>
   );
 }
+

@@ -7,8 +7,7 @@ import * as api from '@/lib/api';
 import { validarRUT, formatearRUT } from '@/components/ui/validation';
 import type { Company } from '@/types';
 
-const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
 
 interface CompanyFormProps {
   onDone: () => void;
@@ -129,3 +128,4 @@ export function CompanyForm({ onDone, onCancel }: CompanyFormProps) {
     </div>
   );
 }
+

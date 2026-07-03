@@ -6,6 +6,8 @@ import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import type { User } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 const ROL_GLOBAL_OPTIONS = [
   { value: 'superadmin', label: 'Superadministrador' },
   { value: 'admin_empresa', label: 'Admin empresa' },
@@ -285,10 +287,7 @@ function UserModal({
     setNewPw('');
   }, [user]);
 
-  const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-  const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
-
-  function set(k: keyof typeof form, v: string) {
+      function set(k: keyof typeof form, v: string) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
@@ -400,3 +399,4 @@ function UserModal({
     </div>
   );
 }
+

@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 export default function LoginPage() {
   const router = useRouter();
   const { setToken, setUser, setCompanies, setCompany } = useApp();
@@ -105,3 +107,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

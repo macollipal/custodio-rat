@@ -8,6 +8,8 @@ import * as api from '@/lib/api';
 import { validarRUT, formatearRUT } from '@/components/ui/validation';
 import type { Rubro } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { setCompany, setCompanies } = useApp();
@@ -23,10 +25,7 @@ export default function OnboardingPage() {
   const [rubros, setRubros] = useState<Rubro[]>([]);
   const [loadingRubros, setLoadingRubros] = useState(true);
 
-  const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-  const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
-
-  function set(k: keyof typeof form, v: string) {
+      function set(k: keyof typeof form, v: string) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
@@ -197,3 +196,4 @@ export default function OnboardingPage() {
     </div>
   );
 }
+

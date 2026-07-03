@@ -265,7 +265,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={form.datos_sensibles} onChange={e => set('datos_sensibles', e.target.checked)} className="mt-0.5 rounded" />
+                    <input type="checkbox" checked={form.datos_sensibles} onChange={e => set('datos_sensibles', e.target.checked)} className="mt-0.5 rounded" />
                   <span className="text-sm font-medium" style={{ color: '#374151' }}>⚠️ El proceso trata datos sensibles (Art. 2 letra g)</span>
                 </label>
                 {form.datos_sensibles && (

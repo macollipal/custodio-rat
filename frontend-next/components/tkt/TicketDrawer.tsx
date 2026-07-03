@@ -20,6 +20,8 @@ import {
 } from '@/lib/api';
 import type { RAT } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
   rectificacion: { label: 'Rectificación', color: '#7C3AED', abbr: 'RC' },
@@ -465,7 +467,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
               <select
                 value={nuevoEstado}
                 onChange={e => setNuevoEstado(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-sm border"
+                className={inputCls}
                 style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
               >
                 <option value="abierto">Abierto</option>
@@ -481,7 +483,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 <select
                   value={causalRechazo}
                   onChange={e => setCausalRechazo(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  className={inputCls}
                   style={{ borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' }}
                   aria-required="true"
                 >
@@ -499,7 +501,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 onChange={e => setRespuesta(e.target.value)}
                 rows={3}
                 placeholder={nuevoEstado === 'rechazado' ? 'Fundamente la causal seleccionada de manera clara y Respecto al titular...' : 'Escribe la respuesta formal para el titular...'}
-                className="w-full px-3 py-2 rounded-lg text-sm border"
+                className={inputCls}
                 style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
               />
               {nuevoEstado === 'rechazado' && (
@@ -623,7 +625,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                       onChange={e => setSubsanacionDetalle(e.target.value)}
                       rows={3}
                       placeholder="Detallá qué información falta para procesar la solicitud..."
-                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      className={inputCls}
                       style={{ borderColor: '#FDE68A' }}
                     />
                     <div className="flex gap-2">
@@ -673,7 +675,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                       max={10}
                       value={prorrogaDias}
                       onChange={e => setProrrogaDias(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      className={inputCls}
                       style={{ borderColor: '#C4B5FD' }}
                     />
                   </div>
@@ -684,7 +686,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                       value={prorrogaMotivo}
                       onChange={e => setProrrogaMotivo(e.target.value)}
                       placeholder="Complejidad del caso..."
-                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      className={inputCls}
                       style={{ borderColor: '#C4B5FD' }}
                     />
                   </div>
@@ -815,3 +817,4 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
     </Drawer>
   );
 }
+

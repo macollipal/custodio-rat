@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 
-const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
 
 interface CreateUserModalProps {
   onClose: () => void;
@@ -51,7 +50,7 @@ export function CreateUserModal({ onClose, onCreated }: CreateUserModalProps) {
             { k: 'password', label: 'Contraseña *', type: 'password', placeholder: 'Mínimo 6 caracteres' },
           ].map(({ k, label, type, placeholder }) => (
             <div key={k}>
-              <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>{label}</label>
+              <label className={labelCls} style={labelStyle}>{label}</label>
               <input
                 type={type}
                 value={(form as Record<string, unknown>)[k] as string}
@@ -83,3 +82,4 @@ export function CreateUserModal({ onClose, onCreated }: CreateUserModalProps) {
     </div>
   );
 }
+

@@ -10,6 +10,8 @@ import { validarRUT } from '@/components/ui/validation';
 import { crearTktTicket, listarRats, checkDuplicadoTkt, type TktTicket } from '@/lib/api';
 import type { RAT } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 const ARTICULOS: Record<string, string> = {
   acceso: 'Art. 12 — El titular puede solicitar información sobre sus datos tratados.',
   rectificacion: 'Art. 12 — El titular puede solicitar corrección de datos inexactos.',
@@ -230,7 +232,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               id="tipo-select"
               value={tipo}
               onChange={e => setTipo(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               aria-label="Tipo de solicitud ARCO"
               aria-required="true"
@@ -252,7 +254,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               id="prioridad-select"
               value={prioridad}
               onChange={e => setPrioridad(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               aria-label="Prioridad de la solicitud"
             >
@@ -273,7 +275,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               type="text"
               value={titularNombre}
               onChange={e => setTitularNombre(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               placeholder="Nombre completo"
               aria-label="Nombre del titular"
@@ -294,7 +296,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
                   setRutError(valido ? '' : mensaje);
                 } else { setRutError(''); }
               }}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: rutError ? '#DC2626' : '#E5E7EB' }}
               placeholder="12.345.678-9"
               aria-label="RUT del titular"
@@ -311,7 +313,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               type="email"
               value={titularEmail}
               onChange={e => setTitularEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               placeholder="email@ejemplo.cl"
               aria-label="Email del titular"
@@ -325,7 +327,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               type="email"
               value={confirmarEmail}
               onChange={e => setConfirmarEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: confirmarEmail && titularEmail !== confirmarEmail ? '#DC2626' : '#E5E7EB' }}
               placeholder="Repita el email"
               aria-label="Confirmar email del titular"
@@ -344,7 +346,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               type="tel"
               value={telefono}
               onChange={e => setTelefono(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               placeholder="+56 9 1234 5678"
               aria-label="Teléfono del titular"
@@ -357,7 +359,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               type="text"
               value={pais}
               onChange={e => setPais(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               placeholder="Chile"
               aria-label="País del titular"
@@ -371,7 +373,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               value={fechaNacimiento}
               onChange={e => setFechaNacimiento(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               aria-label="Fecha de nacimiento del titular"
             />
@@ -389,7 +391,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               value={ratSearch}
               onChange={e => { setRatSearch(e.target.value); setRatsOpen(true); }}
               onFocus={() => setRatsOpen(true)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               placeholder="Buscar RAT..."
               aria-label="Buscar RAT asociado"
@@ -442,7 +444,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
                   type="text"
                   value={reprNombre}
                   onChange={e => setReprNombre(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  className={inputCls}
                   style={{ borderColor: '#E5E7EB' }}
                   placeholder="Nombre del representante legal"
                   aria-label="Nombre del representante"
@@ -455,7 +457,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
                   type="text"
                   value={reprRut}
                   onChange={e => setReprRut(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm border"
+                  className={inputCls}
                   style={{ borderColor: '#E5E7EB' }}
                   placeholder="RUT del representante"
                   aria-label="RUT del representante"
@@ -474,7 +476,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               id="origen-select"
               value={origen}
               onChange={e => setOrigen(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               aria-label="Origen de la solicitud"
             >
@@ -491,7 +493,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               id="descripcion-input"
               value={descripcion}
               onChange={e => setDescripcion(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               rows={3}
               placeholder="Detalle de la solicitud..."
@@ -510,7 +512,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
                 id="metodo-verificacion"
                 value={metodoVerificacion}
                 onChange={e => setMetodoVerificacion(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-sm border"
+                className={inputCls}
                 style={{ borderColor: '#E5E7EB' }}
                 aria-label="Método de verificación de identidad"
               >
@@ -527,7 +529,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
                 id="medio-respuesta"
                 value={medioRespuesta}
                 onChange={e => setMedioRespuesta(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-sm border"
+                className={inputCls}
                 style={{ borderColor: '#E5E7EB' }}
                 aria-label="Medio de respuesta elegido por el titular"
               >
@@ -545,7 +547,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
               id="evidencia-identidad"
               value={evidenciaIdentidad}
               onChange={e => setEvidenciaIdentidad(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
               rows={2}
               placeholder="Descripción de documentos o método usado para verificar la identidad..."
@@ -576,3 +578,4 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
     </Drawer>
   );
 }
+
