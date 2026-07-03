@@ -49,10 +49,14 @@ Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto
 - **deploy-cors-multienv**: para configurar CORS multi-ambiente (Dev/QA/Prod)
 - **debug-login**: para diagnosticar problemas de login (401, credenciales, BD)
 - **rat-compliance**: para validar compliance de un RAT (Art. 16, campos obligatorios 7+3, EIPD)
-- **breach-management**: para gestionar brechas de seguridad (72h APDC, notificación titulares)
+- **breach-management**: para gestionar brechas de seguridad (72h APDP, notificación titulares)
 - **arco-rights**: para validar workflow ARCO (10 días hábiles, verificación identidad, causal rechazo)
 - **multi-tenant-security**: para auditar aislamiento multi-tenant (IDOR, RBAC, acceso cruzado)
 - **api-review**: para revisar nuevos endpoints antes de deploy (seguridad, compliance, REST)
+- **eipd-management**: para validar workflow EIPD (Art. 15 bis, metodologia, plazos, resultado)
+- **consentimiento-management**: para validar ciclo de vida del consentimiento (Art. 12, revocacion, evidencia)
+- **politica-transparencia**: para validar politica de transparencia (Art. 14 ter, endpoint publico)
+- **encargado-tratamiento**: para validar contratos de encargado (Art. 14 quater, vigencias, PDF)
 
 ---
 
