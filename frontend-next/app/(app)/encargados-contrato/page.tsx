@@ -15,6 +15,8 @@ import {
 import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 function fmtDate(val: string | null | undefined): string {
   if (!val) return '—';
   const d = new Date(val);
@@ -228,14 +230,14 @@ export default function EncargadosContratoPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nombre del Encargado *</label>
-            <input value={form.nombre_encargado} onChange={e => set('nombre_encargado', e.target.value)} aria-label="Nombre del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Razón social o nombre completo" />
+            <label className={labelCls} style={labelStyle}>Nombre del Encargado *</label>
+            <input value={form.nombre_encargado} onChange={e => set('nombre_encargado', e.target.value)} aria-label="Nombre del encargado" aria-required="true" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Razón social o nombre completo" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Pais *</label>
-              <select value={form.pais} onChange={e => set('pais', e.target.value)} aria-label="Pais del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }}>
+              <label className={labelCls} style={labelStyle}>Pais *</label>
+              <select value={form.pais} onChange={e => set('pais', e.target.value)} aria-label="Pais del encargado" aria-required="true" className={inputCls} style={{ borderColor: '#E5E7EB' }}>
                 <option value="">Seleccionar pais</option>
                 <option value="CL">Chile</option>
                 <option value="AR">Argentina</option>
@@ -249,50 +251,50 @@ export default function EncargadosContratoPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Direccion *</label>
-              <input value={form.direccion} onChange={e => set('direccion', e.target.value)} aria-label="Direccion del encargado" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Calle, numero, ciudad" />
+              <label className={labelCls} style={labelStyle}>Direccion *</label>
+              <input value={form.direccion} onChange={e => set('direccion', e.target.value)} aria-label="Direccion del encargado" aria-required="true" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Calle, numero, ciudad" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Objeto del Tratamiento *</label>
-            <textarea value={form.objeto} onChange={e => set('objeto', e.target.value)} rows={3} aria-label="Objeto del tratamiento" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Describe el objeto del contrato de encargo..." />
+            <label className={labelCls} style={labelStyle}>Objeto del Tratamiento *</label>
+            <textarea value={form.objeto} onChange={e => set('objeto', e.target.value)} rows={3} aria-label="Objeto del tratamiento" aria-required="true" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Describe el objeto del contrato de encargo..." />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha Inicio *</label>
-              <input type="date" value={form.duracion_inicio} onChange={e => set('duracion_inicio', e.target.value)} aria-label="Fecha de inicio del contrato" aria-required="true" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
+              <label className={labelCls} style={labelStyle}>Fecha Inicio *</label>
+              <input type="date" value={form.duracion_inicio} onChange={e => set('duracion_inicio', e.target.value)} aria-label="Fecha de inicio del contrato" aria-required="true" className={inputCls} style={{ borderColor: '#E5E7EB' }} />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha Fin</label>
-              <input type="date" value={form.duracion_fin} onChange={e => set('duracion_fin', e.target.value)} aria-label="Fecha de fin del contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} />
+              <label className={labelCls} style={labelStyle}>Fecha Fin</label>
+              <input type="date" value={form.duracion_fin} onChange={e => set('duracion_fin', e.target.value)} aria-label="Fecha de fin del contrato" className={inputCls} style={{ borderColor: '#E5E7EB' }} />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Finalidad</label>
-            <input value={form.finalidad} onChange={e => set('finalidad', e.target.value)} aria-label="Finalidad del tratamiento" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Finalidad del tratamiento" />
+            <label className={labelCls} style={labelStyle}>Finalidad</label>
+            <input value={form.finalidad} onChange={e => set('finalidad', e.target.value)} aria-label="Finalidad del tratamiento" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Finalidad del tratamiento" />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Tipo de Datos</label>
-            <input value={form.tipo_datos} onChange={e => set('tipo_datos', e.target.value)} aria-label="Tipo de datos tratados" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Datos identificativos, financieros..." />
+            <label className={labelCls} style={labelStyle}>Tipo de Datos</label>
+            <input value={form.tipo_datos} onChange={e => set('tipo_datos', e.target.value)} aria-label="Tipo de datos tratados" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Datos identificativos, financieros..." />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Categorías de Titulares</label>
-            <input value={form.categorias_titulares} onChange={e => set('categorias_titulares', e.target.value)} aria-label="Categorias de titulares" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Trabajadores, clientes..." />
+            <label className={labelCls} style={labelStyle}>Categorías de Titulares</label>
+            <input value={form.categorias_titulares} onChange={e => set('categorias_titulares', e.target.value)} aria-label="Categorias de titulares" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Ej: Trabajadores, clientes..." />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Derechos y Obligaciones</label>
-            <textarea value={form.derechos_obligaciones} onChange={e => set('derechos_obligaciones', e.target.value)} rows={2} aria-label="Derechos y obligaciones del contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }} placeholder="Derechos del responsable y obligaciones del encargado..." />
+            <label className={labelCls} style={labelStyle}>Derechos y Obligaciones</label>
+            <textarea value={form.derechos_obligaciones} onChange={e => set('derechos_obligaciones', e.target.value)} rows={2} aria-label="Derechos y obligaciones del contrato" className={inputCls} style={{ borderColor: '#E5E7EB' }} placeholder="Derechos del responsable y obligaciones del encargado..." />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>RAT Asociado</label>
-            <select value={form.rat_id} onChange={e => set('rat_id', e.target.value)} aria-label="RAT asociado al contrato" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E5E7EB' }}>
+            <label className={labelCls} style={labelStyle}>RAT Asociado</label>
+            <select value={form.rat_id} onChange={e => set('rat_id', e.target.value)} aria-label="RAT asociado al contrato" className={inputCls} style={{ borderColor: '#E5E7EB' }}>
               <option value="">Sin RAT asociado</option>
               {rats.map(r => <option key={r.id} value={r.id}>{r.nombre_proceso}</option>)}
             </select>
@@ -314,3 +316,4 @@ export default function EncargadosContratoPage() {
     </div>
   );
 }
+

@@ -7,6 +7,8 @@ import { API_BASE } from '@/lib/constants';
 import * as api from '@/lib/api';
 import type { RAT } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 interface Consentimiento {
   id: number;
   company_id: number;
@@ -324,11 +326,11 @@ function CreateConsentimientoModal({
         <h2 className="text-xl font-bold mb-4">Nuevo consentimiento</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">RAT *</label>
+            <label className={labelCls}>RAT *</label>
             <select
               value={ratId}
               onChange={(e) => setRatId(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               required
             >
               <option value="">Seleccionar RAT</option>
@@ -340,34 +342,34 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="consent-nombre">Nombre del titular *</label>
+            <label className={labelCls} htmlFor="consent-nombre">Nombre del titular *</label>
             <input
               id="consent-nombre"
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               aria-required="true"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="consent-email">Email del titular</label>
+            <label className={labelCls} htmlFor="consent-email">Email del titular</label>
             <input
               id="consent-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="consent-canal">Canal de obtención *</label>
+            <label className={labelCls} htmlFor="consent-canal">Canal de obtención *</label>
             <select
               id="consent-canal"
               value={canal}
               onChange={(e) => setCanal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               aria-required="true"
             >
               {Object.entries(CANAL_LABELS).map(([k, v]) => (
@@ -376,13 +378,13 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="consent-texto">Texto del consentimiento *</label>
+            <label className={labelCls} htmlFor="consent-texto">Texto del consentimiento *</label>
             <textarea
               id="consent-texto"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               placeholder="Por medio del presente autorizo el tratamiento de mis datos personales para..."
               aria-required="true"
               required
@@ -503,3 +505,4 @@ function DetailModal({
     </div>
   );
 }
+

@@ -6,9 +6,7 @@ import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import type { SecurityBreach } from '@/types';
-
-const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2 } from '@/lib/styles';
 
 const PLAZO_APDC_HORAS = 72;
 
@@ -213,13 +211,13 @@ function BreachForm({
       <div className="rounded-lg p-4 space-y-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
         <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>Evaluación de Riesgo (Art. 14 sexies)</p>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Volumen de titulares afectados</label>
+          <label className={labelCls} style={labelStyle}>Volumen de titulares afectados</label>
           <input
             type="number"
             min={0}
             value={form.volumen_titulares_afectados}
             onChange={e => set('volumen_titulares_afectados', Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
+            className={inputCls}
             style={{ borderColor: '#E5E7EB' }}
             placeholder="Ej: 150"
           />
@@ -245,21 +243,21 @@ function BreachForm({
         <p className="text-sm font-semibold" style={{ color: '#0369A1' }}>📋 Compliance · Ley 21.719</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha ocurrencia estimada</label>
+            <label className={labelCls} style={labelStyle}>Fecha ocurrencia estimada</label>
             <input
               type="datetime-local"
               value={form.fecha_ocurrencia_estimada ?? ''}
               onChange={e => set('fecha_ocurrencia_estimada', e.target.value || undefined)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Causa raíz</label>
+            <label className={labelCls} style={labelStyle}>Causa raíz</label>
             <select
               value={form.causa_raiz ?? ''}
               onChange={e => set('causa_raiz', e.target.value || undefined)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
             >
               <option value="">— No especificada —</option>
@@ -273,34 +271,34 @@ function BreachForm({
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Efectos probables para los titulares</label>
+          <label className={labelCls} style={labelStyle}>Efectos probables para los titulares</label>
           <textarea
             value={form.efectos_probables ?? ''}
             onChange={e => set('efectos_probables', e.target.value || undefined)}
             rows={2}
             placeholder="Ej: Robo de identidad, fraude financiero, daño reputacional..."
-            className="w-full px-3 py-2 rounded-lg text-sm border"
+            className={inputCls}
             style={{ borderColor: '#E5E7EB' }}
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Folio notificación APDC</label>
+            <label className={labelCls} style={labelStyle}>Folio notificación APDC</label>
             <input
               type="text"
               value={form.evidencia_notificacion_apdc_folio ?? ''}
               onChange={e => set('evidencia_notificacion_apdc_folio', e.target.value || undefined)}
               placeholder="Ej: APDC-2026-001234"
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Estado de cierre</label>
+            <label className={labelCls} style={labelStyle}>Estado de cierre</label>
             <select
               value={form.estado_cierre ?? ''}
               onChange={e => set('estado_cierre', e.target.value || undefined)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
             >
               <option value="">— No especificado —</option>
@@ -314,12 +312,12 @@ function BreachForm({
         </div>
         {form.estado_cierre === 'cerrada' && (
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Fecha de cierre</label>
+            <label className={labelCls} style={labelStyle}>Fecha de cierre</label>
             <input
               type="datetime-local"
               value={form.fecha_cierre ?? ''}
               onChange={e => set('fecha_cierre', e.target.value || undefined)}
-              className="w-full px-3 py-2 rounded-lg text-sm border"
+              className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
             />
           </div>
@@ -631,3 +629,4 @@ export default function BreachesPage() {
     </div>
   );
 }
+
