@@ -40,6 +40,7 @@ def sanitize_csv_value(value: str) -> str:
 
 
 CAMPOS_RAT = [
+    # Campos obligatorios Art. 16
     ("ID", "id"),
     ("Nombre del Proceso", "nombre_proceso"),
     ("Categoría de Datos", "categoria_datos"),
@@ -47,26 +48,56 @@ CAMPOS_RAT = [
     ("Finalidad", "finalidad"),
     ("Base Legal", "base_legal"),
     ("Fuente de Datos", "fuente_datos"),
-    ("Transferencia de Datos", "transferencia_datos"),
     ("Plazo de Retención", "plazo_retencion"),
+    # Campos recomendados Art. 16
     ("Medidas de Seguridad", "medidas_seguridad"),
     ("Destinatarios / Encargados", "destinatarios"),
+    ("Transferencia de Datos", "transferencia_datos"),
+    # Encargado del tratamiento
     ("Nombre Encargado", "nombre_encargado"),
     ("Contrato Encargado", "tiene_contrato_encargado"),
+    # Transferencia internacional
     ("Transfer. Internacional", "transferencia_internacional"),
     ("País Destino", "pais_destino"),
     ("Garantías Transfer. Internacional", "garantias_transferencia_int"),
+    ("Transferencia Nacional", "transferencia_nacional"),
+    # Datos sensibles y EIPD
     ("Datos Sensibles", "datos_sensibles"),
     ("Tipo Dato Sensible (Art. 2 g)", "tipo_dato_sensible"),
+    ("Datos NNA (Menores)", "datos_nna"),
     ("Requiere EIPD", "evaluacion_impacto"),
     ("Estado EIPD", "estado_eipd"),
     ("Fecha EIPD", "fecha_eipd"),
     ("Decisiones Automatizadas", "decisiones_automatizadas"),
+    ("Lógica Automatizada", "logica_automatizada"),
+    # Test interés legítimo
     ("Test Interés Legítimo", "test_interes_legitimo"),
+    # Tier 1 - Gaps críticos Ley 21.719
+    ("Nivel Confidencialidad", "nivel_confidencialidad"),
+    ("Estructura del Dato", "estructura_dato"),
+    ("Datos Anonimizados", "datos_anonimizados"),
+    ("Datos Seudonimizados", "datos_seudonimizados"),
+    # Tier 2 - Operativos
+    ("Ciclo Procesamiento", "ciclo_procesamiento"),
+    ("Automatización", "automatizacion"),
+    ("Frecuencia", "frecuencia"),
+    ("Sistema Almacenamiento", "sistema_almacenamiento"),
+    ("Volumen Titulares Estimado", "volumen_titulares_estimado"),
+    ("Responsable Tratamiento Email", "responsable_tratamiento_email"),
+    ("Doc Clausulas", "doc_clausulas"),
+    ("Medidas Organizativas", "medidas_organizativas"),
+    ("Mecanismos Eliminación", "mecanismos_eliminacion"),
+    ("Técnica Anonimización", "tecnica_anonimizacion"),
+    ("Origen Dato Portabilidad", "origen_dato_portabilidad"),
+    ("Fecha Levantamiento", "fecha_levantamiento"),
+    # Metadatos y auditoría
     ("Estado", "estado"),
+    ("Aprobado por", "aprobado_por"),
+    ("Fecha Aprobación", "fecha_aprobacion"),
     ("Creado por", "created_by"),
     ("Fecha creación", "created_at"),
     ("Última actualización", "updated_at"),
+    ("Tiene Archivo Base Legal", "tiene_archivo_base_legal"),
 ]
 
 
@@ -81,7 +112,28 @@ def exportar_csv(rats: list[RAT]) -> bytes:
     for rat in rats:
         fila = []
         for _, attr in CAMPOS_RAT:
-            value = getattr(rat, attr, "")
+            if attr == "tiene_archivo_base_legal":
+                value = "Sí" if getattr(rat, "archivo_base_legal_datos", None) else "No"
+            elif attr == "fecha_eipd":
+                value = getattr(rat, attr, None)
+                if value:
+                    value = value.strftime("%d/%m/%Y")
+                else:
+                    value = ""
+            elif attr == "fecha_levantamiento":
+                value = getattr(rat, attr, None)
+                if value:
+                    value = value.strftime("%d/%m/%Y")
+                else:
+                    value = ""
+            elif attr == "fecha_aprobacion":
+                value = getattr(rat, attr, None)
+                if value:
+                    value = value.strftime("%d/%m/%Y %H:%M")
+                else:
+                    value = ""
+            else:
+                value = getattr(rat, attr, "")
             if isinstance(value, bool):
                 value = "Sí" if value else "No"
             elif isinstance(value, datetime):
