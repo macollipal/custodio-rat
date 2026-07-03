@@ -221,31 +221,37 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
     story.append(Spacer(1, 0.5 * cm))
 
     # Tabla de resumen
-    resumen_data = [["#", "Proceso", "Categoría de Datos", "Base Legal", "Estado", "Datos Sensibles"]]
+    resumen_data = [["#", "Proceso", "Categoría Datos", "Base Legal", "Estado", "Sensibles", "NNA", "Transf. Int.", "EIPD", "Dec. Auto."]]
     for i, rat in enumerate(rats, 1):
         resumen_data.append([
             str(i),
-            _truncar(sanitize_pii(rat.nombre_proceso or ""), 30),
-            _truncar(sanitize_pii(rat.categoria_datos or ""), 35),
-            _truncar(sanitize_pii(rat.base_legal or ""), 25),
+            _truncar(sanitize_pii(rat.nombre_proceso or ""), 25),
+            _truncar(sanitize_pii(rat.categoria_datos or ""), 25),
+            _truncar(sanitize_pii(rat.base_legal or ""), 20),
             rat.estado.value.upper(),
             "SÍ" if rat.datos_sensibles else "No",
+            "SÍ" if getattr(rat, "datos_nna", None) else "No",
+            "SÍ" if rat.transferencia_internacional else "No",
+            "SÍ" if rat.evaluacion_impacto else "No",
+            "SÍ" if rat.decisiones_automatizadas else "No",
         ])
 
     tabla_resumen = Table(
         resumen_data,
-        colWidths=[0.7 * cm, 4 * cm, 5 * cm, 4 * cm, 2.5 * cm, 2 * cm],
+        colWidths=[0.5 * cm, 3.5 * cm, 3.5 * cm, 3 * cm, 2 * cm, 1.5 * cm, 1 * cm, 1.5 * cm, 1 * cm, 1.5 * cm],
         repeatRows=1,
     )
     tabla_resumen.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), COLOR_PRIMARIO),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("FONTSIZE", (0, 0), (-1, -1), 6),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, COLOR_FONDO]),
         ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("PADDING", (0, 0), (-1, -1), 4),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, -1), "CENTER"),
+        ("ALIGN", (5, 0), (-1, -1), "CENTER"),
+        ("PADDING", (0, 0), (-1, -1), 3),
     ]))
     story.append(tabla_resumen)
     story.append(Spacer(1, 0.8 * cm))
@@ -273,6 +279,42 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
             campos_ficha.append(("Encargado del Tratamiento", f"{sanitize_pii(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
         if getattr(rat, "test_interes_legitimo", None):
             campos_ficha.append(("Test Interés Legítimo (3 pasos)", sanitize_pii(rat.test_interes_legitimo)))
+        if getattr(rat, "logica_automatizada", None):
+            campos_ficha.append(("Lógica Automatizada (Art. 8)", sanitize_pii(rat.logica_automatizada)))
+        if getattr(rat, "datos_nna", None):
+            campos_ficha.append(("Datos NNA (Menores)", sanitize_pii(rat.datos_nna)))
+        if getattr(rat, "nivel_confidencialidad", None):
+            campos_ficha.append(("Nivel Confidencialidad", sanitize_pii(rat.nivel_confidencialidad)))
+        if getattr(rat, "estructura_dato", None):
+            campos_ficha.append(("Estructura del Dato", sanitize_pii(rat.estructura_dato)))
+        if getattr(rat, "ciclo_procesamiento", None):
+            campos_ficha.append(("Ciclo de Procesamiento", sanitize_pii(rat.ciclo_procesamiento)))
+        if getattr(rat, "automatizacion", None):
+            campos_ficha.append(("Automatización", sanitize_pii(rat.automatizacion)))
+        if getattr(rat, "frecuencia", None):
+            campos_ficha.append(("Frecuencia", sanitize_pii(rat.frecuencia)))
+        if getattr(rat, "sistema_almacenamiento", None):
+            campos_ficha.append(("Sistema Almacenamiento", sanitize_pii(rat.sistema_almacenamiento)))
+        if getattr(rat, "responsable_tratamiento_email", None):
+            campos_ficha.append(("Responsable Tratamiento (email)", sanitize_pii(rat.responsable_tratamiento_email)))
+        if getattr(rat, "transferencia_nacional", None):
+            campos_ficha.append(("Transferencia Nacional", "Sí" if rat.transferencia_nacional else "No"))
+        if getattr(rat, "doc_clausulas", None):
+            campos_ficha.append(("Doc. Cláusulas", sanitize_pii(rat.doc_clausulas)))
+        if getattr(rat, "medidas_organizativas", None):
+            campos_ficha.append(("Medidas Organizativas", sanitize_pii(rat.medidas_organizativas)))
+        if getattr(rat, "mecanismos_eliminacion", None):
+            campos_ficha.append(("Mecanismos de Eliminación", sanitize_pii(rat.mecanismos_eliminacion)))
+        if getattr(rat, "tecnica_anonimizacion", None):
+            campos_ficha.append(("Técnica Anonimización", sanitize_pii(rat.tecnica_anonimizacion)))
+        if getattr(rat, "datos_anonimizados", None):
+            campos_ficha.append(("Datos Anonimizados", "Sí" if rat.datos_anonimizados else "No"))
+        if getattr(rat, "datos_seudonimizados", None):
+            campos_ficha.append(("Datos Seudonimizados", "Sí" if rat.datos_seudonimizados else "No"))
+        if getattr(rat, "origen_dato_portabilidad", None):
+            campos_ficha.append(("Origen Dato Portabilidad", sanitize_pii(rat.origen_dato_portabilidad)))
+        if getattr(rat, "volumen_titulares_estimado", None):
+            campos_ficha.append(("Volumen Titulares Estimado", str(rat.volumen_titulares_estimado)))
 
         ficha_data = []
         for label, valor in campos_ficha:
@@ -310,6 +352,11 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
             ficha_data.append([
                 Paragraph("Decisiones Automatizadas (Art. 8)", estilo_label),
                 Paragraph("SÍ — Documente la lógica del sistema y el mecanismo de revisión humana disponible", estilo_alerta),
+            ])
+        if getattr(rat, "transferencia_nacional", None) and rat.transferencia_nacional:
+            ficha_data.append([
+                Paragraph("Transferencia Nacional", estilo_label),
+                Paragraph("SÍ — Comunicación de datos dentro de Chile", estilo_alerta),
             ])
 
         tabla_ficha = Table(ficha_data, colWidths=[5 * cm, 12.7 * cm])
