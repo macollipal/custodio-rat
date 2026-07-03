@@ -99,6 +99,15 @@ migrate_to_neon.py
 ~*.docx
 ~$nual_Usuario_Custodio.docx
 
+# Documentación oficial (no versionar, guardar en SharePoint/Google Drive)
+docs/documentacion_oficial/*.docx
+docs/documentacion_oficial/*.xlsx
+
+# Archivos Office locales
+*.pptx
+*.xlsx
+~$*.xlsx
+
 # Archives (no versionar)
 archive/
 paso/*
@@ -127,6 +136,9 @@ paso/*
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Generadores locales (no versionar)
+generar_ppt*.py
 
 # Local API keys (no subir)
 *.local.key
