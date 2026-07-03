@@ -629,7 +629,9 @@ export default function ReportesPage() {
               {selectedRat.datos_sensibles && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>⚠️ Datos sensibles</span>}
               {selectedRat.evaluacion_impacto && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📋 EIPD requerida</span>}
               {selectedRat.transferencia_internacional && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#F3E8FF', color: '#5B21B6' }}>🌐 Transfer. internacional</span>}
+              {selectedRat.transferencia_nacional && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#ECFDF5', color: '#065F46' }}>🏠 Transfer. nacional</span>}
               {selectedRat.decisiones_automatizadas && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Decisiones automatizadas</span>}
+              {selectedRat.datos_nna && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>👶 Datos NNA</span>}
             </div>
 
             {/* Sección: Identificación */}
@@ -655,6 +657,12 @@ export default function ReportesPage() {
                     <p className="text-sm whitespace-pre-wrap" style={{ color: '#374151' }}>{selectedRat.test_interes_legitimo}</p>
                   </div>
                 )}
+                {selectedRat.logica_automatizada && (
+                  <div className="p-4 rounded-xl" style={{ background: '#F3F4F6', border: '1px solid #E5E7EB' }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: '#374151' }}>Lógica automatizada (Art. 8)</p>
+                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#374151' }}>{selectedRat.logica_automatizada}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -664,6 +672,11 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Categoría datos" value={selectedRat.categoria_datos} />
                 <Field label="Tipo dato sensible" value={selectedRat.tipo_dato_sensible} />
+                <Field label="Datos NNA" value={selectedRat.datos_nna} />
+                <Field label="Nivel confidencialidad" value={selectedRat.nivel_confidencialidad} />
+                <Field label="Estructura dato" value={selectedRat.estructura_dato} />
+                <Field label="Anonimizados" value={selectedRat.datos_anonimizados ? 'Sí' : 'No'} />
+                <Field label="Seudonimizados" value={selectedRat.datos_seudonimizados ? 'Sí' : 'No'} />
               </div>
             </div>
 
@@ -673,9 +686,14 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Plazo retención" value={selectedRat.plazo_retencion} />
                 <Field label="Medidas de seguridad" value={selectedRat.medidas_seguridad} />
+                <Field label="Sistema almacenamiento" value={selectedRat.sistema_almacenamiento} />
+                <Field label="Frecuencia" value={selectedRat.frecuencia} />
                 <Field label="Transferencia datos" value={selectedRat.transferencia_datos} />
                 <Field label="País destino" value={selectedRat.pais_destino} />
                 <Field label="Garantías transferencia" value={selectedRat.garantias_transferencia_int} />
+                <Field label="Responsable email" value={selectedRat.responsable_tratamiento_email} />
+                <Field label="Ciclo procesamiento" value={selectedRat.ciclo_procesamiento} />
+                <Field label="Automatización" value={selectedRat.automatizacion} />
               </div>
             </div>
 
@@ -687,6 +705,23 @@ export default function ReportesPage() {
                 <Field label="Fecha creación" value={selectedRat.created_at?.slice(0, 10) ?? '—'} />
                 <Field label="Última actualización" value={selectedRat.updated_at?.slice(0, 10) ?? '—'} />
                 <Field label="Observaciones auditoría" value={selectedRat.observaciones_auditoria} />
+                <Field label="Aprobado por" value={selectedRat.aprobado_por} />
+                <Field label="Fecha aprobación" value={selectedRat.fecha_aprobacion?.slice(0, 10) ?? '—'} />
+                <Field label="Archivo base legal" value={selectedRat.tiene_archivo_base_legal ? 'Sí' : 'No'} />
+                <Field label="Técnica anonimización" value={selectedRat.tecnica_anonimizacion} />
+                <Field label="Mecanismos eliminación" value={selectedRat.mecanismos_eliminacion} />
+                <Field label="Origen portabilidad" value={selectedRat.origen_dato_portabilidad} />
+                <Field label="Fecha levantamiento" value={selectedRat.fecha_levantamiento?.slice(0, 10) ?? '—'} />
+              </div>
+            </div>
+
+            {/* Sección: Métricas avanzadas (Tier 1 / Tier 2) */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Métricas avanzadas — Tier 1 y Tier 2</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Volumen titulares" value={selectedRat.volumen_titulares_estimado} />
+                <Field label="Doc cláusulas" value={selectedRat.doc_clausulas} />
+                <Field label="Medidas organizativas" value={selectedRat.medidas_organizativas} />
               </div>
             </div>
 
