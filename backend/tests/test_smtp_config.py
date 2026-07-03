@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para el parser SMTP_URL (smtp_config.py).
 """
 

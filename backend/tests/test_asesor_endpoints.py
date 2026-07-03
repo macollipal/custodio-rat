@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests de los endpoints del Asesor.
 """
 import json
@@ -18,13 +18,13 @@ def test_ask_question_vacia_retorna_422(client, auth_headers):
 
 
 def test_ask_sin_embedding_provider(client, auth_headers):
-    resp = client.post("/asesor/ask", json={"question": "Qué es un RAT?"}, headers=auth_headers)
+    resp = client.post("/asesor/ask", json={"question": "QuÃ© es un RAT?"}, headers=auth_headers)
     # Sin MiniMax_API_Key en test, retorna 503 (OpenAI eliminado en v1.0)
     assert resp.status_code == 503
 
 
 def test_ask_fallback_sin_chunks(client, auth_headers, monkeypatch):
-    """Si no hay chunks indexados, debe retornar respuesta de fallback con sources vacío."""
+    """Si no hay chunks indexados, debe retornar respuesta de fallback con sources vacÃ­o."""
     from app.services import asesor_service
     from app.services import asesor_embedder
     import app.routes.asesor
@@ -34,7 +34,7 @@ def test_ask_fallback_sin_chunks(client, auth_headers, monkeypatch):
 
     async def fake_ask(db, question, context_extra=""):
         return {
-            "answer": "Sin información suficiente en el corpus.",
+            "answer": "Sin informaciÃ³n suficiente en el corpus.",
             "sources": [],
             "provider": "fake",
             "embedding_provider": "fake",

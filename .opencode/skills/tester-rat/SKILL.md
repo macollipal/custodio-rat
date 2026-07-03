@@ -133,7 +133,7 @@ Cobertura de flujos criticos:
 | Crear brecha dispara email a DPO | Integration | Email enviado o logueado (DRY_RUN) |
 | Brecha sin descripcion | Edge | 422 validation error |
 | Leer brecha de otra empresa | Security | 403 |
-| Notificacion APDC con fecha pasada | Edge | Validacion de plazo legal |
+| Notificacion APDP con fecha pasada | Edge | Validacion de plazo legal |
 | Eliminar brecha | Happy path | 204 |
 
 ### Exportacion (P1)
@@ -143,7 +143,7 @@ Cobertura de flujos criticos:
 | Exportar RAT individual a PDF | Happy path | PDF con datos completos |
 | Exportar todos los RATs a PDF | Happy path | PDF multi-RAT |
 | Exportar a CSV | Happy path | CSV con headers correctos |
-| Exportar formato CNI (APDC) | Happy path | JSON con estructura Ley 21.719 |
+| Exportar formato CNI (APDP) | Happy path | JSON con estructura Ley 21.719 |
 | Exportar con filtros activos | Edge | Solo resultados filtrados |
 | Exportar empresa sin RATs | Edge | PDF/CSV vacio con mensaje |
 
@@ -181,7 +181,7 @@ Cobertura de flujos criticos:
 - Fecha de creacion en el futuro
 - Plazo de retencion = 0
 - Plazo de retencion negativo
-- Fecha de notificacion APDC anterior a fecha de deteccion
+- Fecha de notificacion APDP anterior a fecha de deteccion
 - Fecha de revocation anterior a fecha de obtencion (consentimiento)
 
 ### Carga y concurrencia
@@ -348,7 +348,7 @@ Verificar que el sistema cumple con:
 - **Art. 15:** Registro de actividades de tratamiento (RATs)
 - **Art. 15 bis:** Evaluacion de impacto (EIPD) para tratamientos de alto riesgo
 - **Art. 16:** Medidas de seguridad documentadas en cada RAT
-- **Art. 18:** Notificacion de brechas al APDC y a los titulares
+- **Art. 18:** Notificacion de brechas al APDP y a los titulares
 - **Art. 19:** Respuesta a solicitudes ARCO
 
 ### Hash Chain (C6)

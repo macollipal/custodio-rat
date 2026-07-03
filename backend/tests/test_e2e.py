@@ -1,6 +1,6 @@
-"""
-Tests End-to-End: flujos completos como los haría un usuario real.
-Simula: login → crear empresa → crear RAT → ver dashboard → exportar.
+﻿"""
+Tests End-to-End: flujos completos como los harÃ­a un usuario real.
+Simula: login â†’ crear empresa â†’ crear RAT â†’ ver dashboard â†’ exportar.
 """
 
 import pytest
@@ -20,7 +20,7 @@ class TestFlujoCompletoUsuario:
 
         # 2. Crear empresa
         empresa = client.post("/companies/", json={
-            "nombre": "Clínica E2E Ltda.",
+            "nombre": "ClÃ­nica E2E Ltda.",
             "rut": "77.888.999-0",
             "rubro": "Salud",
             "contacto_dpo": "Dr. Test",
@@ -29,7 +29,7 @@ class TestFlujoCompletoUsuario:
         assert empresa.status_code == 201
         company_id = empresa.json()["id"]
 
-        # 3. Obtener sugerencia automática
+        # 3. Obtener sugerencia automÃ¡tica
         sugerencia = client.post("/rats/sugerencias", json={"tipo_proceso": "pacientes"}, headers=headers)
         assert sugerencia.status_code == 200
         sug = sugerencia.json()
@@ -37,20 +37,20 @@ class TestFlujoCompletoUsuario:
         # 4. Crear RAT con datos de sugerencia
         rat = client.post("/rats/", json={
             "company_id": company_id,
-            "nombre_proceso": "Gestión de Pacientes",
+            "nombre_proceso": "GestiÃ³n de Pacientes",
             "categoria_datos": sug["categoria_datos"],
             "finalidad": sug["finalidad"],
             "base_legal": sug["base_legal"],
-            "fuente_datos": "El propio paciente en admisión",
+            "fuente_datos": "El propio paciente en admisiÃ³n",
             "plazo_retencion": sug["plazo_retencion_sugerido"],
-            "medidas_seguridad": "Acceso restringido a personal médico",
+            "medidas_seguridad": "Acceso restringido a personal mÃ©dico",
             "datos_sensibles": sug["datos_sensibles"],
             "evaluacion_impacto": False,
             "transferencia_internacional": False,
         }, headers=headers)
         assert rat.status_code == 201
         rat_id = rat.json()["id"]
-        # El servicio puede marcar el RAT como "completo" automáticamente si tiene todos los campos
+        # El servicio puede marcar el RAT como "completo" automÃ¡ticamente si tiene todos los campos
         assert rat.json()["estado"] in ("borrador", "completo")
 
         # 5. Forzar estado a "aprobado"
@@ -68,7 +68,7 @@ class TestFlujoCompletoUsuario:
         # 7. Exportar CSV
         csv_resp = client.get(f"/rats/export/csv?company_id={company_id}", headers=headers)
         assert csv_resp.status_code == 200
-        assert b"Gesti" in csv_resp.content  # "Gestión" puede variar encoding
+        assert b"Gesti" in csv_resp.content  # "GestiÃ³n" puede variar encoding
 
         # 8. Exportar PDF
         pdf_resp = client.get(f"/rats/export/pdf?company_id={company_id}", headers=headers)
@@ -89,7 +89,7 @@ class TestFlujoCompletoUsuario:
 
 class TestFlujoMultiplesEmpresas:
     """
-    Flujo 2: Múltiples empresas con RATs aislados.
+    Flujo 2: MÃºltiples empresas con RATs aislados.
     Los RATs de una empresa no deben aparecer en la otra.
     """
 
@@ -110,7 +110,7 @@ class TestFlujoMultiplesEmpresas:
             "finalidad": "Marketing",
             "base_legal": "Consentimiento del titular",
             "fuente_datos": "Formulario web",
-            "plazo_retencion": "2 años",
+            "plazo_retencion": "2 aÃ±os",
         }
 
         # Crear RAT solo en empresa A
@@ -132,7 +132,7 @@ class TestFlujoMultiplesEmpresas:
 
 class TestFlujoEdgeCases:
     """
-    Flujo 3: Casos límite que pueden romper el sistema en producción.
+    Flujo 3: Casos lÃ­mite que pueden romper el sistema en producciÃ³n.
     """
 
     def test_crear_multiples_rats_misma_empresa(self, client, auth_headers, empresa):
@@ -142,7 +142,7 @@ class TestFlujoEdgeCases:
             "finalidad": "Uso interno",
             "base_legal": "Consentimiento del titular",
             "fuente_datos": "Formulario",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
         }
         nombres = ["Proceso A", "Proceso B", "Proceso C", "Proceso D", "Proceso E"]
         ids = []
@@ -160,16 +160,16 @@ class TestFlujoEdgeCases:
     def test_nombre_proceso_con_caracteres_especiales(self, client, auth_headers, empresa):
         payload = {
             "company_id": empresa["id"],
-            "nombre_proceso": "Gestión & Análisis de Clínicas (Región Ñuble)",
-            "categoria_datos": "Datos médicos",
-            "finalidad": "Atención clínica",
-            "base_legal": "Obligación legal",
+            "nombre_proceso": "GestiÃ³n & AnÃ¡lisis de ClÃ­nicas (RegiÃ³n Ã‘uble)",
+            "categoria_datos": "Datos mÃ©dicos",
+            "finalidad": "AtenciÃ³n clÃ­nica",
+            "base_legal": "ObligaciÃ³n legal",
             "fuente_datos": "Paciente",
-            "plazo_retencion": "10 años",
+            "plazo_retencion": "10 aÃ±os",
         }
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
-        assert "Gestión" in resp.json()["nombre_proceso"]
+        assert "GestiÃ³n" in resp.json()["nombre_proceso"]
 
     def test_actualizacion_parcial_no_borra_otros_campos(self, client, auth_headers, rat_base):
         created = client.post("/rats/", json=rat_base, headers=auth_headers).json()
@@ -182,7 +182,7 @@ class TestFlujoEdgeCases:
             headers=auth_headers,
         )
 
-        # Verificar que categoria_datos no cambió
+        # Verificar que categoria_datos no cambiÃ³
         rat = client.get(f"/rats/{created['id']}", headers=auth_headers).json()
         assert rat["categoria_datos"] == original_categoria
         assert rat["nombre_proceso"] == "Nuevo nombre"
@@ -194,7 +194,7 @@ class TestFlujoEdgeCases:
             "finalidad": "Test",
             "base_legal": "Consentimiento del titular",
             "fuente_datos": "Web",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
         }
         for i in range(3):
             client.post("/rats/", json={**payload_base, "nombre_proceso": f"Proceso {i}"}, headers=auth_headers)
@@ -202,6 +202,6 @@ class TestFlujoEdgeCases:
         resp = client.get(f"/rats/export/csv?company_id={empresa['id']}", headers=auth_headers)
         assert resp.status_code == 200
         content = resp.content.decode("utf-8-sig")
-        # Debe haber al menos 3 filas de datos (más la cabecera)
+        # Debe haber al menos 3 filas de datos (mÃ¡s la cabecera)
         lines = [l for l in content.splitlines() if l.strip()]
         assert len(lines) >= 4  # 1 cabecera + 3 RATs

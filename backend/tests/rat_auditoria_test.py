@@ -1,11 +1,11 @@
-"""
-Tests para GET /rats/{id}/auditoria — historial de auditoria del RAT.
+﻿"""
+Tests para GET /rats/{id}/auditoria â€” historial de auditoria del RAT.
 
 Cubre:
-- acceso sin autenticacion → 401
-- acceso a RAT inexistente → 404 o lista vacia ( según implementacion)
-- acceso valido → 200 + lista de logs
-- IDOR: usuario de otra empresa no puede ver la auditoria → 403
+- acceso sin autenticacion â†’ 401
+- acceso a RAT inexistente â†’ 404 o lista vacia ( segÃºn implementacion)
+- acceso valido â†’ 200 + lista de logs
+- IDOR: usuario de otra empresa no puede ver la auditoria â†’ 403
 """
 
 import pytest
@@ -18,7 +18,7 @@ class TestAuditoriaEndpoint:
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
     def test_auditoria_rat_inexistente_retorna_lista_vacia(self, client, auth_headers, empresa):
-        """RAT inexistente retorna lista vacia (no 404 — no hay entidad que buscar)."""
+        """RAT inexistente retorna lista vacia (no 404 â€” no hay entidad que buscar)."""
         resp = client.get("/rats/99999/auditoria", headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
         assert resp.json() == [], "Auditoria de RAT inexistente debe ser lista vacia"

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests de seguridad: token blacklist, RBAC, rate limiting.
 """
 
@@ -8,7 +8,7 @@ import time
 
 class TestTokenBlacklist:
     def test_logout_invalidates_token(self, client, admin_user):
-        """Después de logout, el token no debe ser válido."""
+        """DespuÃ©s de logout, el token no debe ser vÃ¡lido."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         assert login.status_code == 200
         token = login.json()["access_token"]
@@ -17,7 +17,7 @@ class TestTokenBlacklist:
         assert logout.status_code == 200
 
         resp = client.get("/companies/", headers={"Authorization": f"Bearer {token}"})
-        assert resp.status_code == 401, "Token debería ser inválido después de logout"
+        assert resp.status_code == 401, "Token deberÃ­a ser invÃ¡lido despuÃ©s de logout"
 
     def test_revocated_token_cannot_access(self, client, admin_user):
         """Un token revocado no debe permitir acceso a endpoints protegidos."""
@@ -30,12 +30,12 @@ class TestTokenBlacklist:
         assert resp.status_code == 401
 
     def test_logout_without_token_returns_ok(self, client):
-        """Logout sin token debería retornar OK (no crash)."""
+        """Logout sin token deberÃ­a retornar OK (no crash)."""
         resp = client.post("/auth/logout")
         assert resp.status_code == 200
 
     def test_logout_with_invalid_token_returns_ok(self, client):
-        """Logout con token inválido debería retornar OK sin crash."""
+        """Logout con token invÃ¡lido deberÃ­a retornar OK sin crash."""
         resp = client.post("/auth/logout", headers={"Authorization": "Bearer token_invalido"})
         assert resp.status_code == 200
 
@@ -88,9 +88,9 @@ class TestRBAC:
             "finalidad": "Finalidad",
             "base_legal": "Consentimiento",
             "fuente_datos": "Fuente",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
         }, headers={"Authorization": f"Bearer {user_token}"})
-        assert resp.status_code == 403, "Usuario no debería poder crear RATs"
+        assert resp.status_code == 403, "Usuario no deberÃ­a poder crear RATs"
 
     def test_admin_global_puede_crear_empresa(self, client, admin_user):
         """Superadmin debe poder crear empresas."""
@@ -117,7 +117,7 @@ class TestRBAC:
         for method, path in protected:
             if method == "GET":
                 resp = client.get(path)
-            assert resp.status_code in (401, 403), f"{method} {path} debería requerir auth"
+            assert resp.status_code in (401, 403), f"{method} {path} deberÃ­a requerir auth"
 
 
 class TestRateLimiting:
@@ -127,7 +127,7 @@ class TestRateLimiting:
         assert resp.status_code == 200
 
     def test_ai_ask_requires_auth(self, client):
-        """AI endpoint debe requerir autenticación."""
+        """AI endpoint debe requerir autenticaciÃ³n."""
         resp = client.post("/ai/ask", json={"question": "test"})
         assert resp.status_code in (401, 403)
 
@@ -142,7 +142,7 @@ class TestSecurityHeaders:
         assert resp_db.status_code == 200
 
     def test_sql_injection_prevention(self, client, admin_user):
-        """SQL injection en búsqueda no debe romper la app."""
+        """SQL injection en bÃºsqueda no debe romper la app."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         token = login.json()["access_token"]
 
@@ -160,7 +160,7 @@ class TestSecurityHeaders:
 
 
 class TestIDORProtection:
-    """TC-061: IDOR en /companies/{id} — un usuario no debe acceder a datos de otra empresa."""
+    """TC-061: IDOR en /companies/{id} â€” un usuario no debe acceder a datos de otra empresa."""
 
     def test_idor_get_company_forbidden(self, client, db, admin_user):
         """Usuario no puede leer empresa a la que no pertenece."""
@@ -194,7 +194,7 @@ class TestIDORProtection:
         user_token = user_login.json()["access_token"]
 
         resp = client.get(f"/companies/{company_b_id}", headers={"Authorization": f"Bearer {user_token}"})
-        assert resp.status_code == 403, f"IDOR: usuario debería obtener 403 al acceder a empresa ajena, pero obtuvo {resp.status_code}"
+        assert resp.status_code == 403, f"IDOR: usuario deberÃ­a obtener 403 al acceder a empresa ajena, pero obtuvo {resp.status_code}"
 
     def test_idor_update_company_forbidden(self, client, db, admin_user):
         """Usuario no puede editar empresa a la que no pertenece."""
@@ -228,7 +228,7 @@ class TestIDORProtection:
         user_token = user_login.json()["access_token"]
 
         resp = client.put(f"/companies/{company_b_id}", json={"nombre": "Hacked"}, headers={"Authorization": f"Bearer {user_token}"})
-        assert resp.status_code == 403, f"IDOR PUT: debería ser 403, pero obtuvo {resp.status_code}"
+        assert resp.status_code == 403, f"IDOR PUT: deberÃ­a ser 403, pero obtuvo {resp.status_code}"
 
     def test_idor_delete_company_forbidden(self, client, db, admin_user):
         """Usuario no puede eliminar empresa a la que no pertenece."""
@@ -262,27 +262,27 @@ class TestIDORProtection:
         user_token = user_login.json()["access_token"]
 
         resp = client.delete(f"/companies/{company_b_id}", headers={"Authorization": f"Bearer {user_token}"})
-        assert resp.status_code == 403, f"IDOR DELETE: debería ser 403, pero obtuvo {resp.status_code}"
+        assert resp.status_code == 403, f"IDOR DELETE: deberÃ­a ser 403, pero obtuvo {resp.status_code}"
 
 
 class TestCompaniesPublico:
-    """TC-062: /companies/publico ahora requiere autenticación (antes era público)."""
+    """TC-062: /companies/publico ahora requiere autenticaciÃ³n (antes era pÃºblico)."""
 
     def test_companies_publico_requires_auth(self, client):
         """Acceso sin token debe retornar 401."""
         resp = client.get("/companies/publico")
-        assert resp.status_code == 401, f"/companies/publico debería requerir auth (401), pero obtuvo {resp.status_code}"
+        assert resp.status_code == 401, f"/companies/publico deberÃ­a requerir auth (401), pero obtuvo {resp.status_code}"
 
     def test_companies_publico_accessible_with_auth(self, client, admin_user):
-        """Acceso con token válido debe retornar 200."""
+        """Acceso con token vÃ¡lido debe retornar 200."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         token = login.json()["access_token"]
         resp = client.get("/companies/publico", headers={"Authorization": f"Bearer {token}"})
-        assert resp.status_code == 200, f"/companies/publico con auth debería ser 200, pero obtuvo {resp.status_code}"
+        assert resp.status_code == 200, f"/companies/publico con auth deberÃ­a ser 200, pero obtuvo {resp.status_code}"
 
 
 class TestCSVInjection:
-    """TC-063: Verifica que la sanitización previene CSV injection."""
+    """TC-063: Verifica que la sanitizaciÃ³n previene CSV injection."""
 
     def test_sanitize_csv_value_prevents_formula_injection(self):
         """Valores que empiezan con =,+,-,@,tab deben ser prefijados con '."""
@@ -290,18 +290,18 @@ class TestCSVInjection:
         dangerous = ["=CMD|'/C calc'!A0", "+SUM(A1:A10)", "-HOLA", "\tTAB", "\rCR"]
         for val in dangerous:
             result = sanitize_csv_value(val)
-            assert result.startswith("'"), f"'{val}' debería ser sanitizado con prefijo ', pero quedó: {result}"
+            assert result.startswith("'"), f"'{val}' deberÃ­a ser sanitizado con prefijo ', pero quedÃ³: {result}"
 
     def test_sanitize_csv_value_preserves_normal_text(self):
         """Textos normales no deben ser modificados."""
         from app.services.export_service import sanitize_csv_value
-        normal = ["Hola mundo", "RUT 12.345.678-9", "año 2025", "data-with-dashes"]
+        normal = ["Hola mundo", "RUT 12.345.678-9", "aÃ±o 2025", "data-with-dashes"]
         for val in normal:
             result = sanitize_csv_value(val)
-            assert result == val, f"'{val}' no debería ser sanitizado, pero quedó: {result}"
+            assert result == val, f"'{val}' no deberÃ­a ser sanitizado, pero quedÃ³: {result}"
 
     def test_csv_export_sanitizes_all_cells(self, client, admin_user, empresa):
-        """El CSV exportado no debe contener fórmulas inyectables."""
+        """El CSV exportado no debe contener fÃ³rmulas inyectables."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         token = login.json()["access_token"]
 
@@ -318,7 +318,7 @@ class TestCSVInjection:
             "finalidad": "Test injection",
             "base_legal": "Consentimiento",
             "fuente_datos": "El titular",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
         }, headers={"Authorization": f"Bearer {token}"})
         if rat_resp.status_code != 201:
             pytest.skip(f"No se pudo crear RAT para test CSV: {rat_resp.status_code} {rat_resp.text}")
@@ -327,5 +327,5 @@ class TestCSVInjection:
         assert export_resp.status_code == 200
         content = export_resp.content.decode("utf-8-sig")
         unquoted_line = content.replace('"', "")
-        assert not unquoted_line.startswith("=CMD"), "CSV injection detectada: fórmula =CMD presente sin escapar en export"
+        assert not unquoted_line.startswith("=CMD"), "CSV injection detectada: fÃ³rmula =CMD presente sin escapar en export"
         assert "'=CMD" in content or content.count("CMD") == 0, "CSV injection no sanitizada: valor no prefijado con '"

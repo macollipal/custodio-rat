@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests unitarios del Asesor Chunker.
 """
 import pytest
@@ -14,10 +14,10 @@ def test_estimate_tokens_minimo():
 
 
 def test_split_by_hierarchy_basico():
-    text = "# Título\n\nPárrafo 1.\n\n## Subtítulo\n\nPárrafo 2."
+    text = "# TÃ­tulo\n\nPÃ¡rrafo 1.\n\n## SubtÃ­tulo\n\nPÃ¡rrafo 2."
     parts = split_by_hierarchy(text)
     assert len(parts) >= 2
-    assert any("Subtítulo" in p for p in parts)
+    assert any("SubtÃ­tulo" in p for p in parts)
 
 
 def test_split_by_hierarchy_vacio():
@@ -45,7 +45,7 @@ def test_chunk_text_con_titulo():
 
 
 def test_chunk_text_multiple():
-    text = "\n\n".join([f"Párrafo {i} con suficiente contenido para alcanzar tokens." for i in range(20)])
+    text = "\n\n".join([f"PÃ¡rrafo {i} con suficiente contenido para alcanzar tokens." for i in range(20)])
     chunks = chunk_text(text)
     assert len(chunks) >= 1
     for c in chunks:

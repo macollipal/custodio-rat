@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests para QW6: Plantillas de respuesta por tipo de derecho ARCO.
-Custodio RAT Manager — Ley 21.719 Art. 12.
+Custodio RAT Manager â€” Ley 21.719 Art. 12.
 
 Covers:
 - CRUD de plantillas (solo admin_empresa y superadmin)
@@ -171,7 +171,7 @@ class TestResponderConPlantilla:
         assert "Pedro Test" in data["respuesta_texto"]
 
     def test_respuesta_texto_prevalece_sobre_plantilla(self, client, auth_headers, empresa):
-        """Si se envía both respuesta_texto y plantilla_id, prevalece respuesta_texto."""
+        """Si se envÃ­a both respuesta_texto y plantilla_id, prevalece respuesta_texto."""
         resp_plantilla = client.get("/tkt-plantillas/?tipo=acceso", headers=auth_headers)
         plantilla_id = resp_plantilla.json()[0]["id"]
 

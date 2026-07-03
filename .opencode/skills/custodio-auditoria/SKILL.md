@@ -13,7 +13,7 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 | Campo | Valor |
 |-------|-------|
 | **Nombre** | Custodio RAT Manager |
-| **Normativa** | Ley 21.719 Chile (denuncias y procesos regulatorios) |
+| **Normativa** | Ley 21.719 Chile (proteccion de datos personales) |
 | **Tech Stack** | FastAPI + Next.js + PostgreSQL/Neon |
 | **Ubicación** | `C:\Users\chelo\Desktop\RAT_opencode` |
 | **Bucket Activo** | `custodio-documents-qa` |

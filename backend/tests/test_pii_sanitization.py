@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para sanitizacion PII en exports (Art. 5 Ley 21.719 - principio de minimizacion).
 Cubre sanitize_pii() de app/core/pii.py que se aplica en CSV y PDF.
 """

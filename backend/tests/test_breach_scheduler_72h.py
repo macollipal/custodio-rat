@@ -1,5 +1,5 @@
-"""
-Tests para scheduler de notificacion APDC a las 72h (Art. 14 bis Ley 21.719).
+﻿"""
+Tests para scheduler de notificacion APDP a las 72h (Art. 14 bis Ley 21.719).
 
 Cubre crear_brecha() en breach_service.py que encola una tarea
 NOTIFICAR_BRECHA_DPO con scheduled_for = fecha_deteccion + 72h.

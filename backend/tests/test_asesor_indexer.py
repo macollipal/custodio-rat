@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests del indexer del Asesor.
 """
 import os
@@ -46,7 +46,7 @@ def test_infer_title_desde_h1(tmp_path):
 
 def test_infer_title_sin_heading(tmp_path):
     f = tmp_path / "doc.md"
-    f.write_text("Solo contenido sin título.", encoding="utf-8")
+    f.write_text("Solo contenido sin tÃ­tulo.", encoding="utf-8")
     title = _infer_title(str(f), f.read_text(encoding="utf-8"))
     assert title == "doc.md"
 

@@ -1,6 +1,6 @@
-"""
-Tests para QW8: Portal del Titular — Seguimiento por tracking_token.
-GET /seguimiento/{tracking_token} — público, sin auth.
+﻿"""
+Tests para QW8: Portal del Titular â€” Seguimiento por tracking_token.
+GET /seguimiento/{tracking_token} â€” pÃºblico, sin auth.
 """
 
 import pytest
@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 
 class TestQW8Seguimiento:
     def test_consulta_token_valido_retorna_estado(self, client, db, empresa):
-        """Un tracking_token válido devuelve los datos del ticket."""
+        """Un tracking_token vÃ¡lido devuelve los datos del ticket."""
         from app.services.ticket_service import crear_ticket_desde_solicitud
         from app.models.company import Company
 
@@ -19,9 +19,9 @@ class TestQW8Seguimiento:
             db=db,
             company_id=empresa["id"],
             tipo="acceso",
-            titular_nombre="Juan Pérez",
+            titular_nombre="Juan PÃ©rez",
             titular_email="juan@perez.cl",
-            descripcion="Quiero saber qué datos tienen",
+            descripcion="Quiero saber quÃ© datos tienen",
             origen="web",
             company_nombre=company.nombre if company else "Test",
         )
@@ -40,7 +40,7 @@ class TestQW8Seguimiento:
         """Un tracking_token que no existe devuelve 404."""
         resp = client.get("/seguimiento/00000000-0000-0000-0000-000000000000")
         assert resp.status_code == 404
-        assert "No se encontró" in resp.json()["detail"]
+        assert "No se encontrÃ³" in resp.json()["detail"]
 
     def test_consulta_sin_token_retorna_404(self, client):
         """Sin tracking_token devuelve 404 (not found)."""
@@ -58,7 +58,7 @@ class TestQW8Seguimiento:
             db=db,
             company_id=empresa["id"],
             tipo="acceso",
-            titular_nombre="Test Subsanación",
+            titular_nombre="Test SubsanaciÃ³n",
             titular_email="subsan@test.cl",
             origen="web",
             company_nombre=company.nombre if company else "Test",
@@ -67,13 +67,13 @@ class TestQW8Seguimiento:
         solicitar_subsanacion(
             db=db,
             ticket_id=ticket.id,
-            detalle="Falta cédula de identidad",
+            detalle="Falta cÃ©dula de identidad",
         )
 
         resp = client.get(f"/seguimiento/{ticket.tracking_token}")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["estado"] == "Subsanación"
+        assert data["estado"] == "SubsanaciÃ³n"
 
     def test_consulta_con_historial(self, client, db, empresa):
         """El endpoint devuelve el historial de cambios."""
@@ -86,7 +86,7 @@ class TestQW8Seguimiento:
             db=db,
             company_id=empresa["id"],
             tipo="cancelacion",
-            titular_nombre="Carlos Méndez",
+            titular_nombre="Carlos MÃ©ndez",
             titular_email="carlos@mendez.cl",
             origen="web",
             company_nombre=company.nombre if company else "Test",
@@ -99,7 +99,7 @@ class TestQW8Seguimiento:
         assert data["historial"][0]["estado_nuevo"] == "Abierto"
 
     def test_no_requiere_auth(self, client, db, empresa):
-        """El endpoint es público — no requiere Bearer token."""
+        """El endpoint es pÃºblico â€” no requiere Bearer token."""
         from app.services.ticket_service import crear_ticket_desde_solicitud
         from app.models.company import Company
 

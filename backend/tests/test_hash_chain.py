@@ -1,9 +1,9 @@
-"""
-Tests P0: Hash Chain — Verificación de integridad de auditoría.
-Custodio RAT Manager — Ley 21.719 Art. 12 (Principio de responsabilidad proactiva).
+﻿"""
+Tests P0: Hash Chain â€” VerificaciÃ³n de integridad de auditorÃ­a.
+Custodio RAT Manager â€” Ley 21.719 Art. 12 (Principio de responsabilidad proactiva).
 
 Covers:
-- verify_audit_chain() — integrity check
+- verify_audit_chain() â€” integrity check
 - Hash chain no se rompe con operaciones normales
 - Tampering detection (prev_hash mismatch)
 - Tampering detection (hash mismatch)
@@ -23,7 +23,7 @@ class TestHashChainGenesis:
         assert len(GENESIS_HASH) == 64
 
     def test_primer_registro_tiene_genesis_como_prev_hash(self, db, admin_user):
-        """El primer registro de auditoría debe tener prev_hash = GENESIS_HASH."""
+        """El primer registro de auditorÃ­a debe tener prev_hash = GENESIS_HASH."""
         log_audit(db, "rat", 1, "crear", "admin", {"nombre": "Test"})
         db.commit()
 
@@ -32,7 +32,7 @@ class TestHashChainGenesis:
         assert first.prev_hash == GENESIS_HASH
 
     def test_primer_registro_tiene_hash_valido(self, db, admin_user):
-        """El hash del primer registro debe ser computable y no vacío."""
+        """El hash del primer registro debe ser computable y no vacÃ­o."""
         log_audit(db, "rat", 1, "crear", "admin", {"nombre": "Test"})
         db.commit()
 
@@ -45,14 +45,14 @@ class TestHashChainGenesis:
 
 class TestHashChainVerification:
     def test_verify_audit_chain_sin_registros_retorna_true(self, db, admin_user):
-        """Si no hay registros, verify debe retornar válido."""
+        """Si no hay registros, verify debe retornar vÃ¡lido."""
         result = verify_audit_chain(db)
         assert result["valid"] is True
         assert result["total_records"] == 0
         assert result["broken_at"] is None
 
     def test_verify_audit_chain_con_registros_intactos_retorna_true(self, db, admin_user):
-        """Con registros sin tampering, verify debe retornar válido."""
+        """Con registros sin tampering, verify debe retornar vÃ¡lido."""
         for i in range(3):
             log_audit(db, "rat", i + 1, "crear", "admin", {"nombre": f"RAT-{i}"})
             db.commit()
@@ -117,7 +117,7 @@ class TestHashChainVerification:
 
 class TestHashChainEndpoint:
     def test_audit_de_rat_retorna_registros(self, client, auth_headers, empresa, rat_base):
-        """GET /rats/{id}/auditoria debe retornar los registros de auditoría."""
+        """GET /rats/{id}/auditoria debe retornar los registros de auditorÃ­a."""
         rat_resp = client.post("/rats/", json=rat_base, headers=auth_headers)
         assert rat_resp.status_code == 201
         rat_id = rat_resp.json()["id"]
@@ -127,7 +127,7 @@ class TestHashChainEndpoint:
         assert isinstance(audit_resp.json(), list)
 
     def test_audit_de_rat_sin_auth_falla(self, client, empresa, rat_base):
-        """GET /rats/{id}/auditoria sin autenticación debe retornar 401."""
+        """GET /rats/{id}/auditoria sin autenticaciÃ³n debe retornar 401."""
         rat_resp = client.post("/rats/", json=rat_base, headers={"Authorization": "Bearer invalid"})
         if rat_resp.status_code == 201:
             rat_id = rat_resp.json()["id"]
@@ -137,7 +137,7 @@ class TestHashChainEndpoint:
 
 class TestComputeHash:
     def test_compute_hash_deterministic(self):
-        """_compute_hash debe ser determinístico: misma entrada = misma salida."""
+        """_compute_hash debe ser determinÃ­stico: misma entrada = misma salida."""
         from datetime import datetime, timezone
         ts = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         h1 = _compute_hash(GENESIS_HASH, ts, "crear", "rat", 1, "admin", '{"nombre": "Test"}')

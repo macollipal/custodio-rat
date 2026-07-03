@@ -1,14 +1,14 @@
-"""
-Tests para QW1: Consolidación ARCO — Unificación de SolicitudDerecho y TktSolicitudDerecho.
-Custodio RAT Manager — Ley 21.719.
+﻿"""
+Tests para QW1: ConsolidaciÃ³n ARCO â€” UnificaciÃ³n de SolicitudDerecho y TktSolicitudDerecho.
+Custodio RAT Manager â€” Ley 21.719.
 
 Covers:
 - Crear ticket con tipos extendidos: acceso, rectificacion, cancelacion, oposicion, bloqueo, portabilidad
 - Crear ticket con prioridad "urgente" (no "alta")
 - Crear ticket pasando rat_id
-- Workflow bloquear RAT (Art. 8 ter): /bloquear → estado "bloqueado", RAT.bloqueado=True
-- Workflow desbloquear RAT: /desbloquear → estado "resuelto", RAT.bloqueado=False
-- Workflow rechazo fundado (Art. 12.5): /rechazar → estado "rechazado"
+- Workflow bloquear RAT (Art. 8 ter): /bloquear â†’ estado "bloqueado", RAT.bloqueado=True
+- Workflow desbloquear RAT: /desbloquear â†’ estado "resuelto", RAT.bloqueado=False
+- Workflow rechazo fundado (Art. 12.5): /rechazar â†’ estado "rechazado"
 - Exportar portabilidad (Art. 9): /portabilidad/export
 - Guardar datos de portabilidad: /portabilidad/guardar
 """
@@ -37,10 +37,10 @@ def _crear_rat(client, headers, empresa_id):
         "nombre_proceso": "Proceso Test RAT",
         "categoria_datos": "Nombre, email",
         "categoria_titulares": "Clientes",
-        "finalidad": "Gestión comercial",
+        "finalidad": "GestiÃ³n comercial",
         "base_legal": "Consentimiento",
         "fuente_datos": "Titular web",
-        "plazo_retencion": "5 años",
+        "plazo_retencion": "5 aÃ±os",
     }, headers=headers)
     if resp.status_code != 201:
         raise RuntimeError(f"No se pudo crear RAT: {resp.status_code} {resp.text}")
@@ -63,7 +63,7 @@ class TestTiposExtendidosTKT:
         assert resp.json()["tipo"] == "portabilidad"
 
     def test_crear_ticket_prioridad_urgente(self, client, auth_headers, empresa):
-        """Prioridad correcta es urgente (no alta) según Ley 21.719."""
+        """Prioridad correcta es urgente (no alta) segÃºn Ley 21.719."""
         resp = _crear_ticket(client, auth_headers, empresa["id"], "acceso", prioridad="urgente")
         assert resp.status_code == 200
         assert resp.json()["prioridad"] == "urgente"
@@ -91,7 +91,7 @@ class TestWorkflowBloqueo:
             json={"rat_id": rat_id, "dias_bloqueo": 5},
             headers=auth_headers,
         )
-        assert resp_bloq.status_code == 200, f"Bloquear falló: {resp_bloq.status_code} {resp_bloq.text}"
+        assert resp_bloq.status_code == 200, f"Bloquear fallÃ³: {resp_bloq.status_code} {resp_bloq.text}"
         data = resp_bloq.json()
         assert data["estado"] == "bloqueado"
         assert data["rat_id"] == rat_id
@@ -126,13 +126,13 @@ class TestWorkflowBloqueo:
             f"/tkt-solicitud-derecho/{ticket_id}/desbloquear",
             headers=auth_headers,
         )
-        assert resp_desb.status_code == 200, f"Desbloquear falló: {resp_desb.status_code} {resp_desb.text}"
+        assert resp_desb.status_code == 200, f"Desbloquear fallÃ³: {resp_desb.status_code} {resp_desb.text}"
         data = resp_desb.json()
         assert data["estado"] == "resuelto"
         assert data["respuesta_texto"] is not None
 
     def test_desbloquear_ticket_no_bloqueado_falla(self, client, auth_headers, empresa):
-        """Desbloquear un ticket que no está bloqueado retorna error."""
+        """Desbloquear un ticket que no estÃ¡ bloqueado retorna error."""
         resp_tkt = _crear_ticket(client, auth_headers, empresa["id"], "acceso")
         ticket_id = resp_tkt.json()["id"]
 
@@ -151,10 +151,10 @@ class TestWorkflowRechazo:
 
         resp_rech = client.post(
             f"/tkt-solicitud-derecho/{ticket_id}/rechazar",
-            json={"motivo": "Solicitud manifiestamente infundada según Art. 12.5"},
+            json={"motivo": "Solicitud manifiestamente infundada segÃºn Art. 12.5"},
             headers=auth_headers,
         )
-        assert resp_rech.status_code == 200, f"Rechazar falló: {resp_rech.status_code} {resp_rech.text}"
+        assert resp_rech.status_code == 200, f"Rechazar fallÃ³: {resp_rech.status_code} {resp_rech.text}"
         data = resp_rech.json()
         assert data["estado"] == "rechazado"
         assert data["respuesta_texto"] is not None
@@ -171,7 +171,7 @@ class TestWorkflowPortabilidad:
             f"/tkt-solicitud-derecho/{ticket_id}/portabilidad/export",
             headers=auth_headers,
         )
-        assert resp.status_code == 200, f"Export falló: {resp.status_code} {resp.text}"
+        assert resp.status_code == 200, f"Export fallÃ³: {resp.status_code} {resp.text}"
         data = resp.json()
         assert data["tipo"] == "portabilidad"
         assert data["id"] == ticket_id
@@ -199,7 +199,7 @@ class TestWorkflowPortabilidad:
             json={"portability_data": datos_json},
             headers=auth_headers,
         )
-        assert resp.status_code == 200, f"Guardar portabilidad falló: {resp.status_code} {resp.text}"
+        assert resp.status_code == 200, f"Guardar portabilidad fallÃ³: {resp.status_code} {resp.text}"
         data = resp.json()
         assert data["estado"] == "resuelto"
         assert data["portability_data"] == datos_json
@@ -246,7 +246,7 @@ class TestAutorizacionWorkflows:
 
 class TestAcuseReciboQW2:
     def test_crear_ticket_publico_genera_tracking_token(self, client, empresa):
-        """El formulario público genera un tracking_token único."""
+        """El formulario pÃºblico genera un tracking_token Ãºnico."""
         resp = client.get("/solicitudes-derecho/token")
         token = resp.json()["token"]
 
@@ -264,7 +264,7 @@ class TestAcuseReciboQW2:
         assert len(data["tracking_token"]) == 36
 
     def test_crear_ticket_publico_tiene_acuse_enviado_at(self, client, empresa):
-        """El ticket creado por formulario público tiene acuse_enviado_at."""
+        """El ticket creado por formulario pÃºblico tiene acuse_enviado_at."""
         resp = client.get("/solicitudes-derecho/token")
         token = resp.json()["token"]
 
@@ -305,7 +305,7 @@ class TestAcuseReciboQW2:
         resp2 = client.post("/solicitudes-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "cancelacion",
-            "nombre_titular": "María Tracking",
+            "nombre_titular": "MarÃ­a Tracking",
             "email_titular": "maria_tracking@test.cl",
             "token": token,
         })

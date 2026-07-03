@@ -1,5 +1,5 @@
-"""
-Tests para B-01: Workflow de Bloqueo Temporal (Art. 8 ter — REC-01).
+﻿"""
+Tests para B-01: Workflow de Bloqueo Temporal (Art. 8 ter â€” REC-01).
 """
 
 import pytest
@@ -20,7 +20,7 @@ class TestBloqueoTemporal:
         payload = {
             "company_id": empresa["id"],
             "tipo": "bloqueo",
-            "nombre_titular": "María García",
+            "nombre_titular": "MarÃ­a GarcÃ­a",
             "email_titular": "maria@test.cl",
             "descripcion": "Solicito bloqueo temporal de mis datos.",
         }

@@ -1,12 +1,12 @@
-"""
-Tests para QW9: Auto-asignación por reglas ARCO.
-Custodio RAT Manager — Ley 21.719 Art. 12.
+﻿"""
+Tests para QW9: Auto-asignaciÃ³n por reglas ARCO.
+Custodio RAT Manager â€” Ley 21.719 Art. 12.
 
 Covers:
-- CRUD de reglas de asignación (solo admin_empresa y superadmin)
-- Evaluación de reglas con distintos niveles de especificidad
-- Auto-asignación al crear ticket
-- Sin asignación si no hay regla que aplique
+- CRUD de reglas de asignaciÃ³n (solo admin_empresa y superadmin)
+- EvaluaciÃ³n de reglas con distintos niveles de especificidad
+- Auto-asignaciÃ³n al crear ticket
+- Sin asignaciÃ³n si no hay regla que aplique
 """
 
 import pytest
@@ -14,7 +14,7 @@ import pytest
 
 class TestReglaAsignacionCRUD:
     def test_superadmin_puede_crear_regla(self, client, auth_headers, empresa, admin_user, db):
-        """Superadmin puede crear una regla de asignación."""
+        """Superadmin puede crear una regla de asignaciÃ³n."""
         from app.models.user import User
         from app.core.security import get_password_hash
 
@@ -46,7 +46,7 @@ class TestReglaAsignacionCRUD:
         assert data["activo"] is True
 
     def test_usuario_no_puede_crear_regla(self, client, db, empresa):
-        """Usuario regular no puede crear reglas de asignación."""
+        """Usuario regular no puede crear reglas de asignaciÃ³n."""
         from app.models.user import User
         from app.models.user_company import UserCompany, RolEmpresa
         from app.core.security import get_password_hash
@@ -233,7 +233,7 @@ class TestAutoAsignacion:
         assert resp.json()["responsable_id"] == user.id
 
     def test_regla_mas_especifica_prevalece(self, client, auth_headers, empresa, db):
-        """Una regla más específica (empresa+tipo) prevalece sobre una global."""
+        """Una regla mÃ¡s especÃ­fica (empresa+tipo) prevalece sobre una global."""
         from app.models.user import User
         from app.core.security import get_password_hash
 

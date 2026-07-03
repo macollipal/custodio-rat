@@ -1,11 +1,11 @@
-"""
+﻿"""
 Fixtures compartidas para toda la suite de tests.
 - BD PostgreSQL en Neon QA (aislada por transaction rollback)
-- TestClient con autenticación JWT real
+- TestClient con autenticaciÃ³n JWT real
 - Helpers para crear entidades de prueba
 
 SEGURIDAD: La variable TEST_DATABASE_URL debe estar configurada en .env antes de ejecutar tests.
-NO hardcodear credenciales en este archivo. Ver .env.example para configuración.
+NO hardcodear credenciales en este archivo. Ver .env.example para configuraciÃ³n.
 """
 
 import os
@@ -27,7 +27,7 @@ from app.core.security import get_password_hash
 TEST_DB_URL = os.environ.get("TEST_DATABASE_URL")
 if not TEST_DB_URL:
     raise RuntimeError(
-        "TEST_DATABASE_URL no está configurada. "
+        "TEST_DATABASE_URL no estÃ¡ configurada. "
         "Crea un archivo .env en backend/ con TEST_DATABASE_URL=postgresql://..."
     )
 
@@ -108,7 +108,7 @@ def empresa(client, auth_headers):
     payload = {
         "nombre": "Empresa Test SpA",
         "rut": "76.000.001-1",
-        "rubro": "Tecnología",
+        "rubro": "TecnologÃ­a",
         "direccion": "Av. Providencia 1234",
         "contacto_dpo": "Juan Test",
         "email_dpo": "dpo@test.cl",
@@ -124,14 +124,14 @@ def empresa(client, auth_headers):
 def rat_base(empresa):
     return {
         "company_id": empresa["id"],
-        "nombre_proceso": "Gestión de Clientes Web",
-        "categoria_datos": "Nombre, email, teléfono",
+        "nombre_proceso": "GestiÃ³n de Clientes Web",
+        "categoria_datos": "Nombre, email, telÃ©fono",
         "categoria_titulares": "Clientes y usuarios del servicio",
-        "finalidad": "Gestión comercial y soporte al cliente",
+        "finalidad": "GestiÃ³n comercial y soporte al cliente",
         "base_legal": "Consentimiento del titular",
-        "fuente_datos": "El propio titular a través del formulario web",
-        "plazo_retencion": "5 años desde la última interacción",
-        "medidas_seguridad": "Cifrado en tránsito y reposo, acceso restringido",
+        "fuente_datos": "El propio titular a travÃ©s del formulario web",
+        "plazo_retencion": "5 aÃ±os desde la Ãºltima interacciÃ³n",
+        "medidas_seguridad": "Cifrado en trÃ¡nsito y reposo, acceso restringido",
         "destinatarios": "Equipo comercial interno",
         "transferencia_internacional": False,
         "datos_sensibles": False,
@@ -142,7 +142,7 @@ def rat_base(empresa):
 
 @pytest.fixture(scope="function")
 def clean_task_queue(db):
-    """Limpia la cola de tareas antes y después del test (aislamiento para scheduler)."""
+    """Limpia la cola de tareas antes y despuÃ©s del test (aislamiento para scheduler)."""
     from app.models.task import TaskQueue
     db.query(TaskQueue).delete()
     db.commit()

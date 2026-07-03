@@ -1,6 +1,6 @@
-"""
-Tests P0: ARCO Tickets — Solicitudes de derechos ARCO (Access, Rectification, Cancellation, Opposition).
-Custodio RAT Manager — Ley 21.719 Art. 12 y 17.
+﻿"""
+Tests P0: ARCO Tickets â€” Solicitudes de derechos ARCO (Access, Rectification, Cancellation, Opposition).
+Custodio RAT Manager â€” Ley 21.719 Art. 12 y 17.
 
 Covers:
 - Crear ticket ARCO (todos los tipos: acceso, rectificacion, cancelacion, oposicion)
@@ -9,7 +9,7 @@ Covers:
 - Superadmin puede ver todos los tickets
 - admin_empresa solo ve tickets de su empresa
 - Responder solicitud ARCO cambia estado
-- Estado workflow: pendiente → en_proceso → resuelto
+- Estado workflow: pendiente â†’ en_proceso â†’ resuelto
 - Ticket incluye fecha_vencimiento (SLA)
 - Notas en ticket
 - Historial de cambios de estado
@@ -113,7 +113,7 @@ class TestListarTicketsARCO:
             assert ticket["estado"] == "abierto"
 
     def test_listar_tickets_sin_auth_falla(self, client):
-        """Sin autenticación retorna 401."""
+        """Sin autenticaciÃ³n retorna 401."""
         resp = client.get("/tkt-solicitud-derecho/")
         assert resp.status_code == 401
 
@@ -187,7 +187,7 @@ class TestNotasYTickets:
         resp = _crear_ticket(client, auth_headers, empresa["id"], "acceso")
         ticket_id = resp.json()["id"]
 
-        resp2 = client.post(f"/tkt-solicitud-derecho/{ticket_id}/notas", json={"nota": "Llamé al titular"}, headers=auth_headers)
+        resp2 = client.post(f"/tkt-solicitud-derecho/{ticket_id}/notas", json={"nota": "LlamÃ© al titular"}, headers=auth_headers)
         assert resp2.status_code == 200
         assert "id" in resp2.json()
 

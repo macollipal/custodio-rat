@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests de logging estructurado JSON.
 
 Valida que JSONFormatter se activa en production, qa y staging

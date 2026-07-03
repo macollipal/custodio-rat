@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests para los 5 campos nuevos del modelo RAT (Iter 10 - Gaps Ley 21.719).
-Validación: sistema_almacenamiento, volumen_titulares_estimado, operaciones_tratamiento,
+ValidaciÃ³n: sistema_almacenamiento, volumen_titulares_estimado, operaciones_tratamiento,
 logica_automatizada, responsable_tratamiento_email.
 
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
@@ -14,7 +14,7 @@ class TestRATSistemaAlmacenamiento:
     """Tests para campo sistema_almacenamiento."""
 
     def test_crear_rat_con_sistema_almacenamiento(self, client: TestClient, auth_headers, empresa):
-        """Caso afirmativo: RAT creado con sistema_almacenamiento válido."""
+        """Caso afirmativo: RAT creado con sistema_almacenamiento vÃ¡lido."""
         payload = _rat_payload(empresa)
         payload["sistema_almacenamiento"] = "CRM Salesforce"
         response = client.post("/rats", json=payload, headers=auth_headers)
@@ -46,7 +46,7 @@ class TestRATVolumenTitulares:
     """Tests para campo volumen_titulares_estimado."""
 
     def test_crear_rat_con_volumen_valido(self, client: TestClient, auth_headers, empresa):
-        """Caso afirmativo: RAT con volumen_titulares_estimado válido."""
+        """Caso afirmativo: RAT con volumen_titulares_estimado vÃ¡lido."""
         payload = _rat_payload(empresa)
         payload["volumen_titulares_estimado"] = 50000
         response = client.post("/rats", json=payload, headers=auth_headers)
@@ -109,7 +109,7 @@ class TestRATLogicaAutomatizada:
         """Caso afirmativo: RAT con logica_automatizada completa."""
         payload = _rat_payload(empresa)
         payload["decisiones_automatizadas"] = True
-        payload["logica_automatizada"] = "Score crediticio: algoritmo de 5 variables. Consecuencia: aprobación/rechazo automático. Revisión humana disponible vía email."
+        payload["logica_automatizada"] = "Score crediticio: algoritmo de 5 variables. Consecuencia: aprobaciÃ³n/rechazo automÃ¡tico. RevisiÃ³n humana disponible vÃ­a email."
         response = client.post("/rats", json=payload, headers=auth_headers)
         assert response.status_code == 201
         assert "Score crediticio" in response.json()["logica_automatizada"]
@@ -137,7 +137,7 @@ class TestRATResponsableTratamientoEmail:
     """Tests para campo responsable_tratamiento_email."""
 
     def test_crear_rat_con_email_valido(self, client: TestClient, auth_headers, empresa):
-        """Caso afirmativo: RAT con responsable_tratamiento_email válido."""
+        """Caso afirmativo: RAT con responsable_tratamiento_email vÃ¡lido."""
         payload = _rat_payload(empresa)
         payload["responsable_tratamiento_email"] = "responsable@empresa.cl"
         response = client.post("/rats", json=payload, headers=auth_headers)
@@ -145,7 +145,7 @@ class TestRATResponsableTratamientoEmail:
         assert response.json()["responsable_tratamiento_email"] == "responsable@empresa.cl"
 
     def test_crear_rat_email_formato_invalido(self, client: TestClient, auth_headers, empresa):
-        """Caso negativo: RAT con email en formato inválido (backend lo acepta, validación estricta en frontend)."""
+        """Caso negativo: RAT con email en formato invÃ¡lido (backend lo acepta, validaciÃ³n estricta en frontend)."""
         payload = _rat_payload(empresa)
         payload["responsable_tratamiento_email"] = "no-es-un-email"
         response = client.post("/rats", json=payload, headers=auth_headers)
@@ -165,10 +165,10 @@ def _rat_payload(empresa) -> dict:
         "company_id": empresa["id"],
         "nombre_proceso": "Test RAT gaps",
         "categoria_datos": "Datos de contacto",
-        "finalidad": "Gestión de clientes",
+        "finalidad": "GestiÃ³n de clientes",
         "base_legal": "Consentimiento del titular",
         "fuente_datos": "Formulario web",
-        "plazo_retencion": "5 años",
+        "plazo_retencion": "5 aÃ±os",
     }
 
 

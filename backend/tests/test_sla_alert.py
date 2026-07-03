@@ -1,10 +1,10 @@
-"""
-Tests P1: SLA Alert T-2 días (ARCO-QW2).
-Custodio RAT Manager — Ley 21.719 Art. 14.
+﻿"""
+Tests P1: SLA Alert T-2 dÃ­as (ARCO-QW2).
+Custodio RAT Manager â€” Ley 21.719 Art. 14.
 
 Covers:
 - TaskType.SLA_ALERT_T2 existe
-- _run_sla_alert_t2() detecta tickets próximos a vencer (T-2)
+- _run_sla_alert_t2() detecta tickets prÃ³ximos a vencer (T-2)
 - _run_sla_alert_t2() detecta tickets ya vencidos
 - _run_sla_alert_t2() agrupa por empresa
 - _run_sla_alert_t2() no incluye tickets resueltos/rechazados
@@ -25,7 +25,7 @@ class TestSlaAlertTaskType:
 
 class TestSlaAlertEnqueueEndpoint:
     def test_enqueue_sla_alerts_requiere_auth(self, client):
-        """El endpoint /enqueue-sla-alerts requiere autenticación."""
+        """El endpoint /enqueue-sla-alerts requiere autenticaciÃ³n."""
         resp = client.post("/admin/tasks/enqueue-sla-alerts")
         assert resp.status_code == 401
 
@@ -40,7 +40,7 @@ class TestSlaAlertEnqueueEndpoint:
 
 class TestSlaAlertService:
     def test_run_sla_alert_sin_tickets_proximos(self, db):
-        """Si no hay tickets próximos a vencer, retorna 0."""
+        """Si no hay tickets prÃ³ximos a vencer, retorna 0."""
         from app.services.task_service import _run_sla_alert_t2
         count = _run_sla_alert_t2(db)
         assert count == 0

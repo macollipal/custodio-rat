@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests para scripts/migration/encrypt_existing_bytea.py (C1-F5).
-Valida: heurística de detección, idempotencia, dry-run, manejo de errores.
+Valida: heurÃ­stica de detecciÃ³n, idempotencia, dry-run, manejo de errores.
 """
 
 import base64
@@ -24,10 +24,10 @@ def make_rat(company_id: int, nombre_proceso: str, archivo_datos=None, **kwargs)
         company_id=company_id,
         nombre_proceso=nombre_proceso,
         categoria_datos="Nombre, email",
-        finalidad="Gestión comercial",
+        finalidad="GestiÃ³n comercial",
         base_legal="Consentimiento",
         fuente_datos="Titular web",
-        plazo_retencion="5 años",
+        plazo_retencion="5 aÃ±os",
         estado=EstadoRAT.BORRADOR,
         archivo_base_legal_datos=archivo_datos,
         **kwargs
@@ -35,7 +35,7 @@ def make_rat(company_id: int, nombre_proceso: str, archivo_datos=None, **kwargs)
 
 
 class TestFernetHeuristic:
-    """Tests de la heurística is_already_encrypted()."""
+    """Tests de la heurÃ­stica is_already_encrypted()."""
 
     def test_plain_data_not_detected_as_encrypted(self):
         from scripts.migration.encrypt_existing_bytea import is_already_encrypted
@@ -311,7 +311,7 @@ class TestMigrateTable:
 
 
 class TestEncargadoContratoMigration:
-    """Tests específicos para encargados_contrato.archivo_pdf_datos."""
+    """Tests especÃ­ficos para encargados_contrato.archivo_pdf_datos."""
 
     def test_migrate_encargado_contrato_pdf(self):
         from sqlalchemy import create_engine
@@ -354,7 +354,7 @@ class TestEncargadoContratoMigration:
 
 
 class TestTktAdjuntoMigration:
-    """Tests específicos para tkt_adjuntos.data."""
+    """Tests especÃ­ficos para tkt_adjuntos.data."""
 
     def test_migrate_tkt_adjunto(self):
         from sqlalchemy import create_engine

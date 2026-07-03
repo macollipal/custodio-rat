@@ -1,6 +1,6 @@
 ---
 name: api-review
-description: Revisa nuevos endpoints antes de deploy. Valida seguridad, compliance Ley 21.719, performance, dokumentacion y adherence al REST standard del proyecto.
+description: Revisa nuevos endpoints antes de deploy. Valida seguridad, compliance Ley 21.719, performance, documentacion y adherence al REST standard del proyecto.
 ---
 
 # API Review Validator

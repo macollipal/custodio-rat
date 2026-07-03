@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests CRUD de registros RAT.
-Cubre: creación, listado, obtención, actualización de estado, eliminación,
+Cubre: creaciÃ³n, listado, obtenciÃ³n, actualizaciÃ³n de estado, eliminaciÃ³n,
 completitud, flags de riesgo y casos edge.
 """
 
@@ -13,8 +13,8 @@ class TestCrearRAT:
         assert resp.status_code == 201
         data = resp.json()
         assert data["nombre_proceso"] == rat_base["nombre_proceso"]
-        # El servicio marca automáticamente como "completo" si todos los campos
-        # obligatorios están presentes (comportamiento por diseño)
+        # El servicio marca automÃ¡ticamente como "completo" si todos los campos
+        # obligatorios estÃ¡n presentes (comportamiento por diseÃ±o)
         assert data["estado"] in ("borrador", "completo")
         assert "id" in data
         assert "completitud" in data
@@ -146,7 +146,7 @@ class TestActualizarRAT:
         assert resp.status_code == 404
 
     def test_completitud_aumenta_al_completar(self, client, auth_headers, rat_base):
-        """Un RAT con más campos completos debe tener mayor completitud."""
+        """Un RAT con mÃ¡s campos completos debe tener mayor completitud."""
         # RAT base (sin medidas_seguridad ni algunos campos)
         payload_incompleto = {**rat_base}
         payload_incompleto.pop("medidas_seguridad", None)
@@ -177,7 +177,7 @@ class TestEliminarRAT:
         assert resp.status_code == 404
 
     def test_empresa_eliminada_borra_rats(self, client, auth_headers, rat_base, empresa):
-        """Eliminación en cascada: al borrar empresa, sus RATs desaparecen."""
+        """EliminaciÃ³n en cascada: al borrar empresa, sus RATs desaparecen."""
         rat = client.post("/rats/", json=rat_base, headers=auth_headers).json()
         rat_id = rat["id"]
 
@@ -201,8 +201,8 @@ class TestCompletitud:
             "medidas_seguridad": "Cifrado AES-256",
             "destinatarios": "Equipo comercial",
             "transferencia_internacional": True,
-            "pais_destino": "España",
-            "garantias_transferencia_int": "Cláusulas Contractuales Tipo (SCC)",
+            "pais_destino": "EspaÃ±a",
+            "garantias_transferencia_int": "ClÃ¡usulas Contractuales Tipo (SCC)",
             "datos_sensibles": False,
             "evaluacion_impacto": True,
             "estado_eipd": "pendiente",

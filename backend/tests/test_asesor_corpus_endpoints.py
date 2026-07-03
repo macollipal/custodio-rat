@@ -1,5 +1,5 @@
-"""
-Tests para los endpoints de gestión de corpus del Asesor:
+﻿"""
+Tests para los endpoints de gestiÃ³n de corpus del Asesor:
 GET  /admin/asesor/documents
 POST /admin/asesor/upload
 GET  /admin/asesor/documents/{id}/download

@@ -1,6 +1,6 @@
-"""
-Tests del endpoint de estadísticas del dashboard.
-Valida: estructura de respuesta, contadores, cálculo de completitud, flags de riesgo.
+﻿"""
+Tests del endpoint de estadÃ­sticas del dashboard.
+Valida: estructura de respuesta, contadores, cÃ¡lculo de completitud, flags de riesgo.
 """
 
 import pytest
@@ -63,7 +63,7 @@ class TestDashboard:
         assert 0 <= pct <= 100
 
     def test_dashboard_por_estado_refleja_rat_creado(self, client, auth_headers, rat_base):
-        """El dashboard refleja el estado del RAT (borrador o completo según campos)."""
+        """El dashboard refleja el estado del RAT (borrador o completo segÃºn campos)."""
         client.post("/rats/", json=rat_base, headers=auth_headers)
         resp = client.get(f"/rats/dashboard/{rat_base['company_id']}", headers=auth_headers)
         por_estado = resp.json()["por_estado"]

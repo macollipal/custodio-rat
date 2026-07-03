@@ -1,6 +1,6 @@
 ---
 name: breach-management
-description: Valida el proceso de gestión de brechas de seguridad segun Art. 14 bis de la Ley 21.719. Notificacion 72h APDC, notificacion a titulares, calculo de riesgo.
+description: Valida el proceso de gestión de brechas de seguridad segun Art. 14 bis de la Ley 21.719. Notificacion 72h APDP, notificacion a titulares, calculo de riesgo.
 ---
 
 # Breach Management Validator
@@ -10,7 +10,7 @@ Especialista en gestión de brechas de seguridad bajo la Ley 21.719 de Chile, Ar
 ## Contexto Legal
 
 Art. 14 bis — Notificación de brechas:
-- **72 horas hábiles** desde detección → notificar a APDC
+- **72 horas hábiles** desde detección → notificar a APDP
 - Si hay datos sensibles, menores o financieros → notificar a titulares "sin dilación"
 - Debe documentarse: descripción, datos comprometidos, medidas adoptadas, naturaleza de la brecha
 
@@ -32,11 +32,11 @@ Art. 14 bis — Notificación de brechas:
 - [ ] rats_afectados — qué RATs involucra
 - [ ] datos_comprometidos — qué categorías de datos se vieron afectadas
 
-#### 2. Notificación APDC (plazo: 72h hábiles)
+#### 2. Notificación APDP (plazo: 72h hábiles)
 - [ ] notificado_apdc = True
 - [ ] fecha_notificacion_apdc debe existir
 - [ ] Plazo: fecha_notificacion_apdc - fecha_deteccion <= 72 horas hábiles
-- [ ] evidencia_notificacion_apdc_folio — folio/número de caso APDC
+- [ ] evidencia_notificacion_apdc_folio — folio/número de caso APDP
 
 #### 3. Notificación a Titulares
 - [ ] Si incluye_datos_sensibles, incluye_datos_nna o incluye_datos_financieros → notificado_titulares debe ser True
@@ -72,9 +72,9 @@ horas_desde_deteccion = (now - fecha_deteccion).total_hours()
 **Empresa:** {company}
 **Fecha Deteccion:** {fecha}
 **Días desde deteccion:** {dias}
-**Plazo APDC:** {estado_plazo}
+**Plazo APDP:** {estado_plazo}
 
-### Notificacion APDC
+### Notificacion APDP
 :green_circle: / :yellow_circle: / :red_circle: NOTIFICADO / PENDIENTE / VENCIÓ
 
 ### Notificacion Titulares
@@ -85,7 +85,7 @@ Estado: {notificado/pendiente}
 {nivel} — Volumen: {volumen} titulares
 
 ### Acciones Requeridas
-1. [ ] Notificar APDC antes de {fecha_limite}
+1. [ ] Notificar APDP antes de {fecha_limite}
 2. [ ] Notificar titulares (datos sensibles detectados)
 3. [ ] Documentar causa raíz
 ```
@@ -94,7 +94,7 @@ Estado: {notificado/pendiente}
 
 | Condición | Severidad |
 |-----------|-----------|
-| 72h hábiles vencidas sin notificación APDC | CRÍTICO |
+| 72h hábiles vencidas sin notificación APDP | CRÍTICO |
 | Datos sensibles/menores sin notificación a titulares | CRÍTICO |
 | Breach con nivel_riesgo = crítico | ALERTA |
 | volumen_titulares > 1000 | ALERTA |

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests CRUD de empresas: crear, listar, obtener, actualizar, eliminar.
 Incluye casos edge: duplicados, campos obligatorios, IDs inexistentes.
 """
@@ -11,7 +11,7 @@ PAYLOAD_BASE = {
     "rut": "76.111.222-3",
     "rubro": "Retail",
     "direccion": "Calle Falsa 123",
-    "contacto_dpo": "María García",
+    "contacto_dpo": "MarÃ­a GarcÃ­a",
     "email_dpo": "dpo@alpha.cl",
     "descripcion": "Empresa de prueba.",
 }
@@ -29,14 +29,14 @@ class TestCrearEmpresa:
 
     def test_crear_empresa_minima(self, client, auth_headers):
         """Solo campos obligatorios: nombre y rut."""
-        resp = client.post("/companies/", json={"nombre": "Mínima SpA", "rut": "76.999.000-K"}, headers=auth_headers)
+        resp = client.post("/companies/", json={"nombre": "MÃ­nima SpA", "rut": "76.999.000-K"}, headers=auth_headers)
         assert resp.status_code == 201
         assert resp.json()["rubro"] is None
 
     def test_crear_empresa_sin_nombre_falla(self, client, auth_headers):
         payload = {**PAYLOAD_BASE, "nombre": ""}
         resp = client.post("/companies/", json=payload, headers=auth_headers)
-        # Nombre vacío puede ser 422 (validación Pydantic) o 400 (validación de negocio)
+        # Nombre vacÃ­o puede ser 422 (validaciÃ³n Pydantic) o 400 (validaciÃ³n de negocio)
         assert resp.status_code in (400, 422)
 
     def test_crear_empresa_sin_rut_falla(self, client, auth_headers):

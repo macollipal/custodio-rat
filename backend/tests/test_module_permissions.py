@@ -1,5 +1,5 @@
-"""
-Tests de ModulePermission — feature gates por empresa y modulo.
+﻿"""
+Tests de ModulePermission â€” feature gates por empresa y modulo.
 
 Cubre:
 - Modelo: UNIQUE constraint (company_id, modulo), default enabled=True

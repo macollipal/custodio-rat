@@ -1,16 +1,16 @@
-"""
+﻿"""
 Tests para CSRFMiddleware (S14).
 
 Verifica que:
-- POST/PUT/PATCH/DELETE con cookie pero sin X-Requested-With → 403
-- POST/PUT/PATCH/DELETE con cookie + X-Requested-With: XMLHttpRequest → pasa
-- POST/PUT/PATCH/DELETE con Bearer token (sin cookie) → pasa (no vulnerable)
-- GET/HEAD/OPTIONS → siempre pasa (métodos seguros)
-- Endpoints públicos (/auth/login, /publico/*) → pasa sin CSRF
+- POST/PUT/PATCH/DELETE con cookie pero sin X-Requested-With â†’ 403
+- POST/PUT/PATCH/DELETE con cookie + X-Requested-With: XMLHttpRequest â†’ pasa
+- POST/PUT/PATCH/DELETE con Bearer token (sin cookie) â†’ pasa (no vulnerable)
+- GET/HEAD/OPTIONS â†’ siempre pasa (mÃ©todos seguros)
+- Endpoints pÃºblicos (/auth/login, /publico/*) â†’ pasa sin CSRF
 
 Nota: Los tests usan Bearer token (del fixture token/) para evitar
 interferencia del rate limiter en modo test. Bearer auth no es
-vulnerable a CSRF por definición.
+vulnerable a CSRF por definiciÃ³n.
 """
 
 import pytest
@@ -91,7 +91,7 @@ class TestCSRFMiddleware:
         assert resp.status_code == 201, f"Bearer auth should not trigger CSRF: {resp.status_code}"
 
     def test_get_request_always_allowed(self, client, admin_user):
-        """GET (método seguro) no requiere CSRF y debe pasar."""
+        """GET (mÃ©todo seguro) no requiere CSRF y debe pasar."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         if login.status_code != 200:
             pytest.skip(f"Login failed with {login.status_code}, skipping")
@@ -101,7 +101,7 @@ class TestCSRFMiddleware:
         assert resp.status_code == 200, "GET should not be blocked by CSRF"
 
     def test_public_endpoint_no_csrf_required(self, client):
-        """/auth/login (público) no debe requerir validación CSRF."""
+        """/auth/login (pÃºblico) no debe requerir validaciÃ³n CSRF."""
         resp = client.post(
             "/auth/login",
             json={"username": "admin", "password": "admin1234"},
@@ -172,7 +172,7 @@ class TestCSRFMiddleware:
         assert resp.status_code == 403, f"DELETE without CSRF header should be 403, got {resp.status_code}"
 
     def test_head_options_always_allowed(self, client, admin_user):
-        """OPTIONS debe pasar sin validación CSRF."""
+        """OPTIONS debe pasar sin validaciÃ³n CSRF."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         if login.status_code != 200:
             pytest.skip(f"Login failed with {login.status_code}, skipping")
@@ -184,7 +184,7 @@ class TestCSRFMiddleware:
         assert resp.status_code == 200, "OPTIONS should always pass"
 
     def test_publico_endpoint_no_csrf(self, client, admin_user):
-        """Endpoints /publico/* no requieren validación CSRF."""
+        """Endpoints /publico/* no requieren validaciÃ³n CSRF."""
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         if login.status_code != 200:
             pytest.skip(f"Login failed with {login.status_code}, skipping")

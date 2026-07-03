@@ -1,4 +1,4 @@
-"""Test unitario: verifica que el schema permite no_requerida_justificada"""
+﻿"""Test unitario: verifica que el schema permite no_requerida_justificada"""
 from app.schemas.rat import RATBase, RATOut, RATCreate
 
 

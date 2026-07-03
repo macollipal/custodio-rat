@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para enum NaturalezaBreach (Art. 14 bis Ley 21.719).
 Cubre models/breach.py:NaturalezaBreach y schema BreachCreate.
 """

@@ -1,5 +1,5 @@
-"""
-Tests para app.core.crypto — cifrado simétrico Fernet de datos en reposo.
+﻿"""
+Tests para app.core.crypto â€” cifrado simÃ©trico Fernet de datos en reposo.
 Cumple Ley 21.719 Art. 16.
 """
 
@@ -10,7 +10,7 @@ import pytest
 
 class TestFernetCrypto:
     def test_encrypt_decrypt_round_trip(self):
-        """Datos cifrados y descifrados deben ser idénticos al original."""
+        """Datos cifrados y descifrados deben ser idÃ©nticos al original."""
         from app.core.crypto import encrypt, decrypt, generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
@@ -47,13 +47,13 @@ class TestFernetCrypto:
         assert app.core.crypto.decrypt(enc2) == data
 
     def test_encrypt_empty_data(self):
-        """Datos vacíos deben retornar sin cambios."""
+        """Datos vacÃ­os deben retornar sin cambios."""
         from app.core.crypto import encrypt, decrypt
         assert encrypt(b"") == b""
         assert decrypt(b"") == b""
 
     def test_generate_key_produces_valid_fernet_key(self):
-        """La clave generada debe ser válida para Fernet."""
+        """La clave generada debe ser vÃ¡lida para Fernet."""
         from cryptography.fernet import Fernet
         from app.core.crypto import generate_key
         key = generate_key()
@@ -128,7 +128,7 @@ class TestEncryptIntegrationWithBYTEA:
             "finalidad": "Test",
             "base_legal": "Consentimiento",
             "fuente_datos": "Titular",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
             "archivo_base_legal_base64": pdf_b64,
             "archivo_base_legal_nombre": "test.pdf",
             "archivo_base_legal_tipo": "application/pdf",
@@ -149,7 +149,7 @@ class TestEncryptIntegrationWithBYTEA:
         descifrado = app.core.crypto.decrypt(rat.archivo_base_legal_datos)
         assert descifrado == pdf_content
 
-    @pytest.mark.skip(reason="500 en test env por interacttion de fixtures — logic verified by test_rat_file_procesar_archivo_base_legal_with_encryption y los unit tests de Fernet")
+    @pytest.mark.skip(reason="500 en test env por interacttion de fixtures â€” logic verified by test_rat_file_procesar_archivo_base_legal_with_encryption y los unit tests de Fernet")
     def test_download_rat_file_returns_decrypted_content(self, client, auth_headers, empresa, db):
         """Al descargar archivo RAT (BYTEA), el contenido debe estar descifrado."""
         from unittest.mock import patch
@@ -166,7 +166,7 @@ class TestEncryptIntegrationWithBYTEA:
             "finalidad": "Test",
             "base_legal": "Consentimiento",
             "fuente_datos": "Titular",
-            "plazo_retencion": "1 año",
+            "plazo_retencion": "1 aÃ±o",
             "archivo_base_legal_base64": pdf_b64,
             "archivo_base_legal_nombre": "download_test.pdf",
             "archivo_base_legal_tipo": "application/pdf",

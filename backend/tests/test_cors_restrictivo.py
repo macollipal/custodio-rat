@@ -1,15 +1,15 @@
-"""
+﻿"""
 Tests de CORS restrictivo.
 
-Valida que el middleware CORSMiddleware está configurado con listas
-explícitas de métodos y headers (no comodines), en línea con la guía
+Valida que el middleware CORSMiddleware estÃ¡ configurado con listas
+explÃ­citas de mÃ©todos y headers (no comodines), en lÃ­nea con la guÃ­a
 de seguridad Z-02 (defense-in-depth).
 """
 import pytest
 
 
 def test_cors_preflight_allowed_method_returns_headers(client):
-    """Preflight OPTIONS con método permitido retorna headers CORS."""
+    """Preflight OPTIONS con mÃ©todo permitido retorna headers CORS."""
     resp = client.options(
         "/auth/login",
         headers={
@@ -23,7 +23,7 @@ def test_cors_preflight_allowed_method_returns_headers(client):
 
 
 def test_cors_preflight_get_allowed(client):
-    """Preflight con método GET es permitido."""
+    """Preflight con mÃ©todo GET es permitido."""
     resp = client.options(
         "/companies/",
         headers={
@@ -36,7 +36,7 @@ def test_cors_preflight_get_allowed(client):
 
 
 def test_cors_preflight_put_allowed(client):
-    """Preflight con método PUT es permitido."""
+    """Preflight con mÃ©todo PUT es permitido."""
     resp = client.options(
         "/companies/",
         headers={
@@ -49,7 +49,7 @@ def test_cors_preflight_put_allowed(client):
 
 
 def test_cors_preflight_patch_allowed(client):
-    """Preflight con método PATCH es permitido."""
+    """Preflight con mÃ©todo PATCH es permitido."""
     resp = client.options(
         "/companies/",
         headers={
@@ -62,7 +62,7 @@ def test_cors_preflight_patch_allowed(client):
 
 
 def test_cors_preflight_delete_allowed(client):
-    """Preflight con método DELETE es permitido."""
+    """Preflight con mÃ©todo DELETE es permitido."""
     resp = client.options(
         "/companies/",
         headers={
@@ -75,7 +75,7 @@ def test_cors_preflight_delete_allowed(client):
 
 
 def test_cors_preflight_options_allowed(client):
-    """Preflight OPTIONS es permitido (es el método del preflight)."""
+    """Preflight OPTIONS es permitido (es el mÃ©todo del preflight)."""
     resp = client.options(
         "/auth/login",
         headers={
@@ -129,7 +129,7 @@ def test_cors_allowed_header_x_requested_with(client):
 
 
 def test_cors_allowed_header_x_request_id(client):
-    """Preflight con header X-Request-ID permitido (correlación)."""
+    """Preflight con header X-Request-ID permitido (correlaciÃ³n)."""
     resp = client.options(
         "/companies/",
         headers={
@@ -143,7 +143,7 @@ def test_cors_allowed_header_x_request_id(client):
 
 
 def test_cors_exposes_request_id_header(client):
-    """El header X-Request-ID está en expose_headers."""
+    """El header X-Request-ID estÃ¡ en expose_headers."""
     resp = client.get("/health", headers={"Origin": "http://localhost:3000"})
     exposed = resp.headers.get("access-control-expose-headers", "").lower()
     assert "x-request-id" in exposed

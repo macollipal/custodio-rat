@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests de Z-01: Content-Security-Policy + headers de seguridad.
 
 Valida que el middleware SecurityHeadersMiddleware setea:
@@ -20,7 +20,7 @@ class TestContentSecurityPolicy:
         assert "base-uri 'none'" in csp
 
     def test_csp_disallows_unsafe_inline_for_scripts(self, client):
-        """API no necesita scripts — default-src 'none' bloquea todo por default."""
+        """API no necesita scripts â€” default-src 'none' bloquea todo por default."""
         resp = client.get("/health")
         csp = resp.headers.get("content-security-policy")
         assert "default-src 'none'" in csp

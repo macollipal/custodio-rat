@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para schema EncargadoContratoCreate - campos pais y direccion (Art. 14 quater Ley 21.719).
 """
 import pytest

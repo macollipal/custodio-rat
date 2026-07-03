@@ -1,5 +1,5 @@
-"""
-Tests para B-04: Portabilidad per-titular (Art. 9 — REC-04).
+﻿"""
+Tests para B-04: Portabilidad per-titular (Art. 9 â€” REC-04).
 """
 
 import pytest
@@ -14,7 +14,7 @@ class TestPortabilidad:
         payload = {
             "company_id": empresa["id"],
             "tipo": "portabilidad",
-            "nombre_titular": "Pedro Sánchez",
+            "nombre_titular": "Pedro SÃ¡nchez",
             "rut_titular": "11.111.111-1",
             "email_titular": "pedro@test.cl",
             "descripcion": "Solicito copia de todos mis datos personales.",
@@ -28,7 +28,7 @@ class TestPortabilidad:
         resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "portabilidad",
-            "titular_nombre": "Lucía Fernández",
+            "titular_nombre": "LucÃ­a FernÃ¡ndez",
             "titular_email": "lucia@test.cl",
             "rut_titular": "22.222.222-2",
             "descripcion": "Quiero portabilidad de mis datos.",
@@ -43,7 +43,7 @@ class TestPortabilidad:
         assert resp.status_code == 200
         data = resp.json()
         assert data["tipo"] == "portabilidad"
-        assert data["titular_nombre"] == "Lucía Fernández"
+        assert data["titular_nombre"] == "LucÃ­a FernÃ¡ndez"
         assert data["titular_rut"] is not None
         assert data["titular_email"] == "lucia@test.cl"
         assert "exportado_en" in data
@@ -53,7 +53,7 @@ class TestPortabilidad:
         resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
-            "titular_nombre": "Pedro Sánchez",
+            "titular_nombre": "Pedro SÃ¡nchez",
             "titular_email": "pedro@test.cl",
         }, headers=auth_headers)
         assert resp.status_code == 200

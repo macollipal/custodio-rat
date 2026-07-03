@@ -1,6 +1,6 @@
-"""
-Tests de exportación CSV y PDF.
-Valida: content-type, headers de descarga, contenido mínimo, empresa sin RATs.
+﻿"""
+Tests de exportaciÃ³n CSV y PDF.
+Valida: content-type, headers de descarga, contenido mÃ­nimo, empresa sin RATs.
 """
 
 import pytest
@@ -50,7 +50,7 @@ class TestExportCSV:
             headers=auth_headers,
         )
         content = resp.content.decode("utf-8-sig")
-        assert "Gestión de Clientes Web" in content
+        assert "GestiÃ³n de Clientes Web" in content
 
     def test_csv_empresa_sin_rats_no_falla(self, client, auth_headers, empresa):
         resp = client.get(

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para cifrado PII en consentimientos (Art. 12, 16 Ley 21.719 + Art. 11 medidas seguridad).
 
 Verifica que:

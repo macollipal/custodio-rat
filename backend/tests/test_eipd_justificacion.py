@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para validacion EIPD obligatoria con justificacion documentada (Art. 15 bis Ley 21.719).
 Cubre _validar_eipd_obligatoria() de rat_service.py.
 """

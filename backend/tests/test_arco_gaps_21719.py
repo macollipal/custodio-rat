@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests para los 5 campos nuevos del modelo ARCO/TKT (Iter 10 - Gaps Ley 21.719).
-Validación: metodo_verificacion_identidad, evidencia_identidad, evidencia_respuesta_hash,
+ValidaciÃ³n: metodo_verificacion_identidad, evidencia_identidad, evidencia_respuesta_hash,
 causal_rechazo, medio_respuesta.
 
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
@@ -30,7 +30,7 @@ class TestARCOMetodoVerificacionIdentidad:
     """Tests para campo metodo_verificacion_identidad."""
 
     def test_crear_ticket_con_metodo_verificacion(self, client, auth_headers, empresa):
-        """Caso afirmativo: Ticket con metodo_verificacion_identidad válido."""
+        """Caso afirmativo: Ticket con metodo_verificacion_identidad vÃ¡lido."""
         resp = _crear_ticket_base(client, auth_headers, empresa, {
             "metodo_verificacion_identidad": "cedula"
         })
@@ -58,10 +58,10 @@ class TestARCOEvidenciaIdentidad:
     def test_crear_ticket_con_evidencia_identidad(self, client, auth_headers, empresa):
         """Caso afirmativo: Ticket con evidencia_identidad completa."""
         resp = _crear_ticket_base(client, auth_headers, empresa, {
-            "evidencia_identidad": "Cédula de identidad Chilean vigente, verificada vía video call"
+            "evidencia_identidad": "CÃ©dula de identidad Chilean vigente, verificada vÃ­a video call"
         })
         assert resp.status_code == 200
-        assert "Cédula" in resp.json()["evidencia_identidad"]
+        assert "CÃ©dula" in resp.json()["evidencia_identidad"]
 
     def test_crear_ticket_evidencia_identidad_larga(self, client, auth_headers, empresa):
         """Caso borde: evidencia_identidad con texto muy largo (>500 chars)."""
@@ -83,7 +83,7 @@ class TestARCOEvidenciaRespuestaHash:
     """Tests para campo evidencia_respuesta_hash (SHA-256)."""
 
     def test_crear_ticket_con_hash_valido(self, client, auth_headers, empresa):
-        """Caso afirmativo: Ticket con evidencia_respuesta_hash SHA-256 válido."""
+        """Caso afirmativo: Ticket con evidencia_respuesta_hash SHA-256 vÃ¡lido."""
         hash_sha256 = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ab"
         resp = _crear_ticket_base(client, auth_headers, empresa, {
             "evidencia_respuesta_hash": hash_sha256
@@ -166,7 +166,7 @@ class TestARCOTodosLosCamposJuntos:
         """Caso afirmativo: Ticket con los 5 campos nuevos."""
         resp = _crear_ticket_base(client, auth_headers, empresa, {
             "metodo_verificacion_identidad": "cedula",
-            "evidencia_identidad": "Cédula verificada presencialmente",
+            "evidencia_identidad": "CÃ©dula verificada presencialmente",
             "evidencia_respuesta_hash": "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
             "causal_rechazo": None,
             "medio_respuesta": "email",
@@ -174,7 +174,7 @@ class TestARCOTodosLosCamposJuntos:
         assert resp.status_code == 200
         data = resp.json()
         assert data["metodo_verificacion_identidad"] == "cedula"
-        assert data["evidencia_identidad"] == "Cédula verificada presencialmente"
+        assert data["evidencia_identidad"] == "CÃ©dula verificada presencialmente"
         assert data["evidencia_respuesta_hash"] == "abc123def456abc123def456abc123def456abc123def456abc123def456abc1"
         assert data["causal_rechazo"] is None
         assert data["medio_respuesta"] == "email"

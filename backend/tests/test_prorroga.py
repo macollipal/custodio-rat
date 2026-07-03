@@ -1,6 +1,6 @@
-"""
-Tests para QW4: Workflow de Prórroga.
-Custodio RAT Manager — Ley 21.719 Art. 12 bis.
+﻿"""
+Tests para QW4: Workflow de PrÃ³rroga.
+Custodio RAT Manager â€” Ley 21.719 Art. 12 bis.
 
 Covers:
 - Prorrogar ticket desde estado abierto/en_proceso/pendiente
@@ -8,7 +8,7 @@ Covers:
 - Error al prorrogar dos veces
 - Extension del plazo al prorrogar
 - Permisos: usuario no puede prorrogar
-- Límite máximo de 10 días
+- LÃ­mite mÃ¡ximo de 10 dÃ­as
 """
 
 import pytest
@@ -133,7 +133,7 @@ class TestProrrogaWorkflow:
         assert resp.status_code == 403
 
     def test_dias_maximo_10(self, client, auth_headers, empresa, db):
-        """No se puede prorrogar más de 10 días."""
+        """No se puede prorrogar mÃ¡s de 10 dÃ­as."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",

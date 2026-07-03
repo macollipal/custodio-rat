@@ -1,13 +1,13 @@
-"""
-Tests para QW10: Mejorar Formulario Público
+﻿"""
+Tests para QW10: Mejorar Formulario PÃºblico
 - Campos representante_nombre y representante_rut
 - Upload de archivos adjuntos
 - Respuesta incluye tracking_token
 
-Estrategia de envío:
+Estrategia de envÃ­o:
 - Sin archivos: json={} (Pydantic validation)
 - Con archivos: data={} con JSON serializado como string en campo "data"
-  (esto reproduce cómo el browser envía multipart/form-data cuando hay files + campos)
+  (esto reproduce cÃ³mo el browser envÃ­a multipart/form-data cuando hay files + campos)
 """
 
 import json
@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 class TestQW10Representante:
     def test_crear_solicitud_con_representante(self, client, empresa):
-        """El formulario público acepta representante_nombre y representante_rut."""
+        """El formulario pÃºblico acepta representante_nombre y representante_rut."""
         token_resp = client.get("/solicitudes-derecho/token")
         assert token_resp.status_code == 200
         token = token_resp.json()["token"]
@@ -25,17 +25,17 @@ class TestQW10Representante:
         resp = client.post("/solicitudes-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
-            "nombre_titular": "Juan Pérez",
+            "nombre_titular": "Juan PÃ©rez",
             "rut_titular": "12.345.678-5",
             "email_titular": "juan@perez.cl",
             "descripcion": "Quiero acceder a mis datos",
             "token": token,
-            "representante_nombre": "María López",
+            "representante_nombre": "MarÃ­a LÃ³pez",
             "representante_rut": "98.765.432-1",
         })
         assert resp.status_code == 200
         data = resp.json()
-        assert data["representante_nombre"] == "María López"
+        assert data["representante_nombre"] == "MarÃ­a LÃ³pez"
         assert data["representante_rut"] == "98.765.432-1"
         assert "tracking_token" in data
         assert data["tracking_token"] is not None
@@ -49,7 +49,7 @@ class TestQW10Representante:
         resp = client.post("/solicitudes-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "rectificacion",
-            "nombre_titular": "Carlos Méndez",
+            "nombre_titular": "Carlos MÃ©ndez",
             "email_titular": "carlos@mendez.cl",
             "descripcion": "Quiero corregir mis datos",
             "token": token,
@@ -121,7 +121,7 @@ class TestQW10Archivos:
         assert "tracking_token" in data
 
     def test_crear_solicitud_con_imagen_jpeg(self, client, empresa):
-        """El formulario acepta imágenes JPEG como adjuntos."""
+        """El formulario acepta imÃ¡genes JPEG como adjuntos."""
         token_resp = client.get("/solicitudes-derecho/token")
         assert token_resp.status_code == 200
         token = token_resp.json()["token"]
@@ -160,7 +160,7 @@ class TestQW10Archivos:
         assert "tipo no permitido" in resp.json()["detail"]
 
     def test_multiple_archivos(self, client, empresa):
-        """Se pueden adjuntar múltiples archivos hasta 5."""
+        """Se pueden adjuntar mÃºltiples archivos hasta 5."""
         token_resp = client.get("/solicitudes-derecho/token")
         assert token_resp.status_code == 200
         token = token_resp.json()["token"]
@@ -227,7 +227,7 @@ class TestQW10TrackingToken:
         assert len(data["tracking_token"]) == 36
 
     def test_tracking_token_es_uuid_unico(self, client, empresa):
-        """Cada solicitud recibe un tracking_token único."""
+        """Cada solicitud recibe un tracking_token Ãºnico."""
         token_resp = client.get("/solicitudes-derecho/token")
         assert token_resp.status_code == 200
         token = token_resp.json()["token"]

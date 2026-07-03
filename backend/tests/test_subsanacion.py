@@ -1,14 +1,14 @@
-"""
-Tests para QW3: Workflow de Subsanación.
-Custodio RAT Manager — Ley 21.719 Art. 12.
+﻿"""
+Tests para QW3: Workflow de SubsanaciÃ³n.
+Custodio RAT Manager â€” Ley 21.719 Art. 12.
 
 Covers:
-- Solicitar subsanación desde estado abierto/en_proceso/pendiente
-- Error al solicitar subsanación desde otros estados
-- Completar subsanación y volver a en_proceso
-- Error al completar si no está en subsanacion
-- Extension del plazo al solicitar subsanación
-- Permisos: usuario no puede solicitar subsanación
+- Solicitar subsanaciÃ³n desde estado abierto/en_proceso/pendiente
+- Error al solicitar subsanaciÃ³n desde otros estados
+- Completar subsanaciÃ³n y volver a en_proceso
+- Error al completar si no estÃ¡ en subsanacion
+- Extension del plazo al solicitar subsanaciÃ³n
+- Permisos: usuario no puede solicitar subsanaciÃ³n
 """
 
 import pytest
@@ -16,7 +16,7 @@ import pytest
 
 class TestSubsanacionWorkflow:
     def test_solicitar_subsanacion_desde_abierto(self, client, auth_headers, empresa, db):
-        """Admin puede solicitar subsanación desde estado abierto."""
+        """Admin puede solicitar subsanaciÃ³n desde estado abierto."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
@@ -28,7 +28,7 @@ class TestSubsanacionWorkflow:
         ticket_id = ticket_resp.json()["id"]
 
         resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/subsanar", json={
-            "detalle": "Por favor complete su número de RUT para procesar su solicitud de acceso.",
+            "detalle": "Por favor complete su nÃºmero de RUT para procesar su solicitud de acceso.",
         }, headers=auth_headers)
         assert resp.status_code == 200
         data = resp.json()
@@ -38,7 +38,7 @@ class TestSubsanacionWorkflow:
         assert data["fecha_vencimiento"] is not None
 
     def test_solicitar_subsanacion_desde_en_proceso(self, client, auth_headers, empresa, db):
-        """Admin puede solicitar subsanación desde estado en_proceso."""
+        """Admin puede solicitar subsanaciÃ³n desde estado en_proceso."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
@@ -51,13 +51,13 @@ class TestSubsanacionWorkflow:
         client.patch(f"/tkt-solicitud-derecho/{ticket_id}", json={"estado": "en_proceso"}, headers=auth_headers)
 
         resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/subsanar", json={
-            "detalle": "Se requiere documentación adicional para verificar su identidad.",
+            "detalle": "Se requiere documentaciÃ³n adicional para verificar su identidad.",
         }, headers=auth_headers)
         assert resp.status_code == 200
         assert resp.json()["estado"] == "subsanacion"
 
     def test_solicitar_subsanacion_error_desde_resuelto(self, client, auth_headers, empresa, db):
-        """No se puede solicitar subsanación desde estado resuelto."""
+        """No se puede solicitar subsanaciÃ³n desde estado resuelto."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
@@ -72,12 +72,12 @@ class TestSubsanacionWorkflow:
         }, headers=auth_headers)
 
         resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/subsanar", json={
-            "detalle": "Información faltante",
+            "detalle": "InformaciÃ³n faltante",
         }, headers=auth_headers)
         assert resp.status_code == 400
 
     def test_completar_subsanacion(self, client, auth_headers, empresa, db):
-        """Admin puede completar subsanación y vuelve a en_proceso con nuevo plazo."""
+        """Admin puede completar subsanaciÃ³n y vuelve a en_proceso con nuevo plazo."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "rectificacion",
@@ -98,7 +98,7 @@ class TestSubsanacionWorkflow:
         assert data["subsanacion_fecha_pedido"] is None
 
     def test_completar_subsanacion_error_si_no_esta_en_subsanacion(self, client, auth_headers, empresa, db):
-        """No se puede completar subsanación si el ticket no está en subsanacion."""
+        """No se puede completar subsanaciÃ³n si el ticket no estÃ¡ en subsanacion."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",
@@ -111,7 +111,7 @@ class TestSubsanacionWorkflow:
         assert resp.status_code == 400
 
     def test_usuario_no_puede_solicitar_subsanacion(self, client, db, empresa, auth_headers):
-        """Usuario regular no puede solicitar subsanación (receives 403)."""
+        """Usuario regular no puede solicitar subsanaciÃ³n (receives 403)."""
         from app.models.user import User
         from app.models.user_company import UserCompany, RolEmpresa
         from app.core.security import get_password_hash
@@ -145,12 +145,12 @@ class TestSubsanacionWorkflow:
         headers_usr = {"Authorization": f"Bearer {token}"}
 
         resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/subsanar", json={
-            "detalle": "Información faltante para procesar solicitud.",
+            "detalle": "InformaciÃ³n faltante para procesar solicitud.",
         }, headers=headers_usr)
         assert resp.status_code == 403
 
     def test_detalle_min_length_validation(self, client, auth_headers, empresa, db):
-        """El detalle de subsanación debe tener al menos 10 caracteres."""
+        """El detalle de subsanaciÃ³n debe tener al menos 10 caracteres."""
         ticket_resp = client.post("/tkt-solicitud-derecho/", json={
             "company_id": empresa["id"],
             "tipo": "acceso",

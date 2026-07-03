@@ -1,5 +1,5 @@
-"""
-Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 — REC-06).
+﻿"""
+Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 â€” REC-06).
 """
 
 import pytest
@@ -21,16 +21,16 @@ class TestConsentimientoExpreso:
 
         consentimiento = {
             "rat_id": rat_id,
-            "nombre_titular": "Juan Pérez",
+            "nombre_titular": "Juan PÃ©rez",
             "email_titular": "juan@test.cl",
             "canal": "web",
-            "texto_consentimiento": "Yo, Juan Pérez, otorgo mi consentimiento expreso para el tratamiento de mis datos.",
+            "texto_consentimiento": "Yo, Juan PÃ©rez, otorgo mi consentimiento expreso para el tratamiento de mis datos.",
             "fecha_obtencion": datetime.now(timezone.utc).isoformat(),
         }
         resp = client.post(f"/rats/{rat_id}/consentimientos", json=consentimiento, headers=auth_headers)
         assert resp.status_code == 201, f"Error: {resp.text}"
         data = resp.json()
-        assert data["nombre_titular"] == "Juan Pérez"
+        assert data["nombre_titular"] == "Juan PÃ©rez"
         assert data["activo"] is True
 
     def test_tiene_consentimiento_activo_false(self, db):
@@ -56,7 +56,7 @@ class TestConsentimientoExpreso:
 
         consentimiento = {
             "rat_id": rat_id,
-            "nombre_titular": "Ana López",
+            "nombre_titular": "Ana LÃ³pez",
             "email_titular": "ana@test.cl",
             "canal": "papel",
             "texto_consentimiento": "Consentimiento expreso para datos sensibles.",

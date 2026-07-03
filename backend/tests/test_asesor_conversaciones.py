@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests para persistencia de conversaciones del Asesor IA (Arts. 19, 20 Ley 21.719).
 
 Verifica que cada POST /asesor/ask persiste un registro en AsesorConversacion.

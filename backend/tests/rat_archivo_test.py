@@ -1,10 +1,10 @@
-"""
-Tests para GET /rats/{id}/archivo — descarga de documento de base legal.
+﻿"""
+Tests para GET /rats/{id}/archivo â€” descarga de documento de base legal.
 
 Cubre:
-- descarga sin autenticacion → 401
-- descarga con autenticacion valida → 200 + bytes (BYTEA fallback)
-- IDOR: usuario de otra empresa no puede descargar → 403 o 500 (bug preexistente)
+- descarga sin autenticacion â†’ 401
+- descarga con autenticacion valida â†’ 200 + bytes (BYTEA fallback)
+- IDOR: usuario de otra empresa no puede descargar â†’ 403 o 500 (bug preexistente)
 
 BUGS PREEXISTENTES IDENTIFICADOS:
 - /rats/{id}/archivo con RAT inexistente retorna 500 en vez de 404

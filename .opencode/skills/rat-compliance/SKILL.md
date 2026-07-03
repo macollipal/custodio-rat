@@ -31,7 +31,7 @@ Activa esta skill cuando:
 - El usuario pide "auditar", "validar compliance", "revisar RAT" o "verificar Ley 21.719"
 - Se crea o edita un RAT
 - Se solicita un reporte de compliance
-- Se prepara documentación para una auditoría APDC
+- Se prepara documentación para una auditoría APDP
 - Se detecta un RAT incompleto o con riesgos
 
 ## Validación de Compliance
@@ -153,4 +153,4 @@ Siempre que valides un RAT, devolvé este formato:
 
 - **qa-senior**: Usar para revisión general de código del RAT
 - **tester-rat**: Usar para generar casos de prueba de compliance
-- **custodio-auditoria**: Usar para documentación oficial ante APDC
+- **custodio-auditoria**: Usar para documentación oficial ante APDP

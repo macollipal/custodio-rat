@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests de Z-03: file upload validation (extension + tamano).
 
 Cubre:

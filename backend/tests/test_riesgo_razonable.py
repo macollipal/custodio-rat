@@ -1,5 +1,5 @@
-"""
-Tests para B-05: Filtro de riesgo razonable en Brechas (Art. 14 sexies — REC-05).
+﻿"""
+Tests para B-05: Filtro de riesgo razonable en Brechas (Art. 14 sexies â€” REC-05).
 """
 
 import pytest
@@ -98,7 +98,7 @@ class TestBreachCrud:
         assert data["nivel_riesgo"] == "alto"
         assert data["volumen_titulares_afectados"] == 150
         assert data["incluye_datos_sensibles"] is True
-        assert data["reportable_apdc_calculado"] is True
+        assert data["reportable_APDP_calculado"] is True
 
     def test_evaluar_riesgo_endpoint(self, client, auth_headers, empresa):
         payload = {
@@ -113,7 +113,7 @@ class TestBreachCrud:
 
         resp = client.post(f"/brechas/{breach_id}/evaluar-riesgo", headers=auth_headers)
         assert resp.status_code == 200
-        assert "reportable_apdc_calculado" in resp.json()
+        assert "reportable_APDP_calculado" in resp.json()
 
     def test_listar_brechas_con_campos_riesgo(self, client, auth_headers, empresa):
         payload = {

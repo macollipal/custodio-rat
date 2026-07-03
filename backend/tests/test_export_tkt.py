@@ -1,18 +1,18 @@
-"""
-Tests P1: Exportación CSV/Excel/PDF (ARCO-QW1).
+﻿"""
+Tests P1: ExportaciÃ³n CSV/Excel/PDF (ARCO-QW1).
 Custodio RAT Manager.
 
 Covers:
-- GET /export/tkt/csv → 200 con CSV
-- GET /export/tkt/excel → 200 con XLSX
-- GET /export/tkt/pdf → 200 con PDF
+- GET /export/tkt/csv â†’ 200 con CSV
+- GET /export/tkt/excel â†’ 200 con XLSX
+- GET /export/tkt/pdf â†’ 200 con PDF
 - Filtros aplicados correctamente (estado, prioridad, fecha)
-- Requiere autenticación
+- Requiere autenticaciÃ³n
 - admin_empresa solo ve tickets de su empresa
-- genera_csv bytes no vacíos
-- genera_excel bytes no vacíos
-- genera_pdf bytes no vacíos
-- Export sin tickets → archivo vacío (headers correctos)
+- genera_csv bytes no vacÃ­os
+- genera_excel bytes no vacÃ­os
+- genera_pdf bytes no vacÃ­os
+- Export sin tickets â†’ archivo vacÃ­o (headers correctos)
 """
 
 import pytest
@@ -21,17 +21,17 @@ import io
 
 class TestExportEndpoints:
     def test_export_csv_requiere_auth(self, client):
-        """El endpoint /export/tkt/csv requiere autenticación."""
+        """El endpoint /export/tkt/csv requiere autenticaciÃ³n."""
         resp = client.get("/export/tkt/csv?company_id=1")
         assert resp.status_code == 401
 
     def test_export_excel_requiere_auth(self, client):
-        """El endpoint /export/tkt/excel requiere autenticación."""
+        """El endpoint /export/tkt/excel requiere autenticaciÃ³n."""
         resp = client.get("/export/tkt/excel?company_id=1")
         assert resp.status_code == 401
 
     def test_export_pdf_requiere_auth(self, client):
-        """El endpoint /export/tkt/pdf requiere autenticación."""
+        """El endpoint /export/tkt/pdf requiere autenticaciÃ³n."""
         resp = client.get("/export/tkt/pdf?company_id=1")
         assert resp.status_code == 401
 
@@ -77,7 +77,7 @@ class TestExportPdf:
 
 class TestExportService:
     def test_generar_csv_vacio(self, client, auth_headers, empresa):
-        """generar_csv con empresa sin tickets retorna headers nomás."""
+        """generar_csv con empresa sin tickets retorna headers nomÃ¡s."""
         from app.services.export_tkt_service import generar_csv
         from app.database.database import SessionLocal
 

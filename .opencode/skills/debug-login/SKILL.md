@@ -167,6 +167,6 @@ Si el usuario reporta "no puedo entrar", **siempre verificar primero**:
 3. Browser en modo incógnito funciona
 
 **No asumir** que el problema es código. El 90% de las veces es:
-- Password cambiada y no文档ada
+- Password cambiada y no documentada
 - Token viejo en browser
 - `.env` desactualizado post-rotación

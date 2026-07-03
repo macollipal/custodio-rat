@@ -1,6 +1,6 @@
-"""
+﻿"""
 Tests para los 15 campos nuevos de RAT (Tier 1 + Tier 2) - Iter 11.
-Cubre models/rat.py, schemas/rat.py y la paridad Pydantic ↔ TypeScript.
+Cubre models/rat.py, schemas/rat.py y la paridad Pydantic â†” TypeScript.
 
  Campos Tier 1 (criticos): datos_nna, nivel_confidencialidad, estructura_dato,
    datos_anonimizados, datos_seudonimizados
@@ -25,10 +25,10 @@ class TestRATTier1Tier2Schema:
             company_id=1,
             nombre_proceso="Test proceso",
             categoria_datos="Nombre, email",
-            finalidad="Gestión de clientes",
+            finalidad="GestiÃ³n de clientes",
             base_legal="Consentimiento del titular",
             fuente_datos="Del propio titular",
-            plazo_retencion="5 años",
+            plazo_retencion="5 aÃ±os",
             # Tier 1
             datos_nna="ninguno",
             nivel_confidencialidad="DC1",
@@ -40,8 +40,8 @@ class TestRATTier1Tier2Schema:
             automatizacion="100% automatizado",
             frecuencia="mensual",
             transferencia_nacional=True,
-            doc_clausulas="Política de privacidad en web",
-            medidas_organizativas="Designación RAI",
+            doc_clausulas="PolÃ­tica de privacidad en web",
+            medidas_organizativas="DesignaciÃ³n RAI",
             mecanismos_eliminacion="Borrado seguro NIST 800-88",
             tecnica_anonimizacion="seudonimizacion",
             origen_dato_portabilidad="Directamente del titular",
@@ -56,8 +56,8 @@ class TestRATTier1Tier2Schema:
         assert data.automatizacion == "100% automatizado"
         assert data.frecuencia == "mensual"
         assert data.transferencia_nacional is True
-        assert data.doc_clausulas == "Política de privacidad en web"
-        assert data.medidas_organizativas == "Designación RAI"
+        assert data.doc_clausulas == "PolÃ­tica de privacidad en web"
+        assert data.medidas_organizativas == "DesignaciÃ³n RAI"
         assert data.mecanismos_eliminacion == "Borrado seguro NIST 800-88"
         assert data.tecnica_anonimizacion == "seudonimizacion"
         assert data.origen_dato_portabilidad == "Directamente del titular"
@@ -73,7 +73,7 @@ class TestRATTier1Tier2Schema:
             finalidad="Test",
             base_legal="Consentimiento del titular",
             fuente_datos="Web",
-            plazo_retencion="1 año",
+            plazo_retencion="1 aÃ±o",
         )
         assert data.datos_nna is None
         assert data.nivel_confidencialidad is None
@@ -102,7 +102,7 @@ class TestRATTier1Tier2Schema:
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
-                plazo_retencion="1 año",
+                plazo_retencion="1 aÃ±o",
                 datos_nna=val,
             )
             assert data.datos_nna == val
@@ -118,7 +118,7 @@ class TestRATTier1Tier2Schema:
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
-                plazo_retencion="1 año",
+                plazo_retencion="1 aÃ±o",
                 nivel_confidencialidad=val,
             )
             assert data.nivel_confidencialidad == val
@@ -134,7 +134,7 @@ class TestRATTier1Tier2Schema:
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
-                plazo_retencion="1 año",
+                plazo_retencion="1 aÃ±o",
                 estructura_dato=val,
             )
             assert data.estructura_dato == val
@@ -154,7 +154,7 @@ class TestRATTier1Tier2Schema:
             transferencia_nacional=True,
             doc_clausulas="Aviso de privacidad",
             medidas_organizativas="Procedimiento de acceso",
-            mecanismos_eliminacion="Destrucción física",
+            mecanismos_eliminacion="DestrucciÃ³n fÃ­sica",
             tecnica_anonimizacion="k-anonimidad",
             origen_dato_portabilidad="De otro responsable",
             fecha_levantamiento="2026-03-01",
@@ -170,7 +170,7 @@ class TestRATTier1Tier2Schema:
         assert update.transferencia_nacional is True
         assert update.doc_clausulas == "Aviso de privacidad"
         assert update.medidas_organizativas == "Procedimiento de acceso"
-        assert update.mecanismos_eliminacion == "Destrucción física"
+        assert update.mecanismos_eliminacion == "DestrucciÃ³n fÃ­sica"
         assert update.tecnica_anonimizacion == "k-anonimidad"
         assert update.origen_dato_portabilidad == "De otro responsable"
         assert update.fecha_levantamiento == date(2026, 3, 1)
@@ -185,7 +185,7 @@ class TestRATTier1Tier2Schema:
             finalidad="Test",
             base_legal="Consentimiento del titular",
             fuente_datos="Web",
-            plazo_retencion="1 año",
+            plazo_retencion="1 aÃ±o",
             fecha_levantamiento="2026-06-25",
         )
         assert isinstance(data.fecha_levantamiento, date)
@@ -208,7 +208,7 @@ class TestRATTier1Tier2Persistence:
             automatizacion="100% manual",
             frecuencia="anual",
             transferencia_nacional=True,
-            doc_clausulas="Cláusula de privacidad en contrato",
+            doc_clausulas="ClÃ¡usula de privacidad en contrato",
             medidas_organizativas="DPO designado",
             mecanismos_eliminacion="Borrado seguro",
             tecnica_anonimizacion="agregacion",
@@ -217,7 +217,7 @@ class TestRATTier1Tier2Persistence:
         )
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         if resp.status_code != 201:
-            pytest.fail(f"POST /rats/ falló: {resp.status_code} {resp.text}")
+            pytest.fail(f"POST /rats/ fallÃ³: {resp.status_code} {resp.text}")
         rat_id = resp.json()["id"]
         rat = db.query(RAT).filter(RAT.id == rat_id).first()
         assert rat is not None
@@ -230,7 +230,7 @@ class TestRATTier1Tier2Persistence:
         assert rat.automatizacion == "100% manual"
         assert rat.frecuencia == "anual"
         assert rat.transferencia_nacional is True
-        assert rat.doc_clausulas == "Cláusula de privacidad en contrato"
+        assert rat.doc_clausulas == "ClÃ¡usula de privacidad en contrato"
         assert rat.medidas_organizativas == "DPO designado"
         assert rat.mecanismos_eliminacion == "Borrado seguro"
         assert rat.tecnica_anonimizacion == "agregacion"
@@ -250,20 +250,20 @@ class TestRATTier1Tier2Persistence:
             automatizacion="mayoritariamente automatizado",
             frecuencia="trimestral",
             transferencia_nacional=False,
-            doc_clausulas="Política de tratamiento",
+            doc_clausulas="PolÃ­tica de tratamiento",
             medidas_organizativas="Control de acceso",
-            mecanismos_eliminacion="Destrucción física certificados",
+            mecanismos_eliminacion="DestrucciÃ³n fÃ­sica certificados",
             tecnica_anonimizacion="perturbacion",
             origen_dato_portabilidad="Directamente del titular",
             fecha_levantamiento="2026-02-20",
         )
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         if resp.status_code != 201:
-            pytest.fail(f"POST /rats/ falló: {resp.status_code} {resp.text}")
+            pytest.fail(f"POST /rats/ fallÃ³: {resp.status_code} {resp.text}")
         rat_id = resp.json()["id"]
         resp2 = client.get(f"/rats/{rat_id}", headers=auth_headers)
         if resp2.status_code != 200:
-            pytest.fail(f"GET /rats/{rat_id} falló: {resp2.status_code}")
+            pytest.fail(f"GET /rats/{rat_id} fallÃ³: {resp2.status_code}")
         json_data = resp2.json()
         assert json_data["datos_nna"] == "adolescentes"
         assert json_data["nivel_confidencialidad"] == "DC3"
@@ -274,9 +274,9 @@ class TestRATTier1Tier2Persistence:
         assert json_data["automatizacion"] == "mayoritariamente automatizado"
         assert json_data["frecuencia"] == "trimestral"
         assert json_data["transferencia_nacional"] is False
-        assert json_data["doc_clausulas"] == "Política de tratamiento"
+        assert json_data["doc_clausulas"] == "PolÃ­tica de tratamiento"
         assert json_data["medidas_organizativas"] == "Control de acceso"
-        assert json_data["mecanismos_eliminacion"] == "Destrucción física certificados"
+        assert json_data["mecanismos_eliminacion"] == "DestrucciÃ³n fÃ­sica certificados"
         assert json_data["tecnica_anonimizacion"] == "perturbacion"
         assert json_data["origen_dato_portabilidad"] == "Directamente del titular"
         assert json_data["fecha_levantamiento"] == "2026-02-20"
@@ -285,7 +285,7 @@ class TestRATTier1Tier2Persistence:
         """PUT /rats/{id} modifica los 15 campos nuevos."""
         resp = client.post("/rats/", json=rat_base, headers=auth_headers)
         if resp.status_code != 201:
-            pytest.fail(f"POST /rats/ falló: {resp.status_code} {resp.text}")
+            pytest.fail(f"POST /rats/ fallÃ³: {resp.status_code} {resp.text}")
         rat_id = resp.json()["id"]
         update_payload = {
             "datos_nna": "ambos",
@@ -297,16 +297,16 @@ class TestRATTier1Tier2Persistence:
             "automatizacion": "100% automatizado",
             "frecuencia": "puntual",
             "transferencia_nacional": True,
-            "doc_clausulas": "Términos y condiciones",
-            "medidas_organizativas": "Auditoría anual",
-            "mecanismos_eliminacion": "Devolución a proveedor",
+            "doc_clausulas": "TÃ©rminos y condiciones",
+            "medidas_organizativas": "AuditorÃ­a anual",
+            "mecanismos_eliminacion": "DevoluciÃ³n a proveedor",
             "tecnica_anonimizacion": "pseudonimizacion",
-            "origen_dato_portabilidad": "Fuentes públicas",
+            "origen_dato_portabilidad": "Fuentes pÃºblicas",
             "fecha_levantamiento": "2026-05-01",
         }
         resp2 = client.put(f"/rats/{rat_id}", json=update_payload, headers=auth_headers)
         if resp2.status_code != 200:
-            pytest.fail(f"PUT /rats/{rat_id} falló: {resp2.status_code} {resp2.text}")
+            pytest.fail(f"PUT /rats/{rat_id} fallÃ³: {resp2.status_code} {resp2.text}")
         rat = db.query(RAT).filter(RAT.id == rat_id).first()
         assert rat.datos_nna == "ambos"
         assert rat.nivel_confidencialidad == "DC1"
@@ -317,9 +317,9 @@ class TestRATTier1Tier2Persistence:
         assert rat.automatizacion == "100% automatizado"
         assert rat.frecuencia == "puntual"
         assert rat.transferencia_nacional is True
-        assert rat.doc_clausulas == "Términos y condiciones"
-        assert rat.medidas_organizativas == "Auditoría anual"
-        assert rat.mecanismos_eliminacion == "Devolución a proveedor"
+        assert rat.doc_clausulas == "TÃ©rminos y condiciones"
+        assert rat.medidas_organizativas == "AuditorÃ­a anual"
+        assert rat.mecanismos_eliminacion == "DevoluciÃ³n a proveedor"
         assert rat.tecnica_anonimizacion == "pseudonimizacion"
-        assert rat.origen_dato_portabilidad == "Fuentes públicas"
+        assert rat.origen_dato_portabilidad == "Fuentes pÃºblicas"
         assert rat.fecha_levantamiento == date(2026, 5, 1)
