@@ -25,6 +25,17 @@ Stack: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Sonne
 
 ---
 
+## Skills disponibles para frontend
+
+Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto:
+
+- **security-secret-scan**: para detectar/prevenir exposición de credenciales (OBLIGATORIA antes de commit)
+- **frontend-guardian**: para auditorías de UX, mobile, responsive, a11y, performance pre-producción
+- **commit-helper**: para mensajes de commit con conventional commits
+- **qa-senior**: para revisión de calidad de código y compliance RAT
+
+---
+
 ## Sistema de roles (3 niveles)
 
 | Rol | Alcance |
