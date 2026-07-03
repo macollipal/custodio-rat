@@ -143,6 +143,20 @@ generar_ppt*.py
 # Utilitarios locales en raíz
 check_users.py
 
+# Frontend coverage y diagnosticos
+frontend-next/coverage/
+frontend-next/diag-*.png
+
+# BPMN backups (regenerables)
+*.bpmn.vbak
+
+# Office lock files
+~$*.
+
+# Test results (Playwright)
+frontend-next/test-results/
+frontend-next/.last-run.json
+
 # Local API keys (no subir)
 *.local.key
 .minimax_key.txt
