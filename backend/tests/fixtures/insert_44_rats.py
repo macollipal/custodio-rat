@@ -1,16 +1,20 @@
 """
 Script Python para ejecutar el set de pruebas de 44 RATs.
 Usa CAST para enums y maneja correctamente los booleanos NOT NULL.
+
+Uso:
+    export DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
+    python insert_44_rats.py
+
+Opcionales:
+    COMPANY_ID=2 python insert_44_rats.py
+    USERNAME=admin_empresa python insert_44_rats.py
 """
 
 import os
 import psycopg2
 
-DB_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://neondb_owner:REDACTED_NEON_PASSWORD@ep-fragrant-wildflower-apeqosx9-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require"
-)
-
+DB_URL = os.environ["DATABASE_URL"]  # requerido, no hay default
 COMPANY_ID = int(os.environ.get("COMPANY_ID", "1"))
 USERNAME = os.environ.get("USERNAME", "admin")
 
