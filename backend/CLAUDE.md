@@ -10,6 +10,10 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 
 ## LEY DIVINA DE SEGURIDAD ⚠️
 
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+Reglas absolutas (resumen; ver skill para detalles):
+
 ```
 1. NUNCA hardcodear credenciales en código fuente
 2. Todas las passwords/tokens/keys van en variables de entorno (.env)
@@ -17,7 +21,10 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 4. Los archivos .env están en .gitignore y NUNCA se commitear
 5. Si una credencial se expone, ROTARLA inmediatamente
 6. Usar Secrets Manager en producción (Vercel Env Variables)
-7. Pre-commit hook con gitleaks es OBLIGATORIO (ver .pre-commit-config.yaml en raíz)
+7. Pre-commit hook con gitleaks es OBLIGATORIO (ver .git/hooks/pre-commit)
+```
+
+**Si el agente detecta un secret hardcodeado DEBE negarse a proceder y reportar al usuario antes de continuar.**
 8. Si una credencial se expone en git: git filter-repo para limpiar historial + force-push
 ```
 

@@ -8,6 +8,23 @@ Stack: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Sonne
 
 ---
 
+## LEY DIVINA DE SEGURIDAD ⚠️
+
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+```
+1. NUNCA hardcodear credenciales en código TypeScript/JavaScript
+2. TODAS las variables públicas via process.env.NEXT_PUBLIC_*
+3. TODAS las variables privadas via process.env.* (server-side)
+4. .env.local y .env.production en .gitignore
+5. Si una credencial se expone, ROTARLA inmediatamente
+6. Pre-commit hook detecta y BLOQUEA secrets antes de commit
+```
+
+**Si el agente detecta un secret hardcodeado DEBE negarse a proceder y reportar al usuario antes de continuar.**
+
+---
+
 ## Sistema de roles (3 niveles)
 
 | Rol | Alcance |

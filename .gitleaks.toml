@@ -1,3 +1,11 @@
+# Custodio RAT - Secret Detection
+#
+# Fuente canónica: .opencode/skills/security-secret-scan/SKILL.md
+# Documentación: docs/SEGURIDAD_SECRETS.md
+# Hook activo: .git/hooks/pre-commit
+#
+# LEY DIVINA: Cualquier credencial detectada DEBE ser bloqueada.
+
 title = "Custodio RAT - Secret Detection"
 
 [[rules]]

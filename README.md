@@ -5,6 +5,22 @@ conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
 
 ---
 
+## 🔒 Seguridad y secrets
+
+**REGLA ABSOLUTA:** Este proyecto NUNCA acepta credenciales en el código fuente o historial de git.
+
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+Reglas clave:
+- Credenciales via variables de entorno (`.env`, Vercel Env Vars)
+- `.env` en `.gitignore` (siempre)
+- `.env.example` con placeholders (sin valores reales)
+- Si accidentalmente commiteaste un secret: ROTAR + `git filter-repo` + force-push
+
+Si sos un agente de IA: detectá secrets y **NEGATE** a commitear hasta corregir.
+
+---
+
 ## Arquitectura
 
 ```
