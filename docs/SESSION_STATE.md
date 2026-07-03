@@ -1,9 +1,11 @@
 ﻿# Session State - Custodio RAT
 
-**Generado:** 2026-07-03 13:00
-**Branch:** qa
+**Generado:** 2026-07-03
+**Branch:** qa (upstream configurado)
 
 ## Ultimos 10 commits
+716f2f0 feat(export): PDF con métricas avanzadas Tier 1 y Tier 2
+0e4afe4 feat(frontend): ampliar drawer de detalle en reportes con todos los campos RAT
 b3ee789 feat(infra): agregar CI/CD tests y tooling de salud (Fase 5E)
 45e1d8a feat(docs): agregar docs de compliance y seguridad (Fase 5D)
 1a265f6 feat(skills): crear 4 skills criticas de compliance (Fase 5C)
@@ -12,11 +14,26 @@ b4e6461 chore(repo): reorganizar scripts de backend/ raiz a backend/scripts/migr
 b1a9ff6 chore(gitignore): agregar reglas para coverage frontend, diag-*, bpmn.vbak, lock files
 b3d9f75 chore(repo): eliminar carpeta test/ raiz (duplicado de backend/tests/)
 b290840 chore(repo): quitar del tracking archivos violate .gitignore (Fase 5A)
-2550274 feat(infra): agregar CI/CD y tooling de seguridad (Fase 3)
-d978e74 feat(skills): agregar 5 skills de compliance (Fase 2)
 
 ## Working tree status
 Limpio (solo SESSION_STATE.md modificado localmente)
+
+## TAREAS COMPLETADAS (sesión 2026-07-03)
+
+- Fase 0: Higiene skills (6 commits)
+- Fase 1: Vinculación skills → CLAUDE.md / AGENTS.md
+- Fase 2: 5 skills compliance (rat-compliance, breach-management, arco-rights, multi-tenant-security, api-review)
+- Fase 3: CI/CD infra (secret-scan.yml, pytest-cov, vitest, pre-commit)
+- Fase 5A: Eliminar 61 archivos violate .gitignore
+- Fase 5B: Mover 7 scripts a backend/scripts/migration/
+- Fase 5C: Bugs corregidos + 4 skills críticas (eipd, consentimiento, politica-transparencia, encargado-tratamiento)
+- Fase 5D: SECURITY.md + INCIDENT_RESPONSE.md + CLEANUP_2026-07-03.md
+- Fase 5E: .github/workflows/tests.yml + scripts/dev/setup_hooks.ps1 + health_check.py
+- Tarea 1: CAMPOS_RAT CSV 26→48 campos
+- Tarea 2: ReportTable.tsx COLUMN_OPTIONS 14→31 columnas
+- Tarea 3: SORTABLE_FIELDS 10→18 + 5 filtros nuevos
+- Tarea 4: Drawer reportes expandido (flags + 3 secciones + métricas avanzadas)
+- Tarea 5: PDF export_service.py con métricas Tier 1/2
 
 ## PROXIMOS PASOS (prioridad alta)
 
