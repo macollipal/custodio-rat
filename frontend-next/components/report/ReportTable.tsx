@@ -13,6 +13,7 @@ interface ReportTableProps {
 function renderCell(rat: RAT, col: string): React.ReactNode {
   switch (col) {
     case 'nombre_proceso': return <><span className="font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</span><br /><span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.categoria_titulares || '—'}</span></>;
+    case 'categoria_datos': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.categoria_datos ?? '—').slice(0, 35)}</span>;
     case 'base_legal': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</span>;
     case 'estado': return <Badge estado={rat.estado} />;
     case 'created_by': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.created_by ?? '—'}</span>;
@@ -24,6 +25,7 @@ function renderCell(rat: RAT, col: string): React.ReactNode {
     case 'plazo_retencion': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.plazo_retencion || '—'}</span>;
     case 'medidas_seguridad': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.medidas_seguridad ?? '—').slice(0, 30)}</span>;
     case 'destinatarios': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.destinatarios ?? '—').slice(0, 25)}</span>;
+    case 'transferencia_datos': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.transferencia_datos ?? '—').slice(0, 25)}</span>;
     case 'pais_destino': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.pais_destino || '—'}</span>;
     case 'nivel_riesgo': {
       const isCritico = rat.nivel_riesgo === 'Crítico';
@@ -39,6 +41,21 @@ function renderCell(rat: RAT, col: string): React.ReactNode {
         </div>
       );
     }
+    case 'datos_nna': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.datos_nna || '—'}</span>;
+    case 'transferencia_nacional': return rat.transferencia_nacional ? <span className="text-xs" style={{ color: '#059669' }}>Sí</span> : <span className="text-xs" style={{ color: '#9CA3AF' }}>No</span>;
+    case 'datos_anonimizados': return rat.datos_anonimizados ? <span className="text-xs" style={{ color: '#059669' }}>Sí</span> : <span className="text-xs" style={{ color: '#9CA3AF' }}>No</span>;
+    case 'datos_seudonimizados': return rat.datos_seudonimizados ? <span className="text-xs" style={{ color: '#059669' }}>Sí</span> : <span className="text-xs" style={{ color: '#9CA3AF' }}>No</span>;
+    case 'nivel_confidencialidad': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.nivel_confidencialidad || '—'}</span>;
+    case 'estructura_dato': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.estructura_dato || '—'}</span>;
+    case 'ciclo_procesamiento': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.ciclo_procesamiento || '—'}</span>;
+    case 'automatizacion': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.automatizacion || '—'}</span>;
+    case 'frecuencia': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.frecuencia || '—'}</span>;
+    case 'sistema_almacenamiento': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.sistema_almacenamiento ?? '—').slice(0, 25)}</span>;
+    case 'volumen_titulares_estimado': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.volumen_titulares_estimado ?? '—'}</span>;
+    case 'responsable_tratamiento_email': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.responsable_tratamiento_email || '—'}</span>;
+    case 'logica_automatizada': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.logica_automatizada ?? '—').slice(0, 30)}</span>;
+    case 'tiene_archivo_base_legal': return rat.tiene_archivo_base_legal ? <span className="text-xs" style={{ color: '#059669' }}>Sí</span> : <span className="text-xs" style={{ color: '#DC2626' }}>No</span>;
+    case 'aprobado_por': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.aprobado_por || '—'}</span>;
     default: return null;
   }
 }
