@@ -65,7 +65,7 @@ class RATBase(BaseModel):
     @field_validator('estado_eipd')
     @classmethod
     def estado_eipd_valido(cls, v: Optional[str]) -> Optional[str]:
-        opciones = ["no_requerida", "pendiente", "en_proceso", "completada"]
+        opciones = ["no_requerida", "no_requerida_justificada", "pendiente", "en_proceso", "completada"]
         if v is not None and v not in opciones:
             raise ValueError(f"estado_eipd debe ser uno de {opciones}")
         return v
