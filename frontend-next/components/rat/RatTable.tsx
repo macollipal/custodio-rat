@@ -62,7 +62,10 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
       }
       setFilteredRats(filtered);
       setFiltersActive(true);
-    } catch {}
+    } catch (e) {
+      toast.error('Error al aplicar filtros. Inténtalo de nuevo.');
+      console.error('aplicarFiltros:', e);
+    }
   }
 
   function limpiarFiltros() {

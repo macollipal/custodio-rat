@@ -16,6 +16,12 @@ export const ESTADO_MAP: Record<string, string> = {
   'Aprobado': 'aprobado',
 };
 export const ESTADO_OPTIONS = ['Borrador', 'Completo', 'En revision', 'Aprobado'] as const;
+export const ESTADO_LABEL: Record<string, string> = {
+  borrador: 'Borrador',
+  completo: 'Completo',
+  en_revision: 'En revisión',
+  aprobado: 'Aprobado',
+};
 export const RIESGO_OPTIONS = ['Bajo', 'Medio', 'Alto', 'Critico'] as const;
 export const EIPD_OPTIONS = ['Requerida', 'No requerida'] as const;
 export const TIPOS_DATO_SENSIBLE = [

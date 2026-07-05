@@ -89,11 +89,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
   // Auto-save silencioso cada 30s (solo si hay datos)
   useEffect(() => {
+    const hasData = Object.keys(data).length > 0;
+    if (!hasData) return;
     const id = setInterval(() => {
-      if (Object.keys(data).length > 0) {
+      try {
         const now = Date.now();
         localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step, savedAt: now }));
         setDraftSavedAt(now);
+      } catch (e) {
+        console.error('Auto-save failed:', e);
       }
     }, 30_000);
     return () => clearInterval(id);

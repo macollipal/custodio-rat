@@ -6,6 +6,7 @@ import RatDetailView from './RatDetailView';
 import RatEditForm from './RatEditForm';
 import * as api from '@/lib/api';
 import type { RAT } from '@/types';
+import { ESTADO_LABEL } from '@/lib/constants';
 
 interface AuditLog { accion: string; usuario: string; timestamp: string; }
 
@@ -140,11 +141,11 @@ export default function RatDetailModal({
               )}
               <span
                 role="status"
-                aria-label={`Estado del RAT: ${rat.estado}`}
+                aria-label={`Estado del RAT: ${ESTADO_LABEL[rat.estado] ?? rat.estado}`}
                 className="px-2.5 py-1 rounded-lg text-xs font-bold"
                 style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
               >
-                {rat.estado === 'borrador' ? 'Borrador' : rat.estado === 'completo' ? 'Completo' : rat.estado === 'en_revision' ? 'En revisión' : 'Aprobado'}
+                {ESTADO_LABEL[rat.estado] ?? rat.estado}
               </span>
             </div>
           </div>
