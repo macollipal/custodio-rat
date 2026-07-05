@@ -13,6 +13,12 @@ import type { RAT } from '@/types';
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
 const ESTADOS: RAT['estado'][] = ['borrador', 'completo', 'en_revision', 'aprobado'];
 const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
+
+const validatePaso4 = (form: any): string | null => {
+  if (!form.plazo_retencion?.toString().trim()) return 'Debes indicar el plazo de retención.';
+  if (!form.medidas_seguridad?.toString().trim()) return 'Debes describir las medidas de seguridad.';
+  return null;
+};
 const OPERACIONES_TRATAMIENTO_OPCIONES = [
   'recoleccion',
   'almacenamiento',
@@ -657,7 +663,14 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             <div className="flex justify-between pt-2">
               <button onClick={() => setStep(3)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
               <button
-                onClick={() => setStep(5)}
+                onClick={() => {
+                  const err = validatePaso4(form);
+                  if (err) {
+                    toast.error(err);
+                    return;
+                  }
+                  setStep(5);
+                }}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
                 style={{ background: '#7C3AED' }}
               >

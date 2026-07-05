@@ -119,11 +119,18 @@ export default function RatDetailModal({
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {rat.completitud > 0 && (
-                <div className="hidden sm:flex flex-col items-end gap-1">
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    {rat.completitud}% completo
+                <div
+                  className="flex items-center gap-1.5"
+                  role="progressbar"
+                  aria-valuenow={rat.completitud}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Completitud del RAT: ${rat.completitud}%`}
+                >
+                  <span className="text-xs font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    {rat.completitud}%
                   </span>
-                  <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  <div className="w-16 sm:w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
                     <div
                       className="h-full rounded-full"
                       style={{ width: `${rat.completitud}%`, background: rat.completitud >= 80 ? '#34D399' : rat.completitud >= 50 ? '#FBBF24' : '#F87171' }}
@@ -132,6 +139,8 @@ export default function RatDetailModal({
                 </div>
               )}
               <span
+                role="status"
+                aria-label={`Estado del RAT: ${rat.estado}`}
                 className="px-2.5 py-1 rounded-lg text-xs font-bold"
                 style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
               >

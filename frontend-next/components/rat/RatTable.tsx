@@ -7,7 +7,7 @@ import * as api from '@/lib/api';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import type { RAT, Company } from '@/types';
-import { DIAS_REVISION, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
+import { DIAS_REVISION, ESTADO_MAP, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
 
 function necesitaRevision(rat: RAT, now: number) {
   const dias = (now - new Date(rat.updated_at).getTime()) / 86_400_000;
@@ -30,10 +30,6 @@ function downloadBlob(blob: Blob, filename: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-const ESTADO_MAP: Record<string, string> = {
-  'Borrador': 'borrador', 'Completo': 'completo', 'En revisión': 'en_revision', 'Aprobado': 'aprobado',
-};
 
 export default function RatTable({ rats, company, onSelect, onRefresh, puedeEditar = true }: RatTableProps) {
   const router = useRouter();

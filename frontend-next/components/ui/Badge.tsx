@@ -14,6 +14,8 @@ export default function Badge({ estado }: { estado: string }) {
   const s = BADGE_STYLES[estado] ?? { bg: '#F3F4F6', color: '#374151', label: estado };
   return (
     <span
+      role="status"
+      aria-label={`Estado del RAT: ${s.label}`}
       className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold"
       style={{ background: s.bg, color: s.color }}
     >
