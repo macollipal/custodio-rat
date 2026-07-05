@@ -131,8 +131,16 @@ class RAT(Base):
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="rat", cascade="all, delete-orphan")  # noqa: F821
 
     def calcular_completitud(self) -> int:
-        """Retorna el porcentaje de completitud del registro."""
-        campos_obligatorios = [
+        """Retorna el porcentaje de completitud del registro.
+
+        Fórmula Ley 21.719 (Art. 16) + gaps Tier 1/Tier 2 (Iter 11):
+        - 7 obligatorios Art. 16
+        - 3 recomendados Art. 16
+        - 5 Tier 1 críticos compliance APDP
+        - 10 Tier 2 operativos
+        Total: 25 campos. Penalización -1 si base legal sin documento respaldatorio.
+        """
+        obligatorios = [
             self.nombre_proceso,
             self.categoria_datos,
             self.categoria_titulares,
@@ -141,15 +149,35 @@ class RAT(Base):
             self.fuente_datos,
             self.plazo_retencion,
         ]
-        campos_recomendados = [
+        recomendados = [
             self.medidas_seguridad,
             self.destinatarios,
             self.transferencia_datos,
         ]
-        total = len(campos_obligatorios) + len(campos_recomendados)
-        completados = sum(1 for c in campos_obligatorios + campos_recomendados if c and str(c).strip())
+        tier1 = [
+            self.nivel_confidencialidad,
+            self.estructura_dato,
+            self.datos_nna,
+            self.datos_anonimizados,
+            self.datos_seudonimizados,
+        ]
+        tier2 = [
+            self.sistema_almacenamiento,
+            self.volumen_titulares_estimado,
+            self.responsable_tratamiento_email,
+            self.ciclo_procesamiento,
+            self.automatizacion,
+            self.frecuencia,
+            self.transferencia_nacional,
+            self.doc_clausulas,
+            self.medidas_organizativas,
+            self.mecanismos_eliminacion,
+        ]
+        todos = obligatorios + recomendados + tier1 + tier2
+        total = len(todos)
+        completados = sum(1 for c in todos if c is not None and str(c).strip())
 
-        # Penalizaci├│n: si base legal Ôëá "Otra" y no hay documento que la respalde
+        # Penalización: si base legal != "Otra" y no hay documento que la respalde
         if self.base_legal and self.base_legal.strip().lower() != "otra":
             if not self.archivo_base_legal_datos:
                 completados = max(completados - 1, 0)

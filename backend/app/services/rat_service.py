@@ -497,11 +497,37 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
 
 def _calcular_estado(data: dict) -> EstadoRAT:
     """
-    Determina autom├íticamente el estado del RAT seg├║n completitud.
-    Usa el mismo c├ílculo de campos que RAT.calcular_completitud().
+    Determina automáticamente el estado del RAT según completitud.
+
+    Para marcar como COMPLETO se requiere que los 7 obligatorios Art. 16 estén
+    llenos Y que la completitud global sea >= 90% (al menos los recomendados
+    y la mayoría de Tier 1/2 poblados). Esto evita el bug "badge completo
+    con 80%" donde un RAT marcado como completo pero con campos críticos
+    vacíos induce a error al usuario.
     """
-    todos_completos = all(data.get(campo) and str(data[campo]).strip() for campo in CAMPOS_OBLIGATORIOS_COMPLETO)
-    if todos_completos:
+    obligatorios_ok = all(
+        data.get(campo) and str(data[campo]).strip()
+        for campo in CAMPOS_OBLIGATORIOS_COMPLETO
+    )
+    if not obligatorios_ok:
+        return EstadoRAT.BORRADOR
+
+    # Calcular completitud rápida sobre los 25 campos del modelo
+    campos_25 = CAMPOS_OBLIGATORIOS_COMPLETO + [
+        "medidas_seguridad", "destinatarios", "transferencia_datos",
+        "nivel_confidencialidad", "estructura_dato", "datos_nna",
+        "datos_anonimizados", "datos_seudonimizados",
+        "sistema_almacenamiento", "volumen_titulares_estimado",
+        "responsable_tratamiento_email", "ciclo_procesamiento",
+        "automatizacion", "frecuencia", "transferencia_nacional",
+        "doc_clausulas", "medidas_organizativas", "mecanismos_eliminacion",
+    ]
+    completados = sum(
+        1 for c in campos_25 if data.get(c) is not None and str(data.get(c) or "").strip()
+    )
+    completitud_pct = round((completados / len(campos_25)) * 100)
+
+    if completitud_pct >= 90:
         return EstadoRAT.COMPLETO
     return EstadoRAT.BORRADOR
 
