@@ -1115,8 +1115,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             {/* Iter 10 fields + new Tier 1 + Tier 2 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#0369A1' }}>Campos de Compliance (Iter 10)</h4>
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Campos de Compliance (Iter 10)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
@@ -1151,8 +1151,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             {/* Tier 1 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#991B1B' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tratamiento de NNA</label>
@@ -1192,8 +1192,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             {/* Tier 2 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#166534' }}>Tier 2 — Operativos (ProBest template)</h4>
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 2 — Operativos (ProBest template)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Ciclo de procesamiento</label>
