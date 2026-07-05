@@ -263,58 +263,50 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         story.append(Paragraph(f"PROCESO {i}: {rat.nombre_proceso.upper()}", estilo_label))
         story.append(Spacer(1, 0.2 * cm))
 
+        def _v(val):
+            return sanitize_pii(val) if val else "—"
+
+        def _b(val):
+            return "Sí" if val else "No"
+
         campos_ficha = [
-            ("Categoría de Datos Tratados", sanitize_pii(rat.categoria_datos)),
-            ("Categorías de Titulares", sanitize_pii(rat.categoria_titulares or "No especificadas")),
-            ("Finalidad del Tratamiento", sanitize_pii(rat.finalidad)),
-            ("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", sanitize_pii(rat.base_legal)),
-            ("Fuente de los Datos", sanitize_pii(rat.fuente_datos)),
-            ("Transferencia o Comunicación de Datos", sanitize_pii(rat.transferencia_datos or "No aplica")),
-            ("Plazo de Retención", sanitize_pii(rat.plazo_retencion)),
-            ("Medidas de Seguridad", sanitize_pii(rat.medidas_seguridad or "No especificadas")),
-            ("Destinatarios / Encargados del Tratamiento", sanitize_pii(rat.destinatarios or "No especificados")),
+            ("Categoría de Datos Tratados", _v(rat.categoria_datos)),
+            ("Categorías de Titulares", _v(rat.categoria_titulares or "No especificadas")),
+            ("Finalidad del Tratamiento", _v(rat.finalidad)),
+            ("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", _v(rat.base_legal)),
+            ("Fuente de los Datos", _v(rat.fuente_datos)),
+            ("Transferencia o Comunicación de Datos", _v(rat.transferencia_datos or "No aplica")),
+            ("Plazo de Retención", _v(rat.plazo_retencion)),
+            ("Medidas de Seguridad", _v(rat.medidas_seguridad or "No especificadas")),
+            ("Destinatarios / Encargados del Tratamiento", _v(rat.destinatarios or "No especificados")),
         ]
         if getattr(rat, "nombre_encargado", None):
             contrato_txt = "Sí" if getattr(rat, "tiene_contrato_encargado", False) else "NO DOCUMENTADO"
-            campos_ficha.append(("Encargado del Tratamiento", f"{sanitize_pii(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
+            campos_ficha.append(("Encargado del Tratamiento", f"{_v(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
         if getattr(rat, "test_interes_legitimo", None):
-            campos_ficha.append(("Test Interés Legítimo (3 pasos)", sanitize_pii(rat.test_interes_legitimo)))
-        if getattr(rat, "logica_automatizada", None):
-            campos_ficha.append(("Lógica Automatizada (Art. 8)", sanitize_pii(rat.logica_automatizada)))
-        if getattr(rat, "datos_nna", None):
-            campos_ficha.append(("Datos NNA (Menores)", sanitize_pii(rat.datos_nna)))
-        if getattr(rat, "nivel_confidencialidad", None):
-            campos_ficha.append(("Nivel Confidencialidad", sanitize_pii(rat.nivel_confidencialidad)))
-        if getattr(rat, "estructura_dato", None):
-            campos_ficha.append(("Estructura del Dato", sanitize_pii(rat.estructura_dato)))
-        if getattr(rat, "ciclo_procesamiento", None):
-            campos_ficha.append(("Ciclo de Procesamiento", sanitize_pii(rat.ciclo_procesamiento)))
-        if getattr(rat, "automatizacion", None):
-            campos_ficha.append(("Automatización", sanitize_pii(rat.automatizacion)))
-        if getattr(rat, "frecuencia", None):
-            campos_ficha.append(("Frecuencia", sanitize_pii(rat.frecuencia)))
-        if getattr(rat, "sistema_almacenamiento", None):
-            campos_ficha.append(("Sistema Almacenamiento", sanitize_pii(rat.sistema_almacenamiento)))
-        if getattr(rat, "responsable_tratamiento_email", None):
-            campos_ficha.append(("Responsable Tratamiento (email)", sanitize_pii(rat.responsable_tratamiento_email)))
-        if getattr(rat, "transferencia_nacional", None):
-            campos_ficha.append(("Transferencia Nacional", "Sí" if rat.transferencia_nacional else "No"))
-        if getattr(rat, "doc_clausulas", None):
-            campos_ficha.append(("Doc. Cláusulas", sanitize_pii(rat.doc_clausulas)))
-        if getattr(rat, "medidas_organizativas", None):
-            campos_ficha.append(("Medidas Organizativas", sanitize_pii(rat.medidas_organizativas)))
-        if getattr(rat, "mecanismos_eliminacion", None):
-            campos_ficha.append(("Mecanismos de Eliminación", sanitize_pii(rat.mecanismos_eliminacion)))
-        if getattr(rat, "tecnica_anonimizacion", None):
-            campos_ficha.append(("Técnica Anonimización", sanitize_pii(rat.tecnica_anonimizacion)))
-        if getattr(rat, "datos_anonimizados", None):
-            campos_ficha.append(("Datos Anonimizados", "Sí" if rat.datos_anonimizados else "No"))
-        if getattr(rat, "datos_seudonimizados", None):
-            campos_ficha.append(("Datos Seudonimizados", "Sí" if rat.datos_seudonimizados else "No"))
-        if getattr(rat, "origen_dato_portabilidad", None):
-            campos_ficha.append(("Origen Dato Portabilidad", sanitize_pii(rat.origen_dato_portabilidad)))
-        if getattr(rat, "volumen_titulares_estimado", None):
-            campos_ficha.append(("Volumen Titulares Estimado", str(rat.volumen_titulares_estimado)))
+            campos_ficha.append(("Test Interés Legítimo (3 pasos)", _v(rat.test_interes_legitimo)))
+        campos_ficha.append(("Lógica Automatizada (Art. 8)", _v(getattr(rat, "logica_automatizada", None))))
+        campos_ficha.append(("Datos NNA (Menores)", _v(getattr(rat, "datos_nna", None))))
+        campos_ficha.append(("Nivel Confidencialidad", _v(getattr(rat, "nivel_confidencialidad", None))))
+        campos_ficha.append(("Estructura del Dato", _v(getattr(rat, "estructura_dato", None))))
+        campos_ficha.append(("Datos Anonimizados", _b(getattr(rat, "datos_anonimizados", False))))
+        campos_ficha.append(("Datos Seudonimizados", _b(getattr(rat, "datos_seudonimizados", False))))
+        campos_ficha.append(("Ciclo de Procesamiento", _v(getattr(rat, "ciclo_procesamiento", None))))
+        campos_ficha.append(("Automatización", _v(getattr(rat, "automatizacion", None))))
+        campos_ficha.append(("Frecuencia", _v(getattr(rat, "frecuencia", None))))
+        campos_ficha.append(("Sistema Almacenamiento", _v(getattr(rat, "sistema_almacenamiento", None))))
+        campos_ficha.append(("Responsable Tratamiento (email)", _v(getattr(rat, "responsable_tratamiento_email", None))))
+        campos_ficha.append(("Transferencia Nacional", _b(getattr(rat, "transferencia_nacional", False))))
+        campos_ficha.append(("Doc. Cláusulas", _v(getattr(rat, "doc_clausulas", None))))
+        campos_ficha.append(("Medidas Organizativas", _v(getattr(rat, "medidas_organizativas", None))))
+        campos_ficha.append(("Mecanismos de Eliminación", _v(getattr(rat, "mecanismos_eliminacion", None))))
+        campos_ficha.append(("Técnica Anonimización", _v(getattr(rat, "tecnica_anonimizacion", None))))
+        campos_ficha.append(("Origen Dato Portabilidad", _v(getattr(rat, "origen_dato_portabilidad", None))))
+        campos_ficha.append(("Volumen Titulares Estimado", str(getattr(rat, "volumen_titulares_estimado", None) or "—")))
+        campos_ficha.append(("Responsable Email", _v(getattr(rat, "responsable_tratamiento_email", None))))
+        campos_ficha.append(("Aprobado por", _v(getattr(rat, "aprobado_por", None))))
+        if getattr(rat, "fecha_aprobacion", None):
+            campos_ficha.append(("Fecha Aprobación", getattr(rat, "fecha_aprobacion", None).strftime("%d/%m/%Y %H:%M")))
 
         ficha_data = []
         for label, valor in campos_ficha:
