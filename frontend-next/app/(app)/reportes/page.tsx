@@ -719,7 +719,7 @@ export default function ReportesPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Métricas avanzadas — Tier 1 y Tier 2</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Volumen titulares" value={selectedRat.volumen_titulares_estimado} />
+                <Field label="Volumen titulares" value={selectedRat.volumen_titulares_estimado?.toLocaleString('es-CL')} />
                 <Field label="Doc cláusulas" value={selectedRat.doc_clausulas} />
                 <Field label="Medidas organizativas" value={selectedRat.medidas_organizativas} />
               </div>
