@@ -80,6 +80,8 @@ function FieldRow({ label, value, warning, criticalIfEmpty, children }: FieldRow
       <span
         className="text-sm flex-1 break-words font-medium"
         style={{ color: valueColor }}
+        role={isCriticalEmpty ? 'alert' : undefined}
+        aria-live={isCriticalEmpty ? 'polite' : undefined}
       >
         {display}
       </span>
@@ -138,7 +140,12 @@ const RIESGO_BADGE: Record<string, { bg: string; color: string; icon: string }> 
 function EstadoBadge({ estado }: { estado: RAT['estado'] }) {
   const s = ESTADO_BADGE[estado] ?? ESTADO_BADGE.borrador;
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+    <span
+      role="status"
+      aria-label={`Estado del RAT: ${s.label}`}
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ background: s.bg, color: s.color }}
+    >
       <span aria-hidden="true">{s.icon}</span>
       {s.label}
     </span>
@@ -150,7 +157,12 @@ function RiesgoBadge({ nivel }: { nivel?: string }) {
   const s = RIESGO_BADGE[nivel];
   if (!s) return null;
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+    <span
+      role="status"
+      aria-label={`Nivel de riesgo: ${nivel}`}
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ background: s.bg, color: s.color }}
+    >
       <span aria-hidden="true">{s.icon}</span>
       Riesgo {nivel}
     </span>
@@ -222,6 +234,15 @@ export default function RatDetailView({
   useEffect(() => { dispatch({ type: 'RESET' }); }, [rat.id]);
 
   async function handleApprove() {
+    // Validación frontend: el backend requiere completitud >=90%.
+    // Si falta, mostramos mensaje accionable en vez de recibir un 400 confuso.
+    if ((rat.completitud ?? 0) < 90) {
+      toast.error(
+        `No se puede aprobar: completitud ${rat.completitud ?? 0}% (mínimo 90%). Completa los campos pendientes del RAT.`,
+        { duration: 5000 }
+      );
+      return;
+    }
     dispatch({ type: 'SET_APPROVING', value: true });
     try {
       await api.aprobarRat(rat.id);
@@ -446,8 +467,13 @@ export default function RatDetailView({
               {rat.estado !== 'aprobado' ? (
                 <button
                   onClick={handleApprove}
-                  disabled={approving}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  disabled={approving || (rat.completitud ?? 0) < 90}
+                  title={
+                    (rat.completitud ?? 0) < 90
+                      ? `Completitud ${rat.completitud ?? 0}% — necesitas al menos 90% para aprobar`
+                      : undefined
+                  }
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   style={{ background: '#059669' }}
                 >
                   {approving ? (
