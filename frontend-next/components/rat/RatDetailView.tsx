@@ -338,6 +338,17 @@ export default function RatDetailView({
             warning={!rat.tipo_dato_sensible}
           />
         )}
+        <FieldRow label="Tratamiento NNA" value={rat.datos_nna === 'ninguno' ? 'Sin datos de NNA' : rat.datos_nna === 'ninos' ? 'Niños (< 14 años)' : rat.datos_nna === 'adolescentes' ? 'Adolescentes (14-17 años)' : rat.datos_nna === 'ambos' ? 'Ambos' : null} />
+        <FieldRow label="Nivel confidencialidad" value={rat.nivel_confidencialidad} />
+        <FieldRow label="Estructura del dato" value={rat.estructura_dato} />
+        <FieldRow
+          label="Anonimización"
+          value={
+            rat.datos_anonimizados || rat.datos_seudonimizados
+              ? [rat.datos_anonimizados ? 'Anonimizados' : '', rat.datos_seudonimizados ? 'Seudonimizados' : ''].filter(Boolean).join(', ')
+              : null
+          }
+        />
         {(rat.evaluacion_impacto || (rat.estado_eipd && rat.estado_eipd !== 'no_requerida')) && (
           <>
             <FieldRow label="EIPD" value={rat.estado_eipd ? `• ${rat.estado_eipd.replace('_', ' ')}` : 'Pendiente'} />
@@ -381,10 +392,11 @@ export default function RatDetailView({
       <Section title="Almacenamiento y transferencias">
         <FieldRow label="Plazo retención" value={rat.plazo_retencion} criticalIfEmpty />
         <FieldRow label="Medidas de seguridad" value={rat.medidas_seguridad} />
-        <FieldRow label="Transferencia datos" value={rat.transferencia_datos} />
+        <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
         {rat.volumen_titulares_estimado !== undefined && rat.volumen_titulares_estimado !== null && (
           <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado.toLocaleString('es-CL')} />
         )}
+        <FieldRow label="Transferencia datos" value={rat.transferencia_datos} />
         <FieldRow label="Transferencia nacional" value={rat.transferencia_nacional ? 'Sí — dentro del territorio chileno' : 'No'} />
         {rat.transferencia_internacional && (
           <>
@@ -402,40 +414,15 @@ export default function RatDetailView({
         )}
       </Section>
 
-      {/* Compliance (Iter 10) — siempre visible */}
-      <Section title="Compliance · Ley 21.719">
-        <FieldRow label="Sistema almacenamiento" value={rat.sistema_almacenamiento} />
-        <FieldRow label="Volumen titulares" value={rat.volumen_titulares_estimado != null ? rat.volumen_titulares_estimado.toLocaleString('es-CL') : null} />
+      {/* Compliance operativo — campos operativos del template ProBest (AUDIT_LOG Iter 11, Tier 2) */}
+      <SectionWithTooltip
+        title="Compliance operativo"
+        tooltipText="Operaciones de tratamiento, ciclo de procesamiento, automatización y aspectos técnicos operativos (AUDIT_LOG Iter 11, Tier 2)"
+      >
         <FieldRow label="Operaciones tratamiento" value={rat.operaciones_tratamiento && rat.operaciones_tratamiento.length > 0 ? rat.operaciones_tratamiento.join(', ') : null}>
           <ReadOnlyChips value={rat.operaciones_tratamiento?.join(', ')} />
         </FieldRow>
         <FieldRow label="Responsable tratamiento" value={rat.responsable_tratamiento_email} />
-        <FieldRow label="Lógica automatizada" value={rat.logica_automatizada} />
-      </Section>
-
-      {/* Tier 1 — siempre visible con tooltip */}
-      <SectionWithTooltip
-        title="Datos sensibles y clasificación"
-        tooltipText="Datos NNA, clasificación de confidencialidad, estructura del dato, anonimización (AUDIT_LOG Iter 11, Tier 1)"
-      >
-        <FieldRow label="Tratamiento NNA" value={rat.datos_nna === 'ninguno' ? 'Sin datos de NNA' : rat.datos_nna === 'ninos' ? 'Niños (< 14 años)' : rat.datos_nna === 'adolescentes' ? 'Adolescentes (14-17 años)' : rat.datos_nna === 'ambos' ? 'Ambos' : null} />
-        <FieldRow label="Nivel confidencialidad" value={rat.nivel_confidencialidad} />
-        <FieldRow label="Estructura del dato" value={rat.estructura_dato} />
-        <FieldRow
-          label="Anonimización"
-          value={
-            rat.datos_anonimizados || rat.datos_seudonimizados
-              ? [rat.datos_anonimizados ? 'Anonimizados' : '', rat.datos_seudonimizados ? 'Seudonimizados' : ''].filter(Boolean).join(', ')
-              : null
-          }
-        />
-      </SectionWithTooltip>
-
-      {/* Tier 2 — siempre visible con tooltip */}
-      <SectionWithTooltip
-        title="Operativos y técnicos"
-        tooltipText="Campos operativos del template ProBest (AUDIT_LOG Iter 11, Tier 2)"
-      >
         <FieldRow label="Ciclo procesamiento" value={rat.ciclo_procesamiento} />
         <FieldRow label="Grado automatización" value={rat.automatizacion} />
         <FieldRow label="Frecuencia" value={rat.frecuencia} />

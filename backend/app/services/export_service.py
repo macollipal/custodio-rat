@@ -40,63 +40,62 @@ def sanitize_csv_value(value: str) -> str:
 
 
 CAMPOS_RAT = [
-    # Campos obligatorios Art. 16
+    # Paso 1 — Identificación
     ("ID", "id"),
     ("Nombre del Proceso", "nombre_proceso"),
-    ("Categoría de Datos", "categoria_datos"),
     ("Categorías de Titulares", "categoria_titulares"),
-    ("Finalidad", "finalidad"),
-    ("Base Legal", "base_legal"),
     ("Fuente de Datos", "fuente_datos"),
-    ("Plazo de Retención", "plazo_retencion"),
-    # Campos recomendados Art. 16
-    ("Medidas de Seguridad", "medidas_seguridad"),
     ("Destinatarios / Encargados", "destinatarios"),
-    ("Transferencia de Datos", "transferencia_datos"),
-    # Encargado del tratamiento
     ("Nombre Encargado", "nombre_encargado"),
     ("Contrato Encargado", "tiene_contrato_encargado"),
-    # Transferencia internacional
-    ("Transfer. Internacional", "transferencia_internacional"),
-    ("País Destino", "pais_destino"),
-    ("Garantías Transfer. Internacional", "garantias_transferencia_int"),
-    ("Transferencia Nacional", "transferencia_nacional"),
-    # Datos sensibles y EIPD
+    # Paso 2 — Datos tratados (incluye clasificación Tier 1)
+    ("Categoría de Datos", "categoria_datos"),
     ("Datos Sensibles", "datos_sensibles"),
     ("Tipo Dato Sensible (Art. 2 g)", "tipo_dato_sensible"),
-    ("Datos NNA (Menores)", "datos_nna"),
+    ("Tratamiento NNA", "datos_nna"),
+    ("Nivel Confidencialidad", "nivel_confidencialidad"),
+    ("Estructura del Dato", "estructura_dato"),
+    ("Datos Anonimizados", "datos_anonimizados"),
+    ("Datos Seudonimizados", "datos_seudonimizados"),
     ("Requiere EIPD", "evaluacion_impacto"),
     ("Estado EIPD", "estado_eipd"),
     ("Fecha EIPD", "fecha_eipd"),
     ("Decisiones Automatizadas", "decisiones_automatizadas"),
     ("Lógica Automatizada", "logica_automatizada"),
-    # Test interés legítimo
+    # Paso 3 — Finalidad y ley
+    ("Base Legal", "base_legal"),
+    ("Finalidad", "finalidad"),
     ("Test Interés Legítimo", "test_interes_legitimo"),
-    # Tier 1 - Gaps críticos Ley 21.719
-    ("Nivel Confidencialidad", "nivel_confidencialidad"),
-    ("Estructura del Dato", "estructura_dato"),
-    ("Datos Anonimizados", "datos_anonimizados"),
-    ("Datos Seudonimizados", "datos_seudonimizados"),
-    # Tier 2 - Operativos
+    ("Obs. Auditoría", "observaciones_auditoria"),
+    # Paso 4 — Almacenamiento y transferencias (incluye Tier 2 almacenamiento)
+    ("Plazo de Retención", "plazo_retencion"),
+    ("Medidas de Seguridad", "medidas_seguridad"),
+    ("Transferencia de Datos", "transferencia_datos"),
+    ("Transferencia Internacional", "transferencia_internacional"),
+    ("País Destino", "pais_destino"),
+    ("Garantías Transfer. Internacional", "garantias_transferencia_int"),
+    ("Transferencia Nacional", "transferencia_nacional"),
+    ("Sistema Almacenamiento", "sistema_almacenamiento"),
+    ("Volumen Titulares Estimado", "volumen_titulares_estimado"),
+    # Paso 5 — Compliance operativo (Tier 2 restante)
+    ("Operaciones de Tratamiento", "operaciones_tratamiento"),
+    ("Responsable Tratamiento Email", "responsable_tratamiento_email"),
     ("Ciclo Procesamiento", "ciclo_procesamiento"),
     ("Automatización", "automatizacion"),
     ("Frecuencia", "frecuencia"),
-    ("Sistema Almacenamiento", "sistema_almacenamiento"),
-    ("Volumen Titulares Estimado", "volumen_titulares_estimado"),
-    ("Responsable Tratamiento Email", "responsable_tratamiento_email"),
-    ("Doc Clausulas", "doc_clausulas"),
+    ("Doc. Cláusulas", "doc_clausulas"),
     ("Medidas Organizativas", "medidas_organizativas"),
     ("Mecanismos Eliminación", "mecanismos_eliminacion"),
     ("Técnica Anonimización", "tecnica_anonimizacion"),
-    ("Origen Dato Portabilidad", "origen_dato_portabilidad"),
+    ("Origen Dato (Portabilidad)", "origen_dato_portabilidad"),
     ("Fecha Levantamiento", "fecha_levantamiento"),
     # Metadatos y auditoría
     ("Estado", "estado"),
     ("Aprobado por", "aprobado_por"),
     ("Fecha Aprobación", "fecha_aprobacion"),
     ("Creado por", "created_by"),
-    ("Fecha creación", "created_at"),
-    ("Última actualización", "updated_at"),
+    ("Fecha Creación", "created_at"),
+    ("Última Actualización", "updated_at"),
     ("Tiene Archivo Base Legal", "tiene_archivo_base_legal"),
 ]
 
@@ -126,6 +125,12 @@ def exportar_csv(rats: list[RAT]) -> bytes:
                     value = value.strftime("%d/%m/%Y")
                 else:
                     value = ""
+            elif attr == "operaciones_tratamiento":
+                value = getattr(rat, attr, None)
+                if isinstance(value, list):
+                    value = ", ".join(str(v) for v in value)
+                else:
+                    value = value or ""
             elif attr == "fecha_aprobacion":
                 value = getattr(rat, attr, None)
                 if value:
@@ -270,40 +275,71 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
             return "Sí" if val else "No"
 
         campos_ficha = [
-            ("Categoría de Datos Tratados", _v(rat.categoria_datos)),
+            # Paso 1 — Identificación
+            ("ID RAT", str(rat.id)),
+            ("Nombre del Proceso", _v(rat.nombre_proceso)),
             ("Categorías de Titulares", _v(rat.categoria_titulares or "No especificadas")),
-            ("Finalidad del Tratamiento", _v(rat.finalidad)),
-            ("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", _v(rat.base_legal)),
             ("Fuente de los Datos", _v(rat.fuente_datos)),
-            ("Transferencia o Comunicación de Datos", _v(rat.transferencia_datos or "No aplica")),
-            ("Plazo de Retención", _v(rat.plazo_retencion)),
-            ("Medidas de Seguridad", _v(rat.medidas_seguridad or "No especificadas")),
             ("Destinatarios / Encargados del Tratamiento", _v(rat.destinatarios or "No especificados")),
         ]
         if getattr(rat, "nombre_encargado", None):
             contrato_txt = "Sí" if getattr(rat, "tiene_contrato_encargado", False) else "NO DOCUMENTADO"
             campos_ficha.append(("Encargado del Tratamiento", f"{_v(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
-        if getattr(rat, "test_interes_legitimo", None):
-            campos_ficha.append(("Test Interés Legítimo (3 pasos)", _v(rat.test_interes_legitimo)))
-        campos_ficha.append(("Lógica Automatizada (Art. 8)", _v(getattr(rat, "logica_automatizada", None))))
-        campos_ficha.append(("Datos NNA (Menores)", _v(getattr(rat, "datos_nna", None))))
+        # Paso 2 — Datos tratados (incluye clasificación Tier 1)
+        campos_ficha.append(("Categoría de Datos Tratados", _v(rat.categoria_datos)))
+        if getattr(rat, "datos_sensibles", False):
+            tipo_txt = f" — Tipo: {sanitize_pii(rat.tipo_dato_sensible)}" if getattr(rat, "tipo_dato_sensible", None) else ""
+            campos_ficha.append(("Datos Sensibles (Art. 2 g)", f"SÍ{tipo_txt}"))
+        campos_ficha.append(("Tratamiento NNA", _v(getattr(rat, "datos_nna", None))))
         campos_ficha.append(("Nivel Confidencialidad", _v(getattr(rat, "nivel_confidencialidad", None))))
         campos_ficha.append(("Estructura del Dato", _v(getattr(rat, "estructura_dato", None))))
         campos_ficha.append(("Datos Anonimizados", _b(getattr(rat, "datos_anonimizados", False))))
         campos_ficha.append(("Datos Seudonimizados", _b(getattr(rat, "datos_seudonimizados", False))))
+        if getattr(rat, "evaluacion_impacto", False):
+            eipd_estado = getattr(rat, "estado_eipd", "pendiente") or "pendiente"
+            eipd_fecha = getattr(rat, "fecha_eipd", None)
+            eipd_txt = f"SÍ — Estado: {eipd_estado.upper()}"
+            if eipd_fecha:
+                eipd_txt += f" — Fecha: {eipd_fecha.strftime('%d/%m/%Y')}"
+            if eipd_estado != "completada":
+                eipd_txt += " — PENDIENTE"
+            campos_ficha.append(("EIPD (Evaluación de Impacto)", eipd_txt))
+        if getattr(rat, "decisiones_automatizadas", False):
+            campos_ficha.append(("Decisiones Automatizadas (Art. 8)", f"SÍ — {_v(getattr(rat, 'logica_automatizada', None))}"))
+        # Paso 3 — Finalidad y ley
+        campos_ficha.append(("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", _v(rat.base_legal)))
+        campos_ficha.append(("Finalidad del Tratamiento", _v(rat.finalidad)))
+        if getattr(rat, "test_interes_legitimo", None):
+            campos_ficha.append(("Test Interés Legítimo (3 pasos)", _v(rat.test_interes_legitimo)))
+        if getattr(rat, "observaciones_auditoria", None):
+            campos_ficha.append(("Obs. Auditoría", _v(getattr(rat, "observaciones_auditoria", None))))
+        # Paso 4 — Almacenamiento y transferencias (incluye Tier 2 almacenamiento)
+        campos_ficha.append(("Plazo de Retención", _v(rat.plazo_retencion)))
+        campos_ficha.append(("Medidas de Seguridad", _v(rat.medidas_seguridad or "No especificadas")))
+        campos_ficha.append(("Transferencia o Comunicación de Datos", _v(rat.transferencia_datos or "No aplica")))
+        if getattr(rat, "transferencia_internacional", False):
+            pais = getattr(rat, "pais_destino", None) or "No especificado"
+            garantias = getattr(rat, "garantias_transferencia_int", None) or "NO ESPECIFICADAS"
+            campos_ficha.append(("Transferencia Internacional", f"SÍ — País: {pais} — Garantías: {garantias}"))
+        campos_ficha.append(("Transferencia Nacional", _b(getattr(rat, "transferencia_nacional", False))))
+        campos_ficha.append(("Sistema Almacenamiento", _v(getattr(rat, "sistema_almacenamiento", None))))
+        campos_ficha.append(("Volumen Titulares Estimado", str(getattr(rat, "volumen_titulares_estimado", None) or "—")))
+        # Paso 5 — Compliance operativo (Tier 2 restante)
+        ops = getattr(rat, "operaciones_tratamiento", None)
+        if ops:
+            ops_str = ", ".join(ops) if isinstance(ops, list) else str(ops)
+            campos_ficha.append(("Operaciones de Tratamiento", ops_str))
+        campos_ficha.append(("Responsable Tratamiento (email)", _v(getattr(rat, "responsable_tratamiento_email", None))))
         campos_ficha.append(("Ciclo de Procesamiento", _v(getattr(rat, "ciclo_procesamiento", None))))
         campos_ficha.append(("Automatización", _v(getattr(rat, "automatizacion", None))))
         campos_ficha.append(("Frecuencia", _v(getattr(rat, "frecuencia", None))))
-        campos_ficha.append(("Sistema Almacenamiento", _v(getattr(rat, "sistema_almacenamiento", None))))
-        campos_ficha.append(("Responsable Tratamiento (email)", _v(getattr(rat, "responsable_tratamiento_email", None))))
-        campos_ficha.append(("Transferencia Nacional", _b(getattr(rat, "transferencia_nacional", False))))
         campos_ficha.append(("Doc. Cláusulas", _v(getattr(rat, "doc_clausulas", None))))
         campos_ficha.append(("Medidas Organizativas", _v(getattr(rat, "medidas_organizativas", None))))
         campos_ficha.append(("Mecanismos de Eliminación", _v(getattr(rat, "mecanismos_eliminacion", None))))
         campos_ficha.append(("Técnica Anonimización", _v(getattr(rat, "tecnica_anonimizacion", None))))
-        campos_ficha.append(("Origen Dato Portabilidad", _v(getattr(rat, "origen_dato_portabilidad", None))))
-        campos_ficha.append(("Volumen Titulares Estimado", str(getattr(rat, "volumen_titulares_estimado", None) or "—")))
-        campos_ficha.append(("Responsable Email", _v(getattr(rat, "responsable_tratamiento_email", None))))
+        campos_ficha.append(("Origen Dato (Portabilidad)", _v(getattr(rat, "origen_dato_portabilidad", None))))
+        campos_ficha.append(("Fecha Levantamiento", _v(getattr(rat, "fecha_levantamiento", None))))
+        # Metadatos
         campos_ficha.append(("Aprobado por", _v(getattr(rat, "aprobado_por", None))))
         if getattr(rat, "fecha_aprobacion", None):
             campos_ficha.append(("Fecha Aprobación", getattr(rat, "fecha_aprobacion", None).strftime("%d/%m/%Y %H:%M")))
@@ -315,35 +351,23 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
                 Paragraph(str(valor), estilo_valor),
             ])
 
-        # Flags especiales
+        # Alerts (flags that need visual emphasis — kept with red styling)
         if rat.datos_sensibles:
             tipo_txt = f" — Tipo: {sanitize_pii(rat.tipo_dato_sensible)}" if getattr(rat, "tipo_dato_sensible", None) else ""
             ficha_data.append([
-                Paragraph("Datos Sensibles (Art. 2 g)", estilo_label),
-                Paragraph(f"SÍ{tipo_txt} — Requiere base legal expresa y medidas reforzadas", estilo_alerta),
+                Paragraph("⚠️ Datos Sensibles (Art. 2 g)", estilo_alerta),
+                Paragraph(f"TRATAMIENTO DE DATOS SENSIBLES{tipo_txt} — Requiere base legal expresa y medidas reforzadas", estilo_alerta),
             ])
         if rat.transferencia_internacional:
             garantias_txt = f" | Garantías: {sanitize_pii(getattr(rat, 'garantias_transferencia_int', '') or '')}" if getattr(rat, "garantias_transferencia_int", None) else " | Garantías: NO ESPECIFICADAS"
             ficha_data.append([
-                Paragraph("Transferencia Internacional", estilo_label),
+                Paragraph("🌐 Transferencia Internacional", estilo_alerta),
                 Paragraph(f"SÍ — País destino: {rat.pais_destino or 'No especificado'}{garantias_txt}", estilo_alerta),
             ])
-        if rat.evaluacion_impacto:
-            eipd_estado = getattr(rat, "estado_eipd", "pendiente") or "pendiente"
-            eipd_fecha = getattr(rat, "fecha_eipd", None)
-            eipd_txt = f"SÍ — Estado: {eipd_estado.upper()}"
-            if eipd_fecha:
-                eipd_txt += f" — Fecha: {eipd_fecha}"
-            if eipd_estado != "completada":
-                eipd_txt += " — PENDIENTE de completar antes de iniciar el tratamiento"
+        if rat.evaluacion_impacto and getattr(rat, "estado_eipd", None) != "completada":
             ficha_data.append([
-                Paragraph("EIPD (Art. 15 bis)", estilo_label),
-                Paragraph(eipd_txt, estilo_alerta),
-            ])
-        if getattr(rat, "decisiones_automatizadas", False):
-            ficha_data.append([
-                Paragraph("Decisiones Automatizadas (Art. 8)", estilo_label),
-                Paragraph("SÍ — Documente la lógica del sistema y el mecanismo de revisión humana disponible", estilo_alerta),
+                Paragraph("📋 EIPD Pendiente (Art. 15 bis)", estilo_alerta),
+                Paragraph("La Evaluación de Impacto aún no está completada. Debe finalizarse antes de iniciar el tratamiento.", estilo_alerta),
             ])
         if getattr(rat, "transferencia_nacional", None) and rat.transferencia_nacional:
             ficha_data.append([

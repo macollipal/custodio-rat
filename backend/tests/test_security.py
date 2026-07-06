@@ -329,3 +329,263 @@ class TestCSVInjection:
         unquoted_line = content.replace('"', "")
         assert not unquoted_line.startswith("=CMD"), "CSV injection detectada: fÃ³rmula =CMD presente sin escapar en export"
         assert "'=CMD" in content or content.count("CMD") == 0, "CSV injection no sanitizada: valor no prefijado con '"
+
+
+class TestIDORMultiTenantRAT:
+    """Tests de isolación multi-tenant: empresa B no puede acceder a RATs de empresa A."""
+
+    def test_empresa_b_no_puede_ver_rat_de_empresa_a(self, client, db, admin_user):
+        """GET /rats/{id} debe retornar 404 para RAT de otra empresa."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        # Crear empresa A
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A IDOR",
+            "rut": "76.111.222-4",
+            "rubro": "Test A",
+            "contacto_dpo": "DPO A",
+            "email_dpo": "dpo@empresaA.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        # Crear empresa B
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B IDOR",
+            "rut": "76.111.222-5",
+            "rubro": "Test B",
+            "contacto_dpo": "DPO B",
+            "email_dpo": "dpo@empresaB.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        # Crear usuario para empresa B
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        usuario_b = User(
+            username="usuario_empresa_b",
+            email="usuarioB@empresaB.cl",
+            full_name="Usuario B",
+            hashed_password=get_password_hash("password123"),
+            is_active=True,
+            rol_global=RolGlobal.USUARIO.value,
+        )
+        db.add(usuario_b)
+        db.commit()
+        db.refresh(usuario_b)
+        uc_b = UserCompany(user_id=usuario_b.id, company_id=emp_b["id"], rol=RolEmpresa.VIEWER)
+        db.add(uc_b)
+        db.commit()
+
+        # Crear RAT para empresa A
+        rat_a = client.post("/rats/", json={
+            "company_id": emp_a["id"],
+            "nombre_proceso": "RAT Empresa A Secreto",
+            "categoria_datos": "Datos sensibles",
+            "categoria_titulares": "Empleados",
+            "finalidad": "Gestión depersonal",
+            "base_legal": "Ejecución de contrato",
+            "fuente_datos": "Sistema interno",
+            "plazo_retencion": "5 años",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        # Login como usuario B
+        login_b = client.post("/auth/login", json={"username": "usuario_empresa_b", "password": "password123"})
+        token_b = login_b.json()["access_token"]
+
+        # Intentar acceder al RAT de empresa A con usuario de empresa B
+        resp = client.get(f"/rats/{rat_a['id']}", headers={"Authorization": f"Bearer {token_b}"})
+        assert resp.status_code == 404, f"IDOR: empresa B puede ver RAT de empresa A (status={resp.status_code})"
+
+    def test_empresa_b_no_puede_actualizar_rat_de_empresa_a(self, client, db, admin_user):
+        """PUT /rats/{id} debe retornar 404 para RAT de otra empresa."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A Update",
+            "rut": "76.222.333-1",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empA.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B Update",
+            "rut": "76.222.333-2",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empB.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        usuario_b = User(
+            username="usuario_b_update",
+            email="usuarioB@empB.cl",
+            full_name="Usuario B Update",
+            hashed_password=get_password_hash("password123"),
+            is_active=True,
+            rol_global=RolGlobal.USUARIO.value,
+        )
+        db.add(usuario_b)
+        db.commit()
+        db.refresh(usuario_b)
+        uc_b = UserCompany(user_id=usuario_b.id, company_id=emp_b["id"], rol=RolEmpresa.EDITOR)
+        db.add(uc_b)
+        db.commit()
+
+        rat_a = client.post("/rats/", json={
+            "company_id": emp_a["id"],
+            "nombre_proceso": "RAT A Update",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        login_b = client.post("/auth/login", json={"username": "usuario_b_update", "password": "password123"})
+        token_b = login_b.json()["access_token"]
+
+        resp = client.put(f"/rats/{rat_a['id']}", json={"nombre_proceso": "HACKED"},
+                         headers={"Authorization": f"Bearer {token_b}"})
+        assert resp.status_code == 404, f"IDOR: empresa B puede actualizar RAT de empresa A (status={resp.status_code})"
+
+    def test_empresa_b_no_puede_eliminar_rat_de_empresa_a(self, client, db, admin_user):
+        """DELETE /rats/{id} debe retornar 404 para RAT de otra empresa."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A Delete",
+            "rut": "76.333.444-1",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empAdel.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B Delete",
+            "rut": "76.333.444-2",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empBdel.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        usuario_b = User(
+            username="usuario_b_delete",
+            email="usuarioB@empBdel.cl",
+            full_name="Usuario B Delete",
+            hashed_password=get_password_hash("password123"),
+            is_active=True,
+            rol_global=RolGlobal.USUARIO.value,
+        )
+        db.add(usuario_b)
+        db.commit()
+        db.refresh(usuario_b)
+        uc_b = UserCompany(user_id=usuario_b.id, company_id=emp_b["id"], rol=RolEmpresa.EDITOR)
+        db.add(uc_b)
+        db.commit()
+
+        rat_a = client.post("/rats/", json={
+            "company_id": emp_a["id"],
+            "nombre_proceso": "RAT A Delete",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        login_b = client.post("/auth/login", json={"username": "usuario_b_delete", "password": "password123"})
+        token_b = login_b.json()["access_token"]
+
+        resp = client.delete(f"/rats/{rat_a['id']}", headers={"Authorization": f"Bearer {token_b}"})
+        assert resp.status_code == 404, f"IDOR: empresa B puede eliminar RAT de empresa A (status={resp.status_code})"
+
+    def test_empresa_b_no_puede_ver_auditoria_rat_de_empresa_a(self, client, db, admin_user):
+        """GET /rats/{id}/auditoria debe retornar 404 para RAT de otra empresa."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa A Audit",
+            "rut": "76.444.555-1",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empAaudit.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+        emp_b = client.post("/companies/", json={
+            "nombre": "Empresa B Audit",
+            "rut": "76.444.555-2",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empBaudit.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        from app.models.user import User, RolGlobal
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+        usuario_b = User(
+            username="usuario_b_audit",
+            email="usuarioB@empBaudit.cl",
+            full_name="Usuario B Audit",
+            hashed_password=get_password_hash("password123"),
+            is_active=True,
+            rol_global=RolGlobal.USUARIO.value,
+        )
+        db.add(usuario_b)
+        db.commit()
+        db.refresh(usuario_b)
+        uc_b = UserCompany(user_id=usuario_b.id, company_id=emp_b["id"], rol=RolEmpresa.VIEWER)
+        db.add(uc_b)
+        db.commit()
+
+        rat_a = client.post("/rats/", json={
+            "company_id": emp_a["id"],
+            "nombre_proceso": "RAT A Audit",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        login_b = client.post("/auth/login", json={"username": "usuario_b_audit", "password": "password123"})
+        token_b = login_b.json()["access_token"]
+
+        resp = client.get(f"/rats/{rat_a['id']}/auditoria", headers={"Authorization": f"Bearer {token_b}"})
+        assert resp.status_code == 404, f"IDOR: empresa B puede ver auditoría de RAT de empresa A (status={resp.status_code})"
+
+    def test_superadmin_puede_ver_rat_de_cualquier_empresa(self, client, db, admin_user):
+        """Superadmin (admin) debe poder ver RATs de cualquier empresa."""
+        admin_login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        admin_token = admin_login.json()["access_token"]
+
+        emp_a = client.post("/companies/", json={
+            "nombre": "Empresa Any",
+            "rut": "76.555.666-1",
+            "rubro": "Test",
+            "contacto_dpo": "DPO",
+            "email_dpo": "dpo@empAny.cl",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        rat_a = client.post("/rats/", json={
+            "company_id": emp_a["id"],
+            "nombre_proceso": "RAT Any",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+        }, headers={"Authorization": f"Bearer {admin_token}"}).json()
+
+        # Admin es superadmin, debe poder ver cualquier RAT
+        resp = client.get(f"/rats/{rat_a['id']}", headers={"Authorization": f"Bearer {admin_token}"})
+        assert resp.status_code == 200, f"Superadmin debería poder ver RAT de cualquier empresa (status={resp.status_code})"

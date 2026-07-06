@@ -539,7 +539,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
               {validation.requiredCount > 0 && (
                 <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
                   {validation.completedCount} / {validation.requiredCount} obligatorios completos
@@ -674,6 +674,69 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     </>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Clasificación y NNA — canonical Step 2 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Clasificación y NNA</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Tratamiento de NNA
+                  </label>
+                  <select
+                    value={(data.datos_nna as string) ?? 'ninguno'}
+                    onChange={e => setData(d => ({ ...d, datos_nna: e.target.value as 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' }))}
+                    className={inputCls}
+                    style={inputStyle}
+                  >
+                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Nivel de confidencialidad
+                  </label>
+                  <select
+                    value={(data.nivel_confidencialidad as string) ?? ''}
+                    onChange={e => setData(d => ({ ...d, nivel_confidencialidad: e.target.value as 'DC0' | 'DC1' | 'DC2' | 'DC3' }))}
+                    aria-describedby="nivel-conf-tooltip-wizard"
+                    className={inputCls}
+                    style={inputStyle}
+                  >
+                    <option value="">— Seleccionar —</option>
+                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  {(data.nivel_confidencialidad as string) && (() => {
+                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === data.nivel_confidencialidad);
+                    return opt?.tooltip ? <div role="tooltip" id="nivel-conf-tooltip-wizard" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div> : null;
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Estructura del dato
+                  </label>
+                  <select
+                    value={(data.estructura_dato as string) ?? ''}
+                    onChange={e => setData(d => ({ ...d, estructura_dato: e.target.value as 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' }))}
+                    className={inputCls}
+                    style={inputStyle}
+                  >
+                    <option value="">— Seleccionar —</option>
+                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={data.datos_anonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_anonimizados: e.target.checked }))} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={data.datos_seudonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_seudonimizados: e.target.checked }))} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                </label>
               </div>
             </div>
 
@@ -939,6 +1002,36 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               )}
             </div>
 
+            {/* Iter 10 fields — storage system and volume */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                  Sistema de almacenamiento
+                </label>
+                <input
+                  type="text"
+                  value={data.sistema_almacenamiento ?? ''}
+                  onChange={e => setData(d => ({ ...d, sistema_almacenamiento: e.target.value }))}
+                  placeholder="Ej: CRM Salesforce, Excel, Google Drive, Sistema clínico..."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                  Volumen estimado de titulares
+                </label>
+                <input
+                  type="number"
+                  value={data.volumen_titulares_estimado ?? ''}
+                  onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? parseInt(e.target.value) : undefined }))}
+                  placeholder="Ej: 50000"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <FormField label="Plazo de retención" required htmlFor="rw-plazo_retencion" error={fieldErrors.plazo_retencion}>
@@ -1113,109 +1206,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Campos críticos y operativos del template ProBest para compliance total Ley 21.719.</p>
             </div>
 
-            {/* Iter 10 fields + new Tier 1 + Tier 2 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Campos de Compliance (Iter 10)</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
-                  <input type="text" value={data.sistema_almacenamiento ?? ''} onChange={e => setData(d => ({ ...d, sistema_almacenamiento: e.target.value }))} placeholder="Ej: CRM Salesforce, Excel, Google Drive..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
-                  <input type="number" value={data.volumen_titulares_estimado ?? ''} onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? parseInt(e.target.value) : undefined }))} placeholder="Ej: 50000" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
-                <div className="flex flex-wrap gap-2">
-                  {OPERACIONES_TRATAMIENTO_OPCIONES.map(op => (
-                    <label key={op} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full text-xs font-medium border transition" style={{ backgroundColor: (data.operaciones_tratamiento as string[])?.includes(op) ? '#DBEAFE' : 'white', borderColor: (data.operaciones_tratamiento as string[])?.includes(op) ? '#2563EB' : '#D1D5DB', color: (data.operaciones_tratamiento as string[])?.includes(op) ? '#1D4ED8' : '#6B7280' }}>
-                      <input type="checkbox" checked={(data.operaciones_tratamiento as string[])?.includes(op) || false} onChange={e => { const current = (data.operaciones_tratamiento as string[]) || []; if (e.target.checked) { setData(d => ({ ...d, operaciones_tratamiento: [...current, op] })); } else { setData(d => ({ ...d, operaciones_tratamiento: current.filter((x: string) => x !== op) })); } }} className="sr-only" />
-                      {op}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              {data.decisiones_automatizadas && (
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Logica de decisiones automatizadas</label>
-                  <textarea value={data.logica_automatizada ?? ''} onChange={e => setData(d => ({ ...d, logica_automatizada: e.target.value }))} rows={3} placeholder="Describa la logica aplicada, consecuencias para el titular e intervencion humana disponible" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Responsable del tratamiento (email)</label>
-                <input type="email" value={data.responsable_tratamiento_email ?? ''} onChange={e => setData(d => ({ ...d, responsable_tratamiento_email: e.target.value }))} placeholder="Ej: responsable@empresa.cl" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
-              </div>
-            </div>
-
-            {/* Tier 1 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificación de confidencialidad</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tratamiento de NNA</label>
-                  <select value={(data.datos_nna as string) ?? 'ninguno'} onChange={e => setData(d => ({ ...d, datos_nna: e.target.value as 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Nivel de confidencialidad</label>
-                  <select value={(data.nivel_confidencialidad as string) ?? ''} onChange={e => setData(d => ({ ...d, nivel_confidencialidad: e.target.value as 'DC0' | 'DC1' | 'DC2' | 'DC3' }))} aria-describedby="nivel-conf-tooltip" className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    <option value="">— Seleccionar —</option>
-                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                  {(data.nivel_confidencialidad as string) && (() => {
-                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === data.nivel_confidencialidad);
-                    return opt?.tooltip ? <div role="tooltip" id="nivel-conf-tooltip" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div> : null;
-                  })()}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
-                  <select value={(data.estructura_dato as string) ?? ''} onChange={e => setData(d => ({ ...d, estructura_dato: e.target.value as 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    <option value="">— Seleccionar —</option>
-                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={data.datos_anonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_anonimizados: e.target.checked }))} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={data.datos_seudonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_seudonimizados: e.target.checked }))} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Tier 2 */}
+            {/* Tier 2 — Operativos (ProBest template) */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
               <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 2 — Operativos (ProBest template)</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Ciclo de procesamiento</label>
-                  <select value={data.ciclo_procesamiento ?? ''} onChange={e => setData(d => ({ ...d, ciclo_procesamiento: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    <option value="">— Seleccionar —</option>
-                    {CICLO_PROCESAMIENTO_OPCIONES.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatización</label>
-                  <select value={data.automatizacion ?? ''} onChange={e => setData(d => ({ ...d, automatizacion: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    <option value="">— Seleccionar —</option>
-                    {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Frecuencia del tratamiento</label>
-                  <select value={data.frecuencia ?? ''} onChange={e => setData(d => ({ ...d, frecuencia: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
-                    <option value="">— Seleccionar —</option>
-                    {FRECUENCIA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={data.transferencia_nacional ?? false} onChange={e => setData(d => ({ ...d, transferencia_nacional: e.target.checked }))} className="mt-0.5 rounded" />

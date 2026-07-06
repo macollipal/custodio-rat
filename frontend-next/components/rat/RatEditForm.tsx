@@ -121,6 +121,15 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         return;
       }
     }
+    // Consentimiento expreso obligatorio para datos sensibles (Art. 16 Ley 21.719)
+    if (form.datos_sensibles) {
+      const consentimientos = await api.listarConsentimientos(rat.company_id, rat.id, true);
+      if (consentimientos.length === 0) {
+        toast.error('Un RAT con datos sensibles requiere al menos un consentimiento expreso registrado. Use la alerta de Consentimiento en el detalle del RAT.');
+        setSaving(false);
+        return;
+      }
+    }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {};
@@ -250,7 +259,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
             </div>
 
             <div>
@@ -319,6 +328,55 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Clasificación y NNA — canonical Step 2 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Clasificación y NNA</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Tratamiento de NNA
+                  </label>
+                  <select value={form.datos_nna ?? 'ninguno'} onChange={e => set('datos_nna', e.target.value)} className={inputCls} style={inputStyle}>
+                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Nivel de confidencialidad
+                  </label>
+                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} aria-describedby="nivel-conf-tooltip-edit-form" className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  {form.nivel_confidencialidad && (() => {
+                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === form.nivel_confidencialidad);
+                    return opt?.tooltip ? (
+                      <div role="tooltip" id="nivel-conf-tooltip-edit-form" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div>
+                    ) : null;
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
+                  <select value={form.estructura_dato ?? ''} onChange={e => set('estructura_dato', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_anonimizados} onChange={e => set('datos_anonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_seudonimizados} onChange={e => set('datos_seudonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                </label>
               </div>
             </div>
 
@@ -528,6 +586,32 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
             </div>
 
+            {/* Iter 10 fields — storage system and volume */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
+                <input
+                  type="text"
+                  value={form.sistema_almacenamiento}
+                  onChange={e => set('sistema_almacenamiento', e.target.value)}
+                  placeholder="Ej: CRM Salesforce, Excel, Google Drive, Sistema clínico..."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
+                <input
+                  type="number"
+                  value={form.volumen_titulares_estimado}
+                  onChange={e => set('volumen_titulares_estimado', e.target.value ? parseInt(e.target.value) : '')}
+                  placeholder="Ej: 50000"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
@@ -582,32 +666,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
             {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>📋 Campos de Compliance (Ley 21.719)</h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
-                  <input
-                    type="text"
-                    value={form.sistema_almacenamiento}
-                    onChange={e => set('sistema_almacenamiento', e.target.value)}
-                    placeholder="Ej: CRM Salesforce, Excel, Google Drive, Sistema clínico..."
-                    className={inputCls}
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
-                  <input
-                    type="number"
-                    value={form.volumen_titulares_estimado}
-                    onChange={e => set('volumen_titulares_estimado', e.target.value ? parseInt(e.target.value) : '')}
-                    placeholder="Ej: 50000"
-                    className={inputCls}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>📋 Operaciones y responsable</h4>
 
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
@@ -678,81 +737,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps críticos y operativos - ProBest template.</p>
             </div>
 
-            {/* Tier 1 */}
-            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificación de confidencialidad</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                    Tratamiento de NNA
-                  </label>
-                  <select value={form.datos_nna ?? 'ninguno'} onChange={e => set('datos_nna', e.target.value)} className={inputCls} style={inputStyle}>
-                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                    Nivel de confidencialidad
-                  </label>
-                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} aria-describedby="nivel-conf-tooltip-edit" className={inputCls} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                  {form.nivel_confidencialidad && (() => {
-                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === form.nivel_confidencialidad);
-                    return opt?.tooltip ? (
-                      <div role="tooltip" id="nivel-conf-tooltip-edit" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div>
-                    ) : null;
-                  })()}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
-                  <select value={form.estructura_dato ?? ''} onChange={e => set('estructura_dato', e.target.value)} className={inputCls} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.datos_anonimizados} onChange={e => set('datos_anonimizados', e.target.checked)} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.datos_seudonimizados} onChange={e => set('datos_seudonimizados', e.target.checked)} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Tier 2 */}
+            {/* Tier 2 — Operativos (ProBest template) */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
               <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 2 — Operativos (ProBest template)</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Ciclo de procesamiento</label>
-                  <select value={form.ciclo_procesamiento ?? ''} onChange={e => set('ciclo_procesamiento', e.target.value)} className={inputCls} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {CICLO_PROCESAMIENTO_OPCIONES.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatización</label>
-                  <select value={form.automatizacion ?? ''} onChange={e => set('automatizacion', e.target.value)} className={inputCls} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Frecuencia del tratamiento</label>
-                  <select value={form.frecuencia ?? ''} onChange={e => set('frecuencia', e.target.value)} className={inputCls} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {FRECUENCIA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.transferencia_nacional} onChange={e => set('transferencia_nacional', e.target.checked)} className="mt-0.5 rounded" />
