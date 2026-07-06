@@ -20,3 +20,12 @@ repos:
       - id: detect-private-key
       - id: no-commit-to-branch
         args: ['--branch', 'main', '--branch', 'master']
+
+  - repo: local
+    hooks:
+      - id: docs-inventory
+        name: Custodio RAT — docs inventory (mojibake, lock files, terminologia, links)
+        entry: python scripts/maintenance/docs_inventory.py --check-links
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

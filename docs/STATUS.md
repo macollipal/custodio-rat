@@ -16,7 +16,7 @@
 | **Brechas** | 5.9/10 |
 | **Madurez** | Produccion Inicial |
 | **Branch** | `qa` |
-| **Ultima auditoria** | [2026-07-05_auditoria_v1.9](../auditorias/2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md) |
+| **Ultima auditoria** | [2026-07-05_auditoria_v1.9](auditorias/2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md) |
 
 ## Documentacion Vigente
 
@@ -70,7 +70,7 @@ Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 | 13 | RF-168 | Encoding UTF-8 corregido en backend |
 | 13 | RF-169 | Codigo muerto eliminado |
 
-Ver detalle en [AUDITORIA_V1.9.md](../auditorias/2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md).
+Ver detalle en [AUDITORIA_V1.9.md](auditorias/2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md).
 
 ## Proximos Pasos Sugeridos
 

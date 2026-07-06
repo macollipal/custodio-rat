@@ -188,6 +188,26 @@ Get-ChildItem -Path "docs" -Recurse -Filter "*.md" | ForEach-Object {
 
 ## Pre-commit Hook Sugerido
 
+**Opcion A — Framework pre-commit (recomendado, cross-platform):**
+
+`.pre-commit-config.yaml` ya incluye el hook `docs-inventory` que ejecuta `scripts/maintenance/docs_inventory.py --check-links` en cada commit. Instalar con:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+**Opcion B — Hook PowerShell nativo para Windows (sin pre-commit framework):**
+
+`scripts/maintenance/pre_commit_docs_check.ps1` es un hook standalone para Windows que verifica lock files, mojibake y terminologia APDP/APDC.
+
+Instalar manualmente:
+```powershell
+copy scripts\maintenance\pre_commit_docs_check.ps1 .git\hooks\pre-commit
+```
+
+Logica del hook:
+
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit — bloquea lock files y mojibake
@@ -206,6 +226,26 @@ for f in $(git diff --cached --name-only --diff-filter=AM | grep '\.md$'); do
   fi
 done
 ```
+
+## Automatizacion en CI
+
+`.github/workflows/docs-governance.yml` corre el barrido en cada PR/push a `main`, `develop` y `qa`. Falla si hay P0/P1. Solo PRs a `main` corren `--strict` (falla tambien por P2/P3).
+
+## Script de Inventario
+
+`scripts/maintenance/docs_inventory.py` ejecuta el barrido completo:
+
+```bash
+python scripts/maintenance/docs_inventory.py                  # Reporte formateado
+python scripts/maintenance/docs_inventory.py --json           # Salida JSON
+python scripts/maintenance/docs_inventory.py --check-links    # Incluir validacion de links
+python scripts/maintenance/docs_inventory.py --strict         # Falla tambien por P2/P3
+```
+
+Exit codes:
+- `0` — sin hallazgos P0/P1
+- `1` — hallazgos P0/P1 (o P2/P3 con `--strict`)
+- `2` — error de ejecucion
 
 ---
 
