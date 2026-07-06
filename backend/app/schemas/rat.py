@@ -1,6 +1,6 @@
 ﻿from datetime import datetime, date
 from typing import Any, Optional, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.rat import EstadoRAT
 
@@ -8,7 +8,7 @@ from app.models.rat import EstadoRAT
 class RATBase(BaseModel):
     nombre_proceso: str
     categoria_datos: str
-    categoria_titulares: Optional[str] = None
+    categoria_titulares: str = Field(..., min_length=3, description="Categoría de titulares (Art. 16 — obligatorio)")
     finalidad: str
     base_legal: str
     fuente_datos: str
@@ -70,6 +70,16 @@ class RATBase(BaseModel):
             raise ValueError(f"estado_eipd debe ser uno de {opciones}")
         return v
 
+    @field_validator('responsable_tratamiento_email')
+    @classmethod
+    def email_formato_responsable(cls, v: Optional[str]) -> Optional[str]:
+        import re
+        if v and v.strip():
+            patron = r'^[\w.\-]+@[\w.\-]+\.\w{2,}$'
+            if not re.match(patron, v.strip()):
+                raise ValueError("responsable_tratamiento_email debe ser un email válido (ej: dpo@empresa.cl)")
+        return v
+
 
 class RATCreate(RATBase):
     company_id: int
@@ -97,6 +107,20 @@ class RATCreate(RATBase):
         if stripped not in opciones_validas:
             raise ValueError(f"base_legal debe ser una de las opciones válidas: {opciones_validas}")
         return stripped
+
+    @model_validator(mode='after')
+    def validar_campos_condicionales(self) -> 'RATCreate':
+        if self.transferencia_internacional:
+            if not self.pais_destino or not self.pais_destino.strip():
+                raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
+            if not self.garantias_transferencia_int or not self.garantias_transferencia_int.strip():
+                raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
+        if self.decisiones_automatizadas:
+            if not self.logica_automatizada or not self.logica_automatizada.strip():
+                raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True")
+        if self.datos_sensibles and not self.tipo_dato_sensible:
+            raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
+        return self
 
 
 class RATUpdate(BaseModel):
@@ -150,6 +174,30 @@ class RATUpdate(BaseModel):
     archivo_base_legal_nombre: Optional[str] = None
     archivo_base_legal_tipo: Optional[str] = None
     archivo_base_legal_base64: Optional[str] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def validar_campos_condicionales_before(cls, data):
+        if isinstance(data, dict):
+            ti = data.get('transferencia_internacional')
+            if ti is True:
+                pais = data.get('pais_destino')
+                garantias = data.get('garantias_transferencia_int')
+                if not pais or not str(pais).strip():
+                    raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
+                if not garantias or not str(garantias).strip():
+                    raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
+            da = data.get('decisiones_automatizadas')
+            if da is True:
+                logica = data.get('logica_automatizada')
+                if not logica or not str(logica).strip():
+                    raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True")
+            ds = data.get('datos_sensibles')
+            if ds is True:
+                tipo = data.get('tipo_dato_sensible')
+                if not tipo or not str(tipo).strip():
+                    raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
+        return data
 
 
 class RATOut(RATBase):

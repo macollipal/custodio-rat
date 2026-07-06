@@ -43,8 +43,8 @@ class RAT(Base):
     transferencia_datos: Mapped[str] = mapped_column(Text, nullable=True)
     plazo_retencion: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    # Categor├¡as de titulares (Art. 16 Ley 21.719 ÔÇö campo m├¡nimo obligatorio)
-    categoria_titulares: Mapped[str] = mapped_column(String(500), nullable=True)
+    # Categoría de titulares (Art. 16 Ley 21.719 — campo mínimo obligatorio)
+    categoria_titulares: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # Campos adicionales de cumplimiento
     medidas_seguridad: Mapped[str] = mapped_column(Text, nullable=True)

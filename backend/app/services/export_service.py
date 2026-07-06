@@ -91,6 +91,7 @@ CAMPOS_RAT = [
     ("Fecha Levantamiento", "fecha_levantamiento"),
     # Metadatos y auditoría
     ("Estado", "estado"),
+    ("Bloqueado (Art. 8 ter)", "bloqueado"),
     ("Aprobado por", "aprobado_por"),
     ("Fecha Aprobación", "fecha_aprobacion"),
     ("Creado por", "created_by"),
@@ -353,6 +354,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         campos_ficha.append(("Fecha Levantamiento", _v(getattr(rat, "fecha_levantamiento", None))))
         # Metadatos
         campos_ficha.append(("SECCION", "METADATOS Y AUDITORÍA"))
+        campos_ficha.append(("Bloqueado (Art. 8 ter)", "SÍ — RAT BLOQUEADO" if getattr(rat, "bloqueado", False) else "No"))
         campos_ficha.append(("Aprobado por", _v(getattr(rat, "aprobado_por", None))))
         if getattr(rat, "fecha_aprobacion", None):
             campos_ficha.append(("Fecha Aprobación", getattr(rat, "fecha_aprobacion", None).strftime("%d/%m/%Y %H:%M")))
@@ -389,6 +391,11 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
             ficha_data.append([
                 Paragraph("📋 EIPD Pendiente (Art. 15 bis)", estilo_alerta),
                 Paragraph("La Evaluación de Impacto aún no está completada. Debe finalizarse antes de iniciar el tratamiento.", estilo_alerta),
+            ])
+        if getattr(rat, "bloqueado", False):
+            ficha_data.append([
+                Paragraph("🚫 RAT Bloqueado (Art. 8 ter)", estilo_alerta),
+                Paragraph("El tratamiento de datos ha sido suspendido. No debe realizarse ningún tratamiento de datos bajo este RAT hasta que se levante el bloqueo.", estilo_alerta),
             ])
 
         # Build table style: fondo gris a labels + fondo azul a headers de sección

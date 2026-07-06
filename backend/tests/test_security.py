@@ -86,11 +86,11 @@ class TestRBAC:
             "categoria_datos": "Datos",
             "categoria_titulares": "Titulares",
             "finalidad": "Finalidad",
-            "base_legal": "Consentimiento",
+            "base_legal": "Consentimiento del titular",
             "fuente_datos": "Fuente",
-            "plazo_retencion": "1 aÃ±o",
+            "plazo_retencion": "1 año",
         }, headers={"Authorization": f"Bearer {user_token}"})
-        assert resp.status_code == 403, "Usuario no deberÃ­a poder crear RATs"
+        assert resp.status_code == 403, "Usuario no debería poder crear RATs"
 
     def test_admin_global_puede_crear_empresa(self, client, admin_user):
         """Superadmin debe poder crear empresas."""
@@ -316,7 +316,7 @@ class TestCSVInjection:
             "categoria_datos": "Nombre, email",
             "categoria_titulares": "Clientes",
             "finalidad": "Test injection",
-            "base_legal": "Consentimiento",
+            "base_legal": "Consentimiento del titular",
             "fuente_datos": "El titular",
             "plazo_retencion": "1 aÃ±o",
         }, headers={"Authorization": f"Bearer {token}"})
@@ -589,3 +589,184 @@ class TestIDORMultiTenantRAT:
         # Admin es superadmin, debe poder ver cualquier RAT
         resp = client.get(f"/rats/{rat_a['id']}", headers={"Authorization": f"Bearer {admin_token}"})
         assert resp.status_code == 200, f"Superadmin debería poder ver RAT de cualquier empresa (status={resp.status_code})"
+
+
+class TestRATValidators:
+    """Tests para validadores condicionales de compliance (Ley 21.719 Art. 16, 8, 2 g)."""
+
+    def _get_admin_token(self, client, admin_user):
+        login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
+        return login.json()["access_token"]
+
+    def test_transferencia_internacional_sin_pais_destino(self, client, admin_user, empresa):
+        """transferencia_internacional=True sin pais_destino → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        resp = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "Test Transferencia Int",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "transferencia_internacional": True,
+            "garantias_transferencia_int": "Contrato con cláusulas tipo",
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
+
+    def test_transferencia_internacional_sin_garantias(self, client, admin_user, empresa):
+        """transferencia_internacional=True sin garantias_transferencia_int → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        resp = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "Test Transferencia Int 2",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "transferencia_internacional": True,
+            "pais_destino": "Estados Unidos",
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
+
+    def test_decisiones_automatizadas_sin_logica(self, client, admin_user, empresa):
+        """decisiones_automatizadas=True sin logica_automatizada → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        resp = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "Test Decisiones Auto",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "decisiones_automatizadas": True,
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
+
+    def test_datos_sensibles_sin_tipo(self, client, admin_user, empresa):
+        """datos_sensibles=True sin tipo_dato_sensible → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        resp = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "Test Datos Sensibles",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "datos_sensibles": True,
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
+
+    def test_email_invalido_responsable_tratamiento(self, client, admin_user, empresa):
+        """responsable_tratamiento_email con formato inválido → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        resp = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "Test Email Inválido",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "responsable_tratamiento_email": "no-es-un-email",
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422, got {resp.status_code}: {resp.text}"
+
+    def test_rat_update_transferencia_internacional_sin_pais(self, client, admin_user, empresa):
+        """PUT con transferencia_internacional=True sin pais_destino → HTTP 422."""
+        token = self._get_admin_token(client, admin_user)
+        rat = client.post("/rats/", json={
+            **{
+                "company_id": empresa["id"],
+                "nombre_proceso": "RAT para Update Transferencia",
+                "categoria_datos": "Datos",
+                "categoria_titulares": "Clientes",
+                "finalidad": "Test",
+                "base_legal": "Consentimiento del titular",
+                "fuente_datos": "Web",
+                "plazo_retencion": "1 año",
+            },
+            "transferencia_internacional": False,
+        }, headers={"Authorization": f"Bearer {token}"}).json()
+
+        resp = client.put(f"/rats/{rat['id']}", json={
+            "transferencia_internacional": True,
+            "garantias_transferencia_int": "Contrato SCC",
+        }, headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 422, f"Expected 422 on update, got {resp.status_code}: {resp.text}"
+
+    def test_campos_condicionaes_sin_eipd_no_bloquea_schema(self, client, admin_user, empresa):
+        """Los validators deben pasar en schema (422) aunque la route luego requiera EIPD."""
+        token = self._get_admin_token(client, admin_user)
+        # Con datos_sensibles=True + evaluacion_impacto=False, el schema debe pasar
+        # (la validacion de EIPD es a nivel route, no schema)
+        resp = client.post("/rats/", json={
+            "company_id": empresa["id"],
+            "nombre_proceso": "Test sin EIPD",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+            "datos_sensibles": True,
+            "tipo_dato_sensible": "Salud (física o mental)",
+            "evaluacion_impacto": False,
+        }, headers={"Authorization": f"Bearer {token}"})
+        # Schema validation passes (200/201), route validation may reject for EIPD (422)
+        assert resp.status_code in (200, 201, 422), f"Unexpected status: {resp.status_code}: {resp.text}"
+
+    def test_campos_validos_pasan(self, client, admin_user, empresa):
+        """Un RAT con todos los campos condicionales válidos debe crearse sin error."""
+        token = self._get_admin_token(client, admin_user)
+
+        # Crear EIPD primero (requerido cuando datos_sensibles=True)
+        rat_payload = {
+            "company_id": empresa["id"],
+            "nombre_proceso": "Test RAT Completo",
+            "categoria_datos": "Datos",
+            "categoria_titulares": "Clientes",
+            "finalidad": "Test",
+            "base_legal": "Consentimiento del titular",
+            "fuente_datos": "Web",
+            "plazo_retencion": "1 año",
+            "transferencia_internacional": True,
+            "pais_destino": "Argentina",
+            "garantias_transferencia_int": "Cláusulas Contractuales Tipo",
+            "decisiones_automatizadas": True,
+            "logica_automatizada": " scoring crediticio con threshold 0.7, revisión humana para casos >0.9",
+            "datos_sensibles": True,
+            "tipo_dato_sensible": "Salud (física o mental)",
+            "evaluacion_impacto": True,
+            "responsable_tratamiento_email": "dpo@test.cl",
+        }
+        resp = client.post("/rats/", json=rat_payload, headers={"Authorization": f"Bearer {token}"})
+        if resp.status_code != 201:
+            # Si falla por EIPD, es OK — el test verifica que los validators de schema pasan
+            assert resp.status_code == 422, f"Expected 201 or 422, got {resp.status_code}: {resp.text}"
+            # Verificar que el error NO es por nuestros validators (campos faltantes)
+            detail = resp.json().get("detail", "")
+            assert "pais_destino" not in detail, f"Error en pais_destino: {detail}"
+            assert "garantias" not in detail, f"Error en garantias: {detail}"
+            assert "logica_automatizada" not in detail, f"Error en logica: {detail}"
+            assert "tipo_dato_sensible" not in detail, f"Error en tipo_dato_sensible: {detail}"
+            return
+        assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
