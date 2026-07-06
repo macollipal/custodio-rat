@@ -1,5 +1,5 @@
-﻿"""
-Endpoints CRUD para el RAT, m├ís exportaci├│n y sugerencias autom├íticas.
+"""
+Endpoints CRUD para el RAT, m+�s exportaci+�n y sugerencias autom+�ticas.
 """
 
 import logging
@@ -18,7 +18,7 @@ from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
     create_rat, delete_rat, get_audit_logs, get_dashboard_stats,
-    get_rat, get_rats, update_rat, marcar_revisado, aprobar_rat,
+    get_rat, get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
 from app.services.export_service import exportar_csv, exportar_pdf
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
@@ -34,12 +34,12 @@ async def reportes(
     search: Optional[str] = Query(None, description="Buscar por nombre de proceso"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
     base_legal: Optional[str] = Query(None, description="Filtrar por base legal"),
-    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categoría de titulares"),
+    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categor�a de titulares"),
     datos_sensibles: Optional[bool] = Query(None, description="Solo procesos con datos sensibles"),
     evaluacion_impacto: Optional[bool] = Query(None, description="Solo procesos que requieren EIPD"),
     transferencia_internacional: Optional[bool] = Query(None, description="Solo con transferencia internacional"),
     created_by: Optional[str] = Query(None, description="Filtrar por creador (username)"),
-    categoria_datos: Optional[str] = Query(None, description="Filtrar por categoría de datos"),
+    categoria_datos: Optional[str] = Query(None, description="Filtrar por categor�a de datos"),
     datos_nna: Optional[str] = Query(None, description="Filtrar por datos NNA"),
     transferencia_nacional: Optional[bool] = Query(None, description="Solo con transferencia nacional"),
     nivel_confidencialidad: Optional[str] = Query(None, description="Filtrar por nivel de confidencialidad"),
@@ -52,10 +52,10 @@ async def reportes(
     current_user=Depends(get_current_user),
 ):
     """
-    Endpoint de reportes con filtros avanzados para m├║ltiples RATs.
-    Soporta: b├║squeda por texto, estado, base legal, categor├¡a de titulares,
+    Endpoint de reportes con filtros avanzados para m+�ltiples RATs.
+    Soporta: b+�squeda por texto, estado, base legal, categor+�a de titulares,
     flags de datos sensibles, EIPD, transferencia internacional, creador,
-    ordenamiento y paginaci├│n.
+    ordenamiento y paginaci+�n.
     """
     from app.models.rat import RAT as RATModel
 
@@ -195,7 +195,7 @@ async def listar(
     return result
 
 
-@router.get("/dashboard/{company_id}", summary="Estad├¡sticas del dashboard")
+@router.get("/dashboard/{company_id}", summary="Estad+�sticas del dashboard")
 async def dashboard(
     company_id: int,
     db: Session = Depends(get_db),
@@ -214,7 +214,7 @@ async def tipos_proceso(current_user=Depends(get_current_user)):
     return {"tipos": listar_tipos_proceso()}
 
 
-@router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias autom├íticas para un proceso")
+@router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias autom+�ticas para un proceso")
 async def sugerencias(data: RATSugerencia, current_user=Depends(get_current_user)):
     """
     Dado un tipo de proceso (ej: 'clientes web', 'empleados'),
@@ -229,7 +229,7 @@ async def obtener(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    r = get_rat(db, rat_id)
+    r = get_rat_for_user(db, rat_id, current_user)
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
@@ -288,7 +288,6 @@ async def crear_consentimiento(
     except RATNotFoundError:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
     return consentimiento
-    return consentimiento
 
 
 @router.put("/{rat_id}", response_model=RATOut, summary="Actualizar registro RAT")
@@ -299,7 +298,7 @@ async def actualizar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
@@ -316,20 +315,20 @@ async def eliminar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return delete_rat(db, rat_id, current_user.username, get_client_ip(request))
 
 
-@router.post("/{rat_id}/revision", response_model=AuditLogOut, summary="Registrar revisi├│n peri├│dica del RAT")
+@router.post("/{rat_id}/revision", response_model=AuditLogOut, summary="Registrar revisi+�n peri+�dica del RAT")
 async def registrar_revision(
     request: Request,
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Marca el proceso como revisado peri├│dicamente y registra el evento en la auditor├¡a."""
-    rat = get_rat(db, rat_id)
+    """Marca el proceso como revisado peri+�dicamente y registra el evento en la auditor+�a."""
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return marcar_revisado(db, rat_id, current_user.username, get_client_ip(request))
 
@@ -343,9 +342,9 @@ async def approve_rat(
 ):
     """
     Aprueba un RAT. Solo admin_empresa o superadmin pueden aprobar.
-    Registra qui├®n aprob├│ y la fecha de aprobaci├│n.
+    Registra qui+�n aprob+� y la fecha de aprobaci+�n.
     """
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = aprobar_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
@@ -364,12 +363,12 @@ async def descargar_archivo(
     """
     Retorna el documento que respalda la base legal del RAT.
     Si existe storage_url (OCI), genera pre-signed URL (5 min) para descarga directa.
-    Si está en BYTEA, retorna los bytes directamente.
-    Requiere autenticación. Descarga en nueva pestaña del navegador.
+    Si est� en BYTEA, retorna los bytes directamente.
+    Requiere autenticaci�n. Descarga en nueva pesta�a del navegador.
     """
     from app.services.rat_service import download_rat_file, get_rat
 
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
 
     try:
@@ -405,16 +404,18 @@ async def descargar_archivo(
     raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
 
-@router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditor├¡a de un RAT")
+@router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditor+�a de un RAT")
 async def auditoria(
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # Validar acceso multi-tenant antes de retornar audit log
+    get_rat_for_user(db, rat_id, current_user)
     return get_audit_logs(db, rat_id)
 
 
-@router.get("/auditoria/{company_id}", summary="Historial de auditor├¡a global de la empresa")
+@router.get("/auditoria/{company_id}", summary="Historial de auditor+�a global de la empresa")
 async def auditoria_global(
     company_id: int,
     skip: int = 0,
@@ -423,7 +424,7 @@ async def auditoria_global(
     current_user=Depends(get_current_user),
 ):
     """
-    Retorna todos los eventos de auditor├¡a de los RATs de una empresa,
+    Retorna todos los eventos de auditor+�a de los RATs de una empresa,
     ordenados por timestamp descendente, para que el DPO pueda ver
     toda la actividad reciente de un vistazo.
     Solo usuarios con acceso a la empresa pueden consultar.
@@ -449,15 +450,15 @@ async def auditoria_global(
     return [{"id": log.id, "rat_id": log.entidad_id, "accion": log.accion, "usuario": log.usuario, "timestamp": log.timestamp, "detalle": log.detalle} for log in logs]
 
 
-@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor├¡a")
+@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor+�a")
 async def verificar_cadena_auditoria(
-    limit: int = Query(1000, description="L├¡mite de registros a verificar"),
+    limit: int = Query(1000, description="L+�mite de registros a verificar"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """
-    Verifica la integridad de la cadena de hashes de auditor├¡a.
-    Retorna estado de validaci├│n y el ID del primer registro roto (si hay).
+    Verifica la integridad de la cadena de hashes de auditor+�a.
+    Retorna estado de validaci+�n y el ID del primer registro roto (si hay).
     """
     from app.services.audit_service import verify_audit_chain
 
@@ -465,7 +466,7 @@ async def verificar_cadena_auditoria(
     return result
 
 
-# ÔöÇÔöÇ Exportaci├│n ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+# ������ Exportaci+�n ���������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 
 @router.get("/export/csv", summary="Exportar RAT a CSV")
 async def exportar_a_csv(

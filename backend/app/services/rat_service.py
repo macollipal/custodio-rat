@@ -104,6 +104,27 @@ def get_rat(db: Session, rat_id: int) -> RAT:
     return rat
 
 
+def get_rat_for_user(db: Session, rat_id: int, current_user) -> RAT:
+    """
+    Versión segura de get_rat() con validación multi-tenant.
+
+    - superadmin: acceso total
+    - admin_empresa / usuario: solo RATs de sus empresas asignadas
+
+    Raises 404 (no 403) si el usuario no tiene acceso, para no filtrar
+    la existencia del RAT a usuarios no autorizados.
+    """
+    from app.services.user_company_service import get_empresas_usuario
+    rat = get_rat(db, rat_id)
+    if current_user.rol_global == "superadmin":
+        return rat
+    empresas_usuario = get_empresas_usuario(db, current_user.id)
+    if rat.company_id not in empresas_usuario:
+        # 404 en vez de 403: no exponer existencia del recurso
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Registro RAT no encontrado.")
+    return rat
+
+
 def _procesar_archivo_base_legal(data: dict) -> dict:
     """Sube archivo_base_legal_base64 a OCI y retorna URL. Ca├¡da -> BYTEA como fallback. BYTEA cifrado con Fernet."""
     base64_str = data.get("archivo_base_legal_base64")
@@ -250,7 +271,6 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
     datos = data.model_dump()
     _validar_eipd_obligatoria(datos)
 
-    datos = data.model_dump()
     archivo_fields = _procesar_archivo_base_legal(datos)
     datos.update(archivo_fields)
 
