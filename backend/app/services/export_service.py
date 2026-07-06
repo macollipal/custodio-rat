@@ -207,6 +207,13 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         textColor=COLOR_ALERTA,
         fontName="Helvetica-Oblique",
     )
+    estilo_seccion = ParagraphStyle(
+        "seccion",
+        fontSize=8,
+        textColor=colors.white,
+        fontName="Helvetica-Bold",
+        leading=10,
+    )
 
     story = []
 
@@ -276,6 +283,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
 
         campos_ficha = [
             # Paso 1 — Identificación
+            ("SECCION", "PASO 1 — IDENTIFICACIÓN DEL PROCESO"),
             ("ID RAT", str(rat.id)),
             ("Nombre del Proceso", _v(rat.nombre_proceso)),
             ("Categorías de Titulares", _v(rat.categoria_titulares or "No especificadas")),
@@ -286,6 +294,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
             contrato_txt = "Sí" if getattr(rat, "tiene_contrato_encargado", False) else "NO DOCUMENTADO"
             campos_ficha.append(("Encargado del Tratamiento", f"{_v(rat.nombre_encargado)} — Contrato: {contrato_txt}"))
         # Paso 2 — Datos tratados (incluye clasificación Tier 1)
+        campos_ficha.append(("SECCION", "PASO 2 — DATOS TRATADOS"))
         campos_ficha.append(("Categoría de Datos Tratados", _v(rat.categoria_datos)))
         if getattr(rat, "datos_sensibles", False):
             tipo_txt = f" — Tipo: {sanitize_pii(rat.tipo_dato_sensible)}" if getattr(rat, "tipo_dato_sensible", None) else ""
@@ -307,6 +316,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         if getattr(rat, "decisiones_automatizadas", False):
             campos_ficha.append(("Decisiones Automatizadas (Art. 8)", f"SÍ — {_v(getattr(rat, 'logica_automatizada', None))}"))
         # Paso 3 — Finalidad y ley
+        campos_ficha.append(("SECCION", "PASO 3 — FINALIDAD Y BASE LEGAL"))
         campos_ficha.append(("Base Legal (Art. 13 / 16 / 16 BIS Ley 21.719)", _v(rat.base_legal)))
         campos_ficha.append(("Finalidad del Tratamiento", _v(rat.finalidad)))
         if getattr(rat, "test_interes_legitimo", None):
@@ -314,6 +324,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         if getattr(rat, "observaciones_auditoria", None):
             campos_ficha.append(("Obs. Auditoría", _v(getattr(rat, "observaciones_auditoria", None))))
         # Paso 4 — Almacenamiento y transferencias (incluye Tier 2 almacenamiento)
+        campos_ficha.append(("SECCION", "PASO 4 — ALMACENAMIENTO Y TRANSFERENCIAS"))
         campos_ficha.append(("Plazo de Retención", _v(rat.plazo_retencion)))
         campos_ficha.append(("Medidas de Seguridad", _v(rat.medidas_seguridad or "No especificadas")))
         campos_ficha.append(("Transferencia o Comunicación de Datos", _v(rat.transferencia_datos or "No aplica")))
@@ -325,6 +336,7 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         campos_ficha.append(("Sistema Almacenamiento", _v(getattr(rat, "sistema_almacenamiento", None))))
         campos_ficha.append(("Volumen Titulares Estimado", str(getattr(rat, "volumen_titulares_estimado", None) or "—")))
         # Paso 5 — Compliance operativo (Tier 2 restante)
+        campos_ficha.append(("SECCION", "PASO 5 — COMPLIANCE OPERATIVO"))
         ops = getattr(rat, "operaciones_tratamiento", None)
         if ops:
             ops_str = ", ".join(ops) if isinstance(ops, list) else str(ops)
@@ -340,16 +352,25 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         campos_ficha.append(("Origen Dato (Portabilidad)", _v(getattr(rat, "origen_dato_portabilidad", None))))
         campos_ficha.append(("Fecha Levantamiento", _v(getattr(rat, "fecha_levantamiento", None))))
         # Metadatos
+        campos_ficha.append(("SECCION", "METADATOS Y AUDITORÍA"))
         campos_ficha.append(("Aprobado por", _v(getattr(rat, "aprobado_por", None))))
         if getattr(rat, "fecha_aprobacion", None):
             campos_ficha.append(("Fecha Aprobación", getattr(rat, "fecha_aprobacion", None).strftime("%d/%m/%Y %H:%M")))
 
         ficha_data = []
-        for label, valor in campos_ficha:
-            ficha_data.append([
-                Paragraph(label, estilo_label),
-                Paragraph(str(valor), estilo_valor),
-            ])
+        seccion_indices = []
+        for item in campos_ficha:
+            if item[0] == "SECCION":
+                _, titulo = item
+                idx = len(ficha_data)
+                seccion_indices.append(idx)
+                ficha_data.append([Paragraph(titulo, estilo_seccion), Paragraph("", estilo_seccion)])
+            else:
+                label, valor = item
+                ficha_data.append([
+                    Paragraph(label, estilo_label),
+                    Paragraph(str(valor), estilo_valor),
+                ])
 
         # Alerts (flags that need visual emphasis — kept with red styling)
         if rat.datos_sensibles:
@@ -369,24 +390,24 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
                 Paragraph("📋 EIPD Pendiente (Art. 15 bis)", estilo_alerta),
                 Paragraph("La Evaluación de Impacto aún no está completada. Debe finalizarse antes de iniciar el tratamiento.", estilo_alerta),
             ])
-        if getattr(rat, "transferencia_nacional", None) and rat.transferencia_nacional:
-            ficha_data.append([
-                Paragraph("Transferencia Nacional", estilo_label),
-                Paragraph("SÍ — Comunicación de datos dentro de Chile", estilo_alerta),
-            ])
 
-        tabla_ficha = Table(ficha_data, colWidths=[5 * cm, 12.7 * cm])
-        tabla_ficha.setStyle(TableStyle([
+        # Build table style: fondo gris a labels + fondo azul a headers de sección
+        style_cmds = [
             ("BACKGROUND", (0, 0), (0, -1), COLOR_FONDO),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("GRID", (0, 0), (-1, -1), 0.3, colors.lightgrey),
             ("PADDING", (0, 0), (-1, -1), 5),
-        ]))
-        story.append(tabla_ficha)
+            ("SPAN", (0, 0), (1, 0)),
+        ]
+        for idx in seccion_indices:
+            style_cmds.append(("BACKGROUND", (0, idx), (1, idx), COLOR_PRIMARIO))
+            style_cmds.append(("TEXTCOLOR", (0, idx), (1, idx), colors.white))
+            style_cmds.append(("FONTNAME", (0, idx), (1, idx), "Helvetica-Bold"))
+            style_cmds.append(("PADDING", (0, idx), (1, idx), 6))
 
-        if rat.observaciones_auditoria:
-            story.append(Spacer(1, 0.2 * cm))
-            story.append(Paragraph(f"Observaciones de auditoría: {sanitize_pii(rat.observaciones_auditoria)}", estilo_alerta))
+        tabla_ficha = Table(ficha_data, colWidths=[5 * cm, 12.7 * cm])
+        tabla_ficha.setStyle(TableStyle(style_cmds))
+        story.append(tabla_ficha)
 
         story.append(Spacer(1, 0.5 * cm))
 
