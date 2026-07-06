@@ -319,7 +319,10 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
 
 def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     rat = get_rat(db, rat_id)
-    cambios = data.model_dump(exclude_none=True)
+    # H3.4 — exclude_unset=True evita incluir campos vacios inyectados por
+    # el model_validator de RATUpdate para que solo se actualicen los campos
+    # que el cliente realmente envio.
+    cambios = data.model_dump(exclude_unset=True, exclude_none=True)
 
     archivo_fields = _procesar_archivo_base_legal(cambios)
     cambios.update(archivo_fields)

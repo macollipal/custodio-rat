@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.routes.deps import get_current_user, require_editor_or_admin_empresa
-from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse
+from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
@@ -201,6 +201,10 @@ async def dashboard(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # H2.4 — feature gate N-02: modulo RAT debe estar habilitado
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, company_id, "RAT")
+
     if not current_user.rol_global == "superadmin":
         ids = get_empresas_usuario(db, current_user.id)
         if company_id not in ids:
@@ -209,9 +213,9 @@ async def dashboard(
     return get_dashboard_stats(db, company_id)
 
 
-@router.get("/sugerencias/tipos", summary="Listar tipos de proceso disponibles para sugerencias")
+@router.get("/sugerencias/tipos", response_model=SugerenciasTiposOut, summary="Listar tipos de proceso disponibles para sugerencias")
 async def tipos_proceso(current_user=Depends(get_current_user)):
-    return {"tipos": listar_tipos_proceso()}
+    return SugerenciasTiposOut(tipos=listar_tipos_proceso())
 
 
 @router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias autom+�ticas para un proceso")

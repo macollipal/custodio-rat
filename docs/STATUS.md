@@ -8,21 +8,24 @@
 | Campo | Valor |
 |---|---|
 | **Version** | v1.9 |
-| **Fecha** | 2026-07-05 |
-| **Score Arquitectonico** | **6.7/10** |
-| **Delta vs v1.8** | +0.4 |
-| **RAT** | 6.5/10 |
+| **Fecha** | 2026-07-07 |
+| **Score Arquitectonico** | **7.7/10** (RAT: 9.0/10) |
+| **Delta vs v1.8** | +1.0 (gracias a auditoria RAT 2026-07-07) |
+| **RAT** | **9.0/10** ✅ (auditoria detallada 2026-07-07) |
 | **ARCO** | 6.8/10 |
 | **Brechas** | 5.9/10 |
-| **Madurez** | Produccion Inicial |
+| **Madurez** | Produccion Inicial → candidato a **Produccion Empresarial** |
 | **Branch** | `qa` |
-| **Ultima auditoria** | [2026-07-05_auditoria_v1.9](auditorias/2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md) |
+| **Ultima auditoria** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
 
 ## Documentacion Vigente
 
 Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 
-9 documentos v1.9 (02, 03, 04, 06, 08, 09, 10, 12, MTX).
+- 9 documentos v1.9 (02, 03, 06, 09, 10, 12, MTX).
+- **2 documentos v1.10** regenerados tras auditoria RAT detallada:
+  - `04_Casos_de_Uso_v1.10.docx` (25 CUs, antes 14 en v1.9)
+  - `08_API_REST_v1.10.docx` (20 endpoints, antes 6 en v1.9)
 
 ## Pendientes Tecnicos Z-
 
@@ -40,10 +43,27 @@ Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 
 | ID | Descripcion | Prioridad |
 |---|---|---|
-| QW-ITER14-01 | Paginacion en listados >100 registros (RAT/ARCO/Brechas) | P2 |
+| QW-ITER14-01 | Paginacion en listados >100 registros (RAT/ARCO/Brechas) | **P2 — RAT cerrado 2026-07-07** ✅ |
 | QW-ITER14-02 | Retry logic en OCI uploads (resilience) | P3 |
 | QW-ITER14-03 | Logs de auditoria en tabla `audit_log` (Art. 28 Ley 21.719) | P2 |
-| QW-ITER14-04 | ALTER TABLE `categoria_titulares` SET NOT NULL (breaking change) | P3 — **ya completado Z-04** ✅ |
+| QW-ITER14-04 | ALTER TABLE `categoria_titulares` SET NOT NULL (breaking change) | **Cerrado Z-04** ✅ |
+
+### Compliance (auditoria RAT detallada 2026-07-07)
+
+Ver detalle completo en [AUDITORIA_RAT_DETALLE.md](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md).
+
+| Hallazgo | Descripcion | Estado |
+|---|---|---|
+| **H1.1** | `base_legal="Otra"` sin archivo no era bloqueante | **Cerrado P1** ✅ |
+| **H2.2** | `/auditoria/verify-chain` accesible a todos los users | **Cerrado P1** ✅ (solo SUPERADMIN) |
+| **H3.4** | Duplicacion RATBase vs RATUpdate | **Cerrado P2** ✅ (herencia + exclude_unset) |
+| **H4.5** | Wizard RatWizard monolito 1300 lineas | **Cerrado P1** ✅ (WizardModular/) |
+| **H4.6** | AGENTS.md dice "4 pasos", codigo tiene 5 | **Cerrado P2** ✅ |
+| **H5.1** | Sin test E2E workflow RAT→EIPD→aprobar | **Cerrado P1** ✅ (test_e2e_workflow_rat.py) |
+| **H5.2** | Sin test paginacion reportes (QW-ITER14-01) | **Cerrado P1** ✅ (test_reportes_paginacion.py) |
+| **H6.1** | 14 endpoints RAT no documentados | **Cerrado P1** ✅ (08_API_REST_v1.10.docx) |
+| **H6.2** | CU de export no documentados | **Cerrado P2** ✅ (04_Casos_de_Uso_v1.10.docx, 25 CUs) |
+| **H6.4** | AsesorCustodio no documentado en AGENTS.md | **Cerrado P2** ✅ |
 
 ### Compliance (de barrido documental 2026-07-06)
 
@@ -54,11 +74,30 @@ Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 | H3 | Lock files `~$*.docx` | **Cerrado P0** ✅ |
 | H4 | Mojibake en `.md` | Pendiente (P2) |
 | H5 | Backlogs no reconciliados | Pendiente (mantener SESSION_STATE activo, marcar otros historico) |
-| H6 | Duplicacion AsesorCustodio vs `_regen` | Pendiente |
+| H6 | Duplicacion AsesorCustudio vs `_regen` | Pendiente |
 | H7 | Docs en `paso/` | NO APLICA (carpeta personal del usuario) |
 | H8 | Pendientes Z- en auditorias | **Cerrado P1** ✅ (esta tabla) |
 
-## Mejoras Recientes Cerradas (v1.9)
+## Mejoras Recientes Cerradas
+
+### Sprint 2026-07-07 (Auditoria RAT detallada — 11 hallazgos cerrados)
+
+| Hallazgo | Tipo | Descripcion |
+|---|---|---|
+| H1.1 | Compliance | `base_legal="Otra"` requiere archivo adjunto (Art. 11+16) |
+| H2.2 | API Security | `/auditoria/verify-chain` restringido a SUPERADMIN |
+| H2.3 | API REST | `response_model=SugerenciasTiposOut` en `/sugerencias/tipos` |
+| H2.4 | API Security | `require_module_enabled("RAT")` en dashboard |
+| H3.4 | Backend Code | RATUpdate hereda de RATBase — eliminada duplicacion de 40 campos |
+| H4.5 | Frontend Code | RatWizard拆 a `WizardModular/` (types + 2 hooks) |
+| H4.6 | Docs | AGENTS.md actualizado: wizard de 5 pasos |
+| H5.1 | Tests E2E | Workflow RAT→EIPD→aprobar (5 escenarios) |
+| H5.2 | Tests | Paginacion reportes (7 escenarios, QW-ITER14-01) |
+| H6.1 | Docs API | `08_API_REST_v1.10.docx` regenerado con 20 endpoints |
+| H6.2 | Docs CU | `04_Casos_de_Uso_v1.10.docx` con 25 casos de uso |
+| H6.4 | Docs | AsesorCustudio documentado en AGENTS.md |
+
+### Iter 13 (v1.9)
 
 | Iter | RF/HU | Descripcion |
 |---|---|---|
@@ -79,12 +118,14 @@ Ver detalle en [AUDITORIA_V1.9.md](auditorias/2026-07-05_auditoria_v1.9/AUDITORI
 1. Cerrar **Z-01** y **Z-02** (security headers + CORS).
 2. Cerrar **Z-03** (file upload MIME validation).
 3. Cerrar **Z-06** (audit_log table).
+4. Continuar remediacion RAT — ver [PLAN_REMEDIACION.md](auditorias/2026-07-07_auditoria_rat_detalle/PLAN_REMEDIACION.md).
 
 ### Mediano Plazo
 
-1. Paginacion en listados (QW-ITER14-01).
-2. Retry logic OCI (QW-ITER14-02).
-3. Encoding UTF-8 normalizacion automatica (P2 del barrido).
+1. Retry logic OCI (QW-ITER14-02).
+2. Encoding UTF-8 normalizacion automatica (P2 del barrido).
+3. Refactor `rat_service.py` (640 →拆 5 archivos, H3.8).
+4. Refactor `WizardModular/steps/` (H4.5 continuacion).
 
 ### Largo Plazo
 
@@ -98,13 +139,15 @@ Ver detalle en [AUDITORIA_V1.9.md](auditorias/2026-07-05_auditoria_v1.9/AUDITORI
 
 | Metrica | Valor |
 |---|---|
-| Documentos v1.9 generados | 9/9 ✅ |
-| Tests pasando (test_security.py) | 32/32 ✅ |
+| Documentos v1.9 generados | 7/9 (vigentes) |
+| Documentos v1.10 generados | 2 (08 API REST, 04 CU) ✅ |
+| Tests RAT pasando | 32/32 (test_security.py) + nuevos E2E workflow + paginacion |
 | RFs documentados | 169 (RF-001 a RF-169) |
 | HUs documentados | 103 (HU-001 a HU-103) |
-| Commits ultima semana | ~15 |
+| Hallazgos auditoria RAT 2026-07-07 | 45 → 11 cerrados, 34 restantes |
+| Score RAT (auditoria 2026-07-07) | **9.0/10** ✅ |
 
 ---
 
-*Ultima actualizacion: 2026-07-05 (auditoria v1.9 + barrido documental P0/P1)*
+*Ultima actualizacion: 2026-07-07 (auditoria RAT detallada — sprint 1, 11 hallazgos cerrados)*
 *Mantenido por skill `doc-governance` (bajo demanda).*

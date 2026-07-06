@@ -15,25 +15,9 @@ import type { Company, RAT, RATWizardData } from '@/types';
 
 import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 
-const DESCRIPCIONES_BASE: Record<string, string> = {
-  'Consentimiento del titular':
-    'Art. 12 — Debe ser libre, previo, expreso, informado, específico, revocable y sin condición negocial. ' +
-    'Para datos sensibles, el consentimiento debe ser EXPRESO. En relaciones laborales jerárquicas, el consentimiento del empleado no es base válida.',
-  'Ejecución de contrato':
-    'Art. 13 b) — El tratamiento es necesario para ejecutar un contrato en que el titular es parte, o para aplicar medidas precontractuales a su solicitud.',
-  'Obligación legal':
-    'Art. 13 a) — El tratamiento es requerido por una norma legal vigente (ley, decreto, etc.). Identifique la norma específica que habilita el tratamiento.',
-  'Interés legítimo':
-    'Art. 16 — Requiere documentar el test de 3 pasos: (1) ¿existe interés legítimo real? (2) ¿el tratamiento es necesario para ese interés? ' +
-    '(3) ¿prevalece sobre los derechos del titular? Sin este test documentado, la base no sirve como defensa ante la APDC.',
-  'Interés vital del titular':
-    'Art. 13 c) — Proteger intereses vitales del titular u otra persona (situaciones de riesgo para la vida o la integridad física).',
-  'Datos biométricos de identificación (Art. 16 BIS)':
-    'Art. 16 BIS — Base específica para datos biométricos destinados a identificar inequívocamente a una persona. ' +
-    'Requiere EIPD previa. En contextos laborales, el consentimiento NO es base válida — use obligación legal y justifique la necesidad.',
-};
-
-const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
+// H4.5: Constantes, hooks y tipos extraídos a ./WizardModular/
+import { STEPS, DESCRIPCIONES_BASE } from './WizardModular/types';
+import { useDraftAutosave, useWizardNavigation } from './WizardModular';
 
 interface RatWizardProps {
   company: Company;
@@ -60,11 +44,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const fieldErrors = validation.errors;
   const stepIsValid = validation.isValid;
 
-  const DRAFT_KEY = `${DRAFT_KEY_PREFIX}${company.id}`;
+  const DRAFT_KEY_LOCAL = `${DRAFT_KEY_PREFIX}${company.id}`;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem(DRAFT_KEY);
+    const saved = localStorage.getItem(DRAFT_KEY_LOCAL);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -77,7 +61,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         }
       } catch {}
     }
-  }, [DRAFT_KEY]);
+  }, [DRAFT_KEY_LOCAL]);
 
   // Re-render cada 30s para actualizar el "Guardado hace X min"
   useEffect(() => {
@@ -86,21 +70,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     return () => clearInterval(id);
   }, [draftSavedAt]);
 
-  // Auto-save silencioso cada 30s (solo si hay datos)
-  useEffect(() => {
-    const hasData = Object.keys(data).length > 0;
-    if (!hasData) return;
-    const id = setInterval(() => {
-      try {
-        const now = Date.now();
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step, savedAt: now }));
-        setDraftSavedAt(now);
-      } catch (e) {
-        console.error('Auto-save failed:', e);
-      }
-    }, 30_000);
-    return () => clearInterval(id);
-  }, [data, step, DRAFT_KEY]);
+  // H4.5: useDraftAutosave hook reemplaza el auto-save inline anterior
+  // (30s interval, only if has data, error handling via try/catch)
+  useDraftAutosave(company.id, data, Object.keys(data).length > 0);
 
   // Onboarding tour — solo la primera vez
   useEffect(() => {
@@ -151,7 +123,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
   function guardarDraft(manual = false) {
     const now = Date.now();
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step, savedAt: now }));
+    localStorage.setItem(DRAFT_KEY_LOCAL, JSON.stringify({ data, step, savedAt: now }));
     setDraftSavedAt(now);
     if (!draftToastShown || manual) {
       toast.success('💾 Borrador guardado', { id: 'draft-saved', duration: 2000 });
@@ -160,7 +132,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   }
 
   function limpiarDraft() {
-    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_KEY_LOCAL);
     setDraftSavedAt(null);
   }
 

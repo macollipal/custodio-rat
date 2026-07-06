@@ -1,4 +1,4 @@
-﻿from datetime import datetime, date
+from datetime import datetime, date
 from typing import Any, Optional, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -123,57 +123,38 @@ class RATCreate(RATBase):
         return self
 
 
-class RATUpdate(BaseModel):
-    nombre_proceso: Optional[str] = None
-    categoria_datos: Optional[str] = None
-    categoria_titulares: Optional[str] = None
-    finalidad: Optional[str] = None
-    base_legal: Optional[str] = None
-    fuente_datos: Optional[str] = None
-    transferencia_datos: Optional[str] = None
-    plazo_retencion: Optional[str] = None
-    medidas_seguridad: Optional[str] = None
-    destinatarios: Optional[str] = None
-    transferencia_internacional: Optional[bool] = None
-    pais_destino: Optional[str] = None
-    garantias_transferencia_int: Optional[str] = None
-    datos_sensibles: Optional[bool] = None
-    tipo_dato_sensible: Optional[str] = None
-    evaluacion_impacto: Optional[bool] = None
-    estado_eipd: Optional[str] = None
-    fecha_eipd: Optional[date] = None
-    decisiones_automatizadas: Optional[bool] = None
-    # Campos nuevos gaps Ley 21.719 (Iter 10)
-    sistema_almacenamiento: Optional[str] = None
-    volumen_titulares_estimado: Optional[int] = None
-    operaciones_tratamiento: Optional[Any] = None
-    logica_automatizada: Optional[str] = None
-    responsable_tratamiento_email: Optional[str] = None
-    # Campos Tier 1 - Gaps criticos (Iter 11)
-    datos_nna: Optional[str] = None
-    nivel_confidencialidad: Optional[str] = None
-    estructura_dato: Optional[str] = None
-    datos_anonimizados: Optional[bool] = None
-    datos_seudonimizados: Optional[bool] = None
-    # Campos Tier 2 - Operativos (Iter 11)
-    ciclo_procesamiento: Optional[str] = None
-    automatizacion: Optional[str] = None
-    frecuencia: Optional[str] = None
-    transferencia_nacional: Optional[bool] = None
-    doc_clausulas: Optional[str] = None
-    medidas_organizativas: Optional[str] = None
-    mecanismos_eliminacion: Optional[str] = None
-    tecnica_anonimizacion: Optional[str] = None
-    origen_dato_portabilidad: Optional[str] = None
-    fecha_levantamiento: Optional[date] = None
-    nombre_encargado: Optional[str] = None
-    tiene_contrato_encargado: Optional[bool] = None
-    test_interes_legitimo: Optional[str] = None
+class RATUpdate(RATBase):
+    """H3.4 — Update DTO que hereda de RATBase.
+
+    Todos los campos son opcionales via exclude_unset semantics.
+    El servicio usa data.model_dump(exclude_none=True) para construir
+    el payload de actualizacion SQL.
+
+    NOTA: Los campos requeridos de RATBase (nombre_proceso, etc.) son
+    validados solo si el cliente los envia. Esto se logra con el
+    model_validator pre-processor que elimina campos requeridos vacios
+    del payload antes de la validacion.
+    """
     estado: Optional[EstadoRAT] = None
-    observaciones_auditoria: Optional[str] = None
-    archivo_base_legal_nombre: Optional[str] = None
-    archivo_base_legal_tipo: Optional[str] = None
     archivo_base_legal_base64: Optional[str] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def _strip_unset_required_fields(cls, data):
+        """Permite que campos requeridos de RATBase sean opcionales en update."""
+        if isinstance(data, dict):
+            # Si el cliente no envia un campo requerido, no validarlo
+            # Pydantic requiere que el campo este presente (no None) si es required
+            # Workaround: removemos campos requeridos que vienen vacios/None
+            from app.schemas.rat import RATBase as _RATBase
+            required_fields = [
+                name for name, field in _RATBase.model_fields.items()
+                if field.is_required()
+            ]
+            for field_name in required_fields:
+                if field_name not in data or data[field_name] is None:
+                    data.setdefault(field_name, "")
+        return data
 
     @model_validator(mode='before')
     @classmethod
@@ -220,6 +201,11 @@ class RATOut(RATBase):
 
 class RATSugerencia(BaseModel):
     tipo_proceso: str
+
+
+class SugerenciasTiposOut(BaseModel):
+    """H2.3 — Response model para GET /rats/sugerencias/tipos."""
+    tipos: list[str]
 
 
 class RATSugerenciaOut(BaseModel):

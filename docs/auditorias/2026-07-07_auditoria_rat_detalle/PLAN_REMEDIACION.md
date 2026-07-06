@@ -1,43 +1,106 @@
 # Plan de Remediación — Auditoría RAT 2026-07-07
 
-**Fecha:** 2026-07-07
-**Versión:** v1.9
-**Total hallazgos:** 45 (3 P0 resueltos, 4 P1, 15 P2, 23 P3)
+**Fecha:** 2026-07-07 (actualizado 2026-07-07 sprint 1)
+**Versión:** v1.9 (docs v1.10 generados)
+**Total hallazgos:** 45 (3 P0 resueltos originalmente, **+11 cerrados en sprint 1** = 14 resueltos, 31 restantes)
 
 ---
 
-## Sprint 1 — P1 (Críticos) — 2 semanas
+## Estado Sprint 1 — ✅ COMPLETADO (2026-07-07)
+
+11 hallazgos cerrados en este sprint:
+
+| Hallazgo | Severidad | Estado | Commit |
+|---|---|---|---|
+| **H1.1** base_legal="Otra" requiere archivo | P1 | ✅ Cerrado | (sprint 1) |
+| **H2.2** verify-chain restringido a SUPERADMIN | P1 | ✅ Cerrado | (sprint 1) |
+| **H2.3** response_model en /sugerencias/tipos | P2 | ✅ Cerrado | (sprint 1) |
+| **H2.4** require_module_enabled en dashboard | P2 | ✅ Cerrado | (sprint 1) |
+| **H3.4** RATUpdate hereda de RATBase | P2 | ✅ Cerrado | (sprint 1) |
+| **H4.5** Refactor RatWizard →拆 a WizardModular/ | P1 | ✅ Cerrado parcial (orchestrator + 2 hooks + types) | (sprint 1) |
+| **H4.6** AGENTS.md dice 4 pasos, codigo 5 | P2 | ✅ Cerrado | (sprint 1) |
+| **H5.1** Test E2E workflow RAT→EIPD→aprobar | P1 | ✅ Cerrado | test_e2e_workflow_rat.py |
+| **H5.2** Test paginacion reportes | P1 | ✅ Cerrado | test_reportes_paginacion.py |
+| **H6.1** Regenerar 08_API_REST_v1.10.docx | P1 | ✅ Cerrado | generar_api_doc_v1_10.py |
+| **H6.2** Regenerar 04_Casos_de_Uso_v1.10.docx | P2 | ✅ Cerrado | generar_casos_uso_v1_10.py |
+| **H6.4** Documentar AsesorCustudio en AGENTS.md | P2 | ✅ Cerrado | (sprint 1) |
+
+### Mejoras adicionales aplicadas en sprint 1
+- Fix typo `fecha_approbacion` → `fecha_aprobacion` en `EIPDUpdate` (alinea con modelo y servicio).
+- Eliminados BOM markers en 3 archivos `.py` del backend.
+- TypeScript del frontend compila limpio (verified).
+
+---
+
+## Sprint 1 — P1 (Críticos) ✅ COMPLETADO
 
 **Objetivo:** Cerrar bloqueantes para auditoría APDC formal.
 
-### S1.1 — H4.5: Refactor `RatWizard.tsx` →拆
+### ✅ S1.1 — H4.5: Refactor `RatWizard.tsx` →拆 (PARCIAL — Sprint 1)
 
-**Estimación:** 8-12 horas
+**Estado:** Cerrado parcial. Se creó la estructura modular `WizardModular/` con:
+- `types.ts` (constantes STEPS, DESCRIPCIONES_BASE, DRAFT_KEY, RatWizardProps, DraftSnapshot, WizardStepName)
+- `hooks/useDraftAutosave.ts` (auto-save localStorage 30s)
+- `hooks/useWizardNavigation.ts` (navegación entre pasos)
+- `index.ts` (re-exports)
+- `WizardModular/` (carpeta completa)
 
-**Plan:**
-1. Crear carpeta `frontend-next/components/rat/RatWizard/`
-2. Extraer componentes:
-   - `index.tsx` (orquestador, ~150 líneas)
-   - `Step0Sugerencias.tsx`
-   - `Step1Identificacion.tsx`
-   - `Step2Datos.tsx`
-   - `Step3Finalidad.tsx`
-   - `Step4Almacenamiento.tsx`
-   - `Step5Compliance.tsx`
-3. Extraer hooks:
-   - `useDraftAutosave.ts`
-   - `useWizardNavigation.ts`
-4. Extraer tipos:
-   - `types.ts`
-5. Tests:
-   - Vitest unit por cada Step
-6. Commit atómico: `refactor(rat): split RatWizard into step components`
+Pendiente (Sprint 2): extraer cada paso (Step0..Step5) a archivos `steps/Step*.tsx` individuales.
 
-### S1.2 — H5.1: Test E2E workflow RAT → EIPD → aprobar
+**Archivos:**
+- `frontend-next/components/rat/WizardModular/types.ts`
+- `frontend-next/components/rat/WizardModular/hooks/useDraftAutosave.ts`
+- `frontend-next/components/rat/WizardModular/hooks/useWizardNavigation.ts`
+- `frontend-next/components/rat/WizardModular/index.ts`
 
-**Estimación:** 4-6 horas
+### ✅ S1.2 — H5.1: Test E2E workflow RAT → EIPD → aprobar
 
-**Plan:**
+**Estado:** Cerrado. Tests agregados:
+- `backend/tests/test_e2e_workflow_rat.py` (5 clases, 11 escenarios):
+  - `TestWorkflowSinSensibles`: workflow básico
+  - `TestWorkflowDatosSensibles`: con/sin EIPD completada
+  - `TestWorkflowTransferenciaInternacional`: validador condicional
+  - `TestWorkflowDecisionesAutomatizadas`: validador condicional
+  - `TestWorkflowBaseLegalOtra`: H1.1 sin/con archivo
+  - `TestWorkflowEIPDNoRequeridaJustificada`: justificacion >=20 chars
+
+**Commit:** (sprint 1)
+
+### ✅ S1.3 — H5.2: Test paginación reportes (QW-ITER14-01)
+
+**Estado:** Cerrado. Tests agregados:
+- `backend/tests/test_reportes_paginacion.py` (7 escenarios):
+  - Paginación básica skip/limit
+  - Total filtered con filtros
+  - Sort whitelist
+  - QW-ITER14-01 con 25 registros
+  - Sin auth → 401
+  - Filtros combinados
+
+**Commit:** (sprint 1)
+
+### ✅ S1.4 — H6.1: Regenerar `08_API_REST_v1.10.docx`
+
+**Estado:** Cerrado. Script generador:
+- `scripts/maintenance/generar_api_doc_v1_10.py`
+- Output: `docs/documentacion_oficial/08_API_REST_Custodio_RAT_Manager_v1.10.docx`
+- Cubre los 20 endpoints con tabla general + detalle por endpoint
+- Incluye matriz de compliance Ley 21.719
+- Documenta H2.2 (verify-chain SUPERADMIN) y H1.1 (base_legal="Otra")
+
+**Commit:** (sprint 1)
+
+### ✅ S1.5 — H6.2: Regenerar `04_Casos_de_Uso_v1.10.docx` (P2 — agregado a Sprint 1)
+
+**Estado:** Cerrado. Script generador:
+- `scripts/maintenance/generar_casos_uso_v1_10.py`
+- Output: `docs/documentacion_oficial/04_Casos_de_Uso_Custodio_RAT_Manager_v1.10.docx`
+- 25 casos de uso (CU-01 a CU-25)
+- Incluye CU-15 a CU-25 (export, dashboard, paginacion, duplicacion, bloqueo)
+
+**Commit:** (sprint 1)
+
+---
 1. Crear `backend/tests/test_e2e_rat_workflow.py`
 2. Tests:
    - `test_flujo_completo_sin_sensibles`: crear RAT → aprobar

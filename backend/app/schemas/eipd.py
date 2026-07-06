@@ -53,7 +53,7 @@ class EIPDUpdate(BaseModel):
     parecer_dpo_fecha: Optional[datetime] = None
     justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
-    fecha_approbacion: Optional[date] = None
+    fecha_aprobacion: Optional[date] = None
     resultado: Optional[str] = None
 
 

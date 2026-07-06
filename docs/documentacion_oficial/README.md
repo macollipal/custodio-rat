@@ -11,11 +11,11 @@
 | **01** | Vision de Producto | _(no regenerado)_ | v1.0 | Sin equivalente v1.9. |
 | **02** | Requisitos | **v1.9** ✅ | v1.0–v1.8 | 9 RFs nuevos en v1.9 (RF-163 a RF-169). |
 | **03** | Historias de Usuario | **v1.9** ✅ | v1.0–v1.8 | 6 HUs nuevos en v1.9 (HU-098 a HU-103). |
-| **04** | Casos de Uso | **v1.9** ✅ | v1.0–v1.8 | 5 CUs nuevos en v1.9 (CU-078 a CU-082). |
+| **04** | Casos de Uso | **v1.10** ✅ | v1.0–v1.9 | 11 CUs nuevos en v1.10 (CU-15 a CU-25: export, dashboard, paginacion, duplicacion, bloqueo). Auditoria RAT 2026-07-07. |
 | **05** | Diseno Funcional | _(no regenerado)_ | v1.0, v1.1, v1.2, v1.3 | Sin equivalente v1.9 — evaluar si necesario. |
 | **06** | Arquitectura Software | **v1.9** ✅ | v1.0–v1.8 | 5 ADRs nuevos en v1.9 (ADR-29 a ADR-33). v1.6.5 y v1.9 son mas livianos que v1.7 (cambio de generacion). |
 | **07** | Modelo de Datos Detallado | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — evaluar si necesario. |
-| **08** | API REST | **v1.9** ✅ | v1.0–v1.8 (v1.5, v1.6 faltan) | Cubre 6 endpoints IDOR + validators. |
+| **08** | API REST | **v1.10** ✅ | v1.0–v1.9 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-07-07.** Cubre **20 endpoints** RAT (antes 6 en v1.9). Incluye fix H2.2 (verify-chain restringido a SUPERADMIN) y H1.1 (base_legal='Otra' requiere archivo). |
 | **09** | Backlog de Producto | **v1.9** ✅ | v1.0–v1.8 | 6 items cerrados nuevos (DT-ITER13-01 a DT-ITER13-06). |
 | **10** | Plan de QA | **v1.9** ✅ | v1.0–v1.8 (v1.5 falta) | 8 TCs nuevos en v1.9 (TC-039 a TC-046). |
 | **11** | Manual de Despliegue | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/despliegue/` cumple esta funcion. |
@@ -65,6 +65,8 @@ Los siguientes documentos historicos NO tienen equivalente v1.9. Mantenerlos por
 
 | Version | Carpeta build |
 |---|---|
+| v1.10 (vigente — RAT API) | `scripts/maintenance/generar_api_doc_v1_10.py` |
+| v1.10 (vigente — CU RAT) | `scripts/maintenance/generar_casos_uso_v1_10.py` |
 | v1.9 (vigente) | `docs/auditorias/2026-07-05_auditoria_v1.9/_scripts/build_*.py` |
 | v1.8 | `docs/auditorias/2026-06-26_auditoria_v1.8/_scripts/build_*.py` |
 | v1.7 | `docs/auditorias/2026-06-24_auditoria_v1.7/_scripts/build_*.py` |
@@ -73,4 +75,4 @@ Los siguientes documentos historicos NO tienen equivalente v1.9. Mantenerlos por
 
 ---
 
-*Ultima actualizacion: 2026-07-05 (auditoria v1.9)*
+*Ultima actualizacion: 2026-07-07 (auditoria RAT detallada — sprint 1)*

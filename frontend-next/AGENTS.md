@@ -121,15 +121,33 @@ Single source of truth para todos los magic strings: `API_BASE`, `STORAGE_KEYS`,
 - Expandir para ver detalle + auditoría
 - Exportar CSV/PDF por empresa
 
-### RatWizard — wizard de creación de RAT (4 pasos)
-1. Identificación (nombre, categoria_titulares, fuente, destinatarios, encargado)
-2. Datos tratados (categoria_datos, datos_sensibles, EIPD, decisiones automatizadas)
-3. Finalidad y ley (finalidad, base_legal, test_interes_legitimo guiado 3 pasos)
-4. Almacenamiento y transferencias (plazo, medidas, transferencia internacional)
+### RatWizard — wizard de creación de RAT (5 pasos + sugerencias previas)
 
-### RatEditForm — edición de RAT (4 pasos)
-Mismos 4 pasos que el wizard, pero pre-llenado con los datos existentes del RAT.
-Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
+> **H4.6 (auditoría 2026-07-07):** El wizard real tiene **5 pasos**, no 4. El doc v1.9 decía 4.
+
+**Paso 0 — Sugerencias por rubro** (opcional, antes del Paso 1):
+- Si la empresa tiene `rubro_id`, el backend ofrece sugerencias pre-completadas.
+- Frontend: `api.sugerenciasPorRubro(company.rubro_id)` → muestra cards.
+- Usuario elige una sugerencia (usa `usarSugerencia`) o salta con "Crear personalizado".
+
+**5 pasos del wizard:**
+1. **Identificación** — nombre_proceso, categoria_titulares (CategoryChips), fuente_datos, destinatarios, nombre_encargado
+2. **Datos tratados** — categoria_datos, datos_sensibles (con tipo_dato_sensible), EIPD, decisiones automatizadas (con logica_automatizada), clasificación NNA/DCONF/estructura_dato
+3. **Finalidad y ley** — finalidad, base_legal (con tooltip legal Art. 12/13/16 BIS), documento base legal (file upload), test_interes_legitimo guiado 3 pasos
+4. **Almacenamiento y transferencias** — plazo_retencion, medidas_seguridad, transferencia_internacional (con pais_destino + garantias), transferencia_nacional
+5. **Compliance operativo (Tier 2)** — sistema_almacenamiento, volumen_titulares, operaciones_tratamiento, ciclo, automatizacion, frecuencia, doc_clausulas, medidas_organizativas, mecanismos_eliminacion, etc.
+
+### Estructura modular (H4.5)
+Desde auditoría 2026-07-07:
+- `components/rat/RatWizard/types.ts` — Constantes (`STEPS`, `DESCRIPCIONES_BASE`, `DRAFT_KEY`) y tipos
+- `components/rat/RatWizard/hooks/useDraftAutosave.ts` — Auto-save localStorage cada 30s
+- `components/rat/RatWizard/hooks/useWizardNavigation.ts` — Navegación entre pasos
+- `components/rat/RatWizard/index.ts` — Re-exports
+- `components/rat/RatWizard.tsx` — Orquestador (pasos UI inline, refactor incremental)
+
+### RatEditForm — edición de RAT (5 pasos)
+Mismos 5 pasos que el wizard, pero pre-llenado con los datos existentes del RAT.
+Incluye: `observaciones_auditoria`, `estado`, `tiene_contrato_encargado`, parseo de `test_interes_legitimo` (3 pasos).
 
 ### Módulo Reportes — reportes/page.tsx
 - KPI cards: total, completitud promedio, datos sensibles, EIPD, transf. internacional, dec. automatizadas
@@ -147,10 +165,14 @@ Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
   - **Campos vacíos se marcan con `**` en rojo itálico** (para saber qué falta)
   - Historial de cambios (auditoría)
 - **Botón Exportar PDF** en drawer → descarga PDF del RAT individual (endpoint `/rats/{id}/export/pdf`)
-- Chat IA flotante (botón 🤚 esquina inferior derecha)
+- **AsesorCustodio (Chat IA)** — flotante (botón 🤚 esquina inferior derecha)
   - Requiere `MINIMAX_API_KEY` o `OPENAI_API_KEY` en `backend/.env`
   - System prompt sobre Ley 21.719 Chile
   - Pasa contexto de empresa + RATs activos
+  - Endpoint backend: `POST /ai/ask`
+  - Componente: `components/dashboard/AIChat.tsx`
+  - Documentado en skill `custodio-auditoria` (sección AI Provider Rules)
+  - **H6.4 (auditoría 2026-07-07):** renombrado de "Chat IA" a **AsesorCustodio** según nomenclatura canónica de la skill `doc-governance/SKILL.md`.
 
 ### OnboardingChecklist — components/dashboard/OnboardingChecklist.tsx
 Checklist de primeros pasos que aparece en el dashboard para empresas nuevas:
