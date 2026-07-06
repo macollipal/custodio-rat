@@ -11,6 +11,7 @@
 | 2026-06-11 | Incidente ENV_VARS | ✅ Resuelto | — |
 | 2026-06-12 | Auditoría v1.4 | ✅ Documentación | 7.6/10 |
 | 2026-06-13 | Post-fix OCI | ✅ Activo | 7.6/10 |
+| 2026-07-05 | Auditoría v1.9 (Iter 13) | ✅ Documentación | 6.7/10 |
 | 2026-06-26 | Cierre sesión v1.8 (Iter 11+12) | ✅ Documentación | 6.3/10 |
 | 2026-06-24 | Cierre sesión v1.7 | ✅ Documentación | 9.0/10 |
 | 2026-06-15 | Cierre sesión v1.6-BETA | ✅ Activo | 8.7/10 |
@@ -24,6 +25,16 @@
 - **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
 - **Carpeta:** `2026-06-24_auditoria_v1.7/`
 - **Gap cerrado:** G1 (doc 08 API estaba en v1.4, ahora en v1.7)
+
+### 2026-07-05 — Auditoría v1.9 (Iter 13)
+- **Estado:** ✅ Documentación generada
+- **Score:** 6.7/10 (RAT 6.5, ARCO 6.8, Brechas 5.9)
+- **Tema:** IDOR multi-tenant en 6 endpoints RAT + base_legal_valida strict + ConsentimientoAlert + homologación orden campos RAT + PDF con títulos de sección
+- **Commits:** `1894a4e` (PDF títulos), `ed6d994` (homologación), `6583cf5` (encoding+tests), `e7318f6` (IDOR+código muerto)
+- **Docs generados:** 02, 03, 04, 06, 08, 09, 10, 12, MTX (9 documentos)
+- **Carpeta:** `2026-07-05_auditoria_v1.9/`
+- **RF nuevos:** RF-163 (CRÍTICO), RF-164 a RF-169
+- **Hallazgos resueltos:** IDOR multi-tenant, base_legal_valida strict, ConsentimientoAlert, homologación campos RAT, PDF títulos sección, encoding UTF-8 fix
 
 ### 2026-06-26 — Cierre sesión v1.8 (Iter 11 + Iter 12)
 - **Estado:** ✅ Documentación generada
@@ -102,6 +113,7 @@
 
 ## Ver También
 
+- [AUDITORIA_V1.9.md](2026-07-05_auditoria_v1.9/AUDITORIA_V1.9.md)
 - [AUDITORIA_v1.8.md](2026-06-26_auditoria_v1.8/AUDITORIA_v1.8.md)
 - [HALLAZGOS.md](2026-06-26_auditoria_v1.8/HALLAZGOS.md)
 - [CIERRE_SESION_v1.8.md](2026-06-26_auditoria_v1.8/CIERRE_SESION_v1.8.md)
@@ -122,4 +134,4 @@
 
 ---
 
-*Última actualización: 2026-06-26*
+*Última actualización: 2026-07-05*
