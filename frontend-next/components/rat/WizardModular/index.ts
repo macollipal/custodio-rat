@@ -15,3 +15,4 @@ export type { RatWizardProps, DraftSnapshot, WizardStepName } from './types';
 export { useDraftAutosave } from './hooks/useDraftAutosave';
 export { useWizardNavigation } from './hooks/useWizardNavigation';
 export type { WizardNavigation } from './hooks/useWizardNavigation';
+export { Step0, Step1, Step2, Step3, Step4, Step5 } from './steps';

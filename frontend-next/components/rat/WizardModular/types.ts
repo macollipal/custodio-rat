@@ -1,4 +1,4 @@
-import { Company, RATWizardData } from '@/types';
+import { Company, RATWizardData, RATSugerido } from '@/types';
 
 export const STEPS: string[] = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
 export type WizardStepName = typeof STEPS[number];
@@ -12,6 +12,47 @@ export interface RatWizardProps {
 export interface DraftSnapshot {
   data: RATWizardData;
   savedAt: number;
+}
+
+export interface StepValidation {
+  errors: Record<string, string | undefined>;
+  isValid: boolean;
+  requiredCount: number;
+  completedCount: number;
+  firstErrorField?: string;
+}
+
+export interface StepProps {
+  data: RATWizardData;
+  setData: React.Dispatch<React.SetStateAction<RATWizardData>>;
+  validation: StepValidation;
+  stepIsValid: boolean;
+  fieldErrors: Record<string, string | undefined>;
+  inputCls: string;
+  inputStyle: React.CSSProperties;
+  onNext: () => void;
+  onPrev: () => void;
+  guardarDraft: () => void;
+}
+
+export interface Step0Props extends StepProps {
+  mostrarPaso0: boolean;
+  rubroNombre: string;
+  sugerencias: RATSugerido[];
+  usarSugerencia: (sug: RATSugerido) => void;
+}
+
+export interface Step1Props extends StepProps {
+  tipos: string[];
+  tipoSel: string;
+  setTipoSel: (v: string) => void;
+  sugerencias: RATSugerido[];
+  usarSugerencia: (sug: RATSugerido) => void;
+  aplicarSugerencias: () => Promise<void>;
+}
+
+export interface Step3Props extends StepProps {
+  onAplicarSugerencias: () => Promise<void>;
 }
 
 export const DRAFT_KEY = (companyId: number): string => `custodio_rat_draft_${companyId}`;
