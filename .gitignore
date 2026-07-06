@@ -96,14 +96,17 @@ migrate_to_neon.py
 
 # Documentación temporal Word
 ~$*.docx
-~*.docx
-~$nual_Usuario_Custodio.docx
+~$*.doc
+~$*.xlsx
+~$*.pptx
+~$*
 
-# Documentación oficial (no versionar, guardar en SharePoint/Google Drive)
-docs/documentacion_oficial/*.docx
-docs/documentacion_oficial/*.xlsx
+# Documentación oficial — la versión vigente SE versiona (v1.9+); 
+# las más viejas permanecen en git como histórico.
+# Cualquier nueva subcarpeta p.ej. _regen debe ignorar su contenido:
+docs/documentacion_oficial_asesorgpt/_regen/*
 
-# Archivos Office locales
+# Archivos Office locales (descartar PPT/XLSX del root)
 *.pptx
 *.xlsx
 ~$*.xlsx
