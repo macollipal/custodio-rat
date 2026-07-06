@@ -29,59 +29,58 @@ CAMPOS_OBLIGATORIOS_COMPLETO = [
     "plazo_retencion",
 ]
 
-# Alertas de auditor├¡a autom├íticas
 ALERTAS_AUDITORIA = {
     "datos_sensibles": (
-        "ÔÜá´©Å Este proceso trata datos sensibles (Art. 2 letra g Ley 21.719). Verifique que cuenta con base legal "
-        "expl├¡cita y medidas de seguridad reforzadas. Documente el tipo espec├¡fico de dato sensible."
+        "⚠️ Este proceso trata datos sensibles (Art. 2 letra g Ley 21.719). Verifique que cuenta con base legal "
+        "explícita y medidas de seguridad reforzadas. Documente el tipo específico de dato sensible."
     ),
     "datos_sensibles_consentimiento": (
-        "ÔÜá´©Å BASE LEGAL: El tratamiento de datos sensibles basado en consentimiento requiere que sea EXPRESO "
-        "(no basta consentimiento impl├¡cito). Documente el mecanismo de obtenci├│n y revocaci├│n del consentimiento."
+        "⚠️ BASE LEGAL: El tratamiento de datos sensibles basado en consentimiento requiere que sea EXPRESO "
+        "(no basta consentimiento implícito). Documente el mecanismo de obtención y revocación del consentimiento."
     ),
     "datos_sensibles_biometria": (
-        "­ƒöÉ BIOMETR├ìA: Los datos biom├®tricos destinados a identificar inequ├¡vocamente a una persona se rigen por "
-        "el Art. 16 BIS Ley 21.719. Requieren base legal espec├¡fica y evaluaci├│n EIPD. En relaciones laborales, "
-        "el consentimiento del empleado NO es base legal v├ílida (relaci├│n jer├írquica asim├®trica)."
+        "🚨 BIOMETRÍA: Los datos biométricos destinados a identificar inequívocamente a una persona se rigen por "
+        "el Art. 16 BIS Ley 21.719. Requieren base legal específica y evaluación EIPD. En relaciones laborales, "
+        "el consentimiento del empleado NO es base legal válida (relación jerárquica asimétrica)."
     ),
     "evaluacion_impacto": (
-        "­ƒôï Se marc├│ que requiere Evaluaci├│n de Impacto en Protecci├│n de Datos (EIPD/DPIA). "
-        "Aseg├║rese de completarla y documentarla antes de iniciar el tratamiento (Art. 15 bis Ley 21.719)."
+        "📋 Se marcó que requiere Evaluación de Impacto en Protección de Datos (EIPD/DPIA). "
+        "Asegúrese de completarla y documentarla antes de iniciar el tratamiento (Art. 15 bis Ley 21.719)."
     ),
     "transferencia_internacional": (
-        "­ƒîÉ Este proceso incluye transferencia internacional de datos. "
-        "Verifique que el pa├¡s destinatario cuenta con nivel adecuado de protecci├│n o que se aplican "
-        "garant├¡as apropiadas (SCC, BCR u otras). Chile NO est├í en la lista de adecuaci├│n de la UE. "
-        "Documente las garant├¡as aplicadas en el campo correspondiente."
+        "🌍 Este proceso incluye transferencia internacional de datos. "
+        "Verifique que el país destinatario cuenta con nivel adecuado de protección o que se aplican "
+        "garantías apropiadas (SCC, BCR u otras). Chile NO está en la lista de adecuación de la UE. "
+        "Documente las garantías aplicadas en el campo correspondiente."
     ),
     "transferencia_sin_garantias": (
-        "­ƒîÉ ATENCI├ôN: Se registr├│ transferencia internacional sin especificar las garant├¡as aplicadas. "
-        "Documente si aplica nivel adecuado, SCC u otras garant├¡as (Art. 28 Ley 21.719)."
+        "🌍 ATENCIÓN: Se registró transferencia internacional sin especificar las garantías aplicadas. "
+        "Documente si aplica nivel adecuado, SCC u otras garantías (Art. 28 Ley 21.719)."
     ),
     "decisiones_automatizadas": (
-        "­ƒñû Este proceso involucra decisiones automatizadas o perfilamiento. Los titulares tienen derecho a "
-        "solicitar intervenci├│n humana e impugnar la decisi├│n (Art. 8 Ley 21.719). Documente la l├│gica del sistema "
-        "y el mecanismo de revisi├│n humana disponible. Eval├║e si requiere EIPD."
+        "🤖 Este proceso involucra decisiones automatizadas o perfilamiento. Los titulares tienen derecho a "
+        "solicitar intervención humana e impugnar la decisión (Art. 8 Ley 21.719). Documente la lógica del sistema "
+        "y el mecanismo de revisión humana disponible. Evalúe si requiere EIPD."
     ),
     "interes_legitimo": (
-        "ÔÜû´©Å Base legal: Inter├®s leg├¡timo. Debe documentar el test de 3 pasos: (1) ┬┐existe inter├®s leg├¡timo real? "
-        "(2) ┬┐el tratamiento es necesario para ese inter├®s? (3) ┬┐prevalece sobre los derechos del titular? "
+        "⚖️ Base legal: Interés legítimo. Debe documentar el test de 3 pasos: (1) ¿existe interés legítimo real? "
+        "(2) ¿el tratamiento es necesario para ese interés? (3) ¿prevalece sobre los derechos del titular? "
         "Sin este test documentado, la base no sirve como defensa ante la APDC."
     ),
     "interes_legitimo_sin_test": (
-        "ÔÜû´©Å PENDIENTE: Base legal Inter├®s leg├¡timo requiere documentar el test de 3 pasos en el campo correspondiente."
+        "⚖️ PENDIENTE: Base legal Interés legítimo requiere documentar el test de 3 pasos en el campo correspondiente."
     ),
     "encargado_sin_contrato": (
-        "­ƒôä ENCARGADO SIN CONTRATO: Se registro un encargado del tratamiento pero no se ha confirmado la existencia "
+        "📄 ENCARGADO SIN CONTRATO: Se registró un encargado del tratamiento pero no se ha confirmado la existencia "
         "de un contrato de encargo que establezca las instrucciones de tratamiento, confidencialidad y seguridad "
         "(Art. 14 quater Ley 21.719)."
     ),
     "eipd_pendiente": (
-        "­ƒöì EIPD PENDIENTE: Este proceso requiere Evaluaci├│n de Impacto en Protecci├│n de Datos y a├║n no est├í completada. "
+        "⏳ EIPD PENDIENTE: Este proceso requiere Evaluación de Impacto en Protección de Datos y aún no está completada. "
         "No puede iniciarse el tratamiento hasta completar la EIPD (Art. 15 bis Ley 21.719)."
     ),
     "falta_doc_base_legal": (
-        "­ƒôä SIN DOCUMENTO DE BASE LEGAL: La base legal seleccionada requiere un documento que la respalde "
+        "📄 SIN DOCUMENTO DE BASE LEGAL: La base legal seleccionada requiere un documento que la respalde "
         "(consentimiento, contrato, norma legal, EIPD, etc.). Adjunte el documento correspondiente para alcanzar el 100% de completitud."
     ),
 }
@@ -476,7 +475,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     now = datetime.now(timezone.utc)
     for r in rats:
         plazo = r.plazo_retencion or ""
-        match = re.search(r"(\d+)\s*(?:a├▒o|a├▒os)", plazo, re.IGNORECASE)
+        match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
         if not match:
             continue
         years = int(match.group(1))

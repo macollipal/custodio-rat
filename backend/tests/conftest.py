@@ -1,11 +1,11 @@
 ﻿"""
 Fixtures compartidas para toda la suite de tests.
 - BD PostgreSQL en Neon QA (aislada por transaction rollback)
-- TestClient con autenticaciÃ³n JWT real
-- Helpers para crear entidades de prueba
+ - TestClient con autenticación JWT real
+ - Helpers para crear entidades de prueba
 
-SEGURIDAD: La variable TEST_DATABASE_URL debe estar configurada en .env antes de ejecutar tests.
-NO hardcodear credenciales en este archivo. Ver .env.example para configuraciÃ³n.
+ SEGURIDAD: La variable TEST_DATABASE_URL debe estar configurada en .env antes de ejecutar tests.
+ NO hardcodear credenciales en este archivo. Ver .env.example para configuración.
 """
 
 import os
@@ -124,14 +124,14 @@ def empresa(client, auth_headers):
 def rat_base(empresa):
     return {
         "company_id": empresa["id"],
-        "nombre_proceso": "GestiÃ³n de Clientes Web",
-        "categoria_datos": "Nombre, email, telÃ©fono",
+        "nombre_proceso": "Gestión de Clientes Web",
+        "categoria_datos": "Nombre, email, teléfono",
         "categoria_titulares": "Clientes y usuarios del servicio",
-        "finalidad": "GestiÃ³n comercial y soporte al cliente",
+        "finalidad": "Gestión comercial y soporte al cliente",
         "base_legal": "Consentimiento del titular",
-        "fuente_datos": "El propio titular a travÃ©s del formulario web",
-        "plazo_retencion": "5 aÃ±os desde la Ãºltima interacciÃ³n",
-        "medidas_seguridad": "Cifrado en trÃ¡nsito y reposo, acceso restringido",
+        "fuente_datos": "El propio titular a través del formulario web",
+        "plazo_retencion": "5 años desde la última interacción",
+        "medidas_seguridad": "Cifrado en tránsito y reposo, acceso restringido",
         "destinatarios": "Equipo comercial interno",
         "transferencia_internacional": False,
         "datos_sensibles": False,

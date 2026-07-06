@@ -45,7 +45,7 @@ def _seed_admin():
 
     secret = os.getenv("SEED_ADMIN_PASSWORD")
     if not secret:
-        print("ÔÜá´©Å SEED_ADMIN=true pero no se defini├│ SEED_ADMIN_PASSWORD ÔÇö omitiendo seed")
+        print("⚠️ SEED_ADMIN=true pero no se definió SEED_ADMIN_PASSWORD — omitiendo seed")
         return
 
     db = SessionLocal()

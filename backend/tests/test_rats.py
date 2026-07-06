@@ -123,14 +123,22 @@ class TestActualizarRAT:
         assert resp.json()["estado"] == "en_revision"
 
     def test_cambiar_estado_a_aprobado(self, client, auth_headers, rat_base):
-        created = client.post("/rats/", json=rat_base, headers=auth_headers).json()
-        resp = client.put(
-            f"/rats/{created['id']}",
-            json={"estado": "aprobado"},
-            headers=auth_headers,
-        )
+        completo = {**rat_base, "transferencia_datos": "No aplica", "datos_nna": "No aplica",
+            "nivel_confidencialidad": "Alta", "estructura_dato": "Digital",
+            "datos_anonimizados": False, "datos_seudonimizados": True,
+            "ciclo_procesamiento": "Recurrente", "automatizacion": "Parcialmente automatizado",
+            "frecuencia": "Diaria", "transferencia_nacional": False,
+            "doc_clausulas": "Clausula de proteccion de datos",
+            "medidas_organizativas": "Controles de acceso basados en roles",
+            "mecanismos_eliminacion": "Eliminacion segura tras plazo",
+            "tecnica_anonimizacion": "No aplica", "origen_dato_portabilidad": "Portal web"}
+        created = client.post("/rats/", json=completo, headers=auth_headers).json()
+        resp = client.post(f"/rats/{created['id']}/aprobar", headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json()["estado"] == "aprobado"
+        data = resp.json()
+        assert data["estado"] == "aprobado"
+        assert data["aprobado_por"] is not None
+        assert data["fecha_aprobacion"] is not None
 
     def test_estado_invalido_falla(self, client, auth_headers, rat_base):
         created = client.post("/rats/", json=rat_base, headers=auth_headers).json()
@@ -193,92 +201,88 @@ class TestCompletitud:
         assert resp.status_code == 201
         pct = resp.json()["completitud"]
         assert 0 <= pct <= 100
-
-def test_rat_con_todos_los_campos_alta_completitud(self, client, auth_headers, rat_base):
-        payload = {
-            **rat_base,
-            "categoria_titulares": "Clientes del servicio web",
-            "medidas_seguridad": "Cifrado AES-256",
-            "destinatarios": "Equipo comercial",
-            "transferencia_internacional": True,
-            "pais_destino": "España",
-            "garantias_transferencia_int": "Cláusulas Contractuales Tipo (SCC)",
-            "datos_sensibles": False,
-            "evaluacion_impacto": True,
-            "estado_eipd": "pendiente",
-            "decisiones_automatizadas": False,
-            "observaciones_auditoria": "Proceso auditado y aprobado",
-            "transferencia_datos": "Proveedor de email marketing",
-        }
-        resp = client.post("/rats/", json=payload, headers=auth_headers)
-        assert resp.status_code == 201
-        # Solo Art. 16 (7+3=10) poblados -> 10/25 = 40%
-        pct = resp.json()["completitud"]
-        assert pct == 40, f"Esperado 40% (10/25), obtuvo {pct}%"
-
-    def test_rat_minimo_obligatorios_sin_recomendados(self, client, auth_headers, rat_base):
-        """Solo con los 7 obligatorios Art. 16: 7/25 = 28%."""
-        resp = client.post("/rats/", json=rat_base, headers=auth_headers)
-        assert resp.status_code == 201
-        pct = resp.json()["completitud"]
-        assert pct == 28, f"Esperado 28% (7/25), obtuvo {pct}%"
-
-    def test_rat_con_tier1_tier2_completos_100_porciento(self, client, auth_headers, rat_base):
-        """Con los 25 campos poblados (7+3+5+10) debe dar 100%."""
-        payload = {
-            **rat_base,
-            "categoria_titulares": "Clientes del servicio web",
-            "medidas_seguridad": "Cifrado AES-256",
-            "destinatarios": "Equipo comercial",
-            "transferencia_datos": "Proveedor de email marketing",
-            "nivel_confidencialidad": "DC2",
-            "estructura_dato": "estructurado",
-            "datos_nna": "ninguno",
-            "datos_anonimizados": False,
-            "datos_seudonimizados": False,
-            "sistema_almacenamiento": "PostgreSQL on-prem",
-            "volumen_titulares_estimado": 5000,
-            "responsable_tratamiento_email": "dpo@empresa.cl",
-            "ciclo_procesamiento": "Captura → Almacenamiento → Archivo",
-            "automatizacion": "asistido",
-            "frecuencia": "diaria",
-            "transferencia_nacional": False,
-            "doc_clausulas": "DPA conforme Art. 14 quater",
-            "medidas_organizativas": "RBAC + aprobación dual",
-            "mecanismos_eliminacion": "Supresión lógica + verificación",
-        }
-        resp = client.post("/rats/", json=payload, headers=auth_headers)
-        assert resp.status_code == 201
-        pct = resp.json()["completitud"]
-        assert pct == 100, f"Esperado 100% (25/25), obtuvo {pct}%"
-
-    def test_estado_completo_solo_con_alta_completitud(self, client, auth_headers, rat_base):
-        """El estado 'completo' requiere obligatorios + >=90% completitud."""
-        payload = {
-            **rat_base,
-            "categoria_titulares": "Clientes",
-            "medidas_seguridad": "TLS 1.3",
-            "destinatarios": "Equipo interno",
-            "transferencia_datos": "N/A",
-            "nivel_confidencialidad": "DC2",
-            "estructura_dato": "estructurado",
-            "datos_nna": "ninguno",
-            "datos_anonimizados": False,
-            "datos_seudonimizados": False,
-            "sistema_almacenamiento": "PostgreSQL",
-            "volumen_titulares_estimado": 1000,
-            "responsable_tratamiento_email": "dpo@empresa.cl",
-            "ciclo_procesamiento": "Captura → Archivo",
-            "automatizacion": "automatico",
-            "frecuencia": "diaria",
-            "transferencia_nacional": False,
-            "doc_clausulas": "N/A",
-            "medidas_organizativas": "RBAC",
-            "mecanismos_eliminacion": "Supresión",
-        }
-        resp = client.post("/rats/", json=payload, headers=auth_headers)
-        assert resp.status_code == 201
-        body = resp.json()
-        assert body["completitud"] == 100
-        # Estado debe ser 'completo' porque tiene 100% completitud
-        assert body["estado"] == "completo", f"Esperado 'completo', obtuvo '{body['estado']}'"
+        def test_rat_con_todos_los_campos_alta_completitud(self, client, auth_headers, rat_base):
+            payload = {
+                **rat_base,
+                "categoria_titulares": "Clientes del servicio web",
+                "medidas_seguridad": "Cifrado AES-256",
+                "destinatarios": "Equipo comercial",
+                "transferencia_internacional": True,
+                "pais_destino": "España",
+                "garantias_transferencia_int": "Cláusulas Contractuales Tipo (SCC)",
+                "datos_sensibles": False,
+                "evaluacion_impacto": True,
+                "estado_eipd": "pendiente",
+                "decisiones_automatizadas": False,
+                "observaciones_auditoria": "Proceso auditado y aprobado",
+                "transferencia_datos": "Proveedor de email marketing",
+            }
+            resp = client.post("/rats/", json=payload, headers=auth_headers)
+            assert resp.status_code == 201
+            # Solo Art. 16 (7+3=10) poblados -> 10/25 = 40%
+            pct = resp.json()["completitud"]
+            assert pct == 40, f"Esperado 40% (10/25), obtuvo {pct}%"
+        def test_rat_minimo_obligatorios_sin_recomendados(self, client, auth_headers, rat_base):
+            """Solo con los 7 obligatorios Art. 16: 7/25 = 28%."""
+            resp = client.post("/rats/", json=rat_base, headers=auth_headers)
+            assert resp.status_code == 201
+            pct = resp.json()["completitud"]
+            assert pct == 28, f"Esperado 28% (7/25), obtuvo {pct}%"
+        def test_rat_con_tier1_tier2_completos_100_porciento(self, client, auth_headers, rat_base):
+            """Con los 25 campos poblados (7+3+5+10) debe dar 100%."""
+            payload = {
+                **rat_base,
+                "categoria_titulares": "Clientes del servicio web",
+                "medidas_seguridad": "Cifrado AES-256",
+                "destinatarios": "Equipo comercial",
+                "transferencia_datos": "Proveedor de email marketing",
+                "nivel_confidencialidad": "DC2",
+                "estructura_dato": "estructurado",
+                "datos_nna": "ninguno",
+                "datos_anonimizados": False,
+                "datos_seudonimizados": False,
+                "sistema_almacenamiento": "PostgreSQL on-prem",
+                "volumen_titulares_estimado": 5000,
+                "responsable_tratamiento_email": "dpo@empresa.cl",
+                "ciclo_procesamiento": "Captura → Almacenamiento → Archivo",
+                "automatizacion": "asistido",
+                "frecuencia": "diaria",
+                "transferencia_nacional": False,
+                "doc_clausulas": "DPA conforme Art. 14 quater",
+                "medidas_organizativas": "RBAC + aprobación dual",
+                "mecanismos_eliminacion": "Supresión lógica + verificación",
+            }
+            resp = client.post("/rats/", json=payload, headers=auth_headers)
+            assert resp.status_code == 201
+            pct = resp.json()["completitud"]
+            assert pct == 100, f"Esperado 100% (25/25), obtuvo {pct}%"
+        def test_estado_completo_solo_con_alta_completitud(self, client, auth_headers, rat_base):
+            """El estado 'completo' requiere obligatorios + >=90% completitud."""
+            payload = {
+                **rat_base,
+                "categoria_titulares": "Clientes",
+                "medidas_seguridad": "TLS 1.3",
+                "destinatarios": "Equipo interno",
+                "transferencia_datos": "N/A",
+                "nivel_confidencialidad": "DC2",
+                "estructura_dato": "estructurado",
+                "datos_nna": "ninguno",
+                "datos_anonimizados": False,
+                "datos_seudonimizados": False,
+                "sistema_almacenamiento": "PostgreSQL",
+                "volumen_titulares_estimado": 1000,
+                "responsable_tratamiento_email": "dpo@empresa.cl",
+                "ciclo_procesamiento": "Captura → Archivo",
+                "automatizacion": "automatico",
+                "frecuencia": "diaria",
+                "transferencia_nacional": False,
+                "doc_clausulas": "N/A",
+                "medidas_organizativas": "RBAC",
+                "mecanismos_eliminacion": "Supresión",
+            }
+            resp = client.post("/rats/", json=payload, headers=auth_headers)
+            assert resp.status_code == 201
+            body = resp.json()
+            assert body["completitud"] == 100
+            # Estado debe ser 'completo' porque tiene 100% completitud
+            assert body["estado"] == "completo", f"Esperado 'completo', obtuvo '{body['estado']}'"

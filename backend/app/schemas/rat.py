@@ -78,7 +78,7 @@ class RATCreate(RATBase):
     @classmethod
     def nombre_no_vacio(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("El nombre del proceso no puede estar vac├¡o.")
+            raise ValueError("El nombre del proceso no puede estar vacío.")
         return v.strip()
 
     @field_validator("base_legal")
@@ -86,15 +86,17 @@ class RATCreate(RATBase):
     def base_legal_valida(cls, v: str) -> str:
         opciones_validas = [
             "Consentimiento del titular",
-            "Ejecuci├│n de contrato",
-            "Obligaci├│n legal",
-            "Inter├®s leg├¡timo",
-            "Inter├®s vital del titular",
-            "Misi├│n de inter├®s p├║blico",
+            "Ejecución de contrato",
+            "Obligación legal",
+            "Interés legítimo",
+            "Interés vital del titular",
+            "Misión de interés público",
             "Otra",
         ]
-        # Validaci├│n flexible: si no coincide exactamente, se acepta igual (puede ser texto libre)
-        return v.strip()
+        stripped = v.strip()
+        if stripped not in opciones_validas:
+            raise ValueError(f"base_legal debe ser una de las opciones válidas: {opciones_validas}")
+        return stripped
 
 
 class RATUpdate(BaseModel):
