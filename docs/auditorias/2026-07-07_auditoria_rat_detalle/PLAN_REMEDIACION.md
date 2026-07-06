@@ -37,7 +37,6 @@
 | Hallazgo | Severidad | Estado | Notas |
 |---|---|---|---|
 | **H3.8** rat_service.py → 5 archivos | P2 | ✅ Cerrado | rat_crud.py, rat_validators.py, rat_alerts.py, rat_file.py, rat_constants.py |
-| **H3.4** RATUpdate hereda RATBase | P2 | ✅ Cerrado (Sprint 1) | |
 | **H5.3** Test CNI export | P2 | ✅ Cerrado | test_cni_export.py (5 escenarios) |
 | **H5.4** Test dashboard stats avanzados | P2 | ✅ Cerrado | test_dashboard_stats.py (6 escenarios) |
 | **H5.5** Test RBAC admin_empresa | P2 | ✅ Cerrado | test_rbac_admin_empresa.py (4 escenarios) |
@@ -45,9 +44,11 @@
 | **H2.2** Scheduler EIPD>90d + consentimiento>2a | P2 | ✅ Cerrado | 2 new email functions + 2 task runners |
 | **H3.3** Magic numbers calcular_nivel_riesgo | P3 | ✅ Cerrado | UMBRAL_RIESGO_CRITICO/ALTO/MEDIO en rat.py |
 | **H3.14** Inline import en rats.py | P3 | ✅ Cerrado | download_rat_file movido a imports de nivel |
-| **H4.5** WizardModular steps | P2 | 🔄 En curso | Pasos 1-5 extraídos a WizardModular/steps/ |
+| **H3.10** Regex plazo_retencion solo detectaba años | P3 | ✅ Cerrado | Ahora detecta años + meses + días |
+| **H4.5** WizardModular steps extraídos | P2 | ✅ Cerrado | Steps 0-5 extraídos a WizardModular/steps/ |
 | **H4.9** test_interes_legitimo JSON | P2 | ⏳ Pendiente | Requiere cambio de schema |
 | **H4.14** axe-core a11y tests | P2 | ⏳ Pendiente | Requiere setup Playwright |
+| **H3.16** export_service.py CSV/PDF split | P3 | ⏳ Pendiente | Split en csv_export.py + pdf_export.py |
 | **H3.10** Regex plazo_retencion | P3 | ⏳ Pendiente | Solo detecta años, no meses/días |
 | **H3.16** export_service.py CSV/PDF | P3 | ⏳ Pendiente | Split en csv_export.py + pdf_export.py |
 

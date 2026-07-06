@@ -247,10 +247,15 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     now = datetime.now(timezone.utc)
     for r in rats:
         plazo = r.plazo_retencion or ""
-        match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
-        if not match:
+        total_dias = 0
+        for years_m in re.finditer(r"(\d+)\s*(?:año|años?)", plazo, re.IGNORECASE):
+            total_dias += int(years_m.group(1)) * 365
+        for meses_m in re.finditer(r"(\d+)\s*(?:mes|meses?)", plazo, re.IGNORECASE):
+            total_dias += int(meses_m.group(1)) * 30
+        for dias_m in re.finditer(r"(\d+)\s*(?:día|días|dia|dias?)", plazo, re.IGNORECASE):
+            total_dias += int(dias_m.group(1))
+        if total_dias == 0:
             continue
-        years = int(match.group(1))
         created = r.created_at
         if created is None:
             continue
@@ -261,7 +266,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
                 continue
         if created.tzinfo is None:
             created = created.replace(tzinfo=timezone.utc)
-        expiry = created + timedelta(days=years * 365)
+        expiry = created + timedelta(days=total_dias)
         if expiry < now:
             rats_vencidos += 1
         elif expiry - timedelta(days=90) < now:
