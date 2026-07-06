@@ -17,7 +17,7 @@ Establecer el procedimiento operacional para la detección, clasificación, eval
 | Detección y registro | Identificar y documentar toda brecha de seguridad | Art. 26.1 |
 | Clasificación de severidad | Categorizar según impacto: CONFIDENCIALIDAD, INTEGRIDAD, DISPONIBILIDAD | Art. 26.1 |
 | Evaluación de impacto | Analizar consecuencias para derechos de titulares | Art. 26.2 |
-| Notificación a APDP | Informar a la Agencia en máximo 72 horas | Art. 26.3 |
+| Notificación a APDC | Informar a la Agencia en máximo 72 horas | Art. 26.3 |
 | Notificación a titulares | Comunicar a afectados cuando exista riesgo | Art. 26.4 |
 | Plan de remediación | Documentar medidas correctivas y preventivas | Art. 26.5 |
 | Evidencias e inmutabilidad | Mantener trazabilidad mediante hashchain | Art. 26.6 |
@@ -41,7 +41,7 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 | TareaSistema | **Crear Brecha registro** - estado=DETECTADA, genera brecha_id único | Sistema |
 | TareaSistema | **Registrar evidencia hashchain M1** - timestamp + hash del reporte inicial | Sistema |
 | TareaSistema | **Notificar DPO inmediatamente** - email automático con brecha_id | Sistema de Correo |
-| TareaSistema | **Iniciar Timer 72 horas APDP** - Timer event que cuenta desde fecha_deteccion | Sistema |
+| TareaSistema | **Iniciar Timer 72 horas APDC** - Timer event que cuenta desde fecha_deteccion | Sistema |
 
 ### FASE 2 - CLASIFICACIÓN
 
@@ -75,21 +75,21 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 | TareaSistema | **Convocar comité de emergencia** - Invita: DPO, Gerente Legal, Risk Manager, Comunicaciones | Sistema |
 | TareaUsuario | **Sesión comité de revisión** - Participantes: DPO, Legal, Risk, Compliance, Comunicaciones | Comité |
 | TareaUsuario | **Documentar acuerdos committee** - Minuta con: decisiones, responsables, plazos | DPO |
-| GatewayExclusivo | **Decisión del comité** → Informar APDP / No informar APDP | - |
+| GatewayExclusivo | **Decisión del comité** → Informar APDC / No informar APDC | - |
 | GatewayExclusivo | **¿Riesgo para titulares?** → Sí → Notificar titulares, No → Omitir notificación | - |
 
-### FASE 5 - NOTIFICACIÓN APDP (72 horas)
+### FASE 5 - NOTIFICACIÓN APDC (72 horas)
 
 | Elemento | Descripción | Lane |
 |----------|-------------|------|
-| GatewayExclusivo | **¿Decisión: Notificar APDP?** → No → Saltar a remediación, Sí → continúa | - |
-| TareaUsuario | **Elaborar notificación APDP** - Contenido según Art. 26.3: naturaleza breach, categorías datos, consecuencias, medidas adoptadas | DPO |
+| GatewayExclusivo | **¿Decisión: Notificar APDC?** → No → Saltar a remediación, Sí → continúa | - |
+| TareaUsuario | **Elaborar notificación APDC** - Contenido según Art. 26.3: naturaleza breach, categorías datos, consecuencias, medidas adoptadas | DPO |
 | TareaSistema | **Validar completitud notificación** - Verificar campos requeridos | Sistema |
-| TareaSistema | **Enviar notificación APDP** - Medio: registro APDP o email certificado | Sistema |
+| TareaSistema | **Enviar notificación APDC** - Medio: registro APDC o email certificado | Sistema |
 | TareaSistema | **Registrar fecha_envio_apdp** - Timestamp oficial de envío | Sistema |
 | TareaSistema | **Actualizar evidencia hashchain** - Registrar envío con hash | Sistema |
-| GatewayExclusivo | **¿APDP requiere información adicional?** → Sí → Preparar respuesta, No → continúa | - |
-| TareaUsuario | **Preparar respuesta APDP** - Complementar información requerida | DPO |
+| GatewayExclusivo | **¿APDC requiere información adicional?** → Sí → Preparar respuesta, No → continúa | - |
+| TareaUsuario | **Preparar respuesta APDC** - Complementar información requerida | DPO |
 
 ### FASE 6 - NOTIFICACIÓN A TITULARES
 
@@ -125,7 +125,7 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 
 ## 3. TABLA RACI
 
-| Actividad | Reportante | DPO | Comité | Sistema | Sistema de Correo | APDP | Titulares Afectados |
+| Actividad | Reportante | DPO | Comité | Sistema | Sistema de Correo | APDC | Titulares Afectados |
 |-----------|:----------:|:---:|:------:|:-------:|:-----------------:|:----:|:-------------------:|
 | Reportar brecha | **R** | - | - | - | - | - | - |
 | Crear registro brecha | I | I | - | **R/A** | - | - | - |
@@ -134,9 +134,9 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 | Evaluar impacto negocio | - | **R** | A | C | - | - | - |
 | Convocar comité | - | I | - | **R/A** | I | - | - |
 | Sesión comité | - | R | **A** | I | - | - | - |
-| Decisión notificar APDP | - | R | **A** | C | - | - | - |
-| Elaborar notificación APDP | - | **R/A** | C | C | - | I | - |
-| Enviar notificación APDP | - | I | - | **R** | **A** | **I** | - |
+| Decisión notificar APDC | - | R | **A** | C | - | - | - |
+| Elaborar notificación APDC | - | **R/A** | C | C | - | I | - |
+| Enviar notificación APDC | - | I | - | **R** | **A** | **I** | - |
 | Notificar titulares | - | R | C | C | **A** | - | **I** |
 | Plan remediación | - | **R/A** | C | I | - | - | - |
 | Verificar implementación | - | **R/A** | - | C | - | - | - |
@@ -156,14 +156,14 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 ### Intermediate Events
 | Evento | Tipo | Descripción |
 |--------|------|-------------|
-| 72 horas APDP | Timer (Intermediate) | Deadline legal para notificación a la Agencia de Protección de Datos Personales |
-| 24 horas recordatorio | Timer (Intermediate) | Recordatorio antes del deadline APDP |
+| 72 horas APDC | Timer (Intermediate) | Deadline legal para notificación a la Agencia de Protección de Datos Personales |
+| 24 horas recordatorio | Timer (Intermediate) | Recordatorio antes del deadline APDC |
 | Comité convocado | Signal (Intermediate) | Señal de que el comité de emergencia ha sido convocado |
 
 ### Boundary Events
 | Evento | Tipo | Attached To | Descripción |
 |--------|------|-------------|-------------|
-| Timeout 72h | Timer (Boundary) | Tarea "Elaborar notificación APDP" | Alerta de deadline inminente |
+| Timeout 72h | Timer (Boundary) | Tarea "Elaborar notificación APDC" | Alerta de deadline inminente |
 
 ### End Events
 | Evento | Tipo | Descripción |
@@ -186,8 +186,8 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 | categorias_datos_afectados | Array | [normal, sensible, protected] | Sí |
 | num_titulares_afectados | Integer | Cantidad estimada de afectados | Sí |
 | impacto_financiero_estimado | Decimal | Estimación de impacto económico (UF) | No |
-| notificacion_apdp_enviada | Boolean | Indica si se notificó a APDP | Sí |
-| fecha_envio_apdp | DateTime | Timestamp de envío a APDP | Condicional |
+| notificacion_apdp_enviada | Boolean | Indica si se notificó a APDC | Sí |
+| fecha_envio_apdp | DateTime | Timestamp de envío a APDC | Condicional |
 | notificacion_titulares_enviada | Boolean | Indica si se notificaron afectados | Sí |
 | estado | Enum | DETECTADA, EN_EVALUACION, EN_COMITE, EN_NOTIFICACION, EN_REMEDIACION, CERRADA | Sí |
 | plan_remediacion | JSON | Detalle de medidas correctivas | Condicional |
@@ -200,7 +200,7 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 |-------------|-------------|
 | ReporteBrecha | Documento inicial de reporte con formato libre |
 | InformeImpacto | Evaluación consolidada de impacto |
-| NotificacionAPDP | Documento formal de notificación a la Agencia |
+| NotificacionAPDC | Documento formal de notificación a la Agencia |
 | PlanRemediacion | Plan estructurado de medidas correctivas |
 | EvidenciaHashchain | Conjunto de evidencias con hashes immutables |
 
@@ -210,11 +210,11 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 
 | SLA | Descripción | Base Legal | Criticidad Aplica |
 |-----|-------------|------------|-------------------|
-| Notificación APDP | **72 horas** desde detección | Art. 26.3 Ley 21.719 | Todas |
+| Notificación APDC | **72 horas** desde detección | Art. 26.3 Ley 21.719 | Todas |
 | Notificación titulares | **Sin dilación indebida** cuando existe riesgo | Art. 26.4 Ley 21.719 | MEDIA, ALTA, CRÍTICA |
 | Comité crítico | Within **24 horas** de clasificación CRÍTICA | Intern policy | CRÍTICA |
 | Plan remediación | Within **7 días** (BAJA), **3 días** (MEDIA), **24h** (ALTA/CRÍTICA) | Art. 26.5 Ley 21.719 | Según severidad |
-| Respuesta APDP adicional | Within **72 horas** de requerimiento | Art. 26.3 Ley 21.719 | Cuando aplique |
+| Respuesta APDC adicional | Within **72 horas** de requerimiento | Art. 26.3 Ley 21.719 | Cuando aplique |
 
 ---
 
@@ -222,8 +222,8 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 
 | ID | Riesgo | Probabilidad | Impacto | Mitigación |
 |----|--------|:------------:|:-------:|------------|
-| BR-001 | Incumplimiento deadline 72h APDP | Media | Crítico | Timer + alertas automáticas + escalamiento |
-| BR-002 | Notificación a APDP incompleta o incorrecta | Baja | Alto | Template validado + checklist de completitud |
+| BR-001 | Incumplimiento deadline 72h APDC | Media | Crítico | Timer + alertas automáticas + escalamiento |
+| BR-002 | Notificación a APDC incompleta o incorrecta | Baja | Alto | Template validado + checklist de completitud |
 | BR-003 | Evidencia insuficiente para auditoría | Baja | Alto | Hashchain automático desde detección |
 | BR-004 | Recurrencia de brechas similares | Media | Medio | Lecciones aprendidas + revisión controles |
 | BR-005 | Titular no notificado cuando es requerido | Baja | Crítico | Gateway obligatorio + registro de envíos |
@@ -242,7 +242,7 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 | Control | Descripción | Frecuencia |
 |---------|-------------|------------|
 | C-01 | Verificación de hashchain en cada fase | Continuo |
-| C-02 | Validación de completitud antes de envío APDP | Por notificación |
+| C-02 | Validación de completitud antes de envío APDC | Por notificación |
 | C-03 | Audit trail de accesos a registro de brecha | Continuo |
 | C-04 | Review de clasificación por segundo DPO (brechas CRÍTICAS) | Por caso |
 | C-05 | Testing de plan de contingencia de comunicación | Trimestral |
@@ -251,7 +251,7 @@ Detección → Clasificación → Evaluación → Comité → Decisión → Noti
 
 | KPI | Definición | Meta | Umbral Alerta |
 |-----|------------|-----:|---------------|
-| K-01 | **Brechas notificadas en plazo** = (Notificaciones APDP ≤72h / Total notificadas) × 100 | ≥95% | <90% |
+| K-01 | **Brechas notificadas en plazo** = (Notificaciones APDC ≤72h / Total notificadas) × 100 | ≥95% | <90% |
 | K-02 | **Tiempo medio detección→cierre** = Promedio días desde fecha_deteccion hasta estado=CERRADA | ≤15 días | >21 días |
 | K-03 | **Tasa notificación titulares** = (Titulares notificados / Titulares que debían ser notificados) × 100 | 100% | <100% |
 | K-04 | **Recurrencia brechas** = Número de brechas del mismo tipo en 12 meses | ≤3 ocurrencias | >5 ocurrencias |
@@ -279,7 +279,7 @@ Clasificación:
 - Puntuación ≥ 100 → CRÍTICA
 ```
 
-### B. Contenido Mínimo Notificación APDP (Art. 26.3)
+### B. Contenido Mínimo Notificación APDC (Art. 26.3)
 
 1. Naturaleza de la brecha
 2. Categorías y número aproximado de afectados

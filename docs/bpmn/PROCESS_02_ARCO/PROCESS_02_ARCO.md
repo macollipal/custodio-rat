@@ -264,7 +264,7 @@ Cierre del proceso con actualización del hashchain de bitácora M1, archivado d
 
 ## 3. TABLA RACI
 
-| Actividad | Titular | DPO | DPO Senior | Sistema | Sistema de Correo | APDP |
+| Actividad | Titular | DPO | DPO Senior | Sistema | Sistema de Correo | APDC |
 |-----------|:-------:|:---:|:----------:|:-------:|:-----------------:|:----:|
 | Recibir solicitud | **R** | - | - | A | - | I |
 | Validar datos | I | - | - | **R/A** | - | - |

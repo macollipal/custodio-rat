@@ -46,7 +46,7 @@ Este proceso no es un módulo más de gestión de datos, sino el **director de o
 Carga configuración regulatoria específica para Chile:
 - Ley 21.719 (nueva ley chilena de protección de datos)
 - GDPR como marco supletorio (Art. 4 Ley 21.719)
-- Resoluciones y guías de la APDP (Autoridad de Protección de Datos Personales)
+- Resoluciones y guías de la APDC (Autoridad de Protección de Datos Personales)
 - Plazos y sanciones aplicables
 
 **Tarea: Inicializar dashboard compliance** (Lane: Sistema)  
@@ -59,7 +59,7 @@ Configura el dashboard de cumplimiento:
 Configura las fechas límite del año:
 - Vencimiento de RAT reviews (12 meses)
 - Renovación de contratos con encargados
-- Fechas de submission de informes APDP
+- Fechas de submission de informes APDC
 - Auditorías programadas
 
 ---
@@ -196,7 +196,7 @@ Fórmula ponderada (ver sección 5):
 
 ### REGULATORY REPORTING
 
-**TareaSistema: Generar informe regulatorio APDP** (Lane: Sistema)  
+**TareaSistema: Generar informe regulatorio APDC** (Lane: Sistema)  
 Genera informe anual según Art. 48 GDPR equivalente:
 - Resumen de actividades de tratamiento
 - EIPDs ejecutadas
@@ -204,19 +204,19 @@ Genera informe anual según Art. 48 GDPR equivalente:
 - Medidas implementadas
 - Cambios organizativos
 
-**TareaUsuario: Revisar y aprobar informe APDP** (Lane: DPO Senior)  
+**TareaUsuario: Revisar y aprobar informe APDC** (Lane: DPO Senior)  
 - Revisión detallada del informe
 - Correcciones si necesario
 - Aprobación formal
 
-**TareaSistema: Enviar a APDP** (Lane: Sistema)  
+**TareaSistema: Enviar a APDC** (Lane: Sistema)  
 - Envío por canal oficial requerido
 - Recibo de confirmación
 - Registro de submission
 
 **TareaSistema: Archivar evidencia submission** (Lane: Sistema)  
 - PDF del informe enviado
-- Comprobante de envío APDP
+- Comprobante de envío APDC
 - Timestamp de submission
 
 ---
@@ -287,7 +287,7 @@ Timer que dispara revisión completa de todo el sistema
 
 **TareaUsuario: Evaluar cambios regulatorios** (Lane: DPO Senior)  
 - Nuevas leyes o reglamentos
-- Guías emitidas por APDP
+- Guías emitidas por APDC
 - Cambios en jurisprudencia
 - Actualizar configuración si necesario
 
@@ -500,7 +500,7 @@ Compliance_Score = 0.12 + 0.15 + 0.18 + 0.15 + 0.12 + 0.20 = 0.92 = 92%
 
 ## 6. RACI MATRIX FOR MASTER PROCESS
 
-| Actividad | DPO | DPO Senior | Sistema | Comité | Auditor | APDP |
+| Actividad | DPO | DPO Senior | Sistema | Comité | Auditor | APDC |
 |-----------|-----|------------|---------|--------|---------|------|
 | Cargar configuración regulatory | I | A | R | - | - | C |
 | Inicializar dashboard | I | A | R | - | - | - |
@@ -512,9 +512,9 @@ Compliance_Score = 0.12 + 0.15 + 0.18 + 0.15 + 0.12 + 0.20 = 0.92 = 92%
 | Verificar encargos vigentes | I | I | R | - | - | - |
 | Verificar brechas abiertas | I | I | R | - | - | - |
 | Calcular compliance score | I | I | R | - | - | - |
-| Generar informe APDP | C | A | R | I | - | - |
-| Revisar informe APDP | I | R/A | C | - | - | - |
-| Enviar a APDP | I | A | R | - | - | C |
+| Generar informe APDC | C | A | R | I | - | - |
+| Revisar informe APDC | I | R/A | C | - | - | - |
+| Enviar a APDC | I | A | R | - | - | C |
 | Preparar documentación auditoría | R | C | C | - | I | - |
 | Generar package evidencias | I | I | R | - | - | - |
 | Participar en auditoría | I | C | C | I | R | - |
@@ -550,7 +550,7 @@ Compliance_Score = 0.12 + 0.15 + 0.18 + 0.15 + 0.12 + 0.20 = 0.92 = 92%
 | RAT vencidos | RAT sin revisión en 12 meses | 0 | Mensual | = 0 |
 | EIPDs pendientes | EIPDs en curso hace más de 60 días | 0 | Mensual | = 0 |
 | Brechas críticas abiertas | Brechas con severidad CRÍTICA sin cerrar | 0 | Semanal | = 0 |
-| Informe APDP timely | Informe anual enviado antes del 31-mar | 100% | Anual | = 100% |
+| Informe APDC timely | Informe anual enviado antes del 31-mar | 100% | Anual | = 100% |
 
 ---
 
@@ -562,8 +562,8 @@ Compliance_Score = 0.12 + 0.15 + 0.18 + 0.15 + 0.12 + 0.20 = 0.92 = 92%
 |-----|-----------|---------|----------|-------------|
 | Enero | Renovación consentimientos anuales | Consent | 31-ene | DPO + Sistema |
 | Enero | Revisión inicial estado compliance | Master | 15-ene | DPO Senior |
-| Febrero | Preparación informe APDP | Master | 28-feb | DPO |
-| Marzo | **Envío informe anual APDP** | Master | **31-mar** | DPO Senior |
+| Febrero | Preparación informe APDC | Master | 28-feb | DPO |
+| Marzo | **Envío informe anual APDC** | Master | **31-mar** | DPO Senior |
 | Abril | Revisión RAT tratamientos grandes volúmenes | RAT | 30-abr | DPO |
 | Abril | Verificación EIPDs activas | EIPD | 30-abr | DPO |
 | Mayo | Auditoría interna de compliance | Master | 15-may | DPO + Comité |
@@ -580,7 +580,7 @@ Compliance_Score = 0.12 + 0.15 + 0.18 + 0.15 + 0.12 + 0.20 = 0.92 = 92%
 
 | Hito | Fecha Límite | Consecuencia Incumplimiento |
 |------|--------------|---------------------------|
-| Informe APDP | 31-mar | Multa hasta 15M CLP, posible auditoría |
+| Informe APDC | 31-mar | Multa hasta 15M CLP, posible auditoría |
 | Renovación consentimientos | 31-ene | Base legal inválida, tratamientos no conformes |
 | Revisión EIPDs | 30-sep | EIPDs pueden estar desactualizadas |
 | Cierre annual | 15-dic | Incumplimiento de governance |

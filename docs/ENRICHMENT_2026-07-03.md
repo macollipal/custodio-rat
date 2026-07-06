@@ -4,7 +4,7 @@
 
 Durante la auditoría de Fase 5 (post-mega-cleanup) se identificó que el script `scripts/maintenance/seed_claudio_corp.py` creaba los 10 RATs de la empresa demo **Claudio Corp SpA** con solo los campos mínimos del Art. 16 de la Ley 21.719 (16 de 48 campos totales del modelo RAT).
 
-Los 14 campos **Tier 1** (críticos para compliance APDP) y **Tier 2** (operativos) ya existían en el schema de BD y en el frontend, pero los RATs seed estaban vacíos en ellos. Esto generaba una brecha entre:
+Los 14 campos **Tier 1** (críticos para compliance APDC) y **Tier 2** (operativos) ya existían en el schema de BD y en el frontend, pero los RATs seed estaban vacíos en ellos. Esto generaba una brecha entre:
 - Lo que el modelo RAT permite expresar (48 campos)
 - Lo que el seed mostraba en QA (16 campos)
 - Lo que la UI/backend ya soportaba completamente (CSV, PDF, drawer de detalle, reportes, drawer — todas actualizadas en commits `cd0741b`, `0be0f25`, `5e2baab`, `0e4afe4`, `716f2f0`)
@@ -28,7 +28,7 @@ Los 14 campos **Tier 1** (críticos para compliance APDP) y **Tier 2** (operativ
 
 *Nota: la fórmula de completitud del backend (`rat_service.py:23`) usa solo los 10 campos obligatorios+recomendados, así que el porcentaje formal no cambia mucho, pero **la cobertura funcional** del RAT en QA ahora es prácticamente completa para todos los flujos que la UI soporta (drawer, CSV, PDF, reportes).*
 
-## Campos Tier 1 agregados (críticos APDP)
+## Campos Tier 1 agregados (críticos APDC)
 
 | Campo | Tipo | Aplicación típica |
 |-------|------|-------------------|

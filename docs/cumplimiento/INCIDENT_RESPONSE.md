@@ -11,7 +11,7 @@ Este documento establece el protocolo de respuesta ante una brecha de seguridad 
 
 - **Brecha de seguridad**: cualquier acceso no autorizado, divulgacion, destruccion o perdida de datos personales.
 - **Responsable**: la empresa (company) que trata datos personales a traves de Custodio RAT.
-- **APDP**: Agencia de Proteccion de Datos Personales (el ente regulador en Chile).
+- **APDC**: Agencia de Proteccion de Datos Personales (el ente regulador en Chile).
 - **DPO**: Delegado de Proteccion de Datos de la empresa.
 
 ---
@@ -34,9 +34,9 @@ Al recibir alerta de brecha:
 - [ ] Si hay acceso no autorizado a la BD: auditar logs de acceso
 - [ ] Preserve evidencia (logs, timestamps, IPs) sin modificar
 
-### 1.3 Evaluar si es Reportable a APDP
+### 1.3 Evaluar si es Reportable a APDC
 
-Una brecha DEBE notificarse a APDP si:
+Una brecha DEBE notificarse a APDC si:
 - [ ] Hay acceso no autorizado a datos personales
 - [ ] La brecha genera riesgo para los derechos de los titulares
 
@@ -50,7 +50,7 @@ Una brecha DEBE notificarse a APDP si:
 
 ## Fase 2: Notificacion (72 horas)
 
-### 2.1 Notificacion a APDP (Obligatorio, maximo 72h)
+### 2.1 Notificacion a APDC (Obligatorio, maximo 72h)
 
 **Deadline**: 72 horas habiles desde la deteccion
 
@@ -63,7 +63,7 @@ Contenido minimo de la notificacion:
 6. Medidas para remediar la brecha
 
 - [ ] Crear registro en `SecurityBreach` en Custodio RAT
-- [ ] Subir evidencia de notificacion (folio APDP)
+- [ ] Subir evidencia de notificacion (folio APDC)
 - [ ] Notificar al DPO de la empresa
 
 ### 2.2 Notificacion a Titulares (si aplica)
@@ -83,8 +83,8 @@ Contenido para titulares:
 ### 2.3 Documentacion
 
 - [ ] Fecha y hora de deteccion
-- [ ] Fecha y hora de notificacion APDP
-- [ ] Folio/numero de caso APDP
+- [ ] Fecha y hora de notificacion APDC
+- [ ] Folio/numero de caso APDC
 - [ ] Lista de medidas adoptadas
 - [ ] Notificaciones a titulares (fechas y metodos)
 
@@ -120,7 +120,7 @@ Contenido para titulares:
 |-----|----------------|
 | DPO de empresa | Declarar la brecha, liderar respuesta |
 | Equipo tecnico | Contencion, remediacion tecnica |
-| Responsable legal | Coordinar notificacion a APDP |
+| Responsable legal | Coordinar notificacion a APDC |
 | Custodio RAT | Registro y trazabilidad de la brecha |
 
 ---
@@ -128,8 +128,8 @@ Contenido para titulares:
 ## Checklist de Cumplimiento
 
 - [ ] Brecha registrada en Custodio RAT (`SecurityBreach`)
-- [ ] Notificacion a APDP dentro de 72h habiles
-- [ ] Evidencia de notificacion guardada (folio APDP)
+- [ ] Notificacion a APDC dentro de 72h habiles
+- [ ] Evidencia de notificacion guardada (folio APDC)
 - [ ] Notificacion a titulares (si corresponde)
 - [ ] Causa raiz documentada
 - [ ] Medidas correctivas implementadas

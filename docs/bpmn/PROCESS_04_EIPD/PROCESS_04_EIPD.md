@@ -38,7 +38,7 @@ El proceso EIPD abarca:
 
 - **Ley 21.719 Art. 15**: Obligatoriedad de EIPD para tratamientos que resulten en alto riesgo
 - **Reglamento europeo GDPR Art. 35**: Referencia comparativa para metodología
-- **Guía APDP Chile**: Directrices para la realización de evaluaciones
+- **Guía APDC Chile**: Directrices para la realización de evaluaciones
 
 ---
 
@@ -254,8 +254,8 @@ El proceso EIPD abarca:
 | Métrica | SLA | Referencia Legal |
 |---------|-----|------------------|
 | **EIPD debe completarse ANTES de iniciar tratamiento** | 0 días de operación sin EIPD para riesgo ALTO | Ley 21.719 Art. 15 |
-| **Revisión periódica** | Cada 24 meses | Best practice APDP |
-| **Decisión sobre consulta previa APDP** | 8 semanas máximo | Si aplica (art. 36 GDPR ref.) |
+| **Revisión periódica** | Cada 24 meses | Best practice APDC |
+| **Decisión sobre consulta previa APDC** | 8 semanas máximo | Si aplica (art. 36 GDPR ref.) |
 | **Tiempo máximo elaboración** | 30 días corridos | Internal policy |
 | **Tiempo revisión DPO Senior** | 10 días hábiles | Internal policy |
 | **Respuesta a rechazo** | 15 días corridos | Internal policy |
@@ -378,7 +378,7 @@ El proceso EIPD abarca:
 | 3-4 | BAJO | Monitoreo, revisión periódica |
 | 5-9 | MEDIO | Controles requeridos |
 | 10-15 | ALTO | Controles obligatorios, aprobación DPO Senior |
-| 16-20 | MUY_ALTO | Consulta previa a APDP recomendada |
+| 16-20 | MUY_ALTO | Consulta previa a APDC recomendada |
 
 ---
 

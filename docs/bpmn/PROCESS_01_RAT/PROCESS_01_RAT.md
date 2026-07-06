@@ -213,7 +213,7 @@ Cada 30 días antes del vencimiento de contratos con encargados de tratamiento:
 
 ## 3. TABLA RACI
 
-| Actividad | Titular | DPO | DPO Senior | Sistema | Encargado | APDP | Comentario |
+| Actividad | Titular | DPO | DPO Senior | Sistema | Encargado | APDC | Comentario |
 |-----------|---------|-----|------------|---------|-----------|------|------------|
 | Completar información básica | I | R | - | I | - | - | DPO ingresa datos |
 | Determinar base legal | I | R/A | C | - | - | - | Titular consultado |
@@ -304,9 +304,9 @@ Cada 30 días antes del vencimiento de contratos con encargados de tratamiento:
 | Creación inicial | 72 horas desde solicitud | Art. 30.1 GDPR / Art. 11 Ley 21.719 | Sanción administrativa hasta 10M CLP (Art. 47 Ley 21.719) |
 | Revisión periódica | 12 meses | Art. 30.5 GDPR | Registro no conforme, potencial sanción |
 | Renovación contratos encargados | 30 días antes vencimiento | Art. 28 GDPR / Art. 12 Ley 21.719 | Tratamiento sin contrato válido, sanción hasta 20M CLP |
-| Notificación APDP transferencias | 1 mes antes de transferencia | Art. 25 Ley 21.719 | Prohibición de transferencia, multa hasta 15M CLP |
+| Notificación APDC transferencias | 1 mes antes de transferencia | Art. 25 Ley 21.719 | Prohibición de transferencia, multa hasta 15M CLP |
 | Actualización por cambio sustancial | 15 días desde cambio | Art. 30.2 GDPR | Registro desactualizado, falta de conformidad |
-| Respuesta a ejercicio de derechos | 10 días hábiles | Art. 12.3 GDPR / Art. 17 Ley 21.719 | Infracción, reclamación ante APDP |
+| Respuesta a ejercicio de derechos | 10 días hábiles | Art. 12.3 GDPR / Art. 17 Ley 21.719 | Infracción, reclamación ante APDC |
 | Conservación de registros | 5 años desde fin tratamiento | Art. 12 Ley 21.719 | Imposibilidad de demostrar compliance |
 
 ---
@@ -321,7 +321,7 @@ Cada 30 días antes del vencimiento de contratos con encargados de tratamiento:
 | RAT-004 | Contratos con encargados de tratamiento vencidos | Media | Alto | MEDIO | Alertas automáticas 60, 30 y 15 días antes del vencimiento |
 | RAT-005 | Datos sensibles sin medidas adicionales apropiadas | Alta | Crítico | ALTO | Validación en flujo que impide avanzar sin medidas Art. 11 |
 | RAT-006 | Revisión periódica vencida (más de 12 meses) | Media | Medio | MEDIO | Timer events con notificaciones progresivas y degradación de estado |
-| RAT-007 | Transferencia internacional sin autorización APDP | Alta | Crítico | ALTO | Checklist obligatorio con países y mecanismos pre-validados |
+| RAT-007 | Transferencia internacional sin autorización APDC | Alta | Crítico | ALTO | Checklist obligatorio con países y mecanismos pre-validados |
 | RAT-008 | Hashchain comprometido o alterado | Baja | Crítico | MEDIO | Auditoría externa trimestral, verificación criptográfica mensual |
 | RAT-009 | RAT activado sin aprobación de admin_empresa | Baja | Alto | MEDIO | Control de acceso basado en roles, firma electrónica de aprobación |
 | RAT-010 | Flujo de datos no corresponde con registro RAT | Media | Alto | MEDIO | Detección de anomalías mediante monitoring continuo |
@@ -338,7 +338,7 @@ Cada 30 días antes del vencimiento de contratos con encargados de tratamiento:
 | CTRL-004 | Sistema de alertas de caducidad de contratos | Detectivo | Diaria | Sistema | Registro de alertas enviadas |
 | CTRL-005 | Checklist obligatorio de medidas Art. 11 para datos sensibles | Preventivo | Por registro | DPO | Formulario completado |
 | CTRL-006 | Timer events para revisión periódica con escalamiento | Detectivo | Por timer | Sistema | Historial de revisiones |
-| CTRL-007 | Validación pre-envío de transferencias internacionales | Preventivo | Por transferencia | DPO/Sistema | Formulario APDP completado |
+| CTRL-007 | Validación pre-envío de transferencias internacionales | Preventivo | Por transferencia | DPO/Sistema | Formulario APDC completado |
 | CTRL-008 | Verificación criptográfica de hashchain | Detectivo | Mensual | Sistema Externo | Certificado de verificación |
 | CTRL-009 | Auditoría de firmas electrónicas en aprobaciones | Detectivo | Trimestral | DPO Senior | Log de auditoría |
 | CTRL-010 | Monitorización de flujo de datos vs RAT registrados | Detectivo | Continuo | Sistema | Dashboard de anomalías |

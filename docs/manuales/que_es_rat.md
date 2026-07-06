@@ -3,7 +3,7 @@ El RAT significa Registro de Actividades de Tratamiento. Es un documento formal 
 El RAT es el corazón documental del cumplimiento. Es el registro formal que describe cada actividad de tratamiento de datos que realiza una organización. Codevsys
 
 El marco legal: Ley N° 21.719
-Es la Ley N.º 21.719, publicada en el Diario Oficial el 13 de diciembre de 2024. La norma moderniza la antigua Ley 19.628, crea la Agencia de Protección de Datos Personales (APDP) y fija una entrada en vigencia general para el 1 de diciembre de 2026. Cebra
+Es la Ley N.º 21.719, publicada en el Diario Oficial el 13 de diciembre de 2024. La norma moderniza la antigua Ley 19.628, crea la Agencia de Protección de Datos Personales (APDC) y fija una entrada en vigencia general para el 1 de diciembre de 2026. Cebra
 
 ¿El RAT es obligatorio en la ley chilena?
 Aquí hay un matiz importante: la nueva normativa no establece expresamente la obligación de contar con un Registro de Actividades de Tratamiento (o "RAT"), como sí lo hacen las normas de otros países. Sin embargo, el artículo 14 ter, en sus literales d), i) y j) establece una serie de información que los responsables de datos deberán publicar respecto de los tratamientos específicos que realicen. El establecimiento de un catálogo, listado o registro que contenga esta información específica facilitará el cumplimiento de esta obligación. Digital
