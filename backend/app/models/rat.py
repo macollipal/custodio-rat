@@ -11,6 +11,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.database import Base
 
 
+UMBRAL_RIESGO_CRITICO = 7
+UMBRAL_RIESGO_ALTO = 5
+UMBRAL_RIESGO_MEDIO = 3
+
+
 class EstadoRAT(str, PyEnum):
     BORRADOR = "borrador"
     COMPLETO = "completo"
@@ -200,10 +205,10 @@ class RAT(Base):
             score += 1
         if self.nombre_encargado and not self.tiene_contrato_encargado:
             score += 1
-        if score >= 7:
+        if score >= UMBRAL_RIESGO_CRITICO:
             return "critico"
-        if score >= 5:
+        if score >= UMBRAL_RIESGO_ALTO:
             return "alto"
-        if score >= 3:
+        if score >= UMBRAL_RIESGO_MEDIO:
             return "medio"
         return "bajo"

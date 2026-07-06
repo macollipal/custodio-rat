@@ -262,6 +262,64 @@ def notificar_sla_alert_t2(
     _send_raw(email_dpo, f"[Custodio] Alerta SLA: {total} solicitudes ARCO próximas a vencer", html, text)
 
 
+def notificar_eipd_vencida(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    rat_nombre: str,
+    rat_id: int,
+    dias_abierta: int,
+) -> None:
+    """
+    Notifica al DPO que una EIPD vinculada a un RAT está abierta desde hace más de 90 días.
+    Conforme al Art. 15 bis Ley 21.719.
+    """
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    cuerpo = (
+        f"<p>La Evaluación de Impacto en Protección de Datos (EIPD) asociada al proceso "
+        f"<strong>{rat_nombre}</strong> (ID #{rat_id}) de la empresa "
+        f"<strong>{nombre_empresa}</strong> lleva <strong>{dias_abierta} días</strong> abierta sin completarse.</p>"
+        f"<p>Según el Art. 15 bis de la Ley 21.719, la EIPD debe completarse <strong>antes de iniciar</strong> "
+        f"el tratamiento de datos sensibles o transferencias internacionales. Un RAT con EIPD pendiente "
+        f"no puede ser aprobado hasta que la evaluación esté completada.</p>"
+        f"<p>Acceda al sistema para completar la EIPD o documentar la justificación de por qué no es requerida.</p>"
+    )
+    footer = "Custodio RAT Manager · Ley 21.719 · Art. 15 bis — EIPD obligatoria"
+    text, html = _render_template(
+        f"EIPD pendiente: {rat_nombre}", saludo, cuerpo, footer
+    )
+    _send_raw(email_dpo, f"[Custodio] EIPD pendiente hace {dias_abierta} días: {rat_nombre}", html, text)
+
+
+def notificar_consentimiento_por_vencer(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    rat_nombre: str,
+    rat_id: int,
+    dias_activo: int,
+) -> None:
+    """
+    Notifica al DPO que un consentimiento lleva más de 2 años activo y debe renovarse.
+    Conforme al Art. 12 Ley 21.719 (consentimiento válido mientras sea necesario).
+    """
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    cuerpo = (
+        f"<p>El consentimiento registrado para el proceso "
+        f"<strong>{rat_nombre}</strong> (ID #{rat_id}) de la empresa "
+        f"<strong>{nombre_empresa}</strong> lleva <strong>{dias_activo} días</strong> activo.</p>"
+        f"<p>Se recomienda evaluar si el consentimiento sigue siendo válido y está actualizado. "
+        f"Según el Art. 12 de la Ley 21.719, el consentimiento debe ser的自由撤回ible en cualquier momento. "
+        f"Considere renovar el consentimiento si las circunstancias del tratamiento han cambiado "
+        f"o si el período de retención lo requiere.</p>"
+    )
+    footer = "Custodio RAT Manager · Ley 21.719 · Art. 12 — Consentimiento"
+    text, html = _render_template(
+        f"Consentimiento activo hace {dias_activo} días: {rat_nombre}", saludo, cuerpo, footer
+    )
+    _send_raw(email_dpo, f"[Custodio] Consentimiento activo hace {dias_activo} días: {rat_nombre}", html, text)
+
+
 def notificar_acuse_solicitud(
     email_titular: str,
     nombre_titular: Optional[str],

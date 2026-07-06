@@ -32,6 +32,27 @@
 
 ---
 
+## Sprint 2 — Estado (2026-07-07)
+
+| Hallazgo | Severidad | Estado | Notas |
+|---|---|---|---|
+| **H3.8** rat_service.py → 5 archivos | P2 | ✅ Cerrado | rat_crud.py, rat_validators.py, rat_alerts.py, rat_file.py, rat_constants.py |
+| **H3.4** RATUpdate hereda RATBase | P2 | ✅ Cerrado (Sprint 1) | |
+| **H5.3** Test CNI export | P2 | ✅ Cerrado | test_cni_export.py (5 escenarios) |
+| **H5.4** Test dashboard stats avanzados | P2 | ✅ Cerrado | test_dashboard_stats.py (6 escenarios) |
+| **H5.5** Test RBAC admin_empresa | P2 | ✅ Cerrado | test_rbac_admin_empresa.py (4 escenarios) |
+| **H5.6** Test email invalid | P2 | ✅ Cerrado | test_email_validacion.py (3 escenarios) |
+| **H2.2** Scheduler EIPD>90d + consentimiento>2a | P2 | ✅ Cerrado | 2 new email functions + 2 task runners |
+| **H3.3** Magic numbers calcular_nivel_riesgo | P3 | ✅ Cerrado | UMBRAL_RIESGO_CRITICO/ALTO/MEDIO en rat.py |
+| **H3.14** Inline import en rats.py | P3 | ✅ Cerrado | download_rat_file movido a imports de nivel |
+| **H4.5** WizardModular steps | P2 | 🔄 En curso | Pasos 1-5 extraídos a WizardModular/steps/ |
+| **H4.9** test_interes_legitimo JSON | P2 | ⏳ Pendiente | Requiere cambio de schema |
+| **H4.14** axe-core a11y tests | P2 | ⏳ Pendiente | Requiere setup Playwright |
+| **H3.10** Regex plazo_retencion | P3 | ⏳ Pendiente | Solo detecta años, no meses/días |
+| **H3.16** export_service.py CSV/PDF | P3 | ⏳ Pendiente | Split en csv_export.py + pdf_export.py |
+
+---
+
 ## Sprint 1 — P1 (Críticos) ✅ COMPLETADO
 
 **Objetivo:** Cerrar bloqueantes para auditoría APDC formal.
@@ -138,6 +159,12 @@ Pendiente (Sprint 2): extraer cada paso (Step0..Step5) a archivos `steps/Step*.t
 ---
 
 ## Sprint 2 — P2 (Importantes) — 2-4 semanas
+
+**Objetivo:** Mejorar mantenibilidad y cobertura de tests.
+
+### ✅ S2.1 — H3.4: Refactor RATBase vs RATUpdate duplicación
+
+**Estado:** Cerrado en Sprint 1 (RATUpdate hereda de RATBase con exclude_unset=True).
 
 **Objetivo:** Mejorar mantenibilidad y cobertura de tests.
 

@@ -22,7 +22,8 @@ from app.models.company import Company
 from app.models.breach import SecurityBreach
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
 from app.services.email_service import (
-    notificar_vencimiento_rat, notificar_nueva_brecha, notificar_respuesta_arco, EmailError,
+    notificar_vencimiento_rat, notificar_nueva_brecha, notificar_respuesta_arco,
+    notificar_eipd_vencida, notificar_consentimiento_por_vencer, EmailError,
 )
 from app.services.ticket_service import (
     cambiar_estado_ticket, get_dashboard_stats,
@@ -267,6 +268,109 @@ def _run_sla_alert_t2(db: Session) -> int:
     return notificados
 
 
+def _run_notificar_eipd_vencida(db: Session) -> int:
+    """Revisa RATs con EIPD pendiente >90 días sin completarse y notifica al DPO."""
+    from datetime import timedelta
+    from app.models.eipd import EIPD
+
+    DIAS_UMBRAL = 90
+    ahora = datetime.now(timezone.utc)
+    umbral = ahora - timedelta(days=DIAS_UMBRAL)
+
+    rats_con_eipd = (
+        db.query(RAT)
+        .filter(
+            RAT.evaluacion_impacto == True,  # noqa: E712
+            RAT.estado_eipd.in_(["pendiente", "en_proceso", "no_requerida"]),
+        )
+        .all()
+    )
+
+    notificados = 0
+    for rat in rats_con_eipd:
+        eipd = db.query(EIPD).filter(EIPD.rat_id == rat.id).first()
+        if not eipd or eipd.estado == "completada":
+            continue
+        inicio = eipd.fecha_inicio
+        if inicio is None:
+            continue
+        if isinstance(inicio, str):
+            try:
+                inicio = datetime.fromisoformat(inicio.replace("Z", "+00:00"))
+            except Exception:
+                continue
+        if inicio.tzinfo is None:
+            inicio = inicio.replace(tzinfo=timezone.utc)
+        dias_abierta = (ahora - inicio).days
+        if dias_abierta < DIAS_UMBRAL:
+            continue
+
+        empresa = db.query(Company).filter(Company.id == rat.company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+        try:
+            notificar_eipd_vencida(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                rat_nombre=rat.nombre_proceso,
+                rat_id=rat.id,
+                dias_abierta=dias_abierta,
+            )
+            notificados += 1
+        except EmailError as e:
+            logger.error(f"EIPD vencida RAT {rat.id}: fallo: {e}")
+
+    return notificados
+
+
+def _run_solicitar_renovacion_consentimiento(db: Session) -> int:
+    """Revisa consentimientos activos >2 años y notifica al DPO."""
+    from datetime import timedelta
+    from app.models.consentimiento import Consentimiento
+
+    DIAS_UMBRAL = 730
+    ahora = datetime.now(timezone.utc)
+    umbral = ahora - timedelta(days=DIAS_UMBRAL)
+
+    consentimientos = (
+        db.query(Consentimiento)
+        .filter(
+            Consentimiento.activo == True,  # noqa: E712
+            Consentimiento.fecha_obtencion < umbral,
+        )
+        .all()
+    )
+
+    notificados = 0
+    seen_companies = set()
+    for consentimiento in consentimientos:
+        rat = db.query(RAT).filter(RAT.id == consentimiento.rat_id).first()
+        if not rat:
+            continue
+        empresa = db.query(Company).filter(Company.id == rat.company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+        if empresa.id in seen_companies:
+            continue
+        seen_companies.add(empresa.id)
+        dias_activo = (ahora - consentimiento.fecha_obtencion.replace(tzinfo=timezone.utc)).days
+        try:
+            notificar_consentimiento_por_vencer(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                rat_nombre=rat.nombre_proceso,
+                rat_id=rat.id,
+                dias_activo=dias_activo,
+            )
+            notificados += 1
+        except EmailError as e:
+            logger.error(f"Consentimiento por vencer empresa {empresa.id}: fallo: {e}")
+
+    return notificados
+
+
 def run_task(db: Session, task: TaskQueue) -> bool:
     """Ejecuta una tarea individual. Retorna True si fue exitosa."""
     task.status = TaskStatus.RUNNING
@@ -301,6 +405,14 @@ def run_task(db: Session, task: TaskQueue) -> bool:
             count = _run_sla_alert_t2(db)
             success = True
             detail = f"{count} empresas notificadas (SLA T-2)"
+        elif task.task_type == TaskType.NOTIFICAR_EIPD_VENCIDA.value:
+            count = _run_notificar_eipd_vencida(db)
+            success = True
+            detail = f"{count} EIPDs vencidas notificadas"
+        elif task.task_type == TaskType.SOLICITAR_RENOVACION_CONSENTIMIENTO.value:
+            count = _run_solicitar_renovacion_consentimiento(db)
+            success = True
+            detail = f"{count} empresas notificadas (consentimientos >2 años)"
         else:
             detail = f"Tipo de tarea desconocido: {task.task_type}"
             logger.warning(detail)

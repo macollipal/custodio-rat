@@ -57,10 +57,34 @@ def _job_enqueue_revisar_encargados_vencidos() -> None:
         db.close()
 
 
+def _job_enqueue_notificar_eipd_vencida() -> None:
+    """Encola la tarea de notificar EIPDs abiertas >90 días."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "notificar_eipd_vencida")
+        logger.info("Scheduler: tarea 'notificar_eipd_vencida' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_solicitar_renovacion_consentimiento() -> None:
+    """Encola la tarea de revisar consentimientos activos >2 años."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "solicitar_renovacion_consentimiento")
+        logger.info("Scheduler: tarea 'solicitar_renovacion_consentimiento' encolada")
+    finally:
+        db.close()
+
+
 _JOBS = [
     (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
     (_job_enqueue_revisar_encargados_vencidos, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_notificar_eipd_vencida, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_solicitar_renovacion_consentimiento, 24 * 60 * 60),  # cada 24h
 ]  # type: ignore
 
 

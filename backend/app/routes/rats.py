@@ -17,7 +17,7 @@ from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, 
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
-    create_rat, delete_rat, get_audit_logs, get_dashboard_stats,
+    create_rat, delete_rat, download_rat_file, get_audit_logs, get_dashboard_stats,
     get_rat, get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
 from app.services.export_service import exportar_csv, exportar_pdf
@@ -370,7 +370,6 @@ async def descargar_archivo(
     Si est� en BYTEA, retorna los bytes directamente.
     Requiere autenticaci�n. Descarga en nueva pesta�a del navegador.
     """
-    from app.services.rat_service import download_rat_file, get_rat
 
     rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
