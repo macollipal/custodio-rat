@@ -13,7 +13,7 @@ import OnboardingTour from '@/components/ui/OnboardingTour';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 
-import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
+import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 
 const DESCRIPCIONES_BASE: Record<string, string> = {
   'Consentimiento del titular':
@@ -34,7 +34,6 @@ const DESCRIPCIONES_BASE: Record<string, string> = {
 };
 
 const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
-const OPERACIONES_TRATAMIENTO_OPCIONES = ['recoleccion','almacenamiento','consulta','uso','comunicacion','cesion','eliminacion'];
 
 interface RatWizardProps {
   company: Company;
@@ -1111,7 +1110,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos criticos y operativos del template ProBest para compliance total Ley 21.719.</p>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos críticos y operativos del template ProBest para compliance total Ley 21.719.</p>
             </div>
 
             {/* Iter 10 fields + new Tier 1 + Tier 2 */}
@@ -1152,7 +1151,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
             {/* Tier 1 */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificación de confidencialidad</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tratamiento de NNA</label>
@@ -1203,7 +1202,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatizacion</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatización</label>
                   <select value={data.automatizacion ?? ''} onChange={e => setData(d => ({ ...d, automatizacion: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}>
                     <option value="">— Seleccionar —</option>
                     {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -1235,12 +1234,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminacion</label>
-                  <textarea value={data.mecanismos_eliminacion ?? ''} onChange={e => setData(d => ({ ...d, mecanismos_eliminacion: e.target.value }))} rows={2} placeholder="Borrado seguro NIST 800-88, destruccion fisica..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminación</label>
+                  <textarea value={data.mecanismos_eliminacion ?? ''} onChange={e => setData(d => ({ ...d, mecanismos_eliminacion: e.target.value }))} rows={2} placeholder="Borrado seguro NIST 800-88, destrucción física..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tecnica de anonimizacion</label>
-                  <input value={data.tecnica_anonimizacion ?? ''} onChange={e => setData(d => ({ ...d, tecnica_anonimizacion: e.target.value }))} placeholder="Pseudonimizacion, k-anonimidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Técnica de anonimización</label>
+                  <input value={data.tecnica_anonimizacion ?? ''} onChange={e => setData(d => ({ ...d, tecnica_anonimizacion: e.target.value }))} placeholder="Pseudonimización, k-anonimidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

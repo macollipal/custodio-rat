@@ -7,7 +7,7 @@ import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import Spinner from '@/components/ui/Spinner';
 import CategoryChips from '@/components/ui/CategoryChips';
-import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES } from '@/lib/constants';
+import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
@@ -19,16 +19,6 @@ const validatePaso4 = (form: any): string | null => {
   if (!form.medidas_seguridad?.toString().trim()) return 'Debes describir las medidas de seguridad.';
   return null;
 };
-const OPERACIONES_TRATAMIENTO_OPCIONES = [
-  'recoleccion',
-  'almacenamiento',
-  'consulta',
-  'uso',
-  'comunicacion',
-  'cesion',
-  'eliminacion',
-];
-
 interface RatEditFormProps {
   rat: RAT;
   onDone: () => void;
@@ -115,11 +105,11 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
   async function handleSave() {
     if (!form.nombre_proceso.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
-    if (!form.categoria_datos.trim()) { toast.error('La categoria de datos es obligatoria.'); return; }
+    if (!form.categoria_datos.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
     if (!form.finalidad.trim()) { toast.error('La finalidad es obligatoria.'); return; }
     if (!form.base_legal.trim()) { toast.error('La base legal es obligatoria.'); return; }
     if (!form.fuente_datos.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
-    if (!form.plazo_retencion.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
+    if (!form.plazo_retencion.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
     if (form.base_legal === 'Interés legítimo') {
       const totalTestIL = [testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim();
       if (!totalTestIL) {
@@ -283,7 +273,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     <AlertBanner message="Dato sensible: requiere base legal expresa y medidas de seguridad reforzadas." type="warning" />
                     <div className="rounded-lg p-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
                       <p className="text-xs font-semibold mb-2" style={{ color: '#1E40AF' }}>B-06: Consentimiento Expreso (Art. 12)</p>
-                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registrá el consentimiento del titular.</p>
+                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registre el consentimiento del titular.</p>
                       <div className="grid grid-cols-2 gap-2">
                         <input type="text" value={form.consentimiento_nombre ?? ''} onChange={e => set('consentimiento_nombre', e.target.value)} placeholder="Nombre del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
                         <input type="email" value={form.consentimiento_email ?? ''} onChange={e => set('consentimiento_email', e.target.value)} placeholder="Email del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
@@ -685,12 +675,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps criticos y operativos - ProBest template.</p>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps críticos y operativos - ProBest template.</p>
             </div>
 
             {/* Tier 1 */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificacion de confidencialidad</h4>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 1 — Datos NNA y Clasificación de confidencialidad</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
@@ -749,7 +739,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatizacion</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Grado de automatización</label>
                   <select value={form.automatizacion ?? ''} onChange={e => set('automatizacion', e.target.value)} className={inputCls} style={inputStyle}>
                     <option value="">— Seleccionar —</option>
                     {AUTOMATIZACION_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -770,7 +760,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </label>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentacion de clausulas informativas</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentación de cláusulas informativas</label>
                 <textarea value={form.doc_clausulas ?? ''} onChange={e => set('doc_clausulas', e.target.value)} rows={2} placeholder="Ej: Politica de privacidad en sitio web, aviso de privacidad en formularios..." className={inputCls} style={inputStyle} />
               </div>
               <div>
@@ -779,12 +769,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminacion</label>
-                  <textarea value={form.mecanismos_eliminacion ?? ''} onChange={e => set('mecanismos_eliminacion', e.target.value)} rows={2} placeholder="Ej: Borrado seguro NIST 800-88, destruccion fisica, retencion hasta fin de plazo..." className={inputCls} style={inputStyle} />
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminación</label>
+                  <textarea value={form.mecanismos_eliminacion ?? ''} onChange={e => set('mecanismos_eliminacion', e.target.value)} rows={2} placeholder="Ej: Borrado seguro NIST 800-88, destrucción física, retención hasta fin de plazo..." className={inputCls} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Tecnica de anonimizacion</label>
-                  <input value={form.tecnica_anonimizacion ?? ''} onChange={e => set('tecnica_anonimizacion', e.target.value)} placeholder="Ej: Pseudonimizacion, k-anonimidad, agregacion..." className={inputCls} style={inputStyle} />
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Técnica de anonimización</label>
+                  <input value={form.tecnica_anonimizacion ?? ''} onChange={e => set('tecnica_anonimizacion', e.target.value)} placeholder="Ej: Pseudonimización, k-anonimidad, agregación..." className={inputCls} style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -803,7 +793,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <button onClick={() => setStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
               <button
                 onClick={() => {
-                  if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
+                  if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
                   handleSave();
                 }}
                 disabled={saving}
