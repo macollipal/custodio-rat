@@ -1,4 +1,4 @@
-﻿"""
+"""
 L├│gica de negocio para el Registro de Actividades de Tratamiento (RAT).
 Incluye validaciones de auditor├¡a conforme a la Ley 21.719.
 """
@@ -210,6 +210,27 @@ def _validar_contrato_encargado(db: Session, rat: RAT) -> None:
         )
 
 
+def _validar_base_legal_otra_requiere_archivo(data: dict) -> None:
+    """Valida que base_legal='Otra' requiera documento adjunto (Art. 11 + 16 Ley 21.719).
+
+    El responsable del tratamiento debe poder acreditar la base legal que invoca.
+    Cuando se selecciona 'Otra' (base legal no categorizada), es obligatorio
+    adjuntar el documento que respalde la invocacion de dicha base.
+    """
+    base_legal = (data.get("base_legal") or "").strip()
+    archivo = data.get("archivo_base_legal_datos")
+    # Solo aplica a base_legal='Otra'. Otras bases tienen sus propios adjuntos (consentimiento, contrato, etc.)
+    if base_legal.lower() == "otra" and not archivo:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "La base legal 'Otra' requiere un documento adjunto que respalde la invocacion "
+                "de dicha base legal (Art. 11 + 16 Ley 21.719). Adjunte el documento mediante "
+                "el campo 'archivo_base_legal_base64' antes de guardar el RAT."
+            ),
+        )
+
+
 def _validar_eipd_obligatoria(data: dict) -> None:
     """Valida EIPD obligatoria si datos_sensibles=True o transferencia_internacional=True (Arts. 15 bis y 28 Ley 21.719).
 
@@ -269,6 +290,7 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
 
     datos = data.model_dump()
     _validar_eipd_obligatoria(datos)
+    _validar_base_legal_otra_requiere_archivo(datos)
 
     archivo_fields = _procesar_archivo_base_legal(datos)
     datos.update(archivo_fields)
@@ -325,6 +347,7 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     rat_dict_validacion.update(cambios)
     if rat_dict_validacion.get("datos_sensibles") or rat_dict_validacion.get("transferencia_internacional"):
         _validar_eipd_obligatoria(rat_dict_validacion)
+    _validar_base_legal_otra_requiere_archivo(rat_dict_validacion)
 
     log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
     db.commit()

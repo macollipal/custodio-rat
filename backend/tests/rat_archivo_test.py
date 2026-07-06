@@ -1,18 +1,16 @@
-﻿"""
-Tests para GET /rats/{id}/archivo â€” descarga de documento de base legal.
+"""
+Tests para GET /rats/{id}/archivo — descarga de documento de base legal.
 
 Cubre:
-- descarga sin autenticacion â†’ 401
-- descarga con autenticacion valida â†’ 200 + bytes (BYTEA fallback)
-- IDOR: usuario de otra empresa no puede descargar â†’ 403 o 500 (bug preexistente)
+- descarga sin autenticacion → 401
+- descarga con autenticacion valida → 200 + bytes (BYTEA fallback)
+- IDOR: usuario de otra empresa no puede descargar → 404 (no exponer existencia)
+- RAT inexistente → 404 (via get_rat_for_user)
+- RAT existente sin archivo → 404 (via download_rat_file)
 
-BUGS PREEXISTENTES IDENTIFICADOS:
-- /rats/{id}/archivo con RAT inexistente retorna 500 en vez de 404
-  (el handler no propaga HTTPException de get_rat())
-- /rats/{id}/archivo con RAT de otra empresa retorna 500 en vez de 403
-  (el handler no verifica pertenencia antes de llamar al servicio)
-- /rats/{id}/archivo con RAT sin archivo retorna 500 en vez de 404
-  (el else del servicio no esta envuelto en try-except en el route handler)
+El endpoint llama get_rat_for_user() que retorna 404 cuando el usuario no tiene
+acceso a la empresa del RAT. Esto es por diseno de seguridad: no exponer la
+existencia del RAT a usuarios no autorizados.
 """
 
 import base64
@@ -28,30 +26,19 @@ class TestDescargarArchivo:
         resp = client.get("/rats/99999/archivo")
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
-    def test_descargar_rat_inexistente_retorna_error(self, client, auth_headers, empresa):
-        """RAT inexistente deberia retornar 404 pero retorna 500 (bug preexistente).
-
-        Bug: el route handler no propaga HTTPException(status_code=404) de get_rat().
-        El fix esta en wrapping el call a download_rat_file() en try-except.
-        """
+    def test_descargar_rat_inexistente_retorna_404(self, client, auth_headers, empresa):
+        """RAT inexistente retorna 404 (via get_rat_for_user que valida existencia)."""
         resp = client.get("/rats/99999/archivo", headers=auth_headers)
-        assert resp.status_code in (404, 500), f"Expected 404 o 500, got {resp.status_code}"
-        if resp.status_code == 500:
-            pytest.skip("Bug preexistente: /rats/{id}/archivo no propaga HTTPException 404 de get_rat()")
+        assert resp.status_code == 404, f"Expected 404, got {resp.status_code}: {resp.text}"
 
-    def test_descargar_rat_sin_archivo_retorna_error(self, client, auth_headers, rat_base):
-        """RAT existente pero sin archivo deberia retornar 404 pero puede retornar 500.
-
-        Bug preexistente en el route handler.
-        """
+    def test_descargar_rat_sin_archivo_retorna_404(self, client, auth_headers, rat_base):
+        """RAT existente pero sin archivo retorna 404 (via download_rat_file que valida)."""
         created = client.post("/rats/", json=rat_base, headers=auth_headers)
         assert created.status_code == 201
         rat_id = created.json()["id"]
 
         resp = client.get(f"/rats/{rat_id}/archivo", headers=auth_headers)
-        assert resp.status_code in (404, 500), f"Expected 404 o 500, got {resp.status_code}"
-        if resp.status_code == 500:
-            pytest.skip("Bug preexistente: endpoint no maneja caso sin archivo consistentemente")
+        assert resp.status_code == 404, f"Expected 404, got {resp.status_code}: {resp.text}"
 
     def test_descargar_con_archivo_retorna_bytes(self, client, auth_headers, empresa, db):
         """Con archivo en BYTEA (cifrado Fernet), la descarga retorna los bytes del PDF.
@@ -104,12 +91,12 @@ class TestDescargarArchivo:
         assert dl_resp.headers["content-type"] == "application/pdf"
         assert dl_resp.content == pdf_content, "Contenido descargado no coincide con el original"
 
-    def test_descargar_rat_de_otra_empresa_falla(self, client, db, auth_headers, empresa, rat_base):
+    def test_descargar_rat_de_otra_empresa_retorna_404(self, client, db, auth_headers, empresa, rat_base):
         """Usuario de empresa A no puede descargar archivo de RAT de empresa B.
 
-        Bug preexistente: retorna 500 en vez de 403 porque el handler no verifica
-        pertenencia antes de llamar al servicio.
-        Fix: agregar verificacion de company en el route handler antes de download_rat_file().
+        El endpoint /rats/{id}/archivo llama get_rat_for_user() que retorna 404
+        cuando el usuario no tiene acceso a la empresa del RAT. Esto es por diseno
+        de seguridad: no exponer la existencia del RAT a usuarios no autorizados.
         """
         from app.models.user import User, RolGlobal
         from app.models.user_company import UserCompany, RolEmpresa
@@ -145,6 +132,4 @@ class TestDescargarArchivo:
             mock_storage.side_effect = Exception("OCI not available")
             resp = client.get(f"/rats/{rat_id}/archivo", headers={"Authorization": f"Bearer {otro_token}"})
 
-        assert resp.status_code in (403, 500), f"Expected 403 o 500, got {resp.status_code}"
-        if resp.status_code == 500:
-            pytest.skip("Bug preexistente: /rats/{id}/archivo no verifica pertenencia a empresa antes de procesar")
+        assert resp.status_code == 404, f"IDOR: deberia retornar 404 (no exponer existencia), got {resp.status_code}"

@@ -459,8 +459,15 @@ async def verificar_cadena_auditoria(
     """
     Verifica la integridad de la cadena de hashes de auditor+�a.
     Retorna estado de validaci+�n y el ID del primer registro roto (si hay).
+    Solo SUPERADMIN puede verificar la cadena global (H2.2 — auditor+�a 2026-07-07).
     """
     from app.services.audit_service import verify_audit_chain
+
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(
+            status_code=403,
+            detail="Solo SUPERADMIN puede verificar la cadena de auditor+�a global.",
+        )
 
     result = verify_audit_chain(db, limit=limit)
     return result

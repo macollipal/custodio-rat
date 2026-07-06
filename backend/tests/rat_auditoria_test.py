@@ -1,11 +1,15 @@
-﻿"""
-Tests para GET /rats/{id}/auditoria â€” historial de auditoria del RAT.
+"""
+Tests para GET /rats/{id}/auditoria — historial de auditoria del RAT.
 
 Cubre:
-- acceso sin autenticacion â†’ 401
-- acceso a RAT inexistente â†’ 404 o lista vacia ( segÃºn implementacion)
-- acceso valido â†’ 200 + lista de logs
-- IDOR: usuario de otra empresa no puede ver la auditoria â†’ 403
+- acceso sin autenticacion → 401
+- acceso a RAT inexistente → 404
+- acceso valido → 200 + lista de logs
+- IDOR: usuario de otra empresa no puede ver la auditoria → 404 (no 403)
+  (404 por diseno: no exponer existencia del recurso a usuarios no autorizados)
+
+Nota: el endpoint llama get_rat_for_user() que retorna 404 (no 403) cuando el
+usuario no tiene acceso, para no filtrar la existencia del RAT.
 """
 
 import pytest
@@ -35,17 +39,12 @@ class TestAuditoriaEndpoint:
         assert isinstance(logs, list)
         assert len(logs) > 0, "Debe haber al menos un log de creacion"
 
-    def test_auditoria_idor_usuario_ajeno_403(self, client, db, auth_headers, empresa, rat_base):
+    def test_auditoria_idor_usuario_ajeno_404(self, client, db, auth_headers, empresa, rat_base):
         """Usuario de empresa B no puede ver la auditoria de un RAT de empresa A.
 
-        BUG CRITICO PREEXISTENTE: el endpoint /rats/{id}/auditoria NO verifica si el usuario
-        tiene acceso a la empresa del RAT. Retorna 200 con todos los logs de auditoria
-        a cualquier usuario autenticado.
-
-        Fix requerido en backend/app/routes/rats.py:l384-390:
-        1. Obtener el RAT para verificar existencia
-        2. Verificar que el current_user tenga acceso a RAT.company_id
-        3. Solo entonces retornar get_audit_logs(db, rat_id)
+        El endpoint /rats/{id}/auditoria llama get_rat_for_user() que retorna 404
+        cuando el usuario no tiene acceso a la empresa del RAT. Esto es por diseno
+        de seguridad: no exponer la existencia del RAT a usuarios no autorizados.
         """
         from app.models.user import User, RolGlobal
         from app.models.user_company import UserCompany, RolEmpresa
@@ -81,4 +80,4 @@ class TestAuditoriaEndpoint:
             f"/rats/{rat_id}/auditoria",
             headers={"Authorization": f"Bearer {otro_token}"}
         )
-        assert resp.status_code == 403, f"IDOR: deberia retornar 403, pero obtuvo {resp.status_code}"
+        assert resp.status_code == 404, f"IDOR: deberia retornar 404 (no exponer existencia), pero obtuvo {resp.status_code}"

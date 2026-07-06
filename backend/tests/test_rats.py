@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests CRUD de registros RAT.
 Cubre: creaciÃ³n, listado, obtenciÃ³n, actualizaciÃ³n de estado, eliminaciÃ³n,
 completitud, flags de riesgo y casos edge.
@@ -42,6 +42,28 @@ class TestCrearRAT:
         data = resp.json()
         assert data["datos_sensibles"] is True
         assert data["evaluacion_impacto"] is True
+
+    def test_crear_rat_base_legal_otra_sin_archivo_falla(self, client, auth_headers, rat_base):
+        """H1.1 — base_legal='Otra' sin archivo adjunto debe fallar con 422 (Art. 11+16 Ley 21.719)."""
+        payload = {**rat_base, "base_legal": "Otra"}
+        resp = client.post("/rats/", json=payload, headers=auth_headers)
+        assert resp.status_code == 422
+        detail = resp.json().get("detail", "")
+        assert "documento adjunto" in detail.lower() or "archivo" in detail.lower()
+
+    def test_crear_rat_base_legal_otra_con_archivo_ok(self, client, auth_headers, rat_base):
+        """base_legal='Otra' con archivo adjunto debe pasar (H1.1)."""
+        import base64
+        pdf_b64 = base64.b64encode(b"%PDF-1.4\nfake\n%%EOF").decode()
+        payload = {
+            **rat_base,
+            "base_legal": "Otra",
+            "archivo_base_legal_base64": pdf_b64,
+            "archivo_base_legal_nombre": "base_legal_otra.pdf",
+            "archivo_base_legal_tipo": "application/pdf",
+        }
+        resp = client.post("/rats/", json=payload, headers=auth_headers)
+        assert resp.status_code == 201
 
     def test_crear_rat_con_transferencia_internacional(self, client, auth_headers, rat_base):
         payload = {**rat_base, "transferencia_internacional": True, "evaluacion_impacto": True, "estado_eipd": "pendiente", "pais_destino": "Estados Unidos"}
@@ -286,3 +308,16 @@ class TestCompletitud:
             assert body["completitud"] == 100
             # Estado debe ser 'completo' porque tiene 100% completitud
             assert body["estado"] == "completo", f"Esperado 'completo', obtuvo '{body['estado']}'"
+
+
+class TestAuditoriaVerifyChain:
+    """H2.2 — Solo SUPERADMIN puede verificar la cadena de auditoria global."""
+
+    def test_verify_chain_sin_auth_falla_401(self, client):
+        resp = client.get("/rats/auditoria/verify-chain")
+        assert resp.status_code == 401
+
+    def test_verify_chain_admin_empresa_falla_403(self, client, auth_headers):
+        """admin_empresa NO debe poder verificar la cadena global (H2.2)."""
+        resp = client.get("/rats/auditoria/verify-chain", headers=auth_headers)
+        assert resp.status_code == 403
