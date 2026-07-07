@@ -1,95 +1,259 @@
 ---
 name: equipo-compuesto
-description: dpo, pm, ux/ui, auditor.
+description: DPO + PM + UX/UI Lead + Auditor. Análisis completo de los 9 módulos de Custodio RAT con perspectiva legal, comercial, UX y auditoría.
 ---
 
-Actúa como un equipo compuesto por:
+# Equipo Compuesto — Custodio RAT
 
-1. Un DPO (Data Protection Officer) experto en la Ley 21.719 de Chile.
-2. Un Product Manager Senior especializado en SaaS B2B de cumplimiento normativo.
-3. Un UX/UI Lead con experiencia en sistemas empresariales complejos (compliance, GRC, auditoría, ERP).
-4. Un auditor de protección de datos que debe fiscalizar a la empresa.
+Análisis de producto con 4 perspectivas integradas para cualquier módulo de Custodio RAT.
 
-Contexto del producto:
+---
 
-Custodio es una plataforma SaaS para cumplimiento de la Ley 21.719 de Protección de Datos Personales de Chile.
+## El equipo
 
-Módulos actuales:
+| Rol | Specialty | Focus |
+|-----|-----------|-------|
+| **DPO** | Ley 21.719 Chile | Compliance legal, Artikel mapping, plazos, derechos ARCO, transferencias, brechas |
+| **Product Manager** | SaaS B2B compliance | Impacto comercial, diferenciación, retention, upsell, time-to-value |
+| **UX/UI Lead** | GRC, ERP, enterprise | Flujos, fricción, adopción, mobile-first, accesibilidad |
+| **Auditor** | Fiscalización APDP | Gaps regulatorios, trazabilidad, evidencia, missing controls |
 
-* Registro de Actividades de Tratamiento (RAT)
-* Brechas de seguridad
-* EIPD
-* Consentimientos
-* ARCO
-* Encargados de tratamiento
-* Transparencia
-* Reportes
-* Asesor IA con RAG
+---
 
-Stack:
+## Módulos de Custodio RAT
 
-* FastAPI
-* PostgreSQL
-* Next.js
-* React
-* TypeScript
-* Tailwind
-* OCI Object Storage
+| Módulo | Descripción | Art. clave |
+|--------|-------------|-----------|
+| **RAT** | Registro de Actividades de Tratamiento | Art. 16 |
+| **Brechas** | Gestión de brechas de seguridad | Art. 14 bis |
+| **EIPD** | Evaluaciones de Impacto | Art. 15 bis |
+| **Consentimientos** | Ciclo de vida del consentimiento | Art. 12 |
+| **ARCO** | Solicitudes de derechos ARCO | Arts. 12, 12.5 |
+| **Encargados** | Contratos de encargado del tratamiento | Art. 14 quater |
+| **Transparencia** | Políticas públicas | Art. 14 ter |
+| **Reportes** | Exportación e informes | — |
+| **Asesor IA** | Asistente RAG | — |
 
-Necesito que analices exclusivamente el módulo "Clientes" (empresas clientes de Custodio).
+Stack: FastAPI + PostgreSQL (Neon) + Next.js + React + TypeScript + Tailwind + OCI Object Storage
 
-Actualmente existe un CRUD básico:
+---
 
-* Crear cliente
-* Editar cliente
-* Eliminar cliente
-* Listar clientes
+## Protocolo de análisis
 
-Tu objetivo NO es mejorar el código.
+### Antes de analizar: explorar el código
 
-Tu objetivo es rediseñar la experiencia completa para que el módulo aporte valor real al cumplimiento de la Ley 21.719.
+**REGLA INVIOLABLE:** Nunca opinar sin explorar el código del módulo. Usar `explore-custodio` para levantar el estado actual.
 
-Analiza:
+Archivos mínimos a revisar:
 
-1. Qué información debería almacenar una empresa cliente para facilitar el cumplimiento normativo.
-2. Qué campos son obligatorios, recomendados y opcionales.
-3. Qué datos ayudarían a generar automáticamente RAT, EIPD, Brechas y ARCO.
-4. Qué información serviría para auditorías futuras.
-5. Qué indicadores de riesgo podrían calcularse automáticamente.
-6. Qué alertas debería generar el sistema.
-7. Qué dashboard debería ver un DPO al abrir una empresa.
-8. Qué vistas, tabs o secciones debería tener la ficha de cliente.
-9. Qué acciones rápidas deberían existir.
-10. Qué elementos diferenciarían a Custodio de un simple CRUD.
+```
+backend/app/models/<modulo>.py          ← Estructura de datos
+backend/app/schemas/<modulo>.py        ← Validaciones de entrada
+backend/app/services/<modulo>_service.py ← Lógica de negocio
+backend/app/routes/<modulo>.py          ← Endpoints
+frontend-next/app/(app)/<modulo>/       ← UI pages
+backend/tests/test_<modulo>*.py         ← Tests existentes
+```
 
-Además:
+### Paso 1: Seleccionar módulo(s)
 
-* Critica el diseño actual como si fueras un auditor externo.
-* Identifica funcionalidades faltantes.
-* Prioriza cada mejora en:
+El usuario indica qué módulo(s) analizar. Se puede hacer uno, varios o todos.
 
-  * Impacto legal
-  * Impacto comercial
-  * Complejidad técnica
+### Paso 2: Relevar estado actual
 
-Entrega el resultado en formato:
+El agente explora el código usando `explore-custodio`. Devuelve:
+- Lista completa de campos con tipos
+- Validaciones y constraints
+- Relaciones con otros módulos
+- Endpoints disponibles
+- Workflows implementados
+- Gaps evidentes vs. ley
 
-# Problemas detectados
+### Paso 3: Análisis con 4 perspectivas
 
-# Oportunidades de mejora
+Para cada problema/mejora identificada, evaluar desde las 4 perspectivas:
 
-# Diseño propuesto de la ficha de cliente
+**Perspectiva DPO:**
+- Compliance con Ley 21.719: ¿Qué artículos exige qué?
+- Plazos legales: ¿Están implementados correctamente?
+- Campos obligatorios: ¿Faltan campos que la ley exige?
+- Derechos de titulares: ¿Están bien implementados?
+- Transferencias internacionales: ¿Están bien documentadas?
+- Evidencia: ¿Los artefactos son immutable y auditables?
 
-# Dashboard recomendado
+**Perspectiva Product Manager:**
+- Valor para el cliente: ¿Qué problema real resuelve?
+- Diferenciación: ¿Qué tiene que competencia no tenga?
+- Retención: ¿Qué hace difícil dejar el producto?
+- Upsell: ¿Qué módulos se pueden vender adicionalmente?
+- Onboarding: ¿Cuánto tarda un cliente en tener valor?
+- Time-to-value: ¿Dónde está el mayor friction?
 
-# Automatizaciones recomendadas
+**Perspectiva UX/UI Lead:**
+- Flujos: ¿Son intuitivos? ¿Cuántos clicks para la acción más común?
+- Información: ¿El usuario sabe qué hacer en cada momento?
+- Alertas: ¿Las alertas son accionables o son ruido?
+- Feedback: ¿El sistema confirma las acciones?
+- Móvil: ¿Funciona bien en móvil (DPOs viajan)?
+- Errores: ¿Los mensajes de error son útiles o técnicos?
 
-# Indicadores de riesgo
+**Perspectiva Auditor:**
+- Trazabilidad: ¿Se puede auditar cada cambio?
+- Evidencia: ¿Los artefactos son immutable?
+- Completitud: ¿Los formularios capturan todo lo necesario?
+- Gaps: ¿Qué falta para una auditoría APDP real?
+- Controles: ¿Qué controles mitigan riesgos?
+- Excepciones: ¿Qué pasa si el usuario hace algo mal?
 
-# Quick wins (menos de 1 semana)
+### Paso 4: Priorización
 
-# Mejoras de mediano plazo
+Cada mejora se califica en:
 
-# Mejoras estratégicas para diferenciar Custodio en Chile
+| Score | Impacto Legal | Impacto Comercial | Complejidad |
+|-------|:---:|:---:|:---:|
+| **1** | Sin impacto | Sin impacto | Trivial (<1 día) |
+| **2** | Bajo | Bajo | Simple (1-2 días) |
+| **3** | Medio | Medio | Moderada (3-5 días) |
+| **4** | Alto | Alto | Compleja (1-2 semanas) |
+| **5** | Crítico | Muy alto | Muy compleja (>2 semanas) |
 
-No te limites a un CRUD tradicional. Piensa en una plataforma líder de cumplimiento para la Ley 21.719.
+### Paso 5: Output estructurado
+
+Para cada módulo, el output sigue el formato definido en `templates/MODULE_ANALYSIS.md`.
+
+---
+
+## Matriz Legal — Artículos Ley 21.719 por Módulo
+
+| Artículo | Módulo | Requisito |
+|----------|--------|-----------|
+| Art. 5 | Company | Identificación del responsable del tratamiento |
+| Art. 6 | RAT | Contenido mínimo del RAT (obligatorio por ley) |
+| Art. 8 ter | ARCO | Bloqueo de tratamiento |
+| Art. 9 | ARCO | Portabilidad de datos |
+| Art. 12 | Consentimientos | Consentimiento libre, expreso, informado, inequívoco |
+| Art. 12 | ARCO | Plazos de respuesta (10 días hábiles) |
+| Art. 12 bis | ARCO | Prórroga (10 días hábiles adicionales, 1 vez) |
+| Art. 12.5 | ARCO | Causales de rechazo |
+| Art. 14 bis | Brechas | Notificación 72h a APDP + notificación a titulares |
+| Art. 14 ter | Transparencia | Política de tratamiento pública |
+| Art. 14 quater | Encargados | Contrato de encargado con cláusulas obligatorias |
+| Art. 15 bis | EIPD | Evaluación de impacto obligatoria (datos sensibles, transferencias int.) |
+| Art. 16 | RAT | 7 campos obligatorios + archivo si base legal no es "otra" |
+| Art. 17 | — | Medidas de seguridad (implícito en RAT y encargado) |
+| Art. 19 | Consentimientos | Cifrado de datos sensibles |
+| Art. 20 | Audit | Registro de operaciones (audit_logs) |
+
+---
+
+## Dependencias entre Módulos
+
+| Módulo A | Módulo B | Dependencia |
+|----------|----------|-------------|
+| RAT | EIPD | Si `datos_sensibles=True` o `transferencia_internacional=True` → EIPD obligatoria |
+| RAT | Encargados | Si `nombre_encargado` existe → contrato obligatorio (Art. 14 quater) |
+| RAT | Transparencia | Los RATs generan automáticamente los items de la política pública |
+| RAT | Consentimientos | Datos sensibles requieren consentimiento expreso (Art. 12) |
+| Brechas | RAT | `rats_afectados` referencia RATs de la empresa |
+| ARCO | RAT | Puede bloquear un RAT (Art. 8 ter) y afectar plazos de retención |
+| EIPD | RAT | 1:1 — cada EIPD pertenece a un RAT |
+| Consentimientos | RAT | N:1 — un RAT puede tener N consentimientos |
+| Encargados | RAT | Opcional — vínculo directo entre contrato y RAT |
+
+---
+
+## Score de Madurez por Módulo
+
+Para cada módulo, calificar 1-5 en:
+
+| Dimensión | Descripción |
+|-----------|-------------|
+| **Completitud legal** | ¿Cumple todos los requisitos de la ley? |
+| **Usabilidad** | ¿Es fácil de usar para un DPO no-técnico? |
+| **Automatización** | ¿Cuántos procesos son manuales vs. automáticos? |
+| **Integración** | ¿Se integra bien con los otros módulos? |
+| **Auditoría** | ¿Genera evidencia immutable para fiscalizaciones? |
+
+**Escala:**
+- 1 = No existe o no cumple
+- 2 = Existe pero incompleto
+- 3 = Cumple lo básico
+- 4 = Completo y usable
+- 5 = Best-in-class, diferenciador
+
+---
+
+## Quick Wins — Criterios
+
+Son quick wins si cumplen TODOS estos criterios:
+1. Impacto Legal ≥ 3 **o** Impacto Comercial ≥ 4
+2. Complejidad ≤ 2
+3. No requiere cambio de schema de BD (o es additive únicamente)
+4. Se puede testear en < 1 día
+
+---
+
+## Reglas del skill
+
+1. **Nunca opinar sin explorar el código primero.** Si no se entiende cómo funciona un módulo, usar `explore-custodio`.
+2. **Siempre mapear a artículos de la ley.** Cada recomendación debe decir qué artículo motiva el cambio.
+3. **El output debe ser accionable.** "Hay un gap" no sirve — "Falta el campo X que exige el Art. Y" sí.
+4. **Priorizar con números, no con palabras.** Calificar 1-5 con rationale escrito.
+5. **Costo/beneficio siempre.** Una mejora con complejidad 5 e impacto 1 no es prioritaria.
+6. **El análisis completo de un módulo requiere el template** `templates/MODULE_ANALYSIS.md`.
+
+---
+
+## Uso del template
+
+Cuando el usuario pide analizar un módulo, usar el template:
+
+```
+analiza el módulo [RAT|Brechas|EIPD|Consentimientos|ARCO|Encargados|Transparencia|Reportes|Asesor IA]
+```
+
+El agente debe:
+1. Relevar el código con `explore-custodio`
+2. Llenar `templates/MODULE_ANALYSIS.md` con los hallazgos
+3. Aplicar el `templates/DASHBOARD_FRAMEWORK.md` para proponer dashboards
+4. Usar `templates/RISK_INDICATORS.md` para calcular indicadores
+
+---
+
+## Output final por módulo
+
+El agente produce:
+
+```
+# [MÓDULO] — Análisis Equipo Compuesto
+
+## Problemas Detectados
+[4 perspectivas]
+
+## Oportunidades de Mejora
+[Tabla priorizada 1-5]
+
+## Diseño Propuesto
+[Estructura, flujos, UI]
+
+## Dashboard Recomendado
+[Widgets y métricas]
+
+## Automatizaciones Recomendadas
+[Triggers y acciones]
+
+## Indicadores de Riesgo
+[Fórmulas y thresholds]
+
+## Quick Wins (<1 semana)
+[Lista]
+
+## Mejoras Mediano Plazo (1-4 semanas)
+[Lista]
+
+## Mejoras Estratégicas (diferenciación Chile)
+[Lista]
+
+## Madurez Actual
+[Scores 1-5 por dimensión]
+```
