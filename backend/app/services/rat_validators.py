@@ -111,21 +111,20 @@ def validar_eipd_obligatoria(data: dict, rat_id: Optional[int] = None, db: Optio
         if eipd_db is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Este RAT trata datos sensibles o declara transferencia internacional y requiere "
-                    "una Evaluación de Impacto en la Protección de Datos (EIPD) conforme al Art. 15 bis "
-                    "de la Ley 21.719. Aún no existe un EIPD vinculada al RAT. "
-                    "Creá la EIPD mediante POST /eipd/ vinculada a este RAT antes de guardar."
-                ),
+                detail={
+                    "msg": "Este RAT requiere EIPD según Art. 15 bis",
+                    "rat_id": rat_id,
+                    "eipd_url": f"/eipd/?rat_id={rat_id}",
+                },
             )
         if eipd_db.resultado == ResultadoEIPD.NO_REQUERIDA:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "La EIPD vinculada a este RAT figura como 'no_requerida' pero el RAT declara "
-                    "datos sensibles o transferencia internacional. Actualizá el resultado del EIPD "
-                    "a 'completada' o 'no_requerida_justificada' con la justificación correspondiente."
-                ),
+                detail={
+                    "msg": "La EIPD vinculada a este RAT figura como 'no_requerida' pero el RAT declara datos sensibles o transferencia internacional.",
+                    "rat_id": rat_id,
+                    "eipd_url": f"/eipd/?rat_id={rat_id}",
+                },
             )
         return
 
