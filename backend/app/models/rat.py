@@ -21,6 +21,7 @@ class EstadoRAT(str, PyEnum):
     COMPLETO = "completo"
     EN_REVISION = "en_revision"
     APROBADO = "aprobado"
+    ARCHIVADO = "archivado"
 
 
 class EstadoEIPD(str, PyEnum):

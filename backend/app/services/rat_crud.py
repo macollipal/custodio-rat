@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.rat import RAT, EstadoRAT
@@ -27,6 +28,66 @@ from app.services.rat_validators import (
     validar_consentimiento_sensibles,
     validar_eipd_obligatoria,
 )
+
+CAMPOS_CLONE_EXCLUIDOS = {
+    "id",
+    "created_at",
+    "updated_at",
+    "created_by",
+    "updated_by",
+    "estado",
+    "aprobado_por",
+    "fecha_aprobacion",
+    "observaciones_auditoria",
+    "archivo_base_legal_nombre",
+    "archivo_base_legal_tipo",
+    "archivo_base_legal_datos",
+    "archivo_base_legal_hash",
+    "archivo_base_legal_storage_url",
+    "tracking_token",
+}
+
+
+def clone_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> RAT:
+    """Clona un RAT existente creando uno nuevo en estado borrador.
+
+    Campos que no se clonan: id, created_at, updated_at, created_by, updated_by,
+    estado (fijado a borrador), archivo_base_legal_*, aprobado_por, fecha_aprobacion,
+    observaciones_auditoria, tracking_token.
+    El RAT clonado mantiene el mismo company_id.
+    """
+    rat_original = get_rat(db, rat_id)
+
+    datos_originales = {
+        c.name: getattr(rat_original, c.name)
+        for c in rat_original.__table__.columns
+    }
+
+    datos_clon = {
+        k: v for k, v in datos_originales.items()
+        if k not in CAMPOS_CLONE_EXCLUIDOS
+    }
+
+    rat_clonado = RAT(
+        **datos_clon,
+        estado=EstadoRAT.BORRADOR,
+        created_by=usuario,
+        updated_by=usuario,
+    )
+
+    db.add(rat_clonado)
+    db.flush()
+
+    log_audit(
+        db, "rat", rat_clonado.id, "clone",
+        usuario,
+        {"rat_original_id": rat_id, "nombre_proceso": datos_originales.get("nombre_proceso")},
+        ip_origen,
+    )
+
+    db.commit()
+    db.refresh(rat_clonado)
+    return rat_clonado
 
 logger = logging.getLogger(__name__)
 
@@ -384,3 +445,30 @@ def aprobar_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str]
     db.commit()
     db.refresh(rat)
     return rat
+
+
+def get_base_legal_sugerida(db: Session, rubro_id: int) -> Optional[str]:
+    """Devuelve la base legal más usada en RATs de empresas del mismo rubro.
+
+    Args:
+        db: sesión de BD
+        rubro_id: ID del rubro a consultar
+
+    Returns:
+        Nombre de la base legal más frecuente, o None si no hay datos.
+    """
+    from app.models.company import Company
+
+    result = (
+        db.query(RAT.base_legal, func.count(RAT.id).label("cnt"))
+        .join(Company, RAT.company_id == Company.id)
+        .filter(
+            Company.rubro_id == rubro_id,
+            RAT.base_legal.isnot(None),
+            RAT.base_legal != "",
+        )
+        .group_by(RAT.base_legal)
+        .order_by(func.count(RAT.id).desc())
+        .first()
+    )
+    return result.base_legal if result else None

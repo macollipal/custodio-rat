@@ -17,6 +17,7 @@ from app.services.rat_service import (
     create_rat, delete_rat, download_rat_file, get_audit_logs, get_dashboard_stats,
     get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
+from app.services.rat_crud import clone_rat
 from app.services.export_service import exportar_csv, exportar_pdf
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
@@ -212,6 +213,18 @@ async def dashboard(
     return get_dashboard_stats(db, company_id)
 
 
+@router.get("/sugerencias/base-legal", summary="Sugerencia de base legal según rubro")
+async def sugerencia_base_legal(
+    rubro_id: int = Query(..., description="ID del rubro de la empresa"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Dado un rubro_id, retorna la base legal más frecuente en RATs de empresas del mismo rubro."""
+    from app.services.rat_crud import get_base_legal_sugerida
+    base_legal = get_base_legal_sugerida(db, rubro_id)
+    return {"base_legal": base_legal}
+
+
 @router.get("/sugerencias/tipos", response_model=SugerenciasTiposOut, summary="Listar tipos de proceso disponibles para sugerencias")
 async def tipos_proceso(current_user=Depends(get_current_user)):
     return SugerenciasTiposOut(tipos=listar_tipos_proceso())
@@ -304,6 +317,54 @@ async def actualizar(
     rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
+    out = RATOut.model_validate(r)
+    out.completitud = r.calcular_completitud()
+    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+    return out
+
+
+@router.patch("/{rat_id}/archivar", response_model=RATOut, summary="Archivar un RAT")
+async def archivar_rat(
+    request: Request,
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Cambia el estado del RAT a 'archivado'."""
+    from app.models.rat import EstadoRAT as EstadoRATModel
+
+    rat = get_rat_for_user(db, rat_id, current_user)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+    rat.estado = EstadoRATModel.ARCHIVADO
+    rat.updated_by = current_user.username
+    from app.services.audit_service import log_audit
+    log_audit(db, "rat", rat_id, "archivar", current_user.username, {"estado": "archivado"}, get_client_ip(request))
+    db.commit()
+    db.refresh(rat)
+    out = RATOut.model_validate(rat)
+    out.completitud = rat.calcular_completitud()
+    out.nivel_riesgo = rat.calcular_nivel_riesgo()
+    out.tiene_archivo_base_legal = bool(rat.archivo_base_legal_datos)
+    return out
+
+
+@router.post("/{rat_id}/clone", response_model=RATOut, status_code=201, summary="Clonar un RAT existente")
+async def clonar_rat(
+    request: Request,
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Crea una copia del RAT en estado borrador.
+
+    No se clonan: archivo de base legal, estados de aprobación,
+    observaciones de auditoría, ni tracking token.
+    El RAT clonado pertenece a la misma empresa.
+    """
+    rat_original = get_rat_for_user(db, rat_id, current_user)
+    require_editor_or_admin_empresa(rat_original.company_id, db, current_user)
+    r = clone_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
     out.completitud = r.calcular_completitud()
     out.nivel_riesgo = r.calcular_nivel_riesgo()
