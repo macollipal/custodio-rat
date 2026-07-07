@@ -44,7 +44,7 @@ RAT_opencode/
 │   │                      ticket, email (SMTP), scheduler (enqueue), task_service (cola),
 │   │                      audit (transversal), policy, eipd
 │   ├── tests/             95+ tests (pytest + httpx)
-│   ├── data/             SQLite local para desarrollo (git ignored)
+
 │   └── venv/             Entorno virtual Python
 │
 ├── frontend-next/        Next.js 16.2 + React 19 + TypeScript + Tailwind CSS v4
@@ -80,7 +80,7 @@ RAT_opencode/
 │   └── types/index.ts    Tipos TypeScript
 │
 ├── docs/                 Documentación (casos de uso, flujos, manual de usuario, errores de deploy Vercel)
-└── data/                 Base de datos SQLite local (fuera del repo)
+
 ```
 
 ---
@@ -92,7 +92,7 @@ RAT_opencode/
 | **Backend API** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
 | **Frontend Prod** | https://custodio-rat.vercel.app | — |
 | **QA (Frontend + API)** | https://custodio-qa.vercel.app | Neon QA |
-| **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
+| **Local** | http://localhost:3000 (frontend) / :8002 (backend) | Neon PostgreSQL (desarrollo) |
 
 ---
 
@@ -167,10 +167,7 @@ pytest tests/ -v
 # Verificar conexión a base
 python -c "from app.core.config import settings; print(settings.DATABASE_URL[:50])"
 
-# Migrar datos SQLite → Neon (production)
-python migrate_to_neon.py export    # Exporta SQLite a JSON
-python migrate_to_neon.py init       # Crea schema en Neon
-python migrate_to_neon.py import     # Importa datos a Neon
+# Migrar datos (script deprecated: migrate_to_neon.py esta deprecado jul-2026)
 ```
 
 ---
@@ -241,7 +238,7 @@ npm run test:e2e:headed
 
 | Variable | Descripción | development | production |
 |----------|-------------|--------------|-------------|
-| `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
+| `DATABASE_URL` | Connection string | `postgresql://...neon.tech` | `postgresql://...neon.tech` |
 | `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | `http://localhost:3000` | **Requerida en todos los ambientes** |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
 | `MINIMAX_API_KEY` | IA chat | — | Opcional |
@@ -262,7 +259,7 @@ npm run test:e2e:headed
 
 **Backend:**
 - FastAPI 0.115 + Uvicorn
-- SQLAlchemy 2.0 + PostgreSQL (Neon) / SQLite (local)
+- SQLAlchemy 2.0 + PostgreSQL (Neon)
 - Pydantic 2.10
 - JWT + Bcrypt
 - ReportLab (exportación PDF)

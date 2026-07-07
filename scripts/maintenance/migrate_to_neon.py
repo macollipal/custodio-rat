@@ -1,15 +1,7 @@
 """
-Scripts de utilidad para la migración SQLite → Neon PostgreSQL.
-Uso:
-  1. python migrate_to_neon.py export    # Exporta datos SQLite → backup_data.json
-  2. python migrate_to_neon.py init     # Crea schema en Neon (requiere DATABASE_URL de Neon)
-  3. python migrate_to_neon.py import   # Importa datos desde backup_data.json a Neon
-  4. python migrate_to_neon.py verify   # Verifica conexión a Neon
-
-Pasos completos:
-  python migrate_to_neon.py export
-  python migrate_to_neon.py init --check  # Verifica conexión primero
-  python migrate_to_neon.py import
+DEPRECADO (jul-2026): La migracion SQLite → Neon PostgreSQL esta completa.
+Este script ya no se usa. Todas las bases de datos son Neon PostgreSQL.
+ 历史 (historico): El script exportaba desde SQLite y hacia import a Neon.
 """
 
 import json

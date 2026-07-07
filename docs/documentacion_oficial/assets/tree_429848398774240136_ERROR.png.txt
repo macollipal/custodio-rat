@@ -12,7 +12,7 @@ Error: Evaluation failed: UnknownDiagramError: No diagram type detected matching
 â”‚   â”‚   â”œâ”€â”€ routes/              10 routers de endpoints
 â”‚   â”‚   â””â”€â”€ services/            LÃ³gica de negocio
 â”‚   â”œâ”€â”€ tests/                   9 archivos pytest
-â”‚   â”œâ”€â”€ data/                    SQLite local (gitignored)
+â”‚   â”œâ”€â”€ data/                    Neon PostgreSQL (gitignored)
 â”‚   â”œâ”€â”€ venv/                    Entorno virtual (gitignored)
 â”‚   â”œâ”€â”€ .env                     Variables de entorno
 â”‚   â”œâ”€â”€ requirements.txt         Dependencias Python

@@ -1,36 +1,37 @@
 """
 Migración one-shot: cifra BYTEA existentes con Fernet (C1-F5).
 
-Idempotente. Hace backup automático en SQLite. Neon requiere pg_dump manual previo.
+⚠️ DEPRECADO (jul-2026): La migración BYTEA→cifrado Fernet está completa.
+Este script no debe ejecutarse nuevamente. Se conserva con fines de auditoría.
+
+Funcionalidad:
+  - Detecta si un campo ya está cifrado (heurística Fernet: prefijo "gAAAAA")
+  - Cifra campos en plano en batches
+  - Loguea estadísticas de migración
 
 Tablas afectadas:
   - rats.archivo_base_legal_datos
   - encargados_contrato.archivo_pdf_datos
   - tkt_adjuntos.data
 
-Detección de "ya cifrado" (heurística):
-  Fernet produce output que empieza con byte 0x80 (versión) seguido de timestamp.
-  En base64 url-safe esto se ve como prefijo "gAAAAA" en los primeros 8 bytes ASCII.
-
-Uso:
+Uso (solo con supervisión):
   cd backend
   python scripts/migration/encrypt_existing_bytea.py [--dry-run] [--batch-size=100]
   python scripts/migration/encrypt_existing_bytea.py --tables=rats --batch-size=50
 
 Variables de entorno requeridas:
-  ENCRYPTION_KEY  (debe ser la MISMA que se usará en producción post-migración)
-  DATABASE_URL    (PostgreSQL/Neon o SQLite)
+  ENCRYPTION_KEY  (debe ser la MISMA que se usará en producción)
+  DATABASE_URL    (PostgreSQL/Neon)
 
 ⚠️  ADVERTENCIAS:
   - Cambiar ENCRYPTION_KEY después de migrar hace los datos irrecuperables.
-  - En Neon/PostgreSQL, ejecutar pg_dump ANTES de correr este script.
+  - Ejecutar pg_dump ANTES de correr este script.
   - Este script NO cifra uploads futuros (eso lo hace el código en runtime).
 """
 
 import argparse
 import logging
 import os
-import shutil
 import sys
 import time
 from datetime import datetime
@@ -90,35 +91,20 @@ def _check_prerequisites() -> tuple[str, Fernet]:
         sys.exit(1)
 
     logger.info(f"ENCRYPTION_KEY válida (Fernet OK)")
-    logger.info(f"DATABASE_URL: {'sqlite' if 'sqlite' in db_url else 'postgresql'}")
+    logger.info(f"Conectando a: postgresql (Neon)")
     return db_url, fernet
 
 
-def _backup_sqlite(db_path: str) -> None:
-    """Crea backup de SQLite con timestamp."""
-    if not Path(db_path).exists():
-        logger.warning(f"Archivo SQLite {db_path} no existe, skip backup")
-        return
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup_path = f"{db_path}.backup-{ts}"
-    shutil.copy2(db_path, backup_path)
-    logger.info(f"Backup SQLite creado: {backup_path}")
-
-
 def _build_engine_and_session(db_url: str):
-    """Crea engine y session según el tipo de BD."""
-    is_sqlite = "sqlite" in db_url
-    if is_sqlite:
-        engine = create_engine(db_url, echo=False)
-    else:
-        engine = create_engine(
-            db_url,
-            echo=False,
-            pool_pre_ping=True,
-            poolclass=QueuePool,
-            pool_size=2,
-            max_overflow=3,
-        )
+    """Crea engine y session PostgreSQL/Neon."""
+    engine = create_engine(
+        db_url,
+        echo=False,
+        pool_pre_ping=True,
+        poolclass=QueuePool,
+        pool_size=2,
+        max_overflow=3,
+    )
     Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
     return engine, Session
 
@@ -216,11 +202,6 @@ def main():
     logger.info("=" * 60)
 
     db_url, fernet = _check_prerequisites()
-
-    is_sqlite = "sqlite" in db_url
-    if is_sqlite and not args.dry_run:
-        sqlite_path = db_url.replace("sqlite:///", "")
-        _backup_sqlite(sqlite_path)
 
     engine, Session = _build_engine_and_session(db_url)
 

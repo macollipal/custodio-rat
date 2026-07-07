@@ -36,7 +36,7 @@ scripts/
 |--------|-------------|
 | [cleanup_orphans.py](maintenance/cleanup_orphans.py) | Limpia archivos huérfanos en OCI |
 | [migrate_oci_storage.py](maintenance/migrate_oci_storage.py) | Migra archivos entre buckets |
-| [migrate_to_neon.py](maintenance/migrate_to_neon.py) | Migra datos SQLite → Neon |
+| [migrate_to_neon.py](maintenance/migrate_to_neon.py) | ⚠️ DEPRECADO (migración SQLite→Neon completada jul-2026) |
 | [sync_sequences.py](maintenance/sync_sequences.py) | Sincroniza sequences de PostgreSQL |
 | [seed_claudio_corp.py](maintenance/seed_claudio_corp.py) | Seed datos de prueba |
 | [generar_manual.py](maintenance/generar_manual.py) | Genera manual de usuario |
@@ -45,7 +45,7 @@ scripts/
 
 | Script | Descripción |
 |--------|-------------|
-| [check_users.py](debug/check_users.py) | Verifica usuarios en BD |
+| [check_users.py](debug/check_users.py) | ⚠️ DEPRECADO (BD ya no es SQLite) |
 | [check_claudio.py](debug/check_claudio.py) | Debug usuario claudio |
 | [test_db_connection.py](debug/test_db_connection.py) | Test conexión BD |
 | [verify_signature.py](debug/verify_signature.py) | Verifica firma OCI |

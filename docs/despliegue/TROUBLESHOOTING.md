@@ -134,7 +134,7 @@ git push
 
 **Síntoma:** `IntegrityError: duplicate key value violates unique constraint "audit_logs_pkey" DETAIL: Key (id)=(X) already exists.`
 
-**Causa:** El connection pooler de Neon cachea valores de secuencia. Cuando se importa datos de SQLite a Neon, las secuencias se reinician correctamente, pero el pooler puede servir IDs antiguos a nuevas conexiones.
+**Causa:** El connection pooler de Neon cachea valores de secuencia. Cuando se reinician secuencias (ej. después de un import masivo), el pooler puede servir IDs antiguos a nuevas conexiones.
 
 **Impacto:** Operaciones `INSERT` en tablas con secuencias (audit_logs, companies, rats, etc.) fallan con unique violation aunque la secuencia en PostgreSQL muestra valores altos.
 

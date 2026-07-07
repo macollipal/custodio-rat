@@ -78,7 +78,6 @@ def log_audit(
     - Obtiene el hash del último registro para encadenar
     - Calcula el hash del nuevo registro
     - PostgreSQL/Neon: usa nextval() directo para evitar problemas con el pooler.
-    - SQLite (tests): deja que la BD asigne el ID automáticamente.
     """
     prev_hash = GENESIS_HASH
     last_log = db.query(AuditLog).order_by(AuditLog.id.desc()).first()

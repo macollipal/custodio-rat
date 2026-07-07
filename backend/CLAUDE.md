@@ -4,7 +4,7 @@
 
 **Custodio RAT Manager** — Gestión del Registro de Actividades de Tratamiento (RAT) conforme a la Ley 21.719 de Chile.
 
-Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt + ReportLab (PDF).
+Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt + ReportLab (PDF).
 
 ---
 
@@ -80,7 +80,7 @@ Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto
 |---------|-----|---------------|
 | **Producción** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
 | **QA** | https://custodio-qa.vercel.app | Neon QA |
-| **Local** | http://localhost:8002 | SQLite (`data/database.db`) |
+| **Local** | http://localhost:8002 | Neon PostgreSQL (desarrollo) |
 
 ### Vercel (Producción)
 
@@ -100,19 +100,6 @@ Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto
 - `ALLOWED_ORIGINS` es la única variable que controla CORS — sin heurísticas, sin VERCEL_URL, sin ENVIRONMENT
 - Si no está seteada, la app no levanta (fail loud)
 - Requerido: `ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000`
-
-### Migración SQLite → Neon
-
-```bash
-# 1. Exportar datos de SQLite
-python migrate_to_neon.py export    # → backend/backup_data.json
-
-# 2. Crear schema en Neon
-python migrate_to_neon.py init       # crea tablas + reinicia sequences
-
-# 3. Importar datos a Neon
-python migrate_to_neon.py import      # desde backup_data.json
-```
 
 ### Desarrollo local
 
@@ -414,7 +401,7 @@ tkt_solicitud_derecho(
 
 - Puerto: `8002`, URL base: `http://localhost:8002`
 - Reiniciar backend: `run_server.bat` (cmd.exe, porque `&` no funciona en PowerShell)
-- Base de datos: `backend/database.db` (SQLite)
+- Base de datos: Neon PostgreSQL (todas las bases de datos son Neon)
 - El usuario `admin` existente fue renombrado a `superadmin` y `jpe` a `admin_empresa`
 - Para queries que filtran por empresa sin ser superadmin: usar `get_empresas_usuario(db, user_id)` que retorna lista de `company_ids`
 - `get_current_user` en `routes/deps.py` extrae el usuario del token JWT
@@ -438,11 +425,9 @@ tkt_solicitud_derecho(
 
 ## Tests
 
-### REGLA INVIOLABLE: Tests contra PostgreSQL (Neon QA), NO SQLite
+### REGLA INVIOLABLE: Tests contra PostgreSQL (Neon QA)
 
-**Los tests DEBEN ejecutarse contra PostgreSQL (Neon QA)** antes de cualquier deploy. SQLite in-memory NO es válido para validar cambios de schema o queries específicas de PostgreSQL.
-
-**Por qué:** SQLite crea el schema fresco desde modelos Python en cada test, ignorando migraciones. Esto causa que tests pasen pero la BD real falle con errores como `column does not exist`.
+**Los tests DEBEN ejecutarse contra PostgreSQL (Neon QA)** antes de cualquier deploy.
 
 ### Setup
 

@@ -1,8 +1,8 @@
 """
 Asesor Retriever: búsqueda por cosine similarity sobre chunks del corpus.
 
-v1.0 implementación en Python puro (cosine top-k) compatible con SQLite y
-PostgreSQL. En v1.1 migra a pgvector con SQL nativo.
+v1.0 implementacion en Python puro (cosine top-k) sobre PostgreSQL/Neon.
+En v1.1 migrara a pgvector con SQL nativo para mayor rendimiento.
 """
 from __future__ import annotations
 import json

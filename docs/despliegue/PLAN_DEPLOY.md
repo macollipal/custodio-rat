@@ -16,7 +16,7 @@ Este documento describe el **proceso canónico** para promover cambios validados
 
 | Ambiente | Frontend | Backend | Base de Datos |
 |----------|----------|---------|---------------|
-| **Local** | http://localhost:3000 | http://localhost:8002 | SQLite (`backend/data/database.db`) |
+| **Local** | http://localhost:3000 | http://localhost:8002 | Neon PostgreSQL (desarrollo) |
 | **QA** | https://custodio-qa.vercel.app | https://custodio-api-qa.vercel.app | Neon PostgreSQL QA |
 | **Producción** | https://custodio-prod.vercel.app | https://custodio-api-prod.vercel.app | Neon PostgreSQL PROD (`Custodio_prod`) |
 

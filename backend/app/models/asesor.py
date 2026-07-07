@@ -2,7 +2,7 @@
 Modelos Asesor: chunks del corpus con embeddings y documentos del corpus.
 
 v1.0 almacena el embedding como JSON serializado (List[float]) en un
-campo Text para máxima portabilidad (SQLite local + Neon prod).
+campo Text para maxima portabilidad (Neon PostgreSQL).
 
 Migración a pgvector (v1.1):
     Reemplazar la columna `embedding_json` por `embedding VECTOR(1536)`
