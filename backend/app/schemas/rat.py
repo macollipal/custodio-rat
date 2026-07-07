@@ -1,8 +1,34 @@
 from datetime import datetime, date
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
+import json
 
 from app.models.rat import EstadoRAT
+
+
+def _normalizar_test_il(val: Any) -> Optional[str]:
+    """Normaliza test_interes_legitimo: acepta dict, JSON-string, o legacy string delimitado."""
+    if val is None:
+        return None
+    if isinstance(val, dict):
+        required = ["paso1", "paso2", "paso3"]
+        if not all(k in val for k in required):
+            raise ValueError(f"test_interes_legitimo como dict debe tener los campos: {required}")
+        total = sum(len(str(v or "").strip()) for v in val.values())
+        if total < 50:
+            raise ValueError("El test de interés legítimo debe tener al menos 50 caracteres en total.")
+        return json.dumps(val, ensure_ascii=False)
+    if isinstance(val, str):
+        val = val.strip()
+        if not val:
+            return None
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, dict):
+                return _normalizar_test_il(parsed)
+        except Exception:
+            pass
+    return val
 
 
 class RATBase(BaseModel):
@@ -52,8 +78,7 @@ class RATBase(BaseModel):
     tiene_contrato_encargado: bool = False
     test_interes_legitimo: Optional[str] = Field(
         default=None,
-        description="Test de interés legítimo (Art. 16). Mínimo 50 caracteres para que sea válido como documentación.",
-        min_length=50,
+        description="Test de interés legítimo (Art. 16). Acepta JSON estructurado {paso1,paso2,paso3} o string legacy. Se normaliza a JSON en almacenamiento.",
     )
     observaciones_auditoria: Optional[str] = None
     # Documento de base legal (base64 para transporte; se almacena como binary en BD)
@@ -79,6 +104,11 @@ class RATBase(BaseModel):
             if not re.match(patron, v.strip()):
                 raise ValueError("responsable_tratamiento_email debe ser un email válido (ej: dpo@empresa.cl)")
         return v
+
+    @field_validator('test_interes_legitimo', mode='before')
+    @classmethod
+    def test_interes_legitimo_normalizar(cls, v: Any) -> Any:
+        return _normalizar_test_il(v)
 
 
 class RATCreate(RATBase):

@@ -28,9 +28,20 @@ interface RatEditFormProps {
 export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps) {
   const [step, setStep] = useState(1);
 
-  // Parsear el test_interes_legitimo existente (formato "Paso 1: ...\nPaso 2: ...\nPaso 3: ...")
+  // Parsear el test_interes_legitimo existente: JSON {paso1,paso2,paso3} o legacy "Paso 1:...\nPaso 2:...\nPaso 3:..."
   const initialTestIL = (() => {
     const raw = rat.test_interes_legitimo ?? '';
+    if (!raw) return { paso1: '', paso2: '', paso3: '' };
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && 'paso1' in parsed) {
+        return {
+          paso1: parsed.paso1 ?? '',
+          paso2: parsed.paso2 ?? '',
+          paso3: parsed.paso3 ?? '',
+        };
+      }
+    } catch {}
     const m1 = raw.match(/Paso 1:\s*([\s\S]*?)(?=\nPaso 2:|$)/);
     const m2 = raw.match(/Paso 2:\s*([\s\S]*?)(?=\nPaso 3:|$)/);
     const m3 = raw.match(/Paso 3:\s*([\s\S]*?)$/);
@@ -137,9 +148,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         if (typeof v === 'string') payload[k] = v?.trim() || null;
         else payload[k] = v ?? null;
       }
-      // Reemplazar test_interes_legitimo con el formato combinado de los 3 pasos
+      // Reemplazar test_interes_legitimo con JSON estructurado
       if (form.base_legal === 'Interés legítimo') {
-        payload.test_interes_legitimo = `Paso 1: ${testIL.paso1.trim()}\nPaso 2: ${testIL.paso2.trim()}\nPaso 3: ${testIL.paso3.trim()}`;
+        payload.test_interes_legitimo = JSON.stringify({ paso1: testIL.paso1.trim(), paso2: testIL.paso2.trim(), paso3: testIL.paso3.trim() });
       } else {
         payload.test_interes_legitimo = null;
       }
@@ -564,8 +575,11 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <button
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
-                  if (form.base_legal === 'Interés legítimo' && (!form.test_interes_legitimo || form.test_interes_legitimo.trim().length < 50)) {
-                    toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+                  if (form.base_legal === 'Interés legítimo') {
+                    const totalIL = [testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim();
+                    if (!totalIL || totalIL.length < 50) {
+                      toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+                    }
                   }
                   setStep(4);
                 }}

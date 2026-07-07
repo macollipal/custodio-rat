@@ -181,7 +181,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     setSaving(true);
     try {
       const testIL = data.base_legal === 'Interés legítimo' && data._testIL
-        ? `Paso 1: ${data._testIL.paso1}\nPaso 2: ${data._testIL.paso2}\nPaso 3: ${data._testIL.paso3}`
+        ? JSON.stringify({ paso1: data._testIL.paso1, paso2: data._testIL.paso2, paso3: data._testIL.paso3 })
         : undefined;
       const payload = {
         company_id:                  company.id,
