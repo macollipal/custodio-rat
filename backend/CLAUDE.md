@@ -334,6 +334,84 @@ completitud = round((completados / total) * 100)
 | POST | `/eipd/` | Crea EIPD (1:1 con RAT) |
 | PUT | `/eipd/{id}` | Actualiza EIPD (workflow) |
 
+### ARCO — Solicitudes de Derecho (Art. 12, 12.5, 14)
+
+Dos rutas legacy (``/solicitudes-derecho``) y moderna (``/tkt-solicitud-derecho``) operan en
+paralelo. La entidad canónica es ``TktSolicitudDerecho``; ``SolicitudDerecho`` queda como
+auditoría histórica (deprecada gradualmente, sincronizada en cada cambio).
+
+#### Formulario público (titular, sin auth)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/solicitudes-derecho/token` | Token CSRF-style para el form (rate-limit 5/min) |
+| GET | `/solicitudes-derecho/csrf-token` | CSRF HMAC-firmado para POST públicos (rate-limit 30/min) |
+| POST | `/solicitudes-derecho/` | Crea TKT + SolicitudDerecho legacy + adjuntos (rate-limit 10/h) |
+| GET | `/seguimiento/{tracking_token}` | Consulta pública del estado (sin auth) |
+
+#### Workflow staff (autenticado, RBAC estricto)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/tkt-solicitud-derecho/` | Lista TKTs con filtros |
+| POST | `/tkt-solicitud-derecho/` | Crear TKT interno |
+| GET | `/tkt-solicitud-derecho/{id}` | Detalle TKT |
+| PATCH | `/tkt-solicitud-derecho/{id}` | Actualizar (requiere `metodo_verificacion_identidad` si pasa a `resuelto`) |
+| POST | `/tkt-solicitud-derecho/{id}/bloquear` | Bloquear RAT (Art. 8 ter) |
+| POST | `/tkt-solicitud-derecho/{id}/desbloquear` | Desbloquear antes de vencer |
+| POST | `/tkt-solicitud-derecho/{id}/rechazar` | Rechazo fundado con `causal_rechazo` enum (Art. 12.5) |
+| POST | `/tkt-solicitud-derecho/{id}/subsanar` | Pedir subsanación al titular |
+| POST | `/tkt-solicitud-derecho/{id}/completar-subsanacion` | Cerrar subsanación |
+| POST | `/tkt-solicitud-derecho/{id}/prorrogar` | Extender plazo +10 días hábiles (Art. 12 bis) |
+| POST | `/tkt-solicitud-derecho/{id}/portabilidad/guardar` | Guardar datos portabilidad |
+| GET | `/tkt-solicitud-derecho/{id}/portabilidad/export` | Exportar JSON portabilidad (Art. 9) |
+
+#### Reglas de compliance automatizadas
+
+| Regla | Detalle |
+|-------|---------|
+| **Verificación de identidad** | Backend rechaza PATCH→`resuelto` si `metodo_verificacion_identidad` no existe (Art. 12) |
+| **Hash de integridad** | Al resolver se computa `evidencia_respuesta_hash = SHA256(respuesta + username + timestamp)` |
+| **Causal de rechazo** | `causal_rechazo` debe estar en `CausalRechazo` enum; valores: `falta_identidad`, `solicitud_manifiestamente_infundada`, `solicitud_excesiva`, `falta_poder_notorial`, `plazo_vencido`, `identidad_no_verificada`, `otro` |
+| **Plazo legal** | 10 días hábiles, calculado con feriados Chile hardcoded hasta 2040 + Semana Santa (Art. 14) |
+| **SLA** | Estados válido intermedio: `abierto` → `en_proceso`/`pendiente` → `resuelto`/`rechazado`. Prórroga 1 vez por ticket (Art. 12 bis). |
+| **Magic bytes** | Upload de archivos valida magic bytes PDF/JPEG/PNG/GIF (S3.1) — rechaza ``.exe`` renombrado |
+| **Rate-limit** | Form público: 10/h por IP (lee X-Forwarded-For). Token: 5/min. CSRF: 30/min |
+
+#### Estructura de tablas
+
+```sql
+-- Tabla canónica (moderna)
+tkt_solicitud_derecho(
+  id, company_id, tipo, estado, prioridad, origen,
+  titular_nombre, titular_email, titular_rut,
+  descripcion, fecha_recepcion, fecha_vencimiento,
+  responsable_id, respuesta_texto, respuesta_fecha,
+  rat_id, plazo_bloqueo_vencimiento, portability_data,
+  tracking_token, acuse_enviado_at,
+  -- Compliance Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad, evidencia_identidad,
+  evidencia_respuesta_hash, causal_rechazo, medio_respuesta,
+  -- Workflow extension
+  subsanacion_detalle, subsanacion_fecha_pedido,
+  prorroga_fecha, prorroga_dias,
+  -- Multi-representante
+  representante_nombre, representante_rut,
+  telefono, fecha_nacimiento, pais,
+  created_by, created_at, updated_at
+)
+
+-- Tabla legacy (deprecated, solo histórico)
+solicitudes_derecho(
+  id, company_id, tipo, nombre_titular, rut_titular,
+  email_titular, descripcion, estado,
+  solicitud_fecha, respuesta, respuesta_fecha,
+  rat_id, plazo_bloqueo_vencimiento,
+  -- Sincronizada con TKT via _sync_legacy_solicitud_from_ticket
+  metodo_verificacion_identidad, evidencia_identidad,
+  evidencia_respuesta_hash, causal_rechazo, medio_respuesta,
+  created_at, updated_at
+)
+```
+
 ### Admin - Cola de Tareas
 | Método | Ruta | Descripción |
 |--------|------|-------------|

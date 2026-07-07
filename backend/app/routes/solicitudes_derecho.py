@@ -13,8 +13,11 @@ from app.models.company import Company
 from app.services.user_company_service import get_empresas_usuario
 from app.services.ticket_service import crear_ticket_desde_solicitud
 from app.core.limiter import limiter
+from app.core.config import settings
 import uuid
 import logging
+import hmac
+import hashlib
 
 router = APIRouter(prefix="/solicitudes-derecho", tags=["Solicitudes de Derecho"])
 logger = logging.getLogger(__name__)
@@ -141,8 +144,53 @@ def obtener_token(request: Request, db: Session = Depends(get_db)):
     return {"token": _generate_token(db, ip)}
 
 
+# ── S3.3: CSRF token (HMAC firmado con SECRET_KEY) ─────────────────────────
+# Un CSRF token distinto del ``/token`` de arriba: este se valida en cada
+# POST/PUT/PATCH contra ``/solicitudes-derecho/`` y ``/tkt-solicitud-derecho/``.
+# Previene que un sitio malicioso cargue la página de Custodio en un iframe
+# y dispare acciones con las credenciales del usuario.
+
+_CSRF_MAX_AGE = 900  # 15 minutos (Sprint 1 sugerencia)
+
+
+def _csrf_sign(token: str) -> str:
+    """Firma un token CSRF con HMAC-SHA256."""
+    secret = settings.resolved_secret_key.encode("utf-8")
+    sig = hmac.new(secret, token.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{token}.{sig}"
+
+
+def _csrf_verify(signed: str) -> bool:
+    """Verifica un token CSRF firmado. Tolera expiración razonable (caller)."""
+    if not signed or "." not in signed:
+        return False
+    token, sig = signed.rsplit(".", 1)
+    return _csrf_sign(token).endswith(f".{sig}")
+
+
+class CsrfResponse(BaseModel):
+    token: str
+    header_name: str
+    expires_in_seconds: int
+
+
+@router.get("/csrf-token", response_model=CsrfResponse, summary="Obtener CSRF token firmado")
+@limiter.limit("30/minute")
+def obtener_csrf_token(request: Request):
+    """Devuelve un CSRF token HMAC-firmado. El cliente debe enviarlo en el
+    header ``X-CSRF-Token`` en cada POST/PUT/PATCH.
+    """
+    raw = uuid.uuid4().hex
+    signed = _csrf_sign(raw)
+    return CsrfResponse(
+        token=signed,
+        header_name="X-CSRF-Token",
+        expires_in_seconds=_CSRF_MAX_AGE,
+    )
+
+
 @router.post("/", response_model=dict)
-@limiter.limit("3/hour")
+@limiter.limit("10/hour")
 async def crear_solicitud(
     request: Request,
     db: Session = Depends(get_db),
@@ -240,6 +288,7 @@ async def crear_solicitud(
 
     if files_data:
         from app.models.tkt_adjunto import TktAdjunto
+        from app.services.file_validation import _MAGIC_BYTES
         allowed_types = {"image/jpeg", "image/png", "image/gif", "application/pdf"}
         max_size = 5 * 1024 * 1024
         for f in files_data[:5]:
@@ -250,6 +299,19 @@ async def crear_solicitud(
                 return JSONResponse(status_code=400, content={"detail": f"El archivo '{filename}' supera el límite de 5MB."})
             if content_type_file not in allowed_types:
                 return JSONResponse(status_code=400, content={"detail": f"El archivo '{filename}' tiene tipo no permitido. Solo PDF, JPEG, PNG o GIF."})
+            # S3.1: verificar magic bytes (no permitir .exe renombrado a .pdf).
+            signatures = _MAGIC_BYTES.get(content_type_file.lower())
+            if signatures and file_bytes:
+                if not any(file_bytes.startswith(sig) for sig in signatures):
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "detail": (
+                                f"El contenido de '{filename}' no coincide con su tipo declarado. "
+                                f"Posible renombrado malicioso."
+                            )
+                        },
+                    )
             adjunto = TktAdjunto(
                 ticket_id=ticket.id,
                 filename=filename,

@@ -296,7 +296,7 @@ export default function SolicitudDerechoPage() {
           </button>
           {submitResult && (
             <a
-              href={`/solicitud_derecho/consulta?token=${submitResult.tracking_token}`}
+              href={`/consulta?token=${submitResult.tracking_token}`}
               className="block mt-3 text-sm font-medium"
               style={{ color: '#2563EB' }}
             >
