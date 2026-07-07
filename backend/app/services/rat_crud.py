@@ -203,49 +203,100 @@ def get_audit_logs(db: Session, rat_id: int) -> list[AuditLog]:
 
 
 def get_dashboard_stats(db: Session, company_id: int) -> dict:
+    """Calcula estadísticas de RATs para dashboard.
+
+    Optimizado: usa SQL GROUP BY/COUNT para agregados simples.
+    Solo carga columnas necesarias para cómputos complejos.
+    """
     from app.models.company import Company
     from fastapi import HTTPException, status
+    from sqlalchemy import func, case, or_
 
     if not db.query(Company).filter(Company.id == company_id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
-    rats = db.query(RAT).filter(RAT.company_id == company_id).all()
-    total = len(rats)
-    por_estado = {}
-    for r in rats:
-        por_estado[r.estado.value] = por_estado.get(r.estado.value, 0) + 1
+    # SQL aggregations para stats simples
+    total = db.query(func.count(RAT.id)).filter(RAT.company_id == company_id).scalar() or 0
 
-    sensibles = sum(1 for r in rats if r.datos_sensibles)
-    con_transferencia_int = sum(1 for r in rats if r.transferencia_internacional)
-    requieren_eipd = sum(1 for r in rats if r.evaluacion_impacto)
-    completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / total) if total else 0
+    # por_estado via GROUP BY
+    estado_rows = (
+        db.query(RAT.estado, func.count(RAT.id).label("count"))
+        .filter(RAT.company_id == company_id)
+        .group_by(RAT.estado)
+        .all()
+    )
+    por_estado = {row.estado.value: row.count for row in estado_rows}
 
+    # Agregados booleanos via SQL
+    sensibles = (
+        db.query(func.count(RAT.id))
+        .filter(RAT.company_id == company_id, RAT.datos_sensibles == True)
+        .scalar()
+    ) or 0
+    con_transferencia_int = (
+        db.query(func.count(RAT.id))
+        .filter(RAT.company_id == company_id, RAT.transferencia_internacional == True)
+        .scalar()
+    ) or 0
+    requieren_eipd = (
+        db.query(func.count(RAT.id))
+        .filter(RAT.company_id == company_id, RAT.evaluacion_impacto == True)
+        .scalar()
+    ) or 0
+
+    # Cómputos que requieren lógica Python compleja: cargar solo columnas necesarias
+    rats_complex = (
+        db.query(
+            RAT.calcular_completitud,
+            RAT.evaluacion_impacto,
+            RAT.estado_eipd,
+            RAT.transferencia_internacional,
+            RAT.garantias_transferencia_int,
+            RAT.base_legal,
+            RAT.test_interes_legitimo,
+            RAT.nombre_encargado,
+            RAT.tiene_contrato_encargado,
+            RAT.archivo_base_legal_datos,
+            RAT.plazo_retencion,
+            RAT.created_at,
+        )
+        .filter(RAT.company_id == company_id)
+        .all()
+    )
+    completitud_promedio = (
+        round(sum(r.calcular_completitud() for r in rats_complex) / total, 1) if total else 0
+    )
     eipd_pendientes = sum(
-        1 for r in rats
+        1 for r in rats_complex
         if r.evaluacion_impacto and (r.estado_eipd or "pendiente") not in ("completada",)
     )
     transferencias_sin_garantias = sum(
-        1 for r in rats if r.transferencia_internacional and not r.garantias_transferencia_int
+        1 for r in rats_complex
+        if r.transferencia_internacional and not r.garantias_transferencia_int
     )
     interes_legitimo_sin_test = sum(
-        1 for r in rats
-        if "interés legítimo" in (r.base_legal or "").lower() or "interes legitimo" in (r.base_legal or "").lower()
-        if not r.test_interes_legitimo
+        1 for r in rats_complex
+        if (
+            ("interés legítimo" in (r.base_legal or "").lower()
+            or "interes legitimo" in (r.base_legal or "").lower())
+        )
+        and not r.test_interes_legitimo
     )
     encargados_sin_contrato = sum(
-        1 for r in rats if r.nombre_encargado and not r.tiene_contrato_encargado
+        1 for r in rats_complex
+        if r.nombre_encargado and not r.tiene_contrato_encargado
     )
-
     rats_sin_doc = sum(
-        1 for r in rats
+        1 for r in rats_complex
         if r.base_legal and r.base_legal.strip().lower() != "otra"
-        if not r.archivo_base_legal_datos
+        and not r.archivo_base_legal_datos
     )
 
+    # Rats por vencer/vencidos: regex parsing por fecha
     rats_por_vencer = 0
     rats_vencidos = 0
     now = datetime.now(timezone.utc)
-    for r in rats:
+    for r in rats_complex:
         plazo = r.plazo_retencion or ""
         total_dias = 0
         for years_m in re.finditer(r"(\d+)\s*(?:año|años?)", plazo, re.IGNORECASE):

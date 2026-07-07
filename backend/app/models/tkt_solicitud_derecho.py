@@ -58,6 +58,9 @@ class TktSolicitudDerecho(Base):
         Index("idx_tkt_fecha_vencimiento", "fecha_vencimiento"),
         Index("idx_tkt_estado_prioridad", "estado", "prioridad"),
         Index("idx_tkt_tracking_token", "tracking_token"),
+        Index("idx_tkt_fecha_recepcion", "fecha_recepcion"),
+        Index("idx_tkt_responsable_id", "responsable_id"),
+        Index("idx_tkt_rat_id", "rat_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

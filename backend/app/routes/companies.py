@@ -64,6 +64,31 @@ async def listar(
     from datetime import datetime, timezone, timedelta
     import re
 
+    company_ids = [c.id for c in companies]
+    now = datetime.now(timezone.utc)
+    estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
+    all_pending = (
+        db.query(TktSolicitudDerecho.company_id, func.count(TktSolicitudDerecho.id))
+        .filter(
+            TktSolicitudDerecho.company_id.in_(company_ids),
+            TktSolicitudDerecho.estado.in_(estados_pendientes),
+        )
+        .group_by(TktSolicitudDerecho.company_id)
+        .all()
+    )
+    pending_by_company = {cid: cnt for cid, cnt in all_pending}
+    all_vencidas = (
+        db.query(TktSolicitudDerecho.company_id, func.count(TktSolicitudDerecho.id))
+        .filter(
+            TktSolicitudDerecho.company_id.in_(company_ids),
+            TktSolicitudDerecho.fecha_vencimiento < now,
+            TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
+        )
+        .group_by(TktSolicitudDerecho.company_id)
+        .all()
+    )
+    vencidas_by_company = {cid: cnt for cid, cnt in all_vencidas}
+
     result = []
     for c in companies:
         out = CompanyOut.model_validate(c)
@@ -73,7 +98,6 @@ async def listar(
         if rats:
             out.completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / len(rats))
             vencidos = 0
-            now = datetime.now(timezone.utc)
             for r in rats:
                 plazo = r.plazo_retencion or ""
                 match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
@@ -98,21 +122,8 @@ async def listar(
             out.completitud_promedio = 0
             out.rats_vencidos = 0
 
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
-        estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
-        tickets = db.query(TktSolicitudDerecho).filter(
-            TktSolicitudDerecho.company_id == c.id,
-            TktSolicitudDerecho.estado.in_(estados_pendientes),
-        ).all()
-        out.solicitudes_pendientes = len(tickets)
-        vencidas = db.query(TktSolicitudDerecho).filter(
-            TktSolicitudDerecho.company_id == c.id,
-            TktSolicitudDerecho.fecha_vencimiento < now,
-            TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
-        ).count()
-        out.solicitudes_vencidas_sla = vencidas
-
+        out.solicitudes_pendientes = pending_by_company.get(c.id, 0)
+        out.solicitudes_vencidas_sla = vencidas_by_company.get(c.id, 0)
         if current_user.rol_global != "superadmin":
             rol = get_rol_usuario(db, current_user.id, c.id)
             out.mi_rol = rol.value if rol else None

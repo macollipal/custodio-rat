@@ -351,51 +351,75 @@ def cambiar_estado_ticket(
 
 
 def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
-    """Calcula estadísticas de tickets para dashboard."""
+    """Calcula estadísticas de tickets para dashboard.
+
+    Optimizado: 1 GROUP BY + 1 vencidos + 1 avg en vez de 9 COUNT queries.
+    """
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from sqlalchemy import func
 
-    query = db.query(TktSolicitudDerecho)
+    base_filter = []
     if company_id:
-        query = query.filter(TktSolicitudDerecho.company_id == company_id)
+        base_filter.append(TktSolicitudDerecho.company_id == company_id)
 
-    total = query.count()
-    abiertos = query.filter(TktSolicitudDerecho.estado == "abierto").count()
-    en_proceso = query.filter(TktSolicitudDerecho.estado == "en_proceso").count()
-    pendientes = query.filter(TktSolicitudDerecho.estado == "pendiente").count()
-    resueltos = query.filter(TktSolicitudDerecho.estado == "resuelto").count()
-    bloqueados = query.filter(TktSolicitudDerecho.estado == "bloqueado").count()
-    rechazados = query.filter(TktSolicitudDerecho.estado == "rechazado").count()
-    subsanacion = query.filter(TktSolicitudDerecho.estado == "subsanacion").count()
-    prorrogas = query.filter(TktSolicitudDerecho.estado == "prorroga").count()
+    # 1 COUNT total
+    total = db.query(func.count(TktSolicitudDerecho.id)).filter(*base_filter).scalar() or 0
 
+    # 1 GROUP BY para todos los estados
+    estado_counts = (
+        db.query(
+            TktSolicitudDerecho.estado,
+            func.count(TktSolicitudDerecho.id).label("count"),
+        )
+        .filter(*base_filter)
+        .group_by(TktSolicitudDerecho.estado)
+        .all()
+    )
+    counts = {row.estado: row.count for row in estado_counts}
+    abiertos = counts.get("abierto", 0)
+    en_proceso = counts.get("en_proceso", 0)
+    pendientes = counts.get("pendiente", 0)
+    resueltos = counts.get("resuelto", 0)
+    bloqueados = counts.get("bloqueado", 0)
+    rechazados = counts.get("rechazado", 0)
+    subsanacion = counts.get("subsanacion", 0)
+    prorrogas = counts.get("prorroga", 0)
+
+    # 1 COUNT vencidos
     ahora = datetime.now(timezone.utc)
-    vencidos = query.filter(
+    vencidos_filter = base_filter + [
         TktSolicitudDerecho.estado.in_(["abierto", "en_proceso", "pendiente", "bloqueado", "subsanacion", "prorroga"]),
         TktSolicitudDerecho.fecha_vencimiento < ahora,
-    ).count()
+    ]
+    vencidos = db.query(func.count(TktSolicitudDerecho.id)).filter(*vencidos_filter).scalar() or 0
 
     # Cumplimiento SLA
-    total_con_sla = query.filter(TktSolicitudDerecho.estado == "resuelto").count()
-    resueltos_en_tiempo = query.filter(
-        TktSolicitudDerecho.estado == "resuelto",
-        TktSolicitudDerecho.respuesta_fecha <= TktSolicitudDerecho.fecha_vencimiento,
-    ).count()
-    cumplimiento = round((resueltos_en_tiempo / total_con_sla) * 100, 1) if total_con_sla > 0 else 100.0
-
-    # Tiempo promedio primera respuesta
-    avg_query = db.query(
-        func.avg(
-            func.extract('epoch', TktSolicitudDerecho.respuesta_fecha) -
-            func.extract('epoch', TktSolicitudDerecho.fecha_recepcion)
+    resueltos_en_tiempo = (
+        db.query(func.count(TktSolicitudDerecho.id))
+        .filter(
+            *base_filter,
+            TktSolicitudDerecho.estado == "resuelto",
+            TktSolicitudDerecho.respuesta_fecha <= TktSolicitudDerecho.fecha_vencimiento,
         )
-    ).filter(
-        TktSolicitudDerecho.estado == "resuelto",
-        TktSolicitudDerecho.respuesta_fecha.isnot(None),
+        .scalar()
+    ) or 0
+    cumplimiento = round((resueltos_en_tiempo / resueltos) * 100, 1) if resueltos > 0 else 100.0
+
+    # 1 AVG query para tiempo promedio
+    avg_seconds = (
+        db.query(
+            func.avg(
+                func.extract("epoch", TktSolicitudDerecho.respuesta_fecha) -
+                func.extract("epoch", TktSolicitudDerecho.fecha_recepcion)
+            )
+        )
+        .filter(
+            *base_filter,
+            TktSolicitudDerecho.estado == "resuelto",
+            TktSolicitudDerecho.respuesta_fecha.isnot(None),
+        )
+        .scalar()
     )
-    if company_id:
-        avg_query = avg_query.filter(TktSolicitudDerecho.company_id == company_id)
-    avg_seconds = avg_query.scalar()
     tiempo_promedio = round(avg_seconds / 3600, 1) if avg_seconds else 0
 
     return {

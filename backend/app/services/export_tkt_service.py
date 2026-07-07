@@ -78,11 +78,15 @@ def _get_tickets_para_exportar(
     return q.order_by(TktSolicitudDerecho.fecha_recepcion.desc()).all()
 
 
-def _enriquecer_ticket(ticket: TktSolicitudDerecho, db: Session) -> dict:
-    empresa = db.query(Company).filter(Company.id == ticket.company_id).first()
+def _enriquecer_ticket(
+    ticket: TktSolicitudDerecho,
+    companies_cache: dict[int, Company],
+    users_cache: dict[int, User],
+) -> dict:
+    empresa = companies_cache.get(ticket.company_id)
     responsable = None
     if ticket.responsable_id:
-        user = db.query(User).filter(User.id == ticket.responsable_id).first()
+        user = users_cache.get(ticket.responsable_id)
         if user:
             responsable = user.full_name or user.username
 
@@ -123,6 +127,14 @@ HEADERS_CSV = [
 ]
 
 
+def _build_caches(db: Session, tickets: list[TktSolicitudDerecho]) -> tuple[dict[int, Company], dict[int, User]]:
+    company_ids = {t.company_id for t in tickets}
+    responsable_ids = {t.responsable_id for t in tickets if t.responsable_id}
+    companies = {c.id: c for c in db.query(Company).filter(Company.id.in_(company_ids)).all()}
+    users = {u.id: u for u in db.query(User).filter(User.id.in_(responsable_ids)).all()} if responsable_ids else {}
+    return companies, users
+
+
 def generar_csv(
     db: Session,
     company_id: Optional[int],
@@ -132,11 +144,12 @@ def generar_csv(
     fecha_hasta: Optional[str],
 ) -> bytes:
     tickets = _get_tickets_para_exportar(db, company_id, estado, prioridad, fecha_desde, fecha_hasta)
+    companies_cache, users_cache = _build_caches(db, tickets)
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_ALL)
     writer.writerow(HEADERS_CSV)
     for t in tickets:
-        row = _enriquecer_ticket(t, db)
+        row = _enriquecer_ticket(t, companies_cache, users_cache)
         writer.writerow([
             row["id"], row["empresa"], row["tipo"], row["estado"], row["prioridad"], row["origen"],
             row["titular_nombre"], row["titular_email"], row["titular_rut"],
@@ -161,6 +174,7 @@ def generar_excel(
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
     tickets = _get_tickets_para_exportar(db, company_id, estado, prioridad, fecha_desde, fecha_hasta)
+    companies_cache, users_cache = _build_caches(db, tickets)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tickets ARCO"
@@ -189,7 +203,7 @@ def generar_excel(
         cell.border = thin_border
 
     for row_idx, t in enumerate(tickets, 2):
-        row = _enriquecer_ticket(t, db)
+        row = _enriquecer_ticket(t, companies_cache, users_cache)
         values = [
             row["id"], row["empresa"], row["tipo"], row["estado"], row["prioridad"], row["origen"],
             row["titular_nombre"], row["titular_email"], row["titular_rut"],
@@ -228,6 +242,7 @@ def generar_pdf(
     fecha_hasta: Optional[str],
 ) -> bytes:
     tickets = _get_tickets_para_exportar(db, company_id, estado, prioridad, fecha_desde, fecha_hasta)
+    companies_cache, _ = _build_caches(db, tickets)
     output = io.BytesIO()
 
     doc = SimpleDocTemplate(output, pagesize=A4, leftMargin=15*mm, rightMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
@@ -247,10 +262,10 @@ def generar_pdf(
     table_data = [
         ["ID", "Empresa", "Tipo", "Estado", "Prioridad", "Titular", "Vencimiento", "Días"],
     ]
+    from app.services.ticket_service import calcular_dias_restantes
     for t in tickets:
-        from app.services.ticket_service import calcular_dias_restantes
         dias = calcular_dias_restantes(t.fecha_vencimiento) if t.fecha_vencimiento else 0
-        empresa = db.query(Company).filter(Company.id == t.company_id).first()
+        empresa = companies_cache.get(t.company_id)
         table_data.append([
             str(t.id),
             (empresa.nombre if empresa else str(t.company_id))[:20],
