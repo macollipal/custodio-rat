@@ -8,7 +8,7 @@ from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session
 
 from app.models.eipd import EIPD, ResultadoEIPD
-from app.models.rat import RAT as RATModel
+from app.models.rat import RAT as RATModel, EstadoEIPD
 from app.schemas.eipd import EIPDCreate, EIPDUpdate
 from app.services.audit_service import log_audit
 
@@ -29,6 +29,29 @@ class ResultadoInvalidoError(Exception):
     def __init__(self, valores_permitidos: List[str]):
         self.valores_permitidos = valores_permitidos
         super().__init__(f"Resultado inválido. Valores permitidos: {valores_permitidos}")
+
+
+_MAPA_RESULTADO_A_ESTADO_RAT = {
+    ResultadoEIPD.COMPLETADA: EstadoEIPD.COMPLETADA,
+    ResultadoEIPD.EN_PROCESO: EstadoEIPD.EN_PROCESO,
+    ResultadoEIPD.NO_REQUERIDA: EstadoEIPD.NO_REQUERIDA,
+    ResultadoEIPD.NO_REQUERIDA_JUSTIFICADA: EstadoEIPD.NO_REQUERIDA,
+}
+
+
+def _sync_rat_estado_eipd(db: Session, rat: RATModel, resultado: ResultadoEIPD) -> None:
+    """
+    Mantiene sincronizado rat.estado_eipd con eipd.resultado para evitar
+    doble fuente de verdad inconsistente.
+
+    Mapeo:
+      EIPD.completada            -> RAT.completada
+      EIPD.en_proceso            -> RAT.en_proceso
+      EIPD.no_requerida(*)       -> RAT.no_requerida
+    """
+    nuevo_estado = _MAPA_RESULTADO_A_ESTADO_RAT.get(resultado, EstadoEIPD.EN_PROCESO)
+    if rat.estado_eipd != nuevo_estado:
+        rat.estado_eipd = nuevo_estado
 
 
 def listar_eipds(
@@ -85,6 +108,9 @@ def crear_eipd(db: Session, data: EIPDCreate, usuario: str) -> EIPD:
         riesgos_identificados=data.riesgos_identificados,
         medidas_propuestas=data.medidas_propuestas,
         parecer_dpo=data.parecer_dpo,
+        parecer_dpo_autor=data.parecer_dpo_autor,
+        parecer_dpo_fecha=data.parecer_dpo_fecha,
+        justificacion_no_aplica=data.justificacion_no_aplica,
         fecha_elaboracion=data.fecha_elaboracion,
         fecha_aprobacion=data.fecha_aprobacion,
         resultado=resultado,
@@ -92,13 +118,14 @@ def crear_eipd(db: Session, data: EIPDCreate, usuario: str) -> EIPD:
     )
     db.add(eipd)
     db.flush()
+    _sync_rat_estado_eipd(db, rat, resultado)
     log_audit(
         db=db,
         entidad="eipd",
         entidad_id=eipd.id,
         accion="create",
         usuario=usuario,
-        detalle={"rat_id": data.rat_id, "resultado": data.resultado},
+        detalle={"rat_id": data.rat_id, "resultado": data.resultado, "rat_estado_eipd": rat.estado_eipd},
     )
     db.commit()
     db.refresh(eipd)
@@ -109,6 +136,8 @@ def actualizar_eipd(db: Session, eipd_id: int, data: EIPDUpdate, usuario: str) -
     eipd = db.query(EIPD).filter(EIPD.id == eipd_id).first()
     if not eipd:
         raise EIPDNotFoundError("EIPD no encontrado.")
+
+    rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
 
     cambios = data.model_dump(exclude_none=True)
     if "resultado" in cambios:
@@ -121,13 +150,16 @@ def actualizar_eipd(db: Session, eipd_id: int, data: EIPDUpdate, usuario: str) -
     for field, value in cambios.items():
         setattr(eipd, field, value)
 
+    if rat is not None:
+        _sync_rat_estado_eipd(db, rat, eipd.resultado)
+
     log_audit(
         db=db,
         entidad="eipd",
         entidad_id=eipd.id,
         accion="update",
         usuario=usuario,
-        detalle={"rat_id": eipd.rat_id, "campos": list(cambios.keys())},
+        detalle={"rat_id": eipd.rat_id, "campos": list(cambios.keys()), "rat_estado_eipd": rat.estado_eipd if rat else None},
     )
     db.commit()
     db.refresh(eipd)

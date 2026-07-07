@@ -154,7 +154,7 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     rat_dict_validacion = {c.name: getattr(rat, c.name) for c in rat.__table__.columns}
     rat_dict_validacion.update(cambios)
     if rat_dict_validacion.get("datos_sensibles") or rat_dict_validacion.get("transferencia_internacional"):
-        validar_eipd_obligatoria(rat_dict_validacion)
+        validar_eipd_obligatoria(rat_dict_validacion, rat_id=rat_id, db=db)
     validar_base_legal_otra_requiere_archivo(rat_dict_validacion)
 
     log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)

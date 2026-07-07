@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
@@ -12,6 +13,8 @@ import type { RAT } from '@/types';
 
 export default function RatPage() {
   const { company, rats, setRats, puedeEditar } = useApp();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -35,6 +38,20 @@ export default function RatPage() {
   }
 
   useEffect(() => { setInitialLoading(true); loadRats(); }, [company?.id]);
+
+  // Abrir drawer del RAT cuando se llega con ?selected=<id> (deep-link desde /eipd).
+  useEffect(() => {
+    const selectedId = Number(searchParams.get('selected'));
+    if (!selectedId || Number.isNaN(selectedId)) return;
+    const target = rats.find((r) => r.id === selectedId);
+    if (target) {
+      setSelectedRat(target);
+      setModalMode('view');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('selected');
+      router.replace(url.pathname + (url.search ? url.search : ''));
+    }
+  }, [rats, searchParams, router]);
 
   function handleSelectRat(rat: RAT) {
     setSelectedRat(rat);

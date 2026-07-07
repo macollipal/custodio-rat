@@ -17,9 +17,12 @@ interface EIPD {
   riesgos_identificados: string | null;
   medidas_propuestas: string | null;
   parecer_dpo: string | null;
+  parecer_dpo_autor: string | null;
+  parecer_dpo_fecha: string | null;
+  justificacion_no_aplica: string | null;
   fecha_elaboracion: string | null;
   fecha_aprobacion: string | null;
-  resultado: 'completada' | 'no_requerida' | 'en_proceso';
+  resultado: 'completada' | 'no_requerida' | 'no_requerida_justificada' | 'en_proceso';
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -29,12 +32,14 @@ const RESULTADO_LABELS: Record<string, string> = {
   en_proceso: 'En proceso',
   completada: 'Completada',
   no_requerida: 'No requerida',
+  no_requerida_justificada: 'No requerida (justificada)',
 };
 
 const RESULTADO_COLORS: Record<string, { bg: string; fg: string }> = {
   en_proceso: { bg: '#FEF3C7', fg: '#92400E' },
   completada: { bg: '#D1FAE5', fg: '#065F46' },
   no_requerida: { bg: '#E5E7EB', fg: '#374151' },
+  no_requerida_justificada: { bg: '#EFF6FF', fg: '#1E40AF' },
 };
 
 export default function EIPDPage() {
@@ -267,6 +272,9 @@ function EIPDForm({
   const [riesgos, setRiesgos] = useState(eipd?.riesgos_identificados || '');
   const [medidas, setMedidas] = useState(eipd?.medidas_propuestas || '');
   const [parecerDpo, setParecerDpo] = useState(eipd?.parecer_dpo || '');
+  const [parecerDpoAutor, setParecerDpoAutor] = useState(eipd?.parecer_dpo_autor || '');
+  const [parecerDpoFecha, setParecerDpoFecha] = useState(eipd?.parecer_dpo_fecha ? eipd.parecer_dpo_fecha.substring(0, 10) : '');
+  const [justificacionNoAplica, setJustificacionNoAplica] = useState(eipd?.justificacion_no_aplica || '');
   const [fechaElaboracion, setFechaElaboracion] = useState(eipd?.fecha_elaboracion || '');
   const [fechaAprobacion, setFechaAprobacion] = useState(eipd?.fecha_aprobacion || '');
   const [resultado, setResultado] = useState(eipd?.resultado || 'en_proceso');
@@ -299,6 +307,9 @@ function EIPDForm({
             riesgos_identificados: riesgos || null,
             medidas_propuestas: medidas || null,
             parecer_dpo: parecerDpo || null,
+            parecer_dpo_autor: parecerDpoAutor || null,
+            parecer_dpo_fecha: parecerDpoFecha ? new Date(parecerDpoFecha).toISOString() : null,
+            justificacion_no_aplica: justificacionNoAplica || null,
             fecha_elaboracion: fechaElaboracion || null,
             fecha_aprobacion: fechaAprobacion || null,
             resultado,
@@ -320,6 +331,9 @@ function EIPDForm({
             riesgos_identificados: riesgos || null,
             medidas_propuestas: medidas || null,
             parecer_dpo: parecerDpo || null,
+            parecer_dpo_autor: parecerDpoAutor || null,
+            parecer_dpo_fecha: parecerDpoFecha ? new Date(parecerDpoFecha).toISOString() : null,
+            justificacion_no_aplica: justificacionNoAplica || null,
             fecha_elaboracion: fechaElaboracion || null,
             fecha_aprobacion: fechaAprobacion || null,
             resultado,
@@ -461,6 +475,49 @@ function EIPDForm({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
+                <label className={labelCls} style={labelStyle}>Autor del parecer (DPO)</label>
+                <input
+                  type="text"
+                  value={parecerDpoAutor}
+                  onChange={(e) => setParecerDpoAutor(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                  placeholder="Nombre del DPO"
+                />
+              </div>
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha del parecer</label>
+                <input
+                  type="date"
+                  value={parecerDpoFecha}
+                  onChange={(e) => setParecerDpoFecha(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            {resultado === 'no_requerida_justificada' && (
+              <div>
+                <label className={labelCls} style={labelStyle}>
+                  Justificación de no aplicación (mínimo 20 caracteres) *
+                </label>
+                <textarea
+                  value={justificacionNoAplica}
+                  onChange={(e) => setJustificacionNoAplica(e.target.value)}
+                  rows={3}
+                  minLength={20}
+                  required
+                  className={inputCls}
+                  style={inputStyle}
+                  placeholder="Explique por qué el tratamiento no requiere EIPD pese a tener datos sensibles (Art. 15 bis Ley 21.719)."
+                />
+                <div className="text-xs mt-1" style={{ color: justificacionNoAplica.length < 20 ? '#DC2626' : '#059669' }}>
+                  {justificacionNoAplica.length} / 20 caracteres
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <label className={labelCls} style={labelStyle}>Fecha elaboración</label>
                 <input
                   type="date"
@@ -493,19 +550,33 @@ function EIPDForm({
                   <option key={k} value={k}>{v}</option>
                 ))}
               </select>
+              {resultado === 'no_requerida' && (
+                <div className="mt-2 p-2 rounded text-xs" style={{ background: '#FEF2F2', color: '#B91C1C' }}>
+                  ⚠️ Si el RAT tiene datos sensibles este resultado será rechazado por validación.
+                </div>
+              )}
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex flex-col sm:flex-row gap-3 justify-between pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
-              style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
-            >
-              Cancelar
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+                style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
+              >
+                Cancelar
+              </button>
+              <a
+                href={`/rat?selected=${ratId}`}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50 inline-flex items-center gap-1"
+                style={{ color: '#374151', borderColor: '#E5E7EB' }}
+              >
+                ← Volver al RAT
+              </a>
+            </div>
             <button
               type="submit"
               disabled={saving}

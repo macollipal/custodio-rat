@@ -3,7 +3,7 @@ Validadores de negocio para el RAT (Arts. 11, 14 quater, 15 bis, 16 Ley 21.719).
 Todas las funciones lanzan HTTPException(422) cuando la validacion falla.
 """
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import HTTPException, status
 
@@ -82,11 +82,16 @@ def validar_base_legal_otra_requiere_archivo(data: dict) -> None:
         )
 
 
-def validar_eipd_obligatoria(data: dict) -> None:
+def validar_eipd_obligatoria(data: dict, rat_id: Optional[int] = None, db: Optional["Session"] = None) -> None:
     """Valida EIPD obligatoria si datos_sensibles=True o transferencia_internacional=True (Arts. 15 bis y 28 Ley 21.719).
 
     Si el RAT declara datos sensibles o transferencia internacional, debe existir una EIPD
-    completada antes de treat the data. El RAT queda bloqueado en BORRADOR hasta que se complete la EIPD.
+    (registrada en la tabla eipds) vinculada al RAT antes de tratar los datos.
+
+    Comportamiento:
+    - Si no hay rat_id o no hay db, valida solo los flags del payload (compat hacia atras).
+    - Si hay rat_id y db, exige que exista una EIPD con resultado distinto de NO_REQUERIDA
+      (acepta NO_REQUERIDA_JUSTIFICADA con justificacion_no_aplica de al menos UMBRAL_JUSTIFICACION_EIPD).
 
     Acepta resultado='no_requerida_justificada' con justificacion_no_aplica (>=20 chars) como excepcion documentada.
     """
@@ -100,13 +105,37 @@ def validar_eipd_obligatoria(data: dict) -> None:
     evaluacion_impacto = data.get("evaluacion_impacto", False)
     justificacion = (data.get("justificacion_no_aplica") or "").strip()
 
+    if rat_id is not None and db is not None:
+        from app.models.eipd import EIPD, ResultadoEIPD
+        eipd_db = db.query(EIPD).filter(EIPD.rat_id == rat_id).first()
+        if eipd_db is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Este RAT trata datos sensibles o declara transferencia internacional y requiere "
+                    "una Evaluación de Impacto en la Protección de Datos (EIPD) conforme al Art. 15 bis "
+                    "de la Ley 21.719. Aún no existe un EIPD vinculada al RAT. "
+                    "Creá la EIPD mediante POST /eipd/ vinculada a este RAT antes de guardar."
+                ),
+            )
+        if eipd_db.resultado == ResultadoEIPD.NO_REQUERIDA:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "La EIPD vinculada a este RAT figura como 'no_requerida' pero el RAT declara "
+                    "datos sensibles o transferencia internacional. Actualizá el resultado del EIPD "
+                    "a 'completada' o 'no_requerida_justificada' con la justificación correspondiente."
+                ),
+            )
+        return
+
     if estado_eipd == "no_requerida":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Este RAT trata datos sensibles o declara transferencia internacional y requiere "
                 "una Evaluación de Impacto en la Protección de Datos (EIPD) conforme al Art. 15 bis "
-                "de la Ley 21.719. Debes iniciar la EIPD antes de treat these datos. "
+                "de la Ley 21.719. Debes iniciar la EIPD antes de tratar estos datos. "
                 "Creá la EIPD mediante POST /eipd/ vinculada a este RAT."
             ),
         )
@@ -117,7 +146,7 @@ def validar_eipd_obligatoria(data: dict) -> None:
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
                     f"Para que el resultado EIPD sea 'no_requerida_justificada' debe ingresar una "
-                    f"justificacion documentada de al menos {UMBRAL_JUSTIFICACION_EIPD} caracteres (Art. 15 bis Ley 21.719)."
+                    f"justificación documentada de al menos {UMBRAL_JUSTIFICACION_EIPD} caracteres (Art. 15 bis Ley 21.719)."
                 ),
             )
         return
