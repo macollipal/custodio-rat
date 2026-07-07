@@ -74,7 +74,7 @@ Ver: [auditorias/README.md](auditorias/README.md)
 - [Plan de Deploy Producción](despliegue/PLAN_DEPLOY.md)
 - [Troubleshooting Vercel](despliegue/TROUBLESHOOTING.md)
 - [Incidentes](despliegue/INCIDENTES.md)
-- Runbooks: [despliegue/RUNBOOKS/](despliegue/RUNBOOKS/)
+- Runbooks: [despliegue/RUNBOOKS/](despliegue/RUNBOOKS/) *(por crear)*
 
 ### Desarrollo
 - [Estado TKT](desarrollo/ESTADO_TKT.md)

@@ -221,18 +221,55 @@ def scan_links_rotos(archivos_md):
     return hallazgos
 
 
+def _parse_version(version_str):
+    """Parsea version tipo '1.9', '1.10', '1.6.5' en tuple de ints para comparacion."""
+    parts = version_str.split(".")
+    return tuple(int(p) for p in parts)
+
+
 def scan_docs_no_vigentes():
-    """P3 — Lista docs v1.6.5 y v1.0 que podrian regenerarse a v1.9."""
+    """P3 — Lista docs con version menor a v1.9 que podrian regenerarse.
+
+    Versiones mayores o iguales a v1.9 (v1.10, v2.0, etc.) se ignoran
+    porque son ediciones futuras o vigentes.
+    """
     hallazgos = []
     if not DOCS_OFICIALES.exists():
         return hallazgos
+
+    VERSION_VIGENTE = (1, 9)
+
     for f in DOCS_OFICIALES.glob("*.docx"):
-        if "v1.9" not in f.name:
+        match = re.search(r"v(\d+\.\d+(?:\.\d+)?)", f.name)
+        if not match:
             hallazgos.append({
                 "severidad": P3,
                 "tipo": "doc_no_vigente",
                 "archivo": str(f.relative_to(REPO_ROOT)),
-                "version": "v1.0" if "v1.0" in f.name else "otra",
+                "version": "sin_version",
+                "mensaje": f"Doc sin version detectable: {f.name}",
+            })
+            continue
+
+        version_str = match.group(1)
+        try:
+            version_tuple = _parse_version(version_str)
+        except ValueError:
+            hallazgos.append({
+                "severidad": P3,
+                "tipo": "doc_no_vigente",
+                "archivo": str(f.relative_to(REPO_ROOT)),
+                "version": version_str,
+                "mensaje": f"Version no parseable '{version_str}': {f.name}",
+            })
+            continue
+
+        if version_tuple < VERSION_VIGENTE:
+            hallazgos.append({
+                "severidad": P3,
+                "tipo": "doc_no_vigente",
+                "archivo": str(f.relative_to(REPO_ROOT)),
+                "version": version_str,
                 "mensaje": f"Doc no regenerado a v1.9: {f.name}",
             })
     return hallazgos
