@@ -21,6 +21,8 @@ class Company(Base):
     direccion: Mapped[str] = mapped_column(String(400), nullable=True)
     contacto_dpo: Mapped[str] = mapped_column(String(200), nullable=True)
     email_dpo: Mapped[str] = mapped_column(String(200), nullable=True)
+    telefono_dpo: Mapped[str] = mapped_column(String(50), nullable=True)
+    representante_legal: Mapped[str] = mapped_column(String(300), nullable=True)
     descripcion: Mapped[str] = mapped_column(Text, nullable=True)
     canal_ejercicio_derechos: Mapped[str] = mapped_column(Text, nullable=True)
     activa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

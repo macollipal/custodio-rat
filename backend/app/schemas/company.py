@@ -25,6 +25,8 @@ class CompanyBase(BaseModel):
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
     email_dpo: Optional[str] = None
+    telefono_dpo: Optional[str] = None
+    representante_legal: Optional[str] = None
     descripcion: Optional[str] = None
     canal_ejercicio_derechos: Optional[str] = None
     activa: Optional[bool] = True
@@ -41,6 +43,8 @@ class CompanyUpdate(BaseModel):
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
     email_dpo: Optional[str] = None
+    telefono_dpo: Optional[str] = None
+    representante_legal: Optional[str] = None
     descripcion: Optional[str] = None
     canal_ejercicio_derechos: Optional[str] = None
 
@@ -58,6 +62,7 @@ class CompanyOut(CompanyBase):
     solicitudes_vencidas_sla: Optional[int] = 0
     activa: Optional[bool] = True
     desactivada_at: Optional[datetime] = None
+    has_politica_transparencia: Optional[bool] = False
 
     model_config = {"from_attributes": True}
 

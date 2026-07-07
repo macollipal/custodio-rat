@@ -16,6 +16,7 @@ from app.services.user_company_service import get_empresas_usuario, get_rol_usua
 from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
 from app.models.rat import RAT as RATModel
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, EstadoTicket
+from app.models.politica_transparencia import PoliticaTransparencia
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
@@ -89,6 +90,13 @@ async def listar(
     )
     vencidas_by_company = {cid: cnt for cid, cnt in all_vencidas}
 
+    politicas_exists = {
+        row.company_id for row in
+        db.query(PoliticaTransparencia.company_id).filter(
+            PoliticaTransparencia.company_id.in_(company_ids)
+        ).all()
+    }
+
     result = []
     for c in companies:
         out = CompanyOut.model_validate(c)
@@ -124,6 +132,7 @@ async def listar(
 
         out.solicitudes_pendientes = pending_by_company.get(c.id, 0)
         out.solicitudes_vencidas_sla = vencidas_by_company.get(c.id, 0)
+        out.has_politica_transparencia = c.id in politicas_exists
         if current_user.rol_global != "superadmin":
             rol = get_rol_usuario(db, current_user.id, c.id)
             out.mi_rol = rol.value if rol else None
@@ -186,6 +195,10 @@ async def obtener(
         TktSolicitudDerecho.fecha_vencimiento < now,
         TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
     ).count()
+
+    out.has_politica_transparencia = db.query(PoliticaTransparencia).filter(
+        PoliticaTransparencia.company_id == company_id
+    ).first() is not None
 
     if current_user.rol_global != "superadmin":
         rol = get_rol_usuario(db, current_user.id, c.id)
