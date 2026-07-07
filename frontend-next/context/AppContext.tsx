@@ -186,6 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toggleDarkMode, setToken, setUser, setCompany, setCompanies,
     setRats, setDashboardStats, logout,
     actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,
+    rolEnEmpresa, rolGlobal, puedeEditar,
   ]);
 
   return (

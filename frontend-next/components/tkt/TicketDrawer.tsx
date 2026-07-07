@@ -20,8 +20,6 @@ import {
 } from '@/lib/api';
 import type { RAT } from '@/types';
 
-import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
-
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
   rectificacion: { label: 'Rectificación', color: '#7C3AED', abbr: 'RC' },
@@ -810,8 +808,8 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
       <FlujoModal
         open={flujoModalOpen}
         onClose={() => setFlujoModalOpen(false)}
-        tipo={ticket.tipo as any}
-        estadoActual={ticket.estado as any}
+        tipo={ticket.tipo as any}  // eslint-disable-line @typescript-eslint/no-explicit-any
+        estadoActual={ticket.estado as any}  // eslint-disable-line @typescript-eslint/no-explicit-any
         trackingToken={ticket.tracking_token}
       />
     </Drawer>

@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
-
 interface ConfirmDialogProps {
   open: boolean;
   onClose: () => void;

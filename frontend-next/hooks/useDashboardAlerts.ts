@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import type { DashboardStats } from '@/types';
-import { DIAS_REVISION } from '@/lib/constants';
 
 export interface AlertItem {
   message: string;

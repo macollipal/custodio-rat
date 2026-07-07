@@ -15,7 +15,9 @@ export default function OnboardingTour({ open, onClose, steps, storageKey }: Onb
   const current = steps[step];
 
   useEffect(() => {
-    if (open) setStep(0);
+    if (open) {
+      setStep(0);
+    }
   }, [open]);
 
   // Cerrar con ESC

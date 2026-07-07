@@ -1,5 +1,3 @@
-type Estado = 'borrador' | 'completo' | 'en_revision' | 'aprobado';
-
 const BADGE_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   borrador:    { bg: '#FEF3C7', color: '#92400E', label: 'Borrador' },
   completo:    { bg: '#D1FAE5', color: '#065F46', label: 'Completo' },

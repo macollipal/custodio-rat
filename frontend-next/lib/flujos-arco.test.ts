@@ -338,7 +338,7 @@ describe('getSubPaso', () => {
   });
 
   it('estado inexistente retorna null', () => {
-    const sub = getSubPaso('acceso', 'invalid' as any);
+    const sub = getSubPaso('acceso', 'invalid' as any);  // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(sub).toBeNull();
   });
 });

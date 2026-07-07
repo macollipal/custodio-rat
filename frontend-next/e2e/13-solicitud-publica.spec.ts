@@ -1,6 +1,5 @@
 // Test E2E: Formulario público de Solicitud de Derecho (ARCO)
 import { test, expect } from './fixtures';
-import { login } from './helpers';
 
 test.describe('Formulario Público ARCO', () => {
   test('Carga el formulario público', async ({ page }) => {
