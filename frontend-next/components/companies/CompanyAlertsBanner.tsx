@@ -25,6 +25,7 @@ export function computeCompanyAlerts(companies: Company[]): AlertItem[] {
     (c) => (c.total_rats ?? 0) > 0 && (c.completitud_promedio ?? 0) < 50,
   ).length;
   const empresasSinDpo = companies.filter((c) => !c.contacto_dpo || !c.email_dpo).length;
+  const empresasSinPolitica = companies.filter((c) => c.has_politica_transparencia === false).length;
 
   const alerts: AlertItem[] = [];
 
@@ -66,6 +67,16 @@ export function computeCompanyAlerts(companies: Company[]): AlertItem[] {
       color: '#5B21B6',
       bg: '#EDE9FE',
       border: '#C4B5FD',
+    });
+  }
+  if (empresasSinPolitica > 0) {
+    alerts.push({
+      icon: '📄',
+      titulo: `${empresasSinPolitica} empresa${empresasSinPolitica !== 1 ? 's' : ''} sin política de transparencia`,
+      detalle: 'Art. 14 ter — Publicar la política de transparencia en el sitio web.',
+      color: '#854D0E',
+      bg: '#FEF9C8',
+      border: '#FDE68A',
     });
   }
 

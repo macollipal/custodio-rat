@@ -29,6 +29,7 @@ export interface Company {
   rats_vencidos?: number;
   solicitudes_pendientes?: number;
   solicitudes_vencidas_sla?: number;
+  has_politica_transparencia?: boolean;
 }
 
 export interface Rubro {

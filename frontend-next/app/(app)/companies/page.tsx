@@ -142,13 +142,18 @@ export default function CompaniesPage() {
                         boxShadow: esActiva ? '0 4px 12px rgba(37,99,235,0.1)' : '0 1px 3px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-4">
                         <div>
                           <div className="flex items-center gap-2.5 mb-1">
                             <span className="font-bold text-base" style={{ color: '#111827' }}>{emp.nombre}</span>
                             {esActiva && (
                               <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>
                                 ACTIVA
+                              </span>
+                            )}
+                            {emp.rats_vencidos != null && emp.rats_vencidos > 0 && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#FEE2E2', color: '#DC2626' }}>
+                                {emp.rats_vencidos} RAT{emp.rats_vencidos > 1 ? 's' : ''} vencid{emp.rats_vencidos > 1 ? 'os' : 'o'}
                               </span>
                             )}
                           </div>
@@ -163,9 +168,29 @@ export default function CompaniesPage() {
                             </p>
                           )}
                         </div>
-                        <div className="text-right flex-shrink-0 ml-4">
+                        <div className="text-right flex-shrink-0 ml-4 space-y-1">
                           <div className="text-2xl font-bold" style={{ color: '#111827' }}>{emp.total_rats ?? 0}</div>
                           <div className="text-xs uppercase tracking-wide" style={{ color: '#9CA3AF' }}>procesos RAT</div>
+                          {emp.completitud_promedio != null && (
+                            <div
+                              className="text-xs font-semibold px-2 py-0.5 rounded-full inline-block"
+                              style={{
+                                background: emp.completitud_promedio >= 75 ? '#DCFCE7' : emp.completitud_promedio >= 50 ? '#FEF9C8' : '#FEE2E2',
+                                color: emp.completitud_promedio >= 75 ? '#166534' : emp.completitud_promedio >= 50 ? '#854D0E' : '#DC2626',
+                              }}
+                            >
+                              {emp.completitud_promedio}% completo
+                            </div>
+                          )}
+                          {emp.has_politica_transparencia === false && (
+                            <div
+                              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                              style={{ background: '#FEF9C8', color: '#854D0E' }}
+                              title="Art. 14 ter — Política de transparencia pendiente"
+                            >
+                              ⚠️ Sin política
+                            </div>
+                          )}
                         </div>
                       </div>
 
