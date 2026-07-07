@@ -135,3 +135,12 @@
 ---
 
 *Última actualización: 2026-07-05*
+
+### 2026-07-07 — Auditoria Modulo ARCO v1.0 (Arquitecto)
+- **Estado:** ✅ Documentacion local generada
+- **Score:** 8.6/10 (6.8/10 → 8.6/10, delta +1.8)
+- **Tema:** Sprints 1-3 hardening ARCO: tracking publico + identidad + hash + feriados + rechazar fundado + sync TKT<->legacy + magic-bytes + CSRF
+- **Commits:** 535bc63 (S3), 4eea5c4 (S2), b5ea6bb (S1)
+- **Tests:** 25 nuevos (9 + 8 + 8) en tests/test_arco_sprint{1,2,3}.py
+- **Carpeta:** 2026-07-07_auditoria_arco_v1_arquitecto/
+
