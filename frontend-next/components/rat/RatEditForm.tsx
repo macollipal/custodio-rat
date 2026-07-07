@@ -317,6 +317,15 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                       </select>
                       <input type="date" value={form.fecha_eipd ?? ''} onChange={e => set('fecha_eipd', e.target.value)} className={inputCls} style={inputStyle} />
                       <AlertBanner message="La EIPD debe completarse antes de iniciar el tratamiento (Art. 15 bis)." type="info" />
+                      <a
+                        href={`/eipd?rat_id=${rat.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-medium underline underline-offset-2"
+                        style={{ color: '#2563EB' }}
+                      >
+                        Ir a Evaluación de Impacto →
+                      </a>
                     </div>
                   )}
                 </div>
