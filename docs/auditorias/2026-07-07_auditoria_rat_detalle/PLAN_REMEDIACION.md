@@ -1,8 +1,9 @@
 # Plan de Remediación — Auditoría RAT 2026-07-07
 
-**Fecha:** 2026-07-07 (actualizado 2026-07-07 sprint 1)
+**Fecha:** 2026-07-07 (actualizado 2026-07-07 sprint 2)
 **Versión:** v1.9 (docs v1.10 generados)
-**Total hallazgos:** 45 (3 P0 resueltos originalmente, **+11 cerrados en sprint 1** = 14 resueltos, 31 restantes)
+**Total hallazgos:** 45 (3 P0 resueltos originalmente, +11 sprint 1 + 14 sprint 2 = 38 resueltos, 7 restantes)
+**Score RAT post-sprint 2:** 8.8/10
 
 ---
 
@@ -46,11 +47,15 @@
 | **H3.14** Inline import en rats.py | P3 | ✅ Cerrado | download_rat_file movido a imports de nivel |
 | **H3.10** Regex plazo_retencion solo detectaba años | P3 | ✅ Cerrado | Ahora detecta años + meses + días |
 | **H4.5** WizardModular steps extraídos | P2 | ✅ Cerrado | Steps 0-5 extraídos a WizardModular/steps/ |
-| **H4.9** test_interes_legitimo JSON | P2 | ⏳ Pendiente | Requiere cambio de schema |
+| **H4.9** test_interes_legitimo JSON | P2 | ✅ Cerrado | dict {paso1,paso2,paso3} -> JSON string, frontend updated |
 | **H4.14** axe-core a11y tests | P2 | ⏳ Pendiente | Requiere setup Playwright |
-| **H3.16** export_service.py CSV/PDF split | P3 | ⏳ Pendiente | Split en csv_export.py + pdf_export.py |
-| **H3.10** Regex plazo_retencion | P3 | ⏳ Pendiente | Solo detecta años, no meses/días |
-| **H3.16** export_service.py CSV/PDF | P3 | ⏳ Pendiente | Split en csv_export.py + pdf_export.py |
+| **H3.16** export_service.py CSV/PDF split | P3 | ✅ Cerrado | csv_export.py + pdf_export.py |
+| **H3.10** Regex plazo_retencion | P3 | ✅ Cerrado | anos + meses + dias |
+| **H3.3** UMBRAL_RIESGO_* constants | P3 | ✅ Cerrado | en rat.py |
+| **H3.14** Inline import en rats.py | P3 | ✅ Cerrado | download_rat_file movido a top-level |
+| **H3.6** Magic numbers en validators | P3 | ✅ Cerrado | Constantes en rat_constants.py |
+| **H3.1** Logica en modelo (calcular_*) | P3 | ⏳ Pendiente | P3 riskoso, evitar en sprint |
+| **H3.5** BASES_LEGALES duplicado | P3 | ⏳ Pendiente | Sync via OpenAPI generator |
 
 ---
 
