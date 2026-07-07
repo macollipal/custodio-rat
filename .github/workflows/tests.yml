@@ -19,6 +19,9 @@ jobs:
           python-version: '3.11'
 
       - name: Backend tests + coverage
+        env:
+          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           cd backend
           python -m venv venv

@@ -6,8 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import os
-import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +13,6 @@ from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings, BASE_DIR
 from app.core.storage import get_storage_backend, StorageBackend
 from app.models.asesor import AsesorCorpusDocument, AsesorChunk
 from app.services.asesor_chunker import chunk_text

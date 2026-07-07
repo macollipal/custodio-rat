@@ -4,7 +4,6 @@ Plazos legales: notificación APDC en 72 horas; titulares sin dilación en datos
 Filtro de riesgo razonable (Art. 14 sexies — REC-05).
 """
 
-import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional

@@ -4,7 +4,7 @@ Lógica para gestionar el acceso de usuarios a empresas.
 
 from typing import Optional
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 
 from app.models.user import User
 from app.models.company import Company

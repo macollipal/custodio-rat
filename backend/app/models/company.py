@@ -4,7 +4,6 @@ Modelo de empresa (responsable del tratamiento de datos).
 
 from __future__ import annotations
 from datetime import datetime, timezone
-from typing import List
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,12 +35,12 @@ class Company(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    rats: Mapped[list["RAT"]] = relationship("RAT", back_populates="company", cascade="all, delete-orphan")
+    rats: Mapped[list["RAT"]] = relationship("RAT", back_populates="company", cascade="all, delete-orphan")  # noqa: F821
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="company", cascade="all, delete-orphan")  # noqa: F821
-    rubro_rel: Mapped["Rubro"] = relationship("Rubro")
-    solicitudes_derecho: Mapped[list["SolicitudDerecho"]] = relationship(
+    rubro_rel: Mapped["Rubro"] = relationship("Rubro")  # noqa: F821
+    solicitudes_derecho: Mapped[list["SolicitudDerecho"]] = relationship(  # noqa: F821
         "SolicitudDerecho", back_populates="company", cascade="all, delete-orphan"
     )
-    tkt_solicitudes: Mapped[list["TktSolicitudDerecho"]] = relationship(
+    tkt_solicitudes: Mapped[list["TktSolicitudDerecho"]] = relationship(  # noqa: F821
         "TktSolicitudDerecho", back_populates="company", cascade="all, delete-orphan"
     )

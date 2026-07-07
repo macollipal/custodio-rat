@@ -8,7 +8,7 @@ Se migra incrementally: nuevo código usa repositories, viejo código sigue func
 
 from typing import TypeVar, Generic, Type, Optional, Sequence
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import func
 
 from app.database.database import Base
 

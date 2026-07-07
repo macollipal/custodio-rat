@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from app.models.task import TaskQueue, TaskStatus, TaskType
 from app.models.token_blacklist import TokenBlacklist
@@ -25,10 +24,6 @@ from app.services.email_service import (
     notificar_vencimiento_rat, notificar_nueva_brecha, notificar_respuesta_arco,
     notificar_eipd_vencida, notificar_consentimiento_por_vencer, EmailError,
 )
-from app.services.ticket_service import (
-    cambiar_estado_ticket, get_dashboard_stats,
-)
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +154,7 @@ def _run_revisar_encargados_vencidos(db: Session) -> int:
     contratos = (
         db.query(EncargadoContrato)
         .filter(
-            EncargadoContrato.activo == True,
+            EncargadoContrato.activo,
             EncargadoContrato.duracion_fin.isnot(None),
             EncargadoContrato.duracion_fin <= umbral,
         )
@@ -194,7 +189,6 @@ def _run_sla_alert_t2(db: Session) -> int:
     y envía alerta grupal al DPO de cada empresa.
     """
     from datetime import timedelta
-    from app.models.encargado_contrato import EncargadoContrato
     from app.models.company import Company
     from app.models.user import User
     from app.services.email_service import notificar_sla_alert_t2, EmailError
@@ -270,12 +264,10 @@ def _run_sla_alert_t2(db: Session) -> int:
 
 def _run_notificar_eipd_vencida(db: Session) -> int:
     """Revisa RATs con EIPD pendiente >90 días sin completarse y notifica al DPO."""
-    from datetime import timedelta
     from app.models.eipd import EIPD
 
     DIAS_UMBRAL = 90
     ahora = datetime.now(timezone.utc)
-    umbral = ahora - timedelta(days=DIAS_UMBRAL)
 
     rats_con_eipd = (
         db.query(RAT)

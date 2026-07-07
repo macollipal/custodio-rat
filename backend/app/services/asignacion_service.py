@@ -11,7 +11,7 @@ def evaluar_reglas_asignacion(
     prioridad: Optional[str] = None,
 ) -> Optional[int]:
     rules = db.query(TktReglaAsignacion).filter(
-        TktReglaAsignacion.activo == True
+        TktReglaAsignacion.activo
     ).all()
 
     matched = []

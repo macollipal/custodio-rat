@@ -1,7 +1,7 @@
 """
 Endpoints administrativos de empresas (solo superadmin).
 """
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 

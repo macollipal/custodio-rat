@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from app.routes.deps import get_current_user, get_client_ip
 from app.core.config import settings
 from app.core.limiter import limiter

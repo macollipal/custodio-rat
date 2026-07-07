@@ -15,7 +15,6 @@ from app.models.tkt_historial import TktHistorial
 from app.models.company import Company
 from app.services.user_company_service import get_empresas_usuario
 from app.services.ticket_service import (
-    crear_ticket_desde_solicitud,
     crear_ticket,
     cambiar_estado_ticket,
     get_dashboard_stats,

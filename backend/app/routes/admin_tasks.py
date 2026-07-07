@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.task import TaskQueue, TaskStatus
+from app.models.task import TaskQueue
 from app.routes.deps import get_current_user
 from app.services.task_service import process_pending_tasks, enqueue_task
 from app.schemas.admin_tasks import (

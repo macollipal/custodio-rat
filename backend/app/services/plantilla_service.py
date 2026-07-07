@@ -2,7 +2,6 @@
 Servicio de negocio para plantillas de respuesta ARCO.
 Maneja renderizado con variables y seed de plantillas por defecto.
 """
-import re
 from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -145,7 +144,7 @@ def get_plantillas_por_tipo(db: Session, tipo: str, company_id: Optional[int] = 
     """Retorna plantillas activas para un tipo, buscando primero por empresa luego globales."""
     q = db.query(TktPlantilla).filter(
         TktPlantilla.tipo == tipo,
-        TktPlantilla.activo == True,
+        TktPlantilla.activo,
     )
     if company_id is not None:
         q = q.filter(

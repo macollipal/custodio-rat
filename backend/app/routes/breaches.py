@@ -2,7 +2,7 @@
 Endpoints para Brechas de Seguridad (Art. 14 bis Ley 21.719).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db

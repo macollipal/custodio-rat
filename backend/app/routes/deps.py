@@ -4,7 +4,7 @@ Acepta token desde cookie (httpOnly) o desde Authorization header (Bearer).
 """
 
 import re
-from fastapi import Depends, HTTPException, status, Request, Cookie
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional

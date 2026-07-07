@@ -2,7 +2,7 @@
 Endpoints de exportación ARCO-QW1: CSV, Excel, PDF.
 Ruta: /export/tkt/
 """
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional

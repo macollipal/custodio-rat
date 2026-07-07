@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime, timezone, timedelta
 from app.database.database import get_db
@@ -15,7 +15,6 @@ from app.services.ticket_service import crear_ticket_desde_solicitud
 from app.core.limiter import limiter
 import uuid
 import logging
-import json
 
 router = APIRouter(prefix="/solicitudes-derecho", tags=["Solicitudes de Derecho"])
 logger = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ def _validate_token(db: Session, token: str) -> bool:
     cutoff = now - timedelta(minutes=5)
     row = db.query(SolicitudToken).filter(
         SolicitudToken.token == token,
-        SolicitudToken.used == False,
+        not SolicitudToken.used,
         SolicitudToken.created_at > cutoff
     ).first()
     if not row:
@@ -186,8 +185,6 @@ async def crear_solicitud(
     company = db.query(Company).filter(Company.id == company_id_int).first()
     if not company:
         return JSONResponse(status_code=400, content={"detail": "Datos inválidos. Verificá los datos ingresados e intentá de nuevo."})
-
-    ahora = datetime.now(timezone.utc)
 
     ticket = crear_ticket_desde_solicitud(
         db=db,

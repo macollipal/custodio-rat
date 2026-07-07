@@ -84,7 +84,7 @@ def exportar_rat_cni(rats: list["RAT"], company: "Company") -> str:
     lines.append(f"  Procesos con datos sensibles:      {sensibles_count}")
     lines.append(f"  Requieren Evaluación de Impacto:   {eipd_count}")
     lines.append(f"  Con transferencia internacional:   {transfer_count}")
-    lines.append(f"  Estados: ")
+    lines.append("  Estados: ")
     estados = {}
     for r in rats:
         e = r.estado.value if hasattr(r.estado, 'value') else r.estado

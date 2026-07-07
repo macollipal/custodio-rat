@@ -2,7 +2,7 @@
 Endpoints CRUD para empresas (responsables del tratamiento).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -26,7 +26,7 @@ async def listar_publico(
     current_user=Depends(get_current_user),
 ):
     from app.models.company import Company
-    companies = db.query(Company).filter(Company.activa == True).order_by(Company.nombre).all()
+    companies = db.query(Company).filter(Company.activa).order_by(Company.nombre).all()
     return companies
 
 
@@ -45,7 +45,7 @@ async def listar(
         from app.models.company import Company as CompanyModel
         query = db.query(CompanyModel).filter(CompanyModel.id.in_(ids))
         if not incluir_inactivas:
-            query = query.filter(CompanyModel.activa == True)
+            query = query.filter(CompanyModel.activa)
         count_total = query.count()
         companies = query.offset(skip).limit(limit).all()
         total = count_total

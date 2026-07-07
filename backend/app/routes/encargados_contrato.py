@@ -87,7 +87,6 @@ async def crear(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    from datetime import timezone as tz
     check_company_access(current_user, data.company_id, db)
     contrato = svc.crear_contrato(db, data, current_user.username)
     _notificar_si_cerca_vencer(db, contrato)

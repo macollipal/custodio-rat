@@ -3,7 +3,7 @@ Servicio de negocio para módulos TKT (ticketing).
 Maneja lógica de SLA, estados, y estadísticas.
 """
 import uuid
-from datetime import datetime, date, timezone, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -122,7 +122,7 @@ def crear_ticket_desde_solicitud(
     company_nombre: str = "la empresa",
     representante_nombre: Optional[str] = None,
     representante_rut: Optional[str] = None,
-) -> "TktSolicitudDerecho":
+) -> "TktSolicitudDerecho":  # noqa: F821
     """Crea un ticket TKT desde el formulario público de solicitudes y envía acuse al titular."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from app.models.tkt_historial import TktHistorial
@@ -225,7 +225,7 @@ def crear_ticket(
     evidencia_respuesta_hash: Optional[str] = None,
     causal_rechazo: Optional[str] = None,
     medio_respuesta: Optional[str] = None,
-) -> "TktSolicitudDerecho":
+) -> "TktSolicitudDerecho":  # noqa: F821
     """Crea un ticket TKT (para uso interno/admin)."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from app.models.tkt_historial import TktHistorial

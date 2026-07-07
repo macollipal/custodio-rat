@@ -18,7 +18,7 @@ from app.services.rat_constants import (
     UMBRAL_COMPLETITUD_COMPLETO,
 )
 from app.services.rat_alerts import generar_alertas_auditoria
-from app.services.rat_file import download_rat_file as _download_rat_file, procesar_archivo_base_legal
+from app.services.rat_file import procesar_archivo_base_legal
 from app.services.rat_validators import (
     tiene_consentimiento_activo,
     tiene_contrato_encargado_activo,
@@ -145,7 +145,7 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     if "estado" not in cambios:
         rat.estado = _calcular_estado(rat_dict)
 
-    if cambios.get("datos_sensibles") == True and not tiene_consentimiento_activo(db, rat_id):
+    if cambios.get("datos_sensibles") and not tiene_consentimiento_activo(db, rat_id):
         validar_consentimiento_sensibles(db, rat)
 
     if cambios.get("nombre_encargado") and not tiene_contrato_encargado_activo(db, rat_id):

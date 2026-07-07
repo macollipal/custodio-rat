@@ -7,7 +7,7 @@ import io
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from sqlalchemy import delete, func, distinct
+from sqlalchemy import delete, distinct
 from sqlalchemy.orm import Session
 
 from app.models.feriado import Feriado

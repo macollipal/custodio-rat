@@ -2,7 +2,6 @@
 Asesor Service: orquestador de retrieve + LLM + auditoría.
 """
 from __future__ import annotations
-import json
 import logging
 import time
 from typing import List
@@ -11,7 +10,6 @@ import requests
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.asesor import AsesorChunk
 from app.services.asesor_embedder import embed_query
 from app.services.asesor_retriever import retrieve
 

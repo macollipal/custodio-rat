@@ -4,7 +4,6 @@ Endpoints para ModulePermission — feature gates por empresa.
 Solo superadmin puede listar/modificar. Usuarios con acceso a la
 empresa pueden consultar el estado de los modulos (read-only).
 """
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session

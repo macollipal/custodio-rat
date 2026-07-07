@@ -3,7 +3,6 @@ Cifrado simétrico Fernet para datos en reposo (BYTEs).
 Cumple Ley 21.719 Art. 16 — medidas técnicas de seguridad.
 """
 
-import base64
 import logging
 
 from typing import Optional

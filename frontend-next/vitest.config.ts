@@ -17,6 +17,7 @@ export default defineConfig({
         '.next/',
         'test-results/',
         'coverage/',
+        'e2e/**/*.spec.ts',
       ],
     },
   },

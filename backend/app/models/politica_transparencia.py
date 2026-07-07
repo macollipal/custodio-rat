@@ -4,7 +4,7 @@ Generada dinámicamente desde los datos del sistema; no requiere almacenamiento.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base

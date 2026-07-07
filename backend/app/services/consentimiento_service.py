@@ -55,7 +55,7 @@ def listar_consentimientos(
     if rat_id is not None:
         q = q.filter(Consentimiento.rat_id == rat_id)
     if solo_activos:
-        q = q.filter(Consentimiento.activo == True)
+        q = q.filter(Consentimiento.activo)
 
     total = q.count()
     items = q.order_by(Consentimiento.fecha_obtencion.desc()).offset(skip).limit(limit).all()

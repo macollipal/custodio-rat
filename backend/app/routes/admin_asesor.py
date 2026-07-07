@@ -52,8 +52,6 @@ async def index_endpoint(
     el trabajo pesado se ejecuta en un thread daemon y el endpoint
     responde inmediatamente. El resultado se audita via log_audit.
     """
-    import threading
-    import time
 
     require_superadmin(current_user)
     ip_origen = request.client.host if request.client else None

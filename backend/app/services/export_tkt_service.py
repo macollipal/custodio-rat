@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -233,7 +233,6 @@ def generar_pdf(
     doc = SimpleDocTemplate(output, pagesize=A4, leftMargin=15*mm, rightMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle("CustomTitle", parent=styles["Heading1"], fontSize=14, spaceAfter=12, textColor=colors.HexColor("#1E40AF"))
-    normal_style = styles["Normal"]
 
     elements = []
     elements.append(Paragraph("Reporte de Solicitudes ARCO — Custodio RAT Manager", title_style))

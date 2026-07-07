@@ -54,7 +54,7 @@ def generate_token(db: Session, ip_address: Optional[str] = None) -> str:
 def validate_token(db: Session, token: str) -> bool:
     result = db.query(SolicitudToken).filter(
         SolicitudToken.token == token,
-        SolicitudToken.used == False,
+        not SolicitudToken.used,
         SolicitudToken.created_at > datetime.now(timezone.utc) - timedelta(minutes=5)
     ).update({SolicitudToken.used: True})
     db.commit()

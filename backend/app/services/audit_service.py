@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text
 
 from app.models.audit_log import AuditLog, GENESIS_HASH
 

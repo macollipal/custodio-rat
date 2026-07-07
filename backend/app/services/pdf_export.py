@@ -7,12 +7,12 @@ from datetime import datetime, timezone, timedelta
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 
 from app.models.rat import RAT
 from app.models.company import Company
@@ -43,7 +43,6 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
         bottomMargin=2 * cm,
     )
 
-    styles = getSampleStyleSheet()
     COLOR_PRIMARIO = colors.HexColor("#1B3A6B")
     COLOR_SECUNDARIO = colors.HexColor("#2E86AB")
     COLOR_ALERTA = colors.HexColor("#E74C3C")

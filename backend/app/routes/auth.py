@@ -4,7 +4,6 @@ Endpoints de autenticación: login, registro de usuarios (solo admin) y perfil.
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from app.database.database import get_db
 from app.schemas.user import (
@@ -19,7 +18,7 @@ from app.services.user_service import (
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user, require_admin
 from app.core.security import (
-    revoke_token, create_refresh_token, decode_refresh_token,
+    revoke_token, decode_refresh_token,
 )
 from app.core.config import settings
 from app.core.limiter import limiter

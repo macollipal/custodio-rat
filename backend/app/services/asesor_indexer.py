@@ -12,14 +12,15 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings, BASE_DIR, BASE_DIR
+from app.core.config import settings, BASE_DIR
 from app.core.storage import get_storage_backend
 from app.models.asesor import AsesorChunk, AsesorCorpusDocument
 from app.services.asesor_chunker import chunk_text
+from app.services.asesor_corpus_store import CORPUS_PREFIX
 from app.services.asesor_embedder import embed_texts
 
 logger = logging.getLogger(__name__)

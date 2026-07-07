@@ -12,8 +12,6 @@ Aqui solo encolamos la tarea; el procesamiento lo hace el worker.
 import logging
 import threading
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Callable
 
 from app.core.config import settings
 from app.database.database import SessionLocal

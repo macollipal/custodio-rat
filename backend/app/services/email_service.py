@@ -255,9 +255,8 @@ def notificar_sla_alert_t2(
         cuerpo.append(f"<td style='padding:6px;'>{t['prioridad']}</td>")
         cuerpo.append("</tr>")
     cuerpo.append("</table>")
-    cuerpo.append(f"<p style='margin-top:16px;'>Recuerde que según el Art. 14 Ley 21.719, el plazo máximo de respuesta es de <strong>10 días hábiles</strong> desde la recepción.</p>")
+    cuerpo.append("<p style='margin-top:16px;'>Recuerde que según el Art. 14 Ley 21.719, el plazo máximo de respuesta es de <strong>10 días hábiles</strong> desde la recepción.</p>")
     footer = f"{total} solicitud(es) con deadline próximo · Custodio RAT Manager · Ley 21.719"
-    text_body = f"SLA Alert T-2: {total} solicitudes ARCO próximas a vencer en {nombre_empresa}"
     text, html = _render_template("Alerta SLA: solicitudes ARCO próximas a vencer", saludo, "".join(cuerpo), footer)
     _send_raw(email_dpo, f"[Custodio] Alerta SLA: {total} solicitudes ARCO próximas a vencer", html, text)
 

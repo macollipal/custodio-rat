@@ -11,7 +11,7 @@ Migración a pgvector (v1.1):
 """
 from datetime import datetime, timezone
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.database import Base
 

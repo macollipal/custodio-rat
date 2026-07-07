@@ -2,7 +2,7 @@
 Schemas comunes reutilizables para toda la API.
 """
 
-from typing import Generic, List, TypeVar, Optional
+from typing import Generic, List, TypeVar
 from pydantic import BaseModel
 
 

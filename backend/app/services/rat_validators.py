@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 
+from app.services.rat_constants import UMBRAL_JUSTIFICACION_EIPD
+
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from app.models.rat import RAT
 
 logger = logging.getLogger(__name__)
-
-from app.services.rat_constants import UMBRAL_JUSTIFICACION_EIPD
 
 
 def tiene_consentimiento_activo(db: "Session", rat_id: int) -> bool:

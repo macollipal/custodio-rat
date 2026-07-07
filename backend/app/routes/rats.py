@@ -1,29 +1,28 @@
 """
-Endpoints CRUD para el RAT, m+�s exportaci+�n y sugerencias autom+�ticas.
+Endpoints CRUD para el RAT, más exportación y sugerencias automáticas.
 """
 
 import logging
 import unicodedata
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
-
-logger = logging.getLogger(__name__)
-from app.routes.deps import get_client_ip
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.routes.deps import get_current_user, require_editor_or_admin_empresa
+from app.routes.deps import get_client_ip, get_current_user, require_editor_or_admin_empresa
 from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
     create_rat, delete_rat, download_rat_file, get_audit_logs, get_dashboard_stats,
-    get_rat, get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
+    get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
 from app.services.export_service import exportar_csv, exportar_pdf
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
 from app.services.user_company_service import get_empresas_usuario
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/rats", tags=["Registro RAT"])
 

@@ -1,7 +1,6 @@
 """
 Constantes de negocio para el Registro de Actividades de Tratamiento (RAT).
 """
-from app.models.rat import EstadoRAT
 
 CAMPOS_OBLIGATORIOS_COMPLETO = [
     "nombre_proceso",

@@ -3,8 +3,6 @@ Endpoints para gestión de Feriados (cálculo de días hábiles para SLAs).
 Los feriados se almacenan en BD y se usan en ticket_service.py para calcular
 fecha de vencimiento de tickets ARCO.
 """
-import io
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse

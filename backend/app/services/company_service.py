@@ -14,7 +14,7 @@ from app.services.audit_service import log_audit
 def get_companies(db: Session, skip: int = 0, limit: int = 100, incluir_inactivas: bool = False) -> tuple[list[Company], int]:
     query = db.query(Company)
     if not incluir_inactivas:
-        query = query.filter(Company.activa == True)
+        query = query.filter(Company.activa)
     total = query.count()
     companies = query.offset(skip).limit(limit).all()
     return companies, total

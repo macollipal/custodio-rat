@@ -1,15 +1,15 @@
-from . import auth
-from . import companies
-from . import rats
-from . import user_companies
-from . import breaches
-from . import ai
-from . import rubros
-from . import solicitudes_derecho
-from . import tkt_solicitud_derecho
-from . import encargados_contrato
-from . import politica_transparencia
-from . import consentimientos
-from . import eipd
-from . import admin_tasks
-from . import feriados
+from . import auth  # noqa: F401
+from . import companies  # noqa: F401
+from . import rats  # noqa: F401
+from . import user_companies  # noqa: F401
+from . import breaches  # noqa: F401
+from . import ai  # noqa: F401
+from . import rubros  # noqa: F401
+from . import solicitudes_derecho  # noqa: F401
+from . import tkt_solicitud_derecho  # noqa: F401
+from . import encargados_contrato  # noqa: F401
+from . import politica_transparencia  # noqa: F401
+from . import consentimientos  # noqa: F401
+from . import eipd  # noqa: F401
+from . import admin_tasks  # noqa: F401
+from . import feriados  # noqa: F401
