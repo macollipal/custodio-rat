@@ -19,6 +19,7 @@ import {
   type TktTicket,
 } from '@/lib/api';
 import type { RAT } from '@/types';
+import { inputCls } from '@/lib/styles';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
