@@ -575,10 +575,6 @@ def rechazar_ticket(
 
     db.commit()
     db.refresh(ticket)
-    # S2.3: sincronizar con la tabla legacy ``SolicitudDerecho`` para auditoría.
-    _sync_legacy_solicitud_from_ticket(
-        db, ticket, ticket.estado, motivo_detalle, user_id, str(user_id) if user_id else "system"
-    )
     return ticket, None
 
 
@@ -592,12 +588,11 @@ def responder_ticket_service(
     descripcion_accion: Optional[str] = None,
     medio_respuesta: Optional[str] = None,
 ) -> tuple:
-    """S2.1: Wrapper centralizado para responder/solucionar un ticket ARCO.
+    """Wrapper centralizado para responder/solucionar un ticket ARCO.
 
     Centraliza:
     - Validación de identidad si estado == 'resuelto' (Art. 12).
     - Cómputo de evidencia_respuesta_hash SHA-256 (Art. 12.5).
-    - Sincronización con tabla legacy ``SolicitudDerecho`` (deprecation gradual).
 
     Returns ``(ticket, None)`` o ``(None, error_message)``.
     """
@@ -642,51 +637,7 @@ def responder_ticket_service(
     db.commit()
     db.refresh(ticket)
 
-    _sync_legacy_solicitud_from_ticket(db, ticket, estado, respuesta, user_id, username)
     return ticket, None
-
-
-def _sync_legacy_solicitud_from_ticket(
-    db: Session,
-    ticket,
-    estado: str,
-    respuesta: Optional[str] = None,
-    user_id: Optional[int] = None,
-    username: Optional[str] = None,
-) -> None:
-    """S2.3: Replica los cambios del TKT a la tabla legacy ``SolicitudDerecho``.
-
-    La tabla legacy queda como histórico. Sólo se sincroniza si existe una fila
-    legacy vinculada por ``tracking_token``.
-    """
-    from app.models.solicitud_derecho import SolicitudDerecho
-    from app.models.solicitud_historial import SolicitudHistorial
-
-    if not ticket.tracking_token:
-        return
-
-    legacy = (
-        db.query(SolicitudDerecho)
-        .filter(SolicitudDerecho.id == ticket.id)  # mismo id asignado en crear_solicitud
-        .first()
-    )
-    if legacy is None:
-        return
-
-    legacy.estado = estado
-    if respuesta is not None:
-        legacy.respuesta = respuesta
-    legacy.respuesta_fecha = datetime.now(timezone.utc)
-
-    historial = SolicitudHistorial(
-        solicitud_id=legacy.id,
-        estado_anterior=legacy.estado,
-        estado_nuevo=estado,
-        descripcion=respuesta or f"Replica desde TKT {ticket.id}",
-        usuario_nombre=username or str(user_id or "system"),
-    )
-    db.add(historial)
-    db.commit()
 
 
 def guardar_portability_data(

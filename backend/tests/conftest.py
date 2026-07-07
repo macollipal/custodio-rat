@@ -39,7 +39,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 def db():
     from app.models import (
         company, rat, user, audit_log, user_company, breach, eipd,
-        consentimiento, rubro, rats_sugerido, solicitud_derecho,
+        consentimiento, rubro, rats_sugerido,
         token_blacklist, solicitud_token,
         tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial,
         tkt_plantilla,

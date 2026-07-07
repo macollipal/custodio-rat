@@ -580,42 +580,6 @@ export async function sugerenciasPorRubro(rubroId: number): Promise<RATSugerido[
   return handle<RATSugerido[]>(res);
 }
 
-export async function crearSolicitudDerecho(data: {
-  company_id: number;
-  tipo: string;
-  nombre_titular: string;
-  email_titular: string;
-  rut_titular?: string;
-  descripcion?: string;
-}): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return handle<void>(res);
-}
-
-export async function listarSolicitudesDerecho(companyId: number, estado?: string): Promise<unknown[]> {
-  const params = new URLSearchParams({ company_id: String(companyId) });
-  if (estado) params.set('estado', estado);
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/?${params}`);
-  const data = await handle<{ solicitudes: unknown[]; total: number; skip: number; limit: number }>(res);
-  return data.solicitudes;
-}
-
-export async function actualizarSolicitudDerecho(
-  id: number,
-  data: { estado: string; respuesta: string; descripcion_accion?: string; usuario_nombre?: string }
-): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${id}/responder`, {
-    method: 'PATCH',
-    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return handle<void>(res);
-}
-
 export async function actualizarRubro(rubroId: number, data: { nombre?: string; orden?: number }): Promise<void> {
   const res = await apiFetch(`${API_BASE}/rubros/${rubroId}`, {
       method: 'PUT',
@@ -795,16 +759,16 @@ export async function listarTktHistorial(ticketId: number): Promise<{ id: number
 // ── B-01: Bloqueo temporal ─────────────────────────────────────────────────────
 
 export async function bloquearSolicitud(solicitudId: number, ratId: number, plazoDias: number): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/bloquear`, {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/bloquear`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rat_id: ratId, plazo_dias: plazoDias }),
+    body: JSON.stringify({ rat_id: ratId, dias_bloqueo: plazoDias }),
   });
   return handle<void>(res);
 }
 
 export async function desbloquearSolicitud(solicitudId: number): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/desbloquear`, {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/desbloquear`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
   });
@@ -814,7 +778,7 @@ export async function desbloquearSolicitud(solicitudId: number): Promise<void> {
 // ── B-04: Portabilidad ─────────────────────────────────────────────────────────
 
 export async function exportarPortabilidad(solicitudId: number): Promise<Blob> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/portabilidad/export`);
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/portabilidad/export`);
   if (!res.ok) throw new Error('Error al exportar portabilidad');
   return res.blob();
 }

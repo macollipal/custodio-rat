@@ -52,7 +52,7 @@ def reset_test_db():
     from app.database.database import Base, engine
     from app.models import (
         company, rat, user, audit_log, user_company, breach, eipd,
-        consentimiento, rubro, rats_sugerido, solicitud_derecho,
+        consentimiento, rubro, rats_sugerido,
         token_blacklist, solicitud_token,
         tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial,
         tkt_plantilla, tkt_regla_asignacion,

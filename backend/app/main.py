@@ -16,7 +16,7 @@ from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.csrf import CSRFMiddleware
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, solicitudes_derecho, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 setup_logging()
@@ -190,7 +190,6 @@ app.include_router(breaches.router)
 app.include_router(ai.router)
 app.include_router(rubros.router)
 app.include_router(rubros.router_sugeridos)
-app.include_router(solicitudes_derecho.router)
 app.include_router(tkt_solicitud_derecho.router)
 app.include_router(tkt_plantillas.router)
 app.include_router(tkt_reglas_asignacion.router)

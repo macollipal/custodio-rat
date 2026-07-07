@@ -5,7 +5,6 @@ from . import user_companies  # noqa: F401
 from . import breaches  # noqa: F401
 from . import ai  # noqa: F401
 from . import rubros  # noqa: F401
-from . import solicitudes_derecho  # noqa: F401
 from . import tkt_solicitud_derecho  # noqa: F401
 from . import encargados_contrato  # noqa: F401
 from . import politica_transparencia  # noqa: F401

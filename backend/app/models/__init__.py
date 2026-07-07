@@ -6,8 +6,6 @@ from app.models.eipd import EIPD
 from app.models.consentimiento import Consentimiento
 from app.models.rubro import Rubro
 from app.models.rats_sugerido import RATSugerido
-from app.models.solicitud_derecho import SolicitudDerecho, TipoSolicitud, EstadoSolicitud
-from app.models.solicitud_historial import SolicitudHistorial
 from app.models.solicitud_token import SolicitudToken
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, TktTipo, EstadoTicket, PrioridadTicket, OrigenTicket
 from app.models.tkt_nota import TktNota
@@ -21,7 +19,7 @@ from app.models.module_permission import ModulePermission, ModuloEnum
 
 __all__ = [
     "User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido",
-    "SolicitudDerecho", "TipoSolicitud", "EstadoSolicitud", "SolicitudHistorial", "SolicitudToken",
+    "SolicitudToken",
     "TktSolicitudDerecho", "TktTipo", "EstadoTicket", "PrioridadTicket", "OrigenTicket",
     "TktNota", "TktAdjunto", "TktHistorial", "TktPlantilla", "TktReglaAsignacion",
     "Feriado",

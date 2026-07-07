@@ -336,16 +336,13 @@ completitud = round((completados / total) * 100)
 
 ### ARCO — Solicitudes de Derecho (Art. 12, 12.5, 14)
 
-Dos rutas legacy (``/solicitudes-derecho``) y moderna (``/tkt-solicitud-derecho``) operan en
-paralelo. La entidad canónica es ``TktSolicitudDerecho``; ``SolicitudDerecho`` queda como
-auditoría histórica (deprecada gradualmente, sincronizada en cada cambio).
+Único modelo canónico: ``TktSolicitudDerecho``. La tabla y endpoints legacy ``SolicitudDerecho``
+fueron eliminados completamente (jul-2026). No existe formulario público en frontend: las solicitudes
+ARCO se gestionan internamente como tickets.
 
-#### Formulario público (titular, sin auth)
+#### Public tracking (titular, sin auth)
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/solicitudes-derecho/token` | Token CSRF-style para el form (rate-limit 5/min) |
-| GET | `/solicitudes-derecho/csrf-token` | CSRF HMAC-firmado para POST públicos (rate-limit 30/min) |
-| POST | `/solicitudes-derecho/` | Crea TKT + SolicitudDerecho legacy + adjuntos (rate-limit 10/h) |
 | GET | `/seguimiento/{tracking_token}` | Consulta pública del estado (sin auth) |
 
 #### Workflow staff (autenticado, RBAC estricto)
@@ -398,19 +395,10 @@ tkt_solicitud_derecho(
   telefono, fecha_nacimiento, pais,
   created_by, created_at, updated_at
 )
-
--- Tabla legacy (deprecated, solo histórico)
-solicitudes_derecho(
-  id, company_id, tipo, nombre_titular, rut_titular,
-  email_titular, descripcion, estado,
-  solicitud_fecha, respuesta, respuesta_fecha,
-  rat_id, plazo_bloqueo_vencimiento,
-  -- Sincronizada con TKT via _sync_legacy_solicitud_from_ticket
-  metodo_verificacion_identidad, evidencia_identidad,
-  evidencia_respuesta_hash, causal_rechazo, medio_respuesta,
-  created_at, updated_at
-)
 ```
+
+> **Nota:** La tabla legacy `solicitudes_derecho` y el modelo `SolicitudDerecho` fueron eliminados en julio 2026.
+> `TktSolicitudDerecho` es la única entidad ARCO canónica. La sincronización legacy ya no existe.
 
 ### Admin - Cola de Tareas
 | Método | Ruta | Descripción |
