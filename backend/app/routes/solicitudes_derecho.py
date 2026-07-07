@@ -536,13 +536,68 @@ def exportar_portabilidad(
 
 
 def _calcular_fecha_vencimiento(dias: int) -> datetime:
-    """Calcula la fecha de vencimiento del bloqueo sumando días hábiles (lunes a viernes)."""
-    from datetime import datetime, timezone, timedelta
+    """Calcula la fecha de vencimiento del bloqueo sumando días hábiles (lunes a viernes, considera feriados Chile).
+
+    Usa el helper centralizado ``ticket_service.calcular_dias_habiles`` que tiene
+    hardcodeados los feriados fijos y Semana Santa 2025-2040.
+    """
+    from app.services.ticket_service import calcular_dias_habiles
+    from datetime import datetime, timezone
+
     hoy = datetime.now(timezone.utc)
-    dias_habiles = 0
-    dia_actual = hoy
-    while dias_habiles < dias:
-        dia_actual += timedelta(days=1)
-        if dia_actual.weekday() < 5:
-            dias_habiles += 1
-    return dia_actual
+    return calcular_dias_habiles(hoy, dias)
+
+
+@router.get("/tracking/{tracking_token}", summary="Consulta pública de estado por tracking token")
+def consultar_tracking_publico(
+    tracking_token: str,
+    db: Session = Depends(get_db),
+):
+    """Permite al titular consultar el estado de su solicitud ARCO mediante el tracking token.
+
+    Endpoint público (sin auth) - solo expone campos seguros (sin representante,
+    sin archivos). Devuelve información mínima para proteger PII.
+
+    Art. 14 Ley 21.719 — el titular tiene derecho a conocer el estado de su solicitud.
+    """
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+
+    ticket = (
+        db.query(TktSolicitudDerecho)
+        .filter(TktSolicitudDerecho.tracking_token == tracking_token)
+        .first()
+    )
+    if not ticket:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Tracking token no encontrado. Verificá el número e intentá de nuevo."},
+        )
+
+    ahora = datetime.now(timezone.utc)
+    fecha_vencimiento = ticket.fecha_vencimiento
+    dias_restantes = None
+    vencido = False
+    if fecha_vencimiento:
+        if fecha_vencimiento.tzinfo is None:
+            fecha_vencimiento = fecha_vencimiento.replace(tzinfo=timezone.utc)
+        delta = fecha_vencimiento - ahora
+        dias_restantes = delta.days
+        vencido = dias_restantes < 0 and ticket.estado not in ("resuelto", "rechazado")
+
+    ultima_accion = None
+    if ticket.historial:
+        ultima_accion = ticket.historial[-1].fecha.isoformat() if ticket.historial[-1].fecha else None
+
+    return {
+        "tracking_token": ticket.tracking_token,
+        "estado": ticket.estado,
+        "tipo": ticket.tipo,
+        "titular_nombre": ticket.titular_nombre,
+        "fecha_recepcion": ticket.fecha_recepcion.isoformat() if ticket.fecha_recepcion else None,
+        "fecha_vencimiento": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        "dias_restantes": dias_restantes,
+        "vencido": vencido,
+        "respuesta_texto": ticket.respuesta_texto if ticket.estado == "resuelto" else None,
+        "evidencia_respuesta_hash": ticket.evidencia_respuesta_hash if ticket.estado == "resuelto" else None,
+        "ultima_accion": ultima_accion,
+    }

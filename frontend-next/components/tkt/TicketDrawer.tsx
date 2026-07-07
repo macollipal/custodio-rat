@@ -160,7 +160,14 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
   async function handleGuardarRespuesta() {
     if (!ticket?.id) return;
     if (nuevoEstado === 'rechazado' && !causalRechazo) {
-      toast.error('Seleccione una causal de rechazo válida (Art. 29 RL).');
+      toast.error('Seleccione una causal de rechazo válida (Art. 12.5 Ley 21.719).');
+      return;
+    }
+    // S1.3: Validación de identidad antes de resolver (Art. 12 Ley 21.719).
+    if (nuevoEstado === 'resuelto' && !ticket.metodo_verificacion_identidad) {
+      toast.error(
+        'Para marcar como resuelta debe registrar el método de verificación de identidad primero. Editá el ticket y agregá dicho campo (Art. 12).',
+      );
       return;
     }
     setGuardando(true);

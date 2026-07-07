@@ -310,6 +310,30 @@ def actualizar_ticket(
                 detail="No se puede resolver sin evidencia: adjunte documentos o informe antes de cerrar.",
             )
 
+    # S1.3: Validación de identidad (Art. 12 Ley 21.719).
+    # Si el ticket pasa a estado 'resuelto', debe existir método de verificación de identidad registrado.
+    if data.estado == "resuelto" and not ticket.metodo_verificacion_identidad:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Antes de marcar una solicitud ARCO como resuelta, debe registrar el método "
+                "de verificación de identidad del titular (Art. 12 Ley 21.719). Editá el "
+                "ticket y agregá 'Metodo verificacion identidad' (ej: 'email_verificado', "
+                "'cedula_escaneada', 'pin_telefono') antes de cerrar."
+            ),
+        )
+
+    # S1.4: Calcular evidencia_respuesta_hash si no existe aún (SHA-256 sobre
+    # respuesta_texto + username + timestamp UTC ISO) — Art. 12.5 integridad.
+    if data.estado == "resuelto" and not ticket.evidencia_respuesta_hash:
+        import hashlib
+        hash_input = (
+            f"{(ticket.respuesta_texto or '').strip()}"
+            f"|{current_user.username}"
+            f"|{datetime.now(timezone.utc).isoformat()}"
+        )
+        ticket.evidencia_respuesta_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
+
     if data.responsable_id is not None:
         from app.models.user import User
         if data.responsable_id > 0:
@@ -606,7 +630,11 @@ def desbloquear_rat_ticket(
 
 
 class RechazarRequest(BaseModel):
-    motivo: str
+    # Causal de rechazo según Art. 12.5 Ley 21.719 (enum CausalRechazo).
+    # Valores: falta_identidad | solicitud_manifiestamente_infundada | solicitud_excesiva
+    #          | falta_poder_notorial | plazo_vencido | identidad_no_verificada | otro.
+    causal_rechazo: str
+    motivo_detalle: Optional[str] = None  # Texto libre explicando la causal
 
 
 @router.post("/{ticket_id}/rechazar", summary="Rechazar solicitud con motivo fundado (Art. 12.5)")
@@ -629,10 +657,23 @@ def rechazar_solicitud_ticket(
         if ticket.company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
 
+    from app.models.tkt_solicitud_derecho import CausalRechazo
+
+    # Validar que causal_rechazo pertenezca al enum (Art. 12.5).
+    causal_validas = [e.value for e in CausalRechazo]
+    if data.causal_rechazo not in causal_validas:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"causal_rechazo inválida. Valores permitidos (Art. 12.5 Ley 21.719): {causal_validas}"
+            ),
+        )
+
     ticket_out, error = rechazar_ticket(
         db=db,
         ticket_id=ticket_id,
-        motivo=data.motivo,
+        motivo=data.causal_rechazo,
+        motivo_detalle=data.motivo_detalle,
         user_id=current_user.id,
     )
     if error:
@@ -644,7 +685,7 @@ def rechazar_solicitud_ticket(
         entidad_id=ticket_id,
         accion="rechazar",
         usuario=current_user.username,
-        detalle={"motivo": data.motivo},
+        detalle={"causal_rechazo": data.causal_rechazo, "motivo_detalle": data.motivo_detalle},
     )
     return _ticket_to_response(ticket_out)
 

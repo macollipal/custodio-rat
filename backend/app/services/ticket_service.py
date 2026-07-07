@@ -530,19 +530,29 @@ def rechazar_ticket(
     ticket_id: int,
     motivo: str,
     user_id: Optional[int] = None,
+    motivo_detalle: Optional[str] = None,
 ) -> tuple:
-    """Rechaza una solicitud ARCO con motivo fundado (Art. 12.5)."""
-    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    """Rechaza una solicitud ARCO con motivo fundado (Art. 12.5).
+
+    Args:
+        motivo: Causal de rechazo (debe estar en ``CausalRechazo``).
+        motivo_detalle: Texto libre que amplía la justificación.
+    """
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, CausalRechazo
     from app.models.tkt_historial import TktHistorial
 
     ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
     if not ticket:
         return None, "Ticket no encontrado"
 
+    if motivo not in [e.value for e in CausalRechazo]:
+        return None, f"causal_rechazo inválida (esperado: {[e.value for e in CausalRechazo]})"
+
     estado_anterior = ticket.estado
 
     ticket.estado = "rechazado"
-    ticket.respuesta_texto = motivo
+    ticket.causal_rechazo = motivo
+    ticket.respuesta_texto = (motivo_detalle or "").strip() or motivo
     ticket.respuesta_fecha = datetime.now(timezone.utc)
 
     historial = TktHistorial(
@@ -550,7 +560,7 @@ def rechazar_ticket(
         estado_anterior=estado_anterior,
         estado_nuevo="rechazado",
         user_id=user_id,
-        descripcion=f"Rechazo fundado: {motivo}",
+        descripcion=f"Rechazo fundado ({motivo})" + (f": {motivo_detalle}" if motivo_detalle else ""),
     )
     db.add(historial)
 
@@ -560,7 +570,7 @@ def rechazar_ticket(
         entidad_id=ticket.id,
         accion="rechazar",
         usuario=str(user_id) if user_id else "system",
-        detalle={"motivo": motivo},
+        detalle={"causal_rechazo": motivo, "motivo_detalle": motivo_detalle},
     )
 
     db.commit()
