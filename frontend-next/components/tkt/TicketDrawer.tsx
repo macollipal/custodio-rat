@@ -16,6 +16,7 @@ import {
   solicitarSubsanacion,
   completarSubsanacion,
   prorrogarTicket,
+  rechazarTktTicket,
   type TktTicket,
 } from '@/lib/api';
 import type { RAT } from '@/types';
@@ -270,6 +271,26 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
       onClose();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error al aplicar prorroga');
+    } finally {
+      setAccionLoading(false);
+    }
+  }
+
+  // S2.5: Rechazo fundado via endpoint dedicado (Art. 12.5 Ley 21.719).
+  async function handleRechazarFundado() {
+    if (!ticket?.id) return;
+    if (!causalRechazo) {
+      toast.error('Seleccione una causal de rechazo válida');
+      return;
+    }
+    const detalle = prompt('Detalle del rechazo (opcional):') || '';
+    setAccionLoading(true);
+    try {
+      await rechazarTktTicket(ticket.id, causalRechazo, detalle || undefined);
+      toast.success('Solicitud rechazada con motivo fundado');
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al rechazar');
     } finally {
       setAccionLoading(false);
     }
@@ -725,6 +746,35 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 Aplicar Prórroga (+10 días hábiles)
               </button>
             )}
+          </div>
+        )}
+
+        {/* S2.5: Rechazo fundado via endpoint dedicado */}
+        {isAdmin && ticket.estado !== 'resuelto' && ticket.estado !== 'rechazado' && (
+          <div className="rounded-xl p-4 space-y-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+            <p className="text-xs font-semibold" style={{ color: '#991B1B' }}>Rechazo fundado (Art. 12.5)</p>
+            <select
+              value={causalRechazo}
+              onChange={e => setCausalRechazo(e.target.value)}
+              className={inputCls}
+              style={{ borderColor: '#FCA5A5', backgroundColor: '#FFFFFF' }}
+            >
+              <option value="">Seleccione causal *</option>
+              <option value="identidad_no_verificada">Identidad del titular no pudo ser verificada</option>
+              <option value="falta_poder_notorial">Falta poder notarial del representante</option>
+              <option value="solicitud_manifiestamente_infundada">Solicitud manifiestamente infundada</option>
+              <option value="solicitud_excesiva">Solicitud excesiva (reiteración injustificada)</option>
+              <option value="plazo_vencido">Plazo vencido para ejercer el derecho</option>
+              <option value="otro">Otro motivo fundado</option>
+            </select>
+            <button
+              onClick={handleRechazarFundado}
+              disabled={accionLoading || !causalRechazo}
+              className="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+              style={{ background: '#DC2626' }}
+            >
+              {accionLoading ? 'Rechazando...' : 'Rechazar con motivo fundado'}
+            </button>
           </div>
         )}
 

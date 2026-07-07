@@ -119,6 +119,18 @@ class SolicitudResponse(BaseModel):
     respuesta: Optional[str]
     respuesta_fecha: Optional[str]
     created_at: Optional[str]
+    rat_id: Optional[int] = None
+    plazo_bloqueo_vencimiento: Optional[str] = None
+    # S2.4: campos compliance Ley 21.719 (Art. 12, 12.5)
+    metodo_verificacion_identidad: Optional[str] = None
+    evidencia_identidad: Optional[str] = None
+    evidencia_respuesta_hash: Optional[str] = None
+    causal_rechazo: Optional[str] = None
+    medio_respuesta: Optional[str] = None
+    representante_nombre: Optional[str] = None
+    representante_rut: Optional[str] = None
+    tracking_token: Optional[str] = None
+    acuse_enviado_at: Optional[str] = None
 
 
 @router.get("/token", response_model=TokenResponse, summary="Obtener token para formulario público")
@@ -199,6 +211,32 @@ async def crear_solicitud(
         representante_nombre=representante_nombre,
         representante_rut=representante_rut,
     )
+
+    # S2.2: crear también la fila legacy ``SolicitudDerecho`` en la misma
+    # transacción, vinculada 1:1 al TKT. Mantener la legacy permite conservar
+    # historial mientras se deprecua gradualmente.
+    try:
+        from app.models.solicitud_derecho import SolicitudDerecho
+        legacy = SolicitudDerecho(
+            id=ticket.id,  # comparte id para facilitar join histórico
+            company_id=company_id_int,
+            tipo=tipo,
+            nombre_titular=nombre_titular,
+            rut_titular=rut_titular,
+            email_titular=email_titular,
+            descripcion=descripcion,
+            estado="pendiente",
+            solicitud_fecha=ticket.fecha_recepcion or datetime.now(timezone.utc),
+            rat_id=ticket.rat_id,
+        )
+        db.add(legacy)
+        db.flush()
+    except Exception as e:
+        # Si falla la legacy no bloqueamos al titular — el TKT ya está creado.
+        logger.warning(f"No se pudo crear SolicitudDerecho legacy para ticket {ticket.id}: {e}")
+        db.rollback()
+        # recomiteamos el TKT ya persistido
+        db.commit()
 
     if files_data:
         from app.models.tkt_adjunto import TktAdjunto
@@ -281,6 +319,13 @@ def listar_solicitudes(
                 respuesta=s.respuesta,
                 respuesta_fecha=s.respuesta_fecha.isoformat() if s.respuesta_fecha else None,
                 created_at=s.created_at.isoformat() if s.created_at else None,
+                rat_id=s.rat_id,
+                plazo_bloqueo_vencimiento=s.plazo_bloqueo_vencimiento.isoformat() if s.plazo_bloqueo_vencimiento else None,
+                metodo_verificacion_identidad=s.metodo_verificacion_identidad,
+                evidencia_identidad=s.evidencia_identidad,
+                evidencia_respuesta_hash=s.evidencia_respuesta_hash,
+                causal_rechazo=s.causal_rechazo,
+                medio_respuesta=s.medio_respuesta,
             )
             for s in solicitudes
         ],
@@ -316,6 +361,13 @@ def obtener_solicitud(
         respuesta=s.respuesta,
         respuesta_fecha=s.respuesta_fecha.isoformat() if s.respuesta_fecha else None,
         created_at=s.created_at.isoformat() if s.created_at else None,
+        rat_id=s.rat_id,
+        plazo_bloqueo_vencimiento=s.plazo_bloqueo_vencimiento.isoformat() if s.plazo_bloqueo_vencimiento else None,
+        metodo_verificacion_identidad=s.metodo_verificacion_identidad,
+        evidencia_identidad=s.evidencia_identidad,
+        evidencia_respuesta_hash=s.evidencia_respuesta_hash,
+        causal_rechazo=s.causal_rechazo,
+        medio_respuesta=s.medio_respuesta,
     )
 
 
@@ -372,43 +424,30 @@ def responder_solicitud(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    from datetime import datetime, timezone
-
-    if current_user.rol_global != "superadmin":
-        empresas = get_empresas_usuario(db, current_user.id)
-        s = db.query(SolicitudDerecho).filter(
-            SolicitudDerecho.id == solicitud_id,
-            SolicitudDerecho.company_id.in_(empresas)
-        ).first()
-        if not s:
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta solicitud")
-    else:
-        s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
-        if not s:
-            raise HTTPException(status_code=404, detail="Solicitud no encontrada")
-
-    historial = SolicitudHistorial(
-        solicitud_id=s.id,
-        estado_anterior=s.estado,
-        estado_nuevo=data.estado,
-        descripcion=data.descripcion_accion or data.respuesta,
-        usuario_nombre=current_user.username,
+    """S2.3: delega al service ``responder_solicitud`` (legacy router) que ya
+    enruta hacia ``responder_ticket_service`` cuando hay TKT vinculado.
+    """
+    from app.services.solicitud_derecho_service import (
+        EstadoInvalidoError,
+        SinAccesoError,
+        SolicitudNotFoundError,
+        responder_solicitud as responder_solicitud_service,
     )
-    db.add(historial)
-
-    s.estado = data.estado
-    s.respuesta = data.respuesta
-    s.respuesta_fecha = datetime.now(timezone.utc)
-    from app.services.audit_service import log_audit
-    log_audit(
-        db=db,
-        entidad="solicitud_derecho",
-        entidad_id=solicitud_id,
-        accion="responder",
-        usuario=current_user.username,
-        detalle={"estado_anterior": s.estado, "estado_nuevo": data.estado},
-    )
-    db.commit()
+    try:
+        responder_solicitud_service(
+            db=db,
+            solicitud_id=solicitud_id,
+            estado=data.estado,
+            respuesta=data.respuesta,
+            descripcion_accion=data.descripcion_accion,
+            current_user=current_user,
+        )
+    except SolicitudNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except SinAccesoError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except EstadoInvalidoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {"ok": True}
 
 

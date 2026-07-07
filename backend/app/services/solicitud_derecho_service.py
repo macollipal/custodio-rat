@@ -168,6 +168,13 @@ def responder_solicitud(
     descripcion_accion: Optional[str],
     current_user,
 ) -> SolicitudDerecho:
+    """Responde una solicitud legacy.
+
+    S2.3: delega al service centralizado ``ticket_service.responder_ticket_service``
+    para garantizar sync con TKT y aplicación de identidad + hash SHA-256.
+    Si el TKT no existe (caso legacy puro), crea un fallback en la tabla legacy
+    directamente.
+    """
     s = db.query(SolicitudDerecho).filter(SolicitudDerecho.id == solicitud_id).first()
     if not s:
         raise SolicitudNotFoundError("Solicitud no encontrada")
@@ -176,6 +183,29 @@ def responder_solicitud(
         if s.company_id not in empresas:
             raise SinAccesoError("No tiene acceso a esta solicitud")
 
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    ticket = (
+        db.query(TktSolicitudDerecho)
+        .filter(TktSolicitudDerecho.id == solicitud_id)
+        .first()
+    )
+
+    if ticket is not None:
+        from app.services.ticket_service import responder_ticket_service
+        ticket_out, error = responder_ticket_service(
+            db=db,
+            ticket_id=solicitud_id,
+            estado=estado,
+            respuesta=respuesta,
+            user_id=current_user.id,
+            username=current_user.username,
+            descripcion_accion=descripcion_accion,
+        )
+        if error:
+            raise EstadoInvalidoError(error)
+        return s
+
+    # Fallback: legacy puro sin TKT vinculado
     historial = SolicitudHistorial(
         solicitud_id=s.id,
         estado_anterior=s.estado,

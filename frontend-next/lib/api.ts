@@ -849,6 +849,21 @@ export async function prorrogarTicket(solicitudId: number, dias?: number, motivo
   return handle<void>(res);
 }
 
+// ── S2.5: Rechazo fundado via endpoint dedicado ───────────────────────────────
+
+export async function rechazarTktTicket(
+  solicitudId: number,
+  causalRechazo: string,
+  motivoDetalle?: string,
+): Promise<TktTicket> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/rechazar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ causal_rechazo: causalRechazo, motivo_detalle: motivoDetalle }),
+  });
+  return handle<TktTicket>(res);
+}
+
 // ── B-05: Evaluacion de riesgo de brecha ───────────────────────────────────────
 
 export async function evaluarRiesgoBrecha(
