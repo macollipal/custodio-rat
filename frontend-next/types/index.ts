@@ -116,7 +116,7 @@ export interface RAT {
   fecha_levantamiento?: string | null;
 }
 
-export type EstadoEIPD = 'no_requerida' | 'pendiente' | 'en_proceso' | 'completada';
+export type EstadoEIPD = 'no_requerida' | 'no_requerida_justificada' | 'pendiente' | 'en_proceso' | 'completada';
 
 export interface SecurityBreach {
   id: number;

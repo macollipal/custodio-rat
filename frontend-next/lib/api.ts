@@ -1020,7 +1020,7 @@ export interface EIPDItem {
   parecer_dpo: string | null;
   fecha_elaboracion: string | null;
   fecha_aprobacion: string | null;
-  resultado: 'completada' | 'no_requerida' | 'en_proceso';
+  resultado: 'completada' | 'no_requerida' | 'no_requerida_justificada' | 'en_proceso';
   created_by: string | null;
   created_at: string;
   updated_at: string;
