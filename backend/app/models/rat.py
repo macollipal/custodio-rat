@@ -9,11 +9,18 @@ from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+from app.services.rat_calculations import (
+    UMBRAL_RIESGO_CRITICO,
+    UMBRAL_RIESGO_ALTO,
+    UMBRAL_RIESGO_MEDIO,
+    calcular_completitud_de_modelo,
+    calcular_nivel_riesgo_de_modelo,
+)
 
 
-UMBRAL_RIESGO_CRITICO = 7
-UMBRAL_RIESGO_ALTO = 5
-UMBRAL_RIESGO_MEDIO = 3
+UMBRAL_RIESGO_CRITICO = UMBRAL_RIESGO_CRITICO
+UMBRAL_RIESGO_ALTO = UMBRAL_RIESGO_ALTO
+UMBRAL_RIESGO_MEDIO = UMBRAL_RIESGO_MEDIO
 
 
 class EstadoRAT(str, PyEnum):
@@ -137,79 +144,24 @@ class RAT(Base):
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="rat", cascade="all, delete-orphan")  # noqa: F821
 
     def calcular_completitud(self) -> int:
-        """Retorna el porcentaje de completitud del registro.
+        """Retorna el porcentaje de completitud del registro (0-100).
 
-        Fórmula Ley 21.719 (Art. 16) + gaps Tier 1/Tier 2 (Iter 11):
+        H3.1 (auditoria 2026-07-07): delega a app.services.rat_calculations
+        para evitar el bug 2026-07-08 donde SQLAlchemy intentaba invocar este
+        metodo como columna y lanzaba TypeError en runtime.
+
+        Formula Ley 21.719 (Art. 16) + gaps Tier 1/Tier 2 (Iter 11):
         - 7 obligatorios Art. 16
         - 3 recomendados Art. 16
-        - 5 Tier 1 críticos compliance APDP
+        - 5 Tier 1 criticos compliance APDP
         - 10 Tier 2 operativos
-        Total: 25 campos. Penalización -1 si base legal sin documento respaldatorio.
+        Total: 25 campos. Penalizacion -1 si base legal != 'Otra' sin doc adjunto.
         """
-        obligatorios = [
-            self.nombre_proceso,
-            self.categoria_datos,
-            self.categoria_titulares,
-            self.finalidad,
-            self.base_legal,
-            self.fuente_datos,
-            self.plazo_retencion,
-        ]
-        recomendados = [
-            self.medidas_seguridad,
-            self.destinatarios,
-            self.transferencia_datos,
-        ]
-        tier1 = [
-            self.nivel_confidencialidad,
-            self.estructura_dato,
-            self.datos_nna,
-            self.datos_anonimizados,
-            self.datos_seudonimizados,
-        ]
-        tier2 = [
-            self.sistema_almacenamiento,
-            self.volumen_titulares_estimado,
-            self.responsable_tratamiento_email,
-            self.ciclo_procesamiento,
-            self.automatizacion,
-            self.frecuencia,
-            self.transferencia_nacional,
-            self.doc_clausulas,
-            self.medidas_organizativas,
-            self.mecanismos_eliminacion,
-        ]
-        todos = obligatorios + recomendados + tier1 + tier2
-        total = len(todos)
-        completados = sum(1 for c in todos if c is not None and str(c).strip())
-
-        # Penalización: si base legal != "Otra" y no hay documento que la respalde
-        if self.base_legal and self.base_legal.strip().lower() != "otra":
-            if not self.archivo_base_legal_datos:
-                completados = max(completados - 1, 0)
-
-        return round((completados / total) * 100)
+        return calcular_completitud_de_modelo(self)
 
     def calcular_nivel_riesgo(self) -> str:
-        """Calcula el nivel de riesgo del proceso seg├║n factores de la Ley 21.719."""
-        score = 0
-        if self.datos_sensibles:
-            score += 2
-        if self.evaluacion_impacto and (self.estado_eipd or "pendiente") != "completada":
-            score += 2
-        if self.decisiones_automatizadas:
-            score += 2
-        if self.transferencia_internacional and not self.garantias_transferencia_int:
-            score += 1
-        tipo = (self.tipo_dato_sensible or "").lower()
-        if "biom├®tric" in tipo or "biometric" in tipo or "menor" in tipo:
-            score += 1
-        if self.nombre_encargado and not self.tiene_contrato_encargado:
-            score += 1
-        if score >= UMBRAL_RIESGO_CRITICO:
-            return "critico"
-        if score >= UMBRAL_RIESGO_ALTO:
-            return "alto"
-        if score >= UMBRAL_RIESGO_MEDIO:
-            return "medio"
-        return "bajo"
+        """Calcula el nivel de riesgo del proceso segun factores de la Ley 21.719.
+
+        H3.1 (auditoria 2026-07-07): delega a app.services.rat_calculations.
+        """
+        return calcular_nivel_riesgo_de_modelo(self)
