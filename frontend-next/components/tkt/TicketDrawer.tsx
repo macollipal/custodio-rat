@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import Drawer from '@/components/ui/Drawer';
 import { FlujoModal } from '@/components/arco/FlujoModal';
+import { getSubPaso } from '@/lib/flujos-arco-detalle';
+import type { TipoArco, EstadoTicket } from '@/lib/flujos-arco';
 import {
   listarTktNotas,
   listarTktHistorial,
@@ -419,6 +421,37 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
             </p>
           </div>
         </div>
+
+        {(() => {
+          const subPaso = getSubPaso(ticket.tipo as TipoArco, ticket.estado as EstadoTicket);
+          if (!subPaso) return null;
+          return (
+            <div
+              className="rounded-lg p-4"
+              style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
+            >
+              <p className="text-xs font-semibold mb-1" style={{ color: '#1E40AF' }}>
+                💡 Próximo paso sugerido
+              </p>
+              <p className="text-sm font-bold mb-1" style={{ color: '#111827' }}>
+                {subPaso.titulo}
+              </p>
+              <p className="text-xs" style={{ color: '#374151' }}>
+                {subPaso.accion}
+              </p>
+              {subPaso.opciones && subPaso.opciones.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {subPaso.opciones.map((o, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-xs" style={{ color: '#374151' }}>
+                      <span style={{ color: '#2563EB' }}>→</span>
+                      <span>{o}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })()}
 
         {ticket.descripcion && (
           <div className="rounded-lg p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
