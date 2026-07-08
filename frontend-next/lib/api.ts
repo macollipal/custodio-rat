@@ -287,6 +287,11 @@ export async function sugerirRat(tipoProceso: string): Promise<Record<string, un
   return handle<Record<string, unknown>>(res);
 }
 
+export async function sugerenciaBaseLegalPorRubro(rubroId: number): Promise<{ rubro_id: number; rubro: string; base_legal: string; descripcion?: string }> {
+  const res = await apiFetch(`${API_BASE}/rats/sugerencias/base-legal?rubro_id=${rubroId}`);
+  return handle<{ rubro_id: number; rubro: string; base_legal: string; descripcion?: string }>(res);
+}
+
 export async function listarTiposProceso(): Promise<string[]> {
   const res = await apiFetch(`${API_BASE}/rats/sugerencias/tipos`);
   const data = await handle<{ tipos: string[] }>(res);

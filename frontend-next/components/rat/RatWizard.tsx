@@ -35,6 +35,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [sugerencias, setSugerencias] = useState<import('@/types').RATSugerido[]>([]);
   const [mostrarPaso0, setMostrarPaso0] = useState(false);
   const [rubroNombre, setRubroNombre] = useState('');
+  const [baseLegalSugerida, setBaseLegalSugerida] = useState<{ base_legal: string; descripcion?: string } | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -96,6 +97,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         const r = rubros.find(rub => rub.id === company.rubro_id);
         if (r) setRubroNombre(r.nombre);
       }).catch(() => {});
+      api.sugerenciaBaseLegalPorRubro(company.rubro_id).then(s => {
+        setBaseLegalSugerida({ base_legal: s.base_legal, descripcion: s.descripcion });
+      }).catch(() => setBaseLegalSugerida(null));
     }
   }, [company.rubro_id]);
 
@@ -795,6 +799,40 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               >
                 {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
+              {baseLegalSugerida && rubroNombre && data.base_legal !== baseLegalSugerida.base_legal && (
+                <div
+                  className="mt-2 rounded-lg p-3 flex items-start gap-3"
+                  style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
+                >
+                  <span className="text-base flex-shrink-0">💡</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold" style={{ color: '#1E40AF' }}>
+                      Sugerencia para tu rubro &laquo;{rubroNombre}&raquo;
+                    </p>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: '#111827' }}>
+                      {baseLegalSugerida.base_legal}
+                    </p>
+                    {baseLegalSugerida.descripcion && (
+                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                        {baseLegalSugerida.descripcion}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData(d => ({ ...d, base_legal: baseLegalSugerida.base_legal }));
+                      toast.success(`Base legal aplicada: ${baseLegalSugerida.base_legal}`);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition flex-shrink-0"
+                    style={{ background: '#2563EB' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              )}
             </FormField>
 
             <div className="space-y-3">
