@@ -31,7 +31,7 @@ test.describe('Wizard RAT — 5 pasos', () => {
 
     if (!visible) {
       // Si no se carga el wizard, falla con mensaje claro
-      test.fail(new Error('Wizard no se abrió tras click en Nuevo RAT'));
+      test.fail(true, 'Wizard no se abrió tras click en Nuevo RAT');
       return;
     }
     await expect(step1).toBeVisible();
