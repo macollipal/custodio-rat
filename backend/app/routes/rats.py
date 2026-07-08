@@ -22,6 +22,7 @@ from app.services.export_service import exportar_csv, exportar_pdf
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
 from app.services.user_company_service import get_empresas_usuario
+from app.services.rat_calculations import calcular_completitud, calcular_nivel_riesgo, rat_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +135,8 @@ async def reportes(
     result = []
     for r in rats_list:
         out = RATOut.model_validate(r)
-        out.completitud = r.calcular_completitud()
-        out.nivel_riesgo = r.calcular_nivel_riesgo()
+        out.completitud = calcular_completitud(rat_to_dict(r))
+        out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
         out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
         result.append(out)
 
@@ -188,8 +189,8 @@ async def listar(
     result = []
     for r in rats_list:
         out = RATOut.model_validate(r)
-        out.completitud = r.calcular_completitud()
-        out.nivel_riesgo = r.calcular_nivel_riesgo()
+        out.completitud = calcular_completitud(rat_to_dict(r))
+        out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
         out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
         result.append(out)
     return result
@@ -247,8 +248,8 @@ async def obtener(
 ):
     r = get_rat_for_user(db, rat_id, current_user)
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -269,8 +270,8 @@ async def crear(
         require_editor_or_admin_empresa(data.company_id, db, current_user)
     r = create_rat(db, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -318,8 +319,8 @@ async def actualizar(
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -343,8 +344,8 @@ async def archivar_rat(
     db.commit()
     db.refresh(rat)
     out = RATOut.model_validate(rat)
-    out.completitud = rat.calcular_completitud()
-    out.nivel_riesgo = rat.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(rat))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(rat))
     out.tiene_archivo_base_legal = bool(rat.archivo_base_legal_datos)
     return out
 
@@ -366,8 +367,8 @@ async def clonar_rat(
     require_editor_or_admin_empresa(rat_original.company_id, db, current_user)
     r = clone_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -412,8 +413,8 @@ async def approve_rat(
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = aprobar_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 

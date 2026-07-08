@@ -28,6 +28,7 @@ from app.services.rat_validators import (
     validar_consentimiento_sensibles,
     validar_eipd_obligatoria,
 )
+from app.services.rat_calculations import calcular_completitud, rat_to_dict
 
 CAMPOS_CLONE_EXCLUIDOS = {
     "id",
@@ -317,7 +318,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         .all()
     )
     completitud_promedio = (
-        round(sum(r.calcular_completitud() for r in rats_complex) / total, 1) if total else 0
+        round(sum(calcular_completitud(rat_to_dict(r)) for r in rats_complex) / total, 1) if total else 0
     )
     eipd_pendientes = sum(
         1 for r in rats_complex
@@ -417,7 +418,7 @@ def aprobar_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str]
 
     rat = get_rat(db, rat_id)
 
-    completitud = rat.calcular_completitud()
+    completitud = calcular_completitud(rat_to_dict(rat))
     if completitud < 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

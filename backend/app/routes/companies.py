@@ -17,6 +17,7 @@ from app.routes.deps import get_current_user, require_admin, get_client_ip, chec
 from app.models.rat import RAT as RATModel
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, EstadoTicket
 from app.models.politica_transparencia import PoliticaTransparencia
+from app.services.rat_calculations import calcular_completitud, rat_to_dict
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
@@ -104,7 +105,7 @@ async def listar(
         rats = rats_by_company.get(c.id, [])
 
         if rats:
-            out.completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / len(rats))
+            out.completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
             vencidos = 0
             for r in rats:
                 plazo = r.plazo_retencion or ""
@@ -153,7 +154,7 @@ async def obtener(
     out.total_rats = len(rats)
 
     if rats:
-        out.completitud_promedio = round(sum(r.calcular_completitud() for r in rats) / len(rats))
+        out.completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
         from datetime import datetime, timezone, timedelta
         import re
         vencidos = 0

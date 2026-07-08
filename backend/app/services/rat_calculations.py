@@ -159,14 +159,28 @@ def calcular_nivel_riesgo_de_modelo(rat) -> str:
     return calcular_nivel_riesgo(_rat_a_dict(rat))
 
 
-def _rat_a_dict(rat) -> dict:
-    """Convierte instancia SQLAlchemy RAT a dict plano.
+def rat_to_dict(rat) -> dict:
+    """Convierte instancia SQLAlchemy RAT a dict plano para pasar al servicio puro.
 
     Sqlalchemy 2.x tiene __dict__ ya populated thanks to `expire_on_commit=False`
     pero hay columnas sensibles (bytes, JSON) que necesitamos pasar tal cual.
+    Filtra las claves internas que empiezan con '_' (como _sa_instance_state).
+
+    Uso:
+        from app.services.rat_calculations import rat_to_dict, calcular_completitud
+        rat = db.query(RAT).first()
+        pct = calcular_completitud(rat_to_dict(rat))
     """
     if hasattr(rat, "__dict__"):
         return {k: v for k, v in rat.__dict__.items() if not k.startswith("_")}
     if hasattr(rat, "_asdict"):
         return dict(rat._asdict())
     return dict(rat)
+
+
+def _rat_a_dict(rat) -> dict:
+    """Compatibilidad hacia atras: alias de rat_to_dict.
+
+    Mantener el nombre original privado para no romper nada.
+    """
+    return rat_to_dict(rat)

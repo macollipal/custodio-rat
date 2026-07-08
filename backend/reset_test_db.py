@@ -47,7 +47,15 @@ def reset_test_db():
 
     print("Creando schema desde modelos...")
     os.environ['ENV'] = 'test'
-    os.environ['DATABASE_URL'] = f"{args.database_url.split('/neondb')[0]}/{TEST_DB}?sslmode=require"
+
+    from urllib.parse import urlparse, urlunparse
+    parsed = urlparse(args.database_url)
+    test_db_url = urlunparse((
+        parsed.scheme, parsed.netloc,
+        f"/{TEST_DB}", parsed.params,
+        parsed.query, parsed.fragment
+    ))
+    os.environ['DATABASE_URL'] = test_db_url
 
     from app.database.database import Base, engine
     from app.models import (
@@ -62,7 +70,7 @@ def reset_test_db():
     Base.metadata.create_all(bind=engine)
     print("Schema creado exitosamente")
 
-    db_url = f"{args.database_url.split('/neondb')[0]}/{TEST_DB}?sslmode=require"
+    db_url = test_db_url
     conn2 = psycopg2.connect(db_url)
     cur2 = conn2.cursor()
     cur2.execute("""

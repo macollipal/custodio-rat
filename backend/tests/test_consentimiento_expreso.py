@@ -4,7 +4,7 @@ Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 â€” R
 
 import pytest
 from datetime import datetime, timezone, timedelta
-from app.services.rat_service import _tiene_consentimiento_activo, _validar_consentimiento_sensibles
+from app.services.rat_validators import tiene_consentimiento_activo
 from app.models.rat import RAT
 from fastapi import HTTPException
 
@@ -34,7 +34,7 @@ class TestConsentimientoExpreso:
         assert data["activo"] is True
 
     def test_tiene_consentimiento_activo_false(self, db):
-        assert _tiene_consentimiento_activo(db, rat_id=99999) is False
+        assert tiene_consentimiento_activo(db, rat_id=99999) is False
 
     def test_actualizar_rat_a_datos_sensibles_sin_consentimiento_falla(
         self, client, auth_headers, empresa, rat_base
