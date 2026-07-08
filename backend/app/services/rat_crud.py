@@ -305,22 +305,14 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         .scalar()
     ) or 0
 
-    # Cómputos que requieren lógica Python compleja: cargar solo columnas necesarias
+    # Cómputos que requieren lógica Python compleja: cargar instancias completas.
+    # Se llama RAT.calcular_completitud() y se accede a atributos simples.
+    # Historia: originalmente hacia db.query(RAT.col1, RAT.col2, ...) — eso devolvia
+    # Row (named tuple) sin acceso a metodos de instancia. El bug rompia GET
+    # /rats/dashboard/{id} en produccion con 'AttributeError: calcular_completitud'.
+    # Workaround H3.1 (auditoria): extraer esta logica a un servicio.
     rats_complex = (
-        db.query(
-            RAT.calcular_completitud,
-            RAT.evaluacion_impacto,
-            RAT.estado_eipd,
-            RAT.transferencia_internacional,
-            RAT.garantias_transferencia_int,
-            RAT.base_legal,
-            RAT.test_interes_legitimo,
-            RAT.nombre_encargado,
-            RAT.tiene_contrato_encargado,
-            RAT.archivo_base_legal_datos,
-            RAT.plazo_retencion,
-            RAT.created_at,
-        )
+        db.query(RAT)
         .filter(RAT.company_id == company_id)
         .all()
     )
