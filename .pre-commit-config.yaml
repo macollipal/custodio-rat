@@ -29,3 +29,10 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+
+      - id: schema-migration-sync
+        name: Schema-migration sync (requiere .sql si cambias app/models/)
+        entry: python scripts/maintenance/schema_migration_sync.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit] 
