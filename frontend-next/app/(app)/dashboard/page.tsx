@@ -335,11 +335,10 @@ export default function DashboardPage() {
               const vencimiento = b.plazo_apdc_vencido;
               const apdcOk = b.notificado_apdc;
               const titOk = b.notificado_titulares;
-              const flags = [
-                b.incluye_datos_sensibles && '🔒 sensibles',
-                b.incluye_datos_nna && '👶 NNA',
-                b.incluye_datos_financieros && '💳 financieros',
-              ].filter(Boolean);
+              const flags: string[] = [];
+              if (b.incluye_datos_sensibles) flags.push('🔒 sensibles');
+              if (b.incluye_datos_nna) flags.push('👶 NNA');
+              if (b.incluye_datos_financieros) flags.push('💳 financieros');
               return (
                 <div
                   key={b.id}
