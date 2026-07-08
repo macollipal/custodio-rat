@@ -25,6 +25,21 @@ export default function DashboardPage() {
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
   const [brechaCount, setBrechaCount] = useState(0);
+  const [brechasActivas, setBrechasActivas] = useState<Array<{
+    id: number;
+    descripcion: string;
+    fecha_deteccion: string;
+    notificado_apdc?: boolean;
+    notificado_titulares?: boolean;
+    nivel_riesgo?: string;
+    incluye_datos_sensibles?: boolean;
+    incluye_datos_nna?: boolean;
+    incluye_datos_financieros?: boolean;
+    volumen_titulares_afectados?: number;
+    horas_desde_deteccion?: number;
+    plazo_apdc_vencido?: boolean;
+    estado_cierre?: string;
+  }>>([]);
   const [hasPolitica, setHasPolitica] = useState(false);
   const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
   const nowRef = useRef(Date.now());
@@ -91,7 +106,13 @@ export default function DashboardPage() {
     ]).then(([s, ratList, breaches, hasPoliticaVal]) => {
       setDashboardStats(s);
       setRats(ratList);
-      setBrechaCount(Array.isArray(breaches) ? breaches.length : 0);
+      const brechasArr = Array.isArray(breaches) ? breaches : [];
+      setBrechaCount(brechasArr.length);
+      const abiertas = brechasArr
+        .filter((b: any) => b.estado_cierre !== 'cerrada')
+        .sort((a: any, b: any) => (b.horas_desde_deteccion ?? 0) - (a.horas_desde_deteccion ?? 0))
+        .slice(0, 3);
+      setBrechasActivas(abiertas as any);
       setHasPolitica(hasPoliticaVal);
       setLastSync(new Date());
     }).catch(() => {
@@ -279,6 +300,125 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {brechasActivas.length > 0 && (
+        <div
+          className="bg-white rounded-xl p-6 shadow-sm"
+          style={{
+            border: brechasActivas.some(b => b.plazo_apdc_vencido) ? '2px solid #DC2626' : '1px solid #E5E7EB',
+            background: brechasActivas.some(b => b.plazo_apdc_vencido) ? '#FEF2F2' : 'white',
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-sm" style={{ color: '#111827' }}>
+                ⚠️ Brechas abiertas ({brechaCount})
+              </h3>
+              <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                Ley 21.719 Art. 14 bis: notificación APDC en 72h, titulares sin dilación
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/breaches')}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
+              style={{ background: '#DC2626' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#B91C1C')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#DC2626')}
+            >
+              Ver todas →
+            </button>
+          </div>
+          <div className="space-y-2">
+            {brechasActivas.map(b => {
+              const h = b.horas_desde_deteccion ?? 0;
+              const restantes = Math.max(0, 72 - h);
+              const vencimiento = b.plazo_apdc_vencido;
+              const apdcOk = b.notificado_apdc;
+              const titOk = b.notificado_titulares;
+              const flags = [
+                b.incluye_datos_sensibles && '🔒 sensibles',
+                b.incluye_datos_nna && '👶 NNA',
+                b.incluye_datos_financieros && '💳 financieros',
+              ].filter(Boolean);
+              return (
+                <div
+                  key={b.id}
+                  className="rounded-lg p-3"
+                  style={{
+                    border: '1px solid',
+                    borderColor: vencimiento ? '#FCA5A5' : restantes < 12 ? '#FCD34D' : '#E5E7EB',
+                    background: vencimiento ? '#FEE2E2' : restantes < 12 ? '#FEF3C7' : '#F9FAFB',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-semibold text-sm" style={{ color: '#111827' }}>
+                          Brecha #{b.id}
+                        </span>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-bold"
+                          style={{
+                            background: b.nivel_riesgo === 'critico' ? '#7F1D1D'
+                              : b.nivel_riesgo === 'alto' ? '#FEE2E2'
+                              : b.nivel_riesgo === 'medio' ? '#DBEAFE' : '#DCFCE7',
+                            color: b.nivel_riesgo === 'critico' ? '#FEE2E2'
+                              : b.nivel_riesgo === 'alto' ? '#7F1D1D'
+                              : b.nivel_riesgo === 'medio' ? '#1E40AF' : '#166534',
+                          }}
+                        >
+                          Riesgo {b.nivel_riesgo ?? 'bajo'}
+                        </span>
+                        {flags.map(f => (
+                          <span key={f} className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#854D0E' }}>
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs" style={{ color: '#374151' }}>
+                        {b.descripcion.slice(0, 100)}{b.descripcion.length > 100 ? '...' : ''}
+                      </p>
+                      {b.volumen_titulares_afectados != null && b.volumen_titulares_afectados > 0 && (
+                        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                          {b.volumen_titulares_afectados.toLocaleString('es-CL')} titulares afectados
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xs font-bold" style={{ color: vencimiento ? '#7F1D1D' : restantes < 12 ? '#854D0E' : '#374151' }}>
+                        {vencimiento
+                          ? `🔴 VENCIDO +${Math.floor(h - 72)}h`
+                          : `🟡 ${Math.floor(restantes)}h restantes`}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                        72h APDC
+                      </div>
+                      <div className="flex gap-1 mt-1 justify-end">
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ background: apdcOk ? '#DCFCE7' : '#FEE2E2', color: apdcOk ? '#166534' : '#7F1D1D' }}
+                          title={apdcOk ? 'APDC notificada' : 'APDC NO notificada'}
+                        >
+                          APDC {apdcOk ? '✓' : '✗'}
+                        </span>
+                        {titOk !== undefined && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded"
+                            style={{ background: titOk ? '#DCFCE7' : '#FEF3C7', color: titOk ? '#166534' : '#854D0E' }}
+                            title={titOk ? 'Titulares notificados' : 'Titulares pendientes'}
+                          >
+                            Tit. {titOk ? '✓' : '⏳'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
         <h3 className="font-semibold text-sm mb-4" style={{ color: '#111827' }}>
