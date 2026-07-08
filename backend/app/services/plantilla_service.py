@@ -19,10 +19,26 @@ PLANTILLAS_DEFAULT = [
             "presentada el {{fecha}}, le informamos que {{empresa}} ha procedido a identificar "
             "y entregar la totalidad de los datos personales que mantenemos tratados sobre su persona.\n\n"
             "Los datos entregados corresponden a: categoría de datos, finalidad del tratamiento, "
-            "fuentes de origen, destinatarios y plazos de retención, segúnconsta en nuestro "
+            "fuentes de origen, destinatarios y plazos de retención, según consta en nuestro "
             "Registro de Actividades de Tratamiento (RAT).\n\n"
             "Número de solicitud: {{numero_solicitud}}\n\n"
             "Si requiere aclaraciones adicionales, responda a este correo.\n\n"
+            "Atentamente,\n{{empresa}}"
+        ),
+    },
+    {
+        "tipo": "acceso",
+        "nombre": "Respuesta — Acceso denegado (requiere verificación)",
+        "contenido": (
+            "Estimado/a {{nombre_titular}}:\n\n"
+            "Hemos recibido su solicitud de derecho de acceso (Art. 12.1 Ley 21.719) "
+            "presentada el {{fecha}}.\n\n"
+            "Para proceder con la entrega, requerimos verificar su identidad. "
+            "Sírvase responder este correo adjuntando copia de su documento de identidad "
+            "vigente por ambos lados.\n\n"
+            "Una vez verificada su identidad, procederemos con la respuesta en un plazo "
+            "máximo de 10 días hábiles (Art. 14 Ley 21.719).\n\n"
+            "Número de solicitud: {{numero_solicitud}}\n\n"
             "Atentamente,\n{{empresa}}"
         ),
     },
@@ -57,6 +73,21 @@ PLANTILLAS_DEFAULT = [
         ),
     },
     {
+        "tipo": "cancelacion",
+        "nombre": "Respuesta — Cancelación denegada (obligación legal)",
+        "contenido": (
+            "Estimado/a {{nombre_titular}}:\n\n"
+            "En respuesta a su solicitud de cancelación (Art. 12.3 Ley 21.719), "
+            "presentada el {{fecha}}, le informamos que {{empresa}} no puede proceder "
+            "con la cancelación solicitada debido a que existe una obligación legal "
+            "que nos exige conservar sus datos por un período específico (Art. 13 Ley 21.719).\n\n"
+            "Le detallamos las causales de la denegación en el documento adjunto.\n\n"
+            "Número de solicitud: {{numero_solicitud}}\n\n"
+            "Tiene derecho a reclamar ante la Agencia de Protección de Datos Personales.\n\n"
+            "Atentamente,\n{{empresa}}"
+        ),
+    },
+    {
         "tipo": "oposicion",
         "nombre": "Respuesta estándar — Oposición",
         "contenido": (
@@ -65,7 +96,7 @@ PLANTILLAS_DEFAULT = [
             "presentada el {{fecha}}, le informamos que {{empresa}} ha procedido a "
             "cesar el tratamiento de sus datos personales para los fines indicados "
             "en su solicitud, en cumplimiento del artículo 12 numeral 4 de la Ley 21.719.\n\n"
-            "Esta oposición applies a: los tratamientos basados en interés legítimo o "
+            "Esta oposición aplica a: los tratamientos basados en interés legítimo o "
             "misión de interés público, según consta en nuestro RAT.\n\n"
             "Número de solicitud: {{numero_solicitud}}\n\n"
             "Si requiere aclaraciones adicionales, responda a este correo.\n\n"
@@ -86,6 +117,36 @@ PLANTILLAS_DEFAULT = [
             "según lo solicitado por usted.\n\n"
             "Número de solicitud: {{numero_solicitud}}\n\n"
             "Vencimiento del bloqueo: {{fecha_vencimiento}}\n\n"
+            "Atentamente,\n{{empresa}}"
+        ),
+    },
+    {
+        "tipo": "portabilidad",
+        "nombre": "Respuesta estándar — Portabilidad",
+        "contenido": (
+            "Estimado/a {{nombre_titular}}:\n\n"
+            "En respuesta a su solicitud de portabilidad (Art. 9 Ley 21.719), "
+            "presentada el {{fecha}}, le informamos que {{empresa}} ha procedido a "
+            "exportar sus datos personales en un formato estructurado, de uso común y "
+            "lectura mecánica (JSON).\n\n"
+            "El archivo adjunto contiene todos los datos personales que tratamos sobre su persona, "
+            "junto con las finalidades del tratamiento y los destinatarios.\n\n"
+            "Número de solicitud: {{numero_solicitud}}\n\n"
+            "Si requiere aclaraciones adicionales, responda a este correo.\n\n"
+            "Atentamente,\n{{empresa}}"
+        ),
+    },
+    {
+        "tipo": "rechazo",
+        "nombre": "Respuesta estándar — Rechazo fundado",
+        "contenido": (
+            "Estimado/a {{nombre_titular}}:\n\n"
+            "En respuesta a su solicitud ARCO (N° {{numero_solicitud}}), presentada el {{fecha}}, "
+            "le informamos que {{empresa}} ha resuelto rechazarla fundadamente en conformidad al "
+            "Art. 12.5 de la Ley 21.719.\n\n"
+            "Causal de rechazo: la solicitud fue considerada (indicar causal).\n\n"
+            "Usted tiene derecho a reclamar ante la Agencia de Protección de Datos Personales "
+            "dentro del plazo legal correspondiente.\n\n"
             "Atentamente,\n{{empresa}}"
         ),
     },
@@ -121,14 +182,21 @@ def render_plantilla(
 
 
 def seed_plantillas_default(db: Session) -> None:
-    """Inserta las plantillas por defecto si no existen."""
+    """Inserta las plantillas por defecto si no existen y refresca el contenido de las existentes.
+
+    Idempotente: si (tipo, nombre, company_id=NULL) ya existe, actualiza el contenido
+    para reflejar correcciones del seed oficial. Plantillas modificadas por el usuario
+    (company_id != NULL) nunca se tocan.
+    """
     for data in PLANTILLAS_DEFAULT:
         existe = db.query(TktPlantilla).filter(
             TktPlantilla.tipo == data["tipo"],
             TktPlantilla.company_id.is_(None),
             TktPlantilla.nombre == data["nombre"],
         ).first()
-        if not existe:
+        if existe:
+            existe.contenido = data["contenido"]
+        else:
             plantilla = TktPlantilla(
                 company_id=None,
                 tipo=data["tipo"],
