@@ -7,6 +7,7 @@ import * as api from '@/lib/api';
 import type { User } from '@/types';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
 
 const ROL_GLOBAL_OPTIONS = [
   { value: 'superadmin', label: 'Superadministrador' },
@@ -136,13 +137,11 @@ export default function UsersPage() {
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
           </div>
-          <button
+          <Button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-            style={{ background: '#2563EB' }}
           >
             + Nuevo usuario
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -244,8 +243,8 @@ export default function UsersPage() {
             <h3 className="text-base font-bold mb-2" style={{ color: '#111827' }}>¿Eliminar usuario?</h3>
             <p className="text-sm mb-5" style={{ color: '#6B7280' }}>Esta acción es irreversible.</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setConfirmDel(null)} className="px-4 py-2 rounded-lg text-sm border transition hover:bg-gray-50" style={{ borderColor: '#D1D5DB', color: '#374151' }}>Cancelar</button>
-              <button onClick={() => handleDelete(confirmDel)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#DC2626' }}>Eliminar</button>
+              <Button variant="secondary" onClick={() => setConfirmDel(null)}>Cancelar</Button>
+              <Button variant="danger" onClick={() => handleDelete(confirmDel)}>Eliminar</Button>
             </div>
           </div>
         </div>
@@ -390,10 +389,10 @@ function UserModal({
           )}
         </div>
         <div className="flex gap-2 justify-end mt-5">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border transition hover:bg-gray-50" style={{ borderColor: '#D1D5DB', color: '#374151' }}>Cancelar</button>
-          <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60" style={{ background: '#2563EB' }}>
+          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={saving} loading={saving}>
             {saving ? 'Guardando...' : user ? 'Guardar cambios' : 'Crear usuario'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

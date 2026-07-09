@@ -8,6 +8,36 @@ Stack: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Sonne
 
 ---
 
+## LEY DIVINA DE COMMITS Y AUTORÍA ⚠️
+
+**El autor del commit DEBE matchear con la cuenta de Vercel vinculada**, sino el deploy no se dispara (`Vercel user not found`).
+
+### Reglas
+
+```
+1. NUNCA usar `git -c user.email=...` ni `-c user.name=...` al commitear
+2. SIEMPRE usar el `user.email` y `user.name` del git config (global o local)
+3. Verificar ANTES del push con `git log -1 --pretty=format:"%an <%ae>"`
+4. Si el autor está mal: `git commit --amend --reset-author --no-verify`
+5. Después: `git push --force-with-lease origin <rama>`
+```
+
+### Verificación rápida (5 segundos)
+
+```bash
+git log -1 --pretty=format:"%an <%ae>"   # confirmar autor antes de push
+```
+
+### Cómo se vinculó Vercel en este proyecto
+
+- Cuenta Vercel: `marcelocollipal-7370`
+- Email vinculado: `marcelocollipal@gmail.com`
+- GitHub user: `macollipal`
+
+Cualquier commit con autor distinto a `marcelocollipal@gmail.com` **bloqueará el deploy automático de Vercel**.
+
+---
+
 ## LEY DIVINA DE SEGURIDAD ⚠️
 
 **📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`

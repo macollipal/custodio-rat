@@ -4,6 +4,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import type { RATWizardData } from '@/types';
 import Spinner from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 
 interface Step5Props {
   data: RATWizardData;
@@ -95,8 +96,9 @@ export function Step5({
       </div>
 
       <div className="flex justify-between pt-2">
-        <button onClick={() => cambiarStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>Anterior</button>
-        <button
+        <Button variant="secondary" size="lg" onClick={() => cambiarStep(4)}>Anterior</Button>
+        <Button
+          variant="success"
           onClick={() => {
             if (!data.plazo_retencion?.trim()) {
               toast.error('Vuelve al paso 4 y completa el plazo de retención.');
@@ -104,12 +106,9 @@ export function Step5({
             }
             onNext();
           }}
-          disabled={false}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
-          style={{ background: '#059669' }}
         >
           Guardar en el RAT
-        </button>
+        </Button>
       </div>
     </div>
   );

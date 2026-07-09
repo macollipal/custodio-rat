@@ -14,6 +14,7 @@ import {
   CompanyAlertsBanner,
   CompanyAuditDrawer,
 } from '@/components/companies';
+import { Button } from '@/components/ui/Button';
 
 type View = 'list' | 'create';
 
@@ -95,23 +96,20 @@ export default function CompaniesPage() {
             </div>
             <div className="flex gap-2">
               {user?.rol_global === 'superadmin' && (
-                <button
+                <Button
+                  variant="secondary"
+                  size="md"
                   onClick={() => setShowCreateUser(true)}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                  style={{ borderColor: '#E5E7EB', color: '#374151' }}
                 >
                   + Nuevo usuario
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                size="md"
                 onClick={() => setView('create')}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
               >
                 + Nueva empresa
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -196,30 +194,30 @@ export default function CompaniesPage() {
 
                       <div className="flex gap-2 flex-wrap">
                         {!esActiva && (
-                          <button
+                          <Button
+                            size="sm"
                             onClick={() => setCompany(emp)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
-                            style={{ background: '#2563EB' }}
                           >
                             Seleccionar
-                          </button>
+                          </Button>
                         )}
                         {esActiva && (
                           <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: '#DBEAFE', color: '#2563EB' }}>
                             ✓ Activa
                           </span>
                         )}
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setEditingId(editingId === emp.id ? null : emp.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                          style={{ borderColor: '#E5E7EB', color: '#374151' }}
                         >
                           Editar
-                        </button>
+                        </Button>
                         {user?.rol_global === 'superadmin' && (
-                          <button
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setAccessPanelId(panelAbierto ? null : emp.id)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
                             style={{
                               borderColor: panelAbierto ? '#2563EB' : '#D1D5DB',
                               color: panelAbierto ? '#2563EB' : '#374151',
@@ -227,45 +225,44 @@ export default function CompaniesPage() {
                             }}
                           >
                             Gestionar accesos
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setShowUsersModal(emp.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                          style={{ borderColor: '#D1D5DB', color: '#374151' }}
                         >
                           Listado usuarios
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setAuditCompany(emp)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                          style={{ borderColor: '#D1D5DB', color: '#374151' }}
                           title="Ver historial de auditoría de los RATs de esta empresa"
                         >
                           📋 Auditoría
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          size="sm"
                           onClick={() => handleExportarApdc(emp)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
-                          style={{ background: '#7C3AED' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = '#6D28D9')}
-                          onMouseLeave={e => (e.currentTarget.style.background = '#7C3AED')}
+                          style={{ background: '#7C3AED', color: '#FFFFFF' }}
                           title="Descargar reporte en formato APDC (Ley 21.719) — JSON estructurado para presentar ante la autoridad"
                         >
                           📄 Reporte APDC
-                        </button>
+                        </Button>
                         {user?.rol_global === 'superadmin' ? (
                           <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ color: '#9CA3AF', background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
                             Gestión en Configuración
                           </span>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setConfirmDelId(emp.id)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
-                            style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
+                            style={{ color: '#DC2626', borderColor: '#FCA5A5', borderWidth: '1px', borderStyle: 'solid' }}
                           >
                             Desactivar
-                          </button>
+                          </Button>
                         )}
                       </div>
 
@@ -275,12 +272,12 @@ export default function CompaniesPage() {
                             ¿Desactivar <strong>{emp.nombre}</strong>? La empresa dejará de aparecer en los listados.
                           </p>
                           <div className="flex gap-2">
-                            <button onClick={() => handleDelete(emp.id)} className="px-3 py-1 rounded text-xs font-semibold text-white" style={{ background: '#DC2626' }}>
+                            <Button variant="danger" size="sm" onClick={() => handleDelete(emp.id)}>
                               Confirmar desactivación
-                            </button>
-                            <button onClick={() => setConfirmDelId(null)} className="px-3 py-1 rounded text-xs font-semibold border" style={{ borderColor: '#E5E7EB', color: '#374151' }}>
+                            </Button>
+                            <Button variant="secondary" size="sm" onClick={() => setConfirmDelId(null)}>
                               Cancelar
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       )}

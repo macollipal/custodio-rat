@@ -10,6 +10,7 @@ import FormField from '@/components/ui/FormField';
 import Spinner from '@/components/ui/Spinner';
 import CategoryChips from '@/components/ui/CategoryChips';
 import OnboardingTour from '@/components/ui/OnboardingTour';
+import { Button } from '@/components/ui/Button';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
 import { useApp } from '@/context/AppContext';
@@ -292,39 +293,39 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       {sug.decisiones_automatizadas && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Dec. auto</span>}
                     </div>
                   </div>
-                  <button
-                    className="ml-3 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition flex-shrink-0"
-                    style={{ background: '#2563EB' }}
+                  <Button
+                    size="sm"
+                    className="ml-3 flex-shrink-0"
                     onClick={e => { e.stopPropagation(); usarSugerencia(sug); }}
                   >
                     Usar
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex justify-center">
-            <button
+            <Button
+              variant="secondary"
+              size="lg"
               onClick={crearPersonalizado}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-              style={{ color: '#374151', borderColor: '#E5E7EB' }}
             >
               + Crear proceso personalizado
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => setConfirmCancel(true)}
-            className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
-            style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
           >
             ← Volver al listado
-          </button>
+          </Button>
           <h2 className="text-lg font-bold" style={{ color: '#111827' }}>Nuevo proceso RAT</h2>
         </div>
         <div className="flex items-center gap-3">
@@ -333,15 +334,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               💾 Guardado {tiempoRelativo()}
             </span>
           )}
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => guardarDraft(true)}
             disabled={saving}
-            className="text-sm font-semibold px-3 py-1.5 rounded-lg border transition hover:bg-blue-50 disabled:opacity-50"
-            style={{ color: '#2563EB', borderColor: '#BFDBFE' }}
+            style={{ color: '#2563EB', borderColor: '#BFDBFE', borderWidth: '1px', borderStyle: 'solid' }}
           >
             💾 Guardar borrador
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -377,14 +379,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   <option value="">— Selecciona para obtener sugerencias —</option>
                   {tipos.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <button
+                <Button
                   onClick={aplicarSugerencias}
                   disabled={!tipoSel || tipoSel.startsWith('—')}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 transition flex-shrink-0"
-                  style={{ background: '#2563EB' }}
+                  className="flex-shrink-0"
                 >
                   Aplicar
-                </button>
+                </Button>
               </div>
               {data._sug_observacion && (
                 <div className="mt-3">
@@ -488,7 +489,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
+              <Button
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -502,12 +503,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   cambiarStep(2);
                 }}
                 disabled={!stepIsValid}
-                aria-disabled={!stepIsValid}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -719,14 +718,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="lg"
                 onClick={() => cambiarStep(1)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#374151', borderColor: '#E5E7EB' }}
               >
                 ← Anterior
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -740,12 +739,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   cambiarStep(3);
                 }}
                 disabled={!stepIsValid}
-                aria-disabled={!stepIsValid}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -820,19 +817,17 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       </p>
                     )}
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
+                    className="flex-shrink-0"
                     onClick={() => {
                       setData(d => ({ ...d, base_legal: baseLegalSugerida.base_legal }));
                       toast.success(`Base legal aplicada: ${baseLegalSugerida.base_legal}`);
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition flex-shrink-0"
-                    style={{ background: '#2563EB' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-                    onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
                   >
                     Aplicar
-                  </button>
+                  </Button>
                 </div>
               )}
             </FormField>
@@ -896,14 +891,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                         <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{data.archivo_base_legal_nombre}</p>
                         <p className="text-xs" style={{ color: '#9CA3AF' }}>{data.archivo_base_legal_tipo}</p>
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setData(d => ({ ...d, archivo_base_legal_base64: undefined, archivo_base_legal_nombre: undefined, archivo_base_legal_tipo: undefined }))}
-                        className="text-xs font-semibold px-2 py-1 rounded"
                         style={{ color: '#DC2626', background: '#FEE2E2' }}
                       >
                         Eliminar
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -969,14 +965,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             )}
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="lg"
                 onClick={() => cambiarStep(2)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#374151', borderColor: '#E5E7EB' }}
               >
                 ← Anterior
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -991,12 +987,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   cambiarStep(4);
                 }}
                 disabled={!stepIsValid}
-                aria-disabled={!stepIsValid}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -1178,14 +1172,15 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </details>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="lg"
                 onClick={() => cambiarStep(3)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#374151', borderColor: '#E5E7EB' }}
               >
                 ← Anterior
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de guardar.');
@@ -1194,18 +1189,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   guardar();
                 }}
                 disabled={!stepIsValid || saving}
-                aria-disabled={!stepIsValid || saving}
-                className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
-                style={{ background: '#059669' }}
+                loading={saving}
+                className="flex-1"
               >
-                {saving ? (
-                  <>
-                    <Spinner size="sm" /> Guardando…
-                  </>
-                ) : (
-                  '✓ Guardar en el RAT'
-                )}
-              </button>
+                ✓ Guardar en el RAT
+              </Button>
             </div>
           </div>
         )}
@@ -1260,8 +1248,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </div>
 
             <div className="flex justify-between pt-2">
-              <button onClick={() => cambiarStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>Anterior</button>
-              <button
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(4)}>Anterior</Button>
+              <Button
+                variant="success"
                 onClick={() => {
                   if (!data.plazo_retencion?.trim()) {
                     toast.error('Vuelve al paso 4 y completa el plazo de retención.');
@@ -1271,17 +1260,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   guardar();
                 }}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
-                style={{ background: '#059669' }}
+                loading={saving}
               >
-                {saving ? (
-                  <>
-                    <Spinner size="sm" /> Guardando…
-                  </>
-                ) : (
-                  'Guardar en el RAT'
-                )}
-              </button>
+                Guardar en el RAT
+              </Button>
             </div>
           </div>
         )}

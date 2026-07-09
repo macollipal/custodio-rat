@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
+import { Button } from '@/components/ui/Button';
 import type { RAT, Company } from '@/types';
 import { DIAS_REVISION, ESTADO_MAP, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
 
@@ -157,8 +158,8 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
             <input id="rat-buscar" type="text" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar proceso..." aria-label="Buscar procesos RAT" className="px-3.5 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 180 }} />
           </div>
           <div className="flex gap-2 pb-1">
-            <button onClick={aplicarFiltros} aria-label="Aplicar filtros de busqueda" className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar</button>
-            {filtersActive && <button onClick={limpiarFiltros} aria-label="Limpiar filtros aplicados" className="px-4 py-2 rounded-lg text-sm font-semibold border transition" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Limpiar</button>}
+            <Button onClick={aplicarFiltros} aria-label="Aplicar filtros de busqueda">Aplicar</Button>
+            {filtersActive && <Button variant="secondary" onClick={limpiarFiltros} aria-label="Limpiar filtros aplicados">Limpiar</Button>}
           </div>
         </div>
       </details>
@@ -179,13 +180,12 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
               : 'Intenta ajustar los filtros de búsqueda'}
           </p>
           {rats.length === 0 && puedeEditar && (
-            <button
+            <Button
+              size="lg"
               onClick={() => router.push('/rat')}
-              className="px-6 py-3 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ background: '#2563EB' }}
             >
               + Crear mi primer proceso RAT
-            </button>
+            </Button>
           )}
           {rats.length === 0 && !puedeEditar && (
             <p className="text-xs" style={{ color: '#6B7280' }}>Contacta al administrador para crear procesos RAT.</p>
@@ -293,8 +293,12 @@ export default function RatTable({ rats, company, onSelect, onRefresh, puedeEdit
         <h3 className="text-sm font-semibold mb-1" style={{ color: '#111827' }}>Exportar Registro RAT</h3>
         <p className="text-xs mb-4" style={{ color: '#6B7280' }}>Descarga el RAT completo para presentar ante la Agencia de Protección de Datos Personales.</p>
         <div className="flex gap-3">
-          <button onClick={exportCsv} disabled={exporting === 'csv'} className="px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-60 hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>{exporting === 'csv' ? 'Exportando...' : '📥 Descargar CSV'}</button>
-          <button onClick={exportPdf} disabled={exporting === 'pdf'} className="px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-60 hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>{exporting === 'pdf' ? 'Exportando...' : '📄 Descargar PDF'}</button>
+          <Button variant="secondary" onClick={exportCsv} disabled={exporting === 'csv'}>
+            {exporting === 'csv' ? 'Exportando...' : '📥 Descargar CSV'}
+          </Button>
+          <Button variant="secondary" onClick={exportPdf} disabled={exporting === 'pdf'}>
+            {exporting === 'pdf' ? 'Exportando...' : '📄 Descargar PDF'}
+          </Button>
         </div>
       </div>
     </div>

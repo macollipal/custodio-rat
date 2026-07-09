@@ -10,6 +10,7 @@ import Spinner from '@/components/ui/Spinner';
 import Tooltip from '@/components/ui/Tooltip';
 import CategoryChips from '@/components/ui/CategoryChips';
 import ReadOnlyChips from '@/components/ui/ReadOnlyChips';
+import { Button } from '@/components/ui/Button';
 import { DIAS_REVISION } from '@/lib/constants';
 import type { RAT } from '@/types';
 
@@ -355,13 +356,13 @@ export default function RatDetailView({
             {rat.fecha_eipd && <FieldRow label="Fecha EIPD" value={fmtDate(rat.fecha_eipd)} />}
             {rat.estado_eipd !== 'completada' && puedeEditar && (
               <div className="px-4 py-2.5">
-                <button
+                <Button
+                  size="sm"
                   onClick={() => router.push(`/eipd?rat_id=${rat.id}`)}
-                  className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white"
-                  style={{ background: '#7C3AED' }}
+                  style={{ background: '#7C3AED', color: '#FFFFFF' }}
                 >
                   📋 Solicitar EIPD
-                </button>
+                </Button>
               </div>
             )}
           </>
@@ -452,7 +453,9 @@ export default function RatDetailView({
           {puedeEditar ? (
             <>
               {rat.estado !== 'aprobado' ? (
-                <button
+                <Button
+                  variant="success"
+                  size="md"
                   onClick={handleApprove}
                   disabled={approving || (rat.completitud ?? 0) < 90}
                   title={
@@ -460,17 +463,10 @@ export default function RatDetailView({
                       ? `Completitud ${rat.completitud ?? 0}% — necesitas al menos 90% para aprobar`
                       : undefined
                   }
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                  style={{ background: '#059669' }}
+                  loading={approving}
                 >
-                  {approving ? (
-                    <>
-                      <Spinner size="sm" /> Aprobando…
-                    </>
-                  ) : (
-                    '✓ Aprobar RAT'
-                  )}
-                </button>
+                  ✓ Aprobar RAT
+                </Button>
               ) : (
                 <div
                   className="px-3 py-1.5 rounded-xl text-xs font-medium"
@@ -481,27 +477,27 @@ export default function RatDetailView({
                   {rat.fecha_aprobacion ? ` el ${fmtDate(rat.fecha_aprobacion)}` : ''}
                 </div>
               )}
-              <button
+              <Button
                 onClick={onEdit}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
+                size="md"
               >
                 ✏ Editar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={() => onDuplicate(rat)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold border transition hover:bg-gray-50"
-                style={{ color: '#374151', borderColor: '#E5E7EB' }}
               >
                 📋 Duplicar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="md"
                 onClick={() => dispatch({ type: 'SET_CONFIRM_DEL', value: true })}
-                className="px-4 py-2 rounded-xl text-xs font-semibold border transition hover:bg-red-50"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+                style={{ color: '#DC2626', borderColor: '#FCA5A5', borderWidth: '1px', borderStyle: 'solid' }}
               >
                 🗑 Eliminar
-              </button>
+              </Button>
             </>
           ) : (
             <span className="text-xs px-3 py-1.5 rounded-xl" style={{ background: '#F3F4F6', color: '#6B7280' }}>
@@ -597,7 +593,17 @@ function ConsentimientoAlert({ ratId }: { ratId: number }) {
       <form onSubmit={handleSubmit} className="rounded-xl p-4 mb-4 space-y-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold" style={{ color: '#1E40AF' }}>📋 Registrar consentimiento expreso</p>
-          <button type="button" onClick={() => setShowForm(false)} className="text-xs px-2 py-1 rounded hover:bg-blue-100" style={{ color: '#6B7280' }}>✕</button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowForm(false)}
+            aria-label="Cerrar"
+            className="!min-h-0 !px-2 !py-1"
+            style={{ color: '#6B7280' }}
+          >
+            ✕
+          </Button>
         </div>
         <p className="text-xs" style={{ color: '#374151' }}>
           Ingrese los datos del titular cuyo consentimiento expreso habilita el tratamiento de datos sensibles (Art. 16 Ley 21.719).
@@ -631,22 +637,22 @@ function ConsentimientoAlert({ ratId }: { ratId: number }) {
           style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
         />
         <div className="flex justify-end gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={() => setShowForm(false)}
-            className="px-4 py-2 rounded-lg text-xs font-medium border transition hover:bg-gray-50"
-            style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            size="md"
             disabled={saving}
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition disabled:opacity-50"
-            style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
+            loading={saving}
           >
-            {saving ? 'Guardando...' : 'Registrar'}
-          </button>
+            Registrar
+          </Button>
         </div>
       </form>
     );
@@ -663,13 +669,14 @@ function ConsentimientoAlert({ ratId }: { ratId: number }) {
           <p className="text-xs mt-0.5" style={{ color: '#B45309' }}>
             Este RAT trata datos sensibles y requiere el consentimiento expreso del titular conforme al Art. 16 de la Ley 21.719. El RAT no puede operar sin un consentimiento activo registrado.
           </p>
-          <button
+          <Button
+            size="sm"
             onClick={() => setShowForm(true)}
-            className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
-            style={{ background: '#D97706' }}
+            className="mt-2"
+            style={{ background: '#D97706', color: '#FFFFFF' }}
           >
             📋 Registrar consentimiento
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import { crearTktTicket, listarRats, checkDuplicadoTkt, type TktTicket } from '@
 import type { RAT } from '@/types';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
 
 const ARTICULOS: Record<string, string> = {
   acceso: 'Art. 12 — El titular puede solicitar información sobre sus datos tratados.',
@@ -426,15 +427,16 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
         <SectionHeader label="Representante legal" />
 
         <div className="mb-5">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setReprCollapsed(!reprCollapsed)}
-            className="flex items-center gap-2 text-xs font-medium mb-3 transition-colors"
-            style={{ color: '#2563EB' }}
+            className="!min-h-0 mb-3"
           >
-            <span className="text-[10px]">{reprCollapsed ? '▶' : '▼'}</span>
+            <span className="text-[10px] mr-1">{reprCollapsed ? '▶' : '▼'}</span>
             {reprCollapsed ? 'Agregar datos de representante' : 'Ocultar datos de representante'}
-          </button>
+          </Button>
           {!reprCollapsed && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -557,22 +559,24 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
         </div>
 
         <div className="flex gap-3 pt-3" style={{ borderTop: '1px solid #E5E7EB' }}>
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
-            style={{ borderColor: '#E5E7EB', color: '#374151' }}
+            className="flex-1"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            size="md"
             disabled={guardando}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition"
-            style={{ background: '#2563EB' }}
+            loading={guardando}
+            className="flex-1"
           >
-            {guardando ? 'Guardando...' : 'Crear Solicitud'}
-          </button>
+            Crear Solicitud
+          </Button>
         </div>
       </form>
     </Drawer>

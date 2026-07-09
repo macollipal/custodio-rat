@@ -6,6 +6,7 @@ import type { RATWizardData, RATSugerido } from '@/types';
 import FormField from '@/components/ui/FormField';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import CategoryChips from '@/components/ui/CategoryChips';
+import { Button } from '@/components/ui/Button';
 
 interface Step1Props {
   data: RATWizardData;
@@ -76,14 +77,13 @@ export function Step1({
             <option value="">— Selecciona para obtener sugerencias —</option>
             {tipos.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
-          <button
+          <Button
             onClick={aplicarSugerencias}
             disabled={!tipoSel || tipoSel.startsWith('—')}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 transition flex-shrink-0"
-            style={{ background: '#2563EB' }}
+            className="flex-shrink-0"
           >
             Aplicar
-          </button>
+          </Button>
         </div>
         {data._sug_observacion && (
           <div className="mt-3">
@@ -187,7 +187,7 @@ export function Step1({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
+        <Button
           onClick={() => {
             if (!stepIsValid) {
               toast.error('Completa los campos obligatorios antes de continuar.');
@@ -201,12 +201,10 @@ export function Step1({
             cambiarStep(2);
           }}
           disabled={!stepIsValid}
-          aria-disabled={!stepIsValid}
-          className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-          style={{ background: '#2563EB' }}
+          className="flex-1"
         >
           Siguiente →
-        </button>
+        </Button>
       </div>
     </div>
   );

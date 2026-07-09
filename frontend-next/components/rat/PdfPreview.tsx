@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
+import { Button } from '@/components/ui/Button';
 
 interface PdfPreviewProps {
   ratId: number;
@@ -67,8 +68,9 @@ export default function PdfPreview({ ratId, filename }: PdfPreviewProps) {
       {error && (
         <div className="flex flex-col items-center justify-center gap-2 p-4" style={{ height: 200 }}>
           <div className="text-xs font-medium" style={{ color: '#DC2626' }}>No se pudo cargar el documento</div>
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={async () => {
               try {
                 const blob = await api.descargarArchivoRAT(ratId);
@@ -79,11 +81,9 @@ export default function PdfPreview({ ratId, filename }: PdfPreviewProps) {
                 toast.error(err instanceof Error ? err.message : 'Error al abrir el documento');
               }
             }}
-            className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition"
-            style={{ background: '#2563EB' }}
           >
             Abrir en nueva pestaña
-          </button>
+          </Button>
         </div>
       )}
       {blobUrl && !loading && !error && (

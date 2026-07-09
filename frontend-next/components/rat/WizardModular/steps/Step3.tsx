@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import type { RATWizardData } from '@/types';
 import FormField from '@/components/ui/FormField';
 import AlertBanner from '@/components/dashboard/AlertBanner';
+import { Button } from '@/components/ui/Button';
 import { useApp } from '@/context/AppContext';
 
 interface Step3Props {
@@ -153,14 +154,15 @@ export function Step3({
                   <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{data.archivo_base_legal_nombre}</p>
                   <p className="text-xs" style={{ color: '#9CA3AF' }}>{data.archivo_base_legal_tipo}</p>
                 </div>
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="ghost"
                   onClick={() => setData(d => ({ ...d, archivo_base_legal_base64: undefined, archivo_base_legal_nombre: undefined, archivo_base_legal_tipo: undefined }))}
-                  className="text-xs font-semibold px-2 py-1 rounded"
                   style={{ color: '#DC2626', background: '#FEE2E2' }}
                 >
                   Eliminar
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -226,14 +228,14 @@ export function Step3({
       )}
 
       <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
+        <Button
+          variant="secondary"
+          size="lg"
           onClick={() => cambiarStep(2)}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-          style={{ color: '#374151', borderColor: '#E5E7EB' }}
         >
           ← Anterior
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => {
             if (!stepIsValid) {
               toast.error('Completa los campos obligatorios antes de continuar.');
@@ -248,12 +250,10 @@ export function Step3({
             cambiarStep(4);
           }}
           disabled={!stepIsValid}
-          aria-disabled={!stepIsValid}
-          className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-          style={{ background: '#2563EB' }}
+          className="flex-1"
         >
           Siguiente →
-        </button>
+        </Button>
       </div>
     </div>
   );

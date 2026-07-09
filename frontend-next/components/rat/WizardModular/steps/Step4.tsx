@@ -6,6 +6,7 @@ import type { RATWizardData } from '@/types';
 import FormField from '@/components/ui/FormField';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import Spinner from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 
 interface Step4Props {
   data: RATWizardData;
@@ -216,14 +217,15 @@ export function Step4({
       </details>
 
       <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
+        <Button
+          variant="secondary"
+          size="lg"
           onClick={() => cambiarStep(3)}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-          style={{ color: '#374151', borderColor: '#E5E7EB' }}
         >
           ← Anterior
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="success"
           onClick={() => {
             if (!stepIsValid) {
               toast.error('Completa los campos obligatorios antes de guardar.');
@@ -232,12 +234,10 @@ export function Step4({
             cambiarStep(5);
           }}
           disabled={!stepIsValid}
-          aria-disabled={!stepIsValid}
-          className="flex-1 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
-          style={{ background: '#059669' }}
+          className="flex-1"
         >
           Siguiente →
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import React from 'react';
 import type { RATWizardData, RATSugerido } from '@/types';
 import AlertBanner from '@/components/dashboard/AlertBanner';
+import { Button } from '@/components/ui/Button';
 
 interface Step0Props {
   data: RATWizardData;
@@ -74,26 +75,26 @@ export function Step0({
                   {sug.decisiones_automatizadas && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Dec. auto</span>}
                 </div>
               </div>
-              <button
-                className="ml-3 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition flex-shrink-0"
-                style={{ background: '#2563EB' }}
+              <Button
+                size="sm"
+                className="ml-3 flex-shrink-0"
                 onClick={e => { e.stopPropagation(); usarSugerencia(sug); }}
               >
                 Usar
-              </button>
+              </Button>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex justify-center">
-        <button
+        <Button
+          variant="secondary"
+          size="lg"
           onClick={crearPersonalizado}
-          className="px-6 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-          style={{ color: '#374151', borderColor: '#E5E7EB' }}
         >
           + Crear proceso personalizado
-        </button>
+        </Button>
       </div>
     </div>
   );

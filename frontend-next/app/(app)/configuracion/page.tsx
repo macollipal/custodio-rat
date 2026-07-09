@@ -10,6 +10,7 @@ import AsesorCorpusTab from '@/components/configuracion/AsesorCorpusTab';
 import { EmpresasManagementTab } from '@/components/configuracion/EmpresasManagementTab';
 import { FeriadosTab } from '@/components/configuracion/FeriadosTab';
 import ModulosTab from '@/components/configuracion/ModulosTab';
+import { Button } from '@/components/ui/Button';
 
 interface AuditEntry {
   id: number;
@@ -231,13 +232,9 @@ export default function ConfiguracionPage() {
           </div>
 
           <div className="flex justify-end">
-            <button
-              onClick={fetchDbHealth}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-              style={{ background: '#2563EB' }}
-            >
+            <Button onClick={fetchDbHealth}>
               🔄 Refrescar estado
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -246,13 +243,14 @@ export default function ConfiguracionPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold" style={{ color: '#111827' }}>Últimos registros de auditoría</h2>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={fetchAuditLogs}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-              style={{ borderColor: '#E5E7EB', color: '#374151' }}
+              aria-label="Refrescar registros"
             >
               🔄
-            </button>
+            </Button>
           </div>
 
           {loadingLogs ? (

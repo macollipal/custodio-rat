@@ -7,6 +7,7 @@ import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import Spinner from '@/components/ui/Spinner';
 import CategoryChips from '@/components/ui/CategoryChips';
+import { Button } from '@/components/ui/Button';
 import { useApp } from '@/context/AppContext';
 import { TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
@@ -182,13 +183,13 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button
+        <Button
+          variant="secondary"
+          size="md"
           onClick={onCancel}
-          className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
-          style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
         >
           ← Volver
-        </button>
+        </Button>
         <h2 className="text-lg font-bold" style={{ color: '#111827' }}>
           Editar proceso · {rat.nombre_proceso}
         </h2>
@@ -251,18 +252,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             <div className="flex justify-end pt-2">
-              <button
+              <Button
                 onClick={() => {
                   if (!form.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
                   if (!form.categoria_titulares?.trim()) { toast.error('Las categorías de titulares son obligatorias.'); return; }
                   if (!form.fuente_datos?.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
                   setStep(2);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -403,17 +402,15 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(1)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+              <Button variant="secondary" size="lg" onClick={() => setStep(1)}>← Anterior</Button>
+              <Button
                 onClick={() => {
                   if (!form.categoria_datos?.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
                   setStep(3);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -490,19 +487,23 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                         <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{form.archivo_base_legal_nombre}</p>
                         <p className="text-xs" style={{ color: '#6B7280' }}>{form.archivo_base_legal_tipo}</p>
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setForm(f => ({ ...f, archivo_base_legal_base64: '', archivo_base_legal_nombre: '', archivo_base_legal_tipo: '' }))}
-                        className="text-xs font-semibold px-2 py-1 rounded"
                         style={{ color: '#DC2626', background: '#FEE2E2' }}
                       >
                         Eliminar
-                      </button>
+                      </Button>
                     </div>
                   )}
                   {rat.tiene_archivo_base_legal && !form.archivo_base_legal_base64 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
                       onClick={async () => {
                         try {
                           const blob = await api.descargarArchivoRAT(rat.id);
@@ -513,11 +514,10 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                           toast.error(err instanceof Error ? err.message : 'Error al abrir el documento');
                         }
                       }}
-                      className="mt-2 text-xs font-medium underline"
-                      style={{ color: '#2563EB' }}
+                      style={{ color: '#2563EB', textDecoration: 'underline' }}
                     >
                       Ver documento actual
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -582,8 +582,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             )}
 
             <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(2)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+              <Button variant="secondary" size="lg" onClick={() => setStep(2)}>← Anterior</Button>
+              <Button
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
                   if (form.base_legal === 'Interés legítimo') {
@@ -594,11 +594,9 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   }
                   setStep(4);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -735,8 +733,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(3)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+              <Button variant="secondary" size="lg" onClick={() => setStep(3)}>← Anterior</Button>
+              <Button
                 onClick={() => {
                   const err = validatePaso4(form);
                   if (err) {
@@ -745,11 +743,10 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   }
                   setStep(5);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#7C3AED' }}
+                style={{ background: '#7C3AED', color: '#FFFFFF' }}
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -802,24 +799,17 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(4)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+              <Button variant="secondary" size="lg" onClick={() => setStep(4)}>← Anterior</Button>
+              <Button
+                variant="success"
                 onClick={() => {
                   if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
                   handleSave();
                 }}
-                disabled={saving}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
-                style={{ background: '#059669' }}
+                loading={saving}
               >
-                {saving ? (
-                  <>
-                    <Spinner size="sm" /> Guardando…
-                  </>
-                ) : (
-                  '✓ Guardar cambios'
-                )}
-              </button>
+                ✓ Guardar cambios
+              </Button>
             </div>
           </div>
         )}
