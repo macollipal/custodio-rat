@@ -8,6 +8,8 @@ from typing import Optional
 
 from fastapi import HTTPException, status
 
+from app.services.file_validation import _validate_magic_bytes
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,7 @@ def procesar_archivo_base_legal(data: dict) -> dict:
     hash_val = hashlib.sha256(datos).hexdigest()
     nombre = data.get("archivo_base_legal_nombre", "documento.pdf")
     tipo = data.get("archivo_base_legal_tipo", "application/pdf")
+    _validate_magic_bytes(datos, tipo)
 
     try:
         from app.core.storage import get_storage_backend, generate_object_name

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.routes.deps import get_client_ip, get_current_user, require_editor_or_admin_empresa
+from app.routes.deps import get_client_ip, get_current_user, require_editor_or_admin_empresa, check_company_access
 from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut, BaseLegalOptionsOut, BASE_LEGAL_OPTIONS
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
@@ -562,11 +562,7 @@ async def exportar_a_csv(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     contenido = exportar_csv(rats)
@@ -584,11 +580,7 @@ async def exportar_a_pdf(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     contenido = exportar_pdf(rats, company)
@@ -612,10 +604,7 @@ async def exportar_rat_individual_pdf(
     if not rat:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if rat.company_id not in ids:
-            raise HTTPException(status_code=403, detail="No tiene acceso a este RAT.")
+    check_company_access(current_user, rat.company_id, db)
     company = get_company(db, rat.company_id)
     contenido = exportar_pdf([rat], company)
     filename = _safe_filename(f"RAT_{rat.nombre_proceso}_{company.rut}.pdf")
@@ -632,11 +621,7 @@ async def exportar_cni(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     from app.services.export_cni_service import exportar_rat_cni

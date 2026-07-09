@@ -29,6 +29,7 @@ backend/backend_out.log
 backend/server.log
 backend/seed_claudio_corp.log
 backend/seed_claudio_corp_manifest.json
+backend/uploads/
 
 # Node
 frontend-next/node_modules/
