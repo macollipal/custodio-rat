@@ -11,6 +11,7 @@ import CompletitudBar from '@/components/ui/CompletitudBar';
 import Drawer from '@/components/ui/Drawer';
 import { ReportTable } from '@/components/report';
 import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/Button';
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
 
@@ -397,19 +398,19 @@ export default function ReportesPage() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => exportCSV()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          <Button variant="secondary" size="md" onClick={() => exportCSV()}>
             📥 CSV
-          </button>
-          <button onClick={() => exportPDF()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          </Button>
+          <Button variant="secondary" size="md" onClick={() => exportPDF()}>
             📥 PDF
-          </button>
-          <button onClick={() => load()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          </Button>
+          <Button variant="secondary" size="md" onClick={() => load()}>
             🔄 Actualizar
-          </button>
+          </Button>
           {puedeEditar && (
-            <button onClick={() => window.location.href = '/rat'} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>
+            <Button onClick={() => window.location.href = '/rat'}>
               + Nuevo proceso
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -446,7 +447,7 @@ export default function ReportesPage() {
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold" style={{ color: '#111827' }}>Filtros</span>
             {tieneFiltrosActivos && (
-              <button onClick={limpiarFiltros} className="text-xs px-2 py-0.5 rounded-lg transition hover:bg-gray-100" style={{ color: '#6B7280' }}>
+              <button onClick={limpiarFiltros} className="text-xs px-3 py-2 rounded-lg transition hover:bg-gray-100 min-h-[44px]" style={{ color: '#6B7280' }}>
                 Limpiar todos
               </button>
             )}
@@ -462,7 +463,7 @@ export default function ReportesPage() {
                 ))}
               </div>
             )}
-            <button onClick={() => setShowSaveModal(true)} className="text-xs px-2 py-1 rounded-lg border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+            <button onClick={() => setShowSaveModal(true)} className="text-xs px-3 py-2.5 rounded-lg border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
               💾 Guardar filtro
             </button>
           </div>
@@ -485,26 +486,26 @@ export default function ReportesPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, datos_sensibles: !f.datos_sensibles }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.datos_sensibles ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.datos_sensibles ? '#FEF3C7' : '#F9FAFB', borderColor: filtrosActivos.datos_sensibles ? '#D97706' : '#E5E7EB', color: filtrosActivos.datos_sensibles ? '#92400E' : '#6B7280' }}>⚠️ Datos sensibles</button>
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, evaluacion_impacto: !f.evaluacion_impacto }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.evaluacion_impacto ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.evaluacion_impacto ? '#DBEAFE' : '#F9FAFB', borderColor: filtrosActivos.evaluacion_impacto ? '#2563EB' : '#E5E7EB', color: filtrosActivos.evaluacion_impacto ? '#1E3A8A' : '#6B7280' }}>📋 Requieren EIPD</button>
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, transferencia_internacional: !f.transferencia_internacional }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.transferencia_internacional ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.transferencia_internacional ? '#F3E8FF' : '#F9FAFB', borderColor: filtrosActivos.transferencia_internacional ? '#7C3AED' : '#E5E7EB', color: filtrosActivos.transferencia_internacional ? '#5B21B6' : '#6B7280' }}>🌐 Transfer. internacional</button>
-          <button onClick={applyFilters} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar filtros</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, datos_sensibles: !f.datos_sensibles }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.datos_sensibles ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.datos_sensibles ? '#FEF3C7' : '#F9FAFB', borderColor: filtrosActivos.datos_sensibles ? '#D97706' : '#E5E7EB', color: filtrosActivos.datos_sensibles ? '#92400E' : '#6B7280' }}>⚠️ Datos sensibles</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, evaluacion_impacto: !f.evaluacion_impacto }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.evaluacion_impacto ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.evaluacion_impacto ? '#DBEAFE' : '#F9FAFB', borderColor: filtrosActivos.evaluacion_impacto ? '#2563EB' : '#E5E7EB', color: filtrosActivos.evaluacion_impacto ? '#1E3A8A' : '#6B7280' }}>📋 Requieren EIPD</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, transferencia_internacional: !f.transferencia_internacional }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.transferencia_internacional ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.transferencia_internacional ? '#F3E8FF' : '#F9FAFB', borderColor: filtrosActivos.transferencia_internacional ? '#7C3AED' : '#E5E7EB', color: filtrosActivos.transferencia_internacional ? '#5B21B6' : '#6B7280' }}>🌐 Transfer. internacional</button>
+          <button onClick={applyFilters} className="px-3 py-2.5 rounded-lg text-xs font-semibold text-white transition min-h-[44px]" style={{ background: '#2563EB' }}>Aplicar filtros</button>
         </div>
 
         {/* Ordenar y agrupar */}
         <div className="flex gap-3 mt-4 flex-wrap items-center">
           <div className="flex items-center gap-2">
             <span className="text-xs" style={{ color: '#6B7280' }}>Ordenar por:</span>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={`${inputCls} py-1.5`} style={{ minWidth: 130 }}>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={`${inputCls} py-2.5 min-h-[44px]`} style={{ minWidth: 130 }}>
               {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <button onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')} className="px-2 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB' }}>
+            <button onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')} className="px-3 py-2.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB' }}>
               {sortOrder === 'desc' ? '↓ Desc' : '↑ Asc'}
             </button>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs" style={{ color: '#6B7280' }}>Agrupar por:</span>
-            <select value={groupBy} onChange={e => setGroupBy(e.target.value)} className={`${inputCls} py-1.5`} style={{ minWidth: 120 }}>
+            <select value={groupBy} onChange={e => setGroupBy(e.target.value)} className={`${inputCls} py-2.5 min-h-[44px]`} style={{ minWidth: 120 }}>
               <option value="none">Sin agrupar</option>
               <option value="estado">Estado</option>
               <option value="base_legal">Base legal</option>
@@ -512,7 +513,7 @@ export default function ReportesPage() {
             </select>
           </div>
           <div className="relative" ref={colPickerRef}>
-            <button onClick={() => setShowColPicker(v => !v)} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+            <button onClick={() => setShowColPicker(v => !v)} className="px-3 py-2.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
               ☰ Columnas ({columns.length})
             </button>
             {showColPicker && (
@@ -829,8 +830,8 @@ export default function ReportesPage() {
             <h3 className="text-base font-semibold mb-4" style={{ color: '#111827' }}>Guardar filtro</h3>
             <input type="text" value={saveFilterName} onChange={e => setSaveFilterName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveFilter()} placeholder="Nombre del filtro..." className="w-full px-3 py-2 rounded-lg text-sm border mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#E5E7EB' }} />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowSaveModal(false)} className="px-4 py-2 rounded-lg text-sm border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-              <button onClick={saveFilter} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Guardar</button>
+              <Button variant="secondary" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
+              <Button onClick={saveFilter}>Guardar</Button>
             </div>
           </div>
         </div>

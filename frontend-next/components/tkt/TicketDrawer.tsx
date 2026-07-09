@@ -23,6 +23,7 @@ import {
 } from '@/lib/api';
 import type { RAT } from '@/types';
 import { inputCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
@@ -569,14 +570,9 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                   La causal debe estar justificada conforme a la Ley 21.719 para ser válida ante la APDC.
                 </p>
               )}
-              <button
-                onClick={handleGuardarRespuesta}
-                disabled={guardando}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
-                style={{ background: '#059669' }}
-              >
-                {guardando ? 'Guardando...' : 'Guardar respuesta'}
-              </button>
+              <Button variant="success" onClick={handleGuardarRespuesta} loading={guardando}>
+                Guardar respuesta
+              </Button>
             </div>
           ) : (
             <p className="text-sm" style={{ color: '#6B7280' }}>
@@ -800,14 +796,9 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
               <option value="plazo_vencido">Plazo vencido para ejercer el derecho</option>
               <option value="otro">Otro motivo fundado</option>
             </select>
-            <button
-              onClick={handleRechazarFundado}
-              disabled={accionLoading || !causalRechazo}
-              className="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
-              style={{ background: '#DC2626' }}
-            >
-              {accionLoading ? 'Rechazando...' : 'Rechazar con motivo fundado'}
-            </button>
+            <Button variant="danger" fullWidth onClick={handleRechazarFundado} loading={accionLoading} disabled={!causalRechazo}>
+              Rechazar con motivo fundado
+            </Button>
           </div>
         )}
 

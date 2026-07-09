@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
+import { Button } from '@/components/ui/Button';
 import type { SecurityBreach } from '@/types';
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2 } from '@/lib/styles';
 
@@ -325,26 +326,22 @@ function BreachForm({
       </div>
 
       <div className="flex justify-between pt-2">
-        <button
-          onClick={onCancel}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-          style={{ color: '#374151', borderColor: '#E5E7EB' }}
-        >
+        <Button variant="secondary" size="lg" onClick={onCancel}>
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="danger"
+          size="lg"
           onClick={() => {
             if (!form.descripcion.trim()) { toast.error('La descripción es obligatoria.'); return; }
             if (!form.fecha_deteccion) { toast.error('La fecha de detección es obligatoria.'); return; }
             if (!form.naturaleza) { toast.error('Debe seleccionar la naturaleza de la brecha.'); return; }
             onSave(form);
           }}
-          disabled={saving}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
-          style={{ background: '#DC2626' }}
+          loading={saving}
         >
-          {saving ? 'Guardando...' : '✓ Guardar brecha'}
-        </button>
+          ✓ Guardar brecha
+        </Button>
       </div>
     </div>
   );
@@ -448,7 +445,7 @@ export default function BreachesPage() {
     <div className="p-8">
       {view === 'list' && (
         <>
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Brechas de Seguridad</h1>
               <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
@@ -457,15 +454,12 @@ export default function BreachesPage() {
               </p>
             </div>
             {puedeEditar && (
-              <button
+              <Button
+                variant="danger"
                 onClick={() => { setEditingBreach(null); setView('create'); }}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#DC2626' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#B91C1C')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#DC2626')}
               >
                 + Registrar brecha
-              </button>
+              </Button>
             )}
           </div>
 
@@ -535,7 +529,7 @@ export default function BreachesPage() {
 
                     {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
                     {(b.fecha_ocurrencia_estimada || b.efectos_probables || b.causa_raiz || b.evidencia_notificacion_apdc_folio || b.estado_cierre) && (
-                      <div className="text-xs mb-3 p-2 rounded" style={{ background: '#F0F9FF', color: '#0369A1' }}>
+                      <div className="text-xs mb-3 p-2 rounded break-words" style={{ background: '#F0F9FF', color: '#0369A1' }}>
                         <span className="font-semibold">📋 Compliance: </span>
                         {b.causa_raiz && <span>Causa: {b.causa_raiz} · </span>}
                         {b.estado_cierre && <span>Estado: {b.estado_cierre} · </span>}
@@ -543,15 +537,15 @@ export default function BreachesPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-3 mb-3">
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex gap-3 mb-3 flex-wrap">
+                      <div className="flex items-center gap-1.5" aria-label={`APDC ${b.notificado_apdc ? 'notificada' : 'pendiente'}`}>
                         <div className={`w-3 h-3 rounded-full ${b.notificado_apdc ? '' : ''}`} style={{ background: b.notificado_apdc ? '#059669' : '#D97706' }} />
                         <span className="text-xs" style={{ color: '#6B7280' }}>
                           APDC {b.notificado_apdc ? 'notificada' : 'pendiente'}
                           {b.fecha_notificacion_apdc && ` (${new Date(b.fecha_notificacion_apdc).toLocaleDateString('es-CL')})`}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5" aria-label={`Titulares ${b.notificado_titulares ? 'notificados' : 'pendiente'}`}>
                         <div className="w-3 h-3 rounded-full" style={{ background: b.notificado_titulares ? '#059669' : '#D97706' }} />
                         <span className="text-xs" style={{ color: '#6B7280' }}>
                           Titulares {b.notificado_titulares ? 'notificados' : 'pendiente'}
@@ -562,22 +556,23 @@ export default function BreachesPage() {
                     <div className="flex gap-2 flex-wrap">
                       {puedeEditar && (
                         <>
-                          <button
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => { setEditingBreach(b); setView('edit'); }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                            style={{ color: '#374151', borderColor: '#E5E7EB' }}
                           >
                             ✏️ Editar
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               if (confirm('¿Eliminar esta brecha?')) handleDelete(b.id);
                             }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
-                            style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
+                            style={{ color: '#DC2626' }}
                           >
                             🗑 Eliminar
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>

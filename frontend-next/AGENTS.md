@@ -109,6 +109,35 @@ Manejo de 401: `window.location.replace()` + `return {} as T`.
 ### Constantes — lib/constants.ts
 Single source of truth para todos los magic strings: `API_BASE`, `STORAGE_KEYS`, `DRAFT_KEY_PREFIX`, `DIAS_REVISION`, `ESTADO_MAP`, `ESTADO_OPTIONS`, `RIEGO_OPTIONS`, `EIPD_OPTIONS`, `BASES_LEGALES`, `TIPOS_DATO_SENSIBLE`.
 
+### Sistema de diseño / homologación UX
+
+**REGLA**: para todo componente nuevo o migración, usar **componentes átomo** de `components/ui/` en vez de HTML crudo con `style={{}}`. Esto garantiza consistencia visual, accesibilidad WCAG, touch targets ≥44px y previene drift de estilos.
+
+**Componentes átomo disponibles** (`components/ui/`):
+
+| Componente | Variantes | Uso |
+|---|---|---|
+| `<Button>` | `variant: primary / secondary / danger / success / warning / ghost` · `size: sm / md / lg` · `loading / fullWidth` | Toda acción clickeable. **Prohibido `<button>` con `style={{ background: '#xxx' }}`**. |
+| `<Input>` | `label / hint / error / iconLeft / iconRight / required` | Inputs de texto. Incluye a11y (`aria-describedby`, `aria-invalid`). |
+| `<Select>` | `label / hint / error / options / placeholder / required` | Dropdowns. |
+| `<Textarea>` | `label / hint / error / showCount / maxLength` | Texto multilínea. |
+| `<Badge>` | `variant: success / warning / danger / info / neutral / purple` · **o** `estado` (RAT) | Etiquetas pequeñas. Mantiene API legacy `estado={rat.estado}`. |
+| `<Card>` + `<CardHeader>` | `variant: default / bordered / elevated` · `padding: none / sm / md / lg` | Contenedor de panel estándar. |
+| `<Alert>` | `variant: info / success / warning / danger` · `title / icon` | Mensajes contextuales (reemplaza `AlertBanner` para mensajes inline). |
+
+**Importación recomendada**:
+```tsx
+import { Button, Input, Select, Textarea, Card, CardHeader, Badge, Alert } from '@/components/ui';
+```
+
+**Touch targets**: todos los botones por defecto cumplen WCAG ≥44px. Si necesitás un botón visualmente más pequeño, agregá `min-h-[44px]` explícito.
+
+**Hover**: **prohibido** usar `onMouseEnter/onMouseLeave` para hover effects. Usar clases Tailwind `hover:` y `active:`.
+
+**Colores hardcodeados**: si necesitás un color específico, primero verificar si existe en `globals.css` (CSS vars) o `lib/styles.ts`. Si no existe, agregarlo como token en `globals.css` y documentar acá.
+
+**Para casos especiales** donde el componente átomo no alcanza (ej. Wizard steps, layout grid complejo), se permite `style={{}}` inline, pero siempre con `className` para Tailwind + clases base.
+
 ### Página de empresas — companies/page.tsx
 - `CompanyForm` — formulario de creación
 - `CompanyEditForm` — edición inline

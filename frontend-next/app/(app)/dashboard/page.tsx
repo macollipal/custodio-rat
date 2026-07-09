@@ -11,6 +11,7 @@ import AlertBanner, { AlertCard } from '@/components/dashboard/AlertBanner';
 import StatusChart from '@/components/dashboard/StatusChart';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Badge from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 import RatDetailModal from '@/components/rat/RatDetailModal';
@@ -190,15 +191,9 @@ export default function DashboardPage() {
             )}
           </p>
         </div>
-        <button
-          onClick={() => router.push('/rat')}
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-          style={{ background: '#2563EB' }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
-        >
+        <Button onClick={() => router.push('/rat')}>
           + Nuevo proceso
-        </button>
+        </Button>
       </div>
 
       <OnboardingChecklist
@@ -318,15 +313,9 @@ export default function DashboardPage() {
                 Ley 21.719 Art. 14 bis: notificación APDC en 72h, titulares sin dilación
               </p>
             </div>
-            <button
-              onClick={() => router.push('/breaches')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
-              style={{ background: '#DC2626' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#B91C1C')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#DC2626')}
-            >
+            <Button variant="danger" size="sm" onClick={() => router.push('/breaches')}>
               Ver todas →
-            </button>
+            </Button>
           </div>
           <div className="space-y-2">
             {brechasActivas.map(b => {
@@ -555,12 +544,12 @@ export default function DashboardPage() {
               <h4 className="font-bold text-base mb-2" style={{ color: '#111827' }}>{tourSteps[tourStep].title}</h4>
               <p className="text-sm mb-5" style={{ color: '#6B7280' }}>{tourSteps[tourStep].content}</p>
               <div className="flex gap-2 justify-end">
-                <button onClick={skipTour} className="px-4 py-2 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+                <Button variant="secondary" size="sm" onClick={skipTour}>
                   Omitir tour
-                </button>
-                <button onClick={nextStep} className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition" style={{ background: '#2563EB' }}>
+                </Button>
+                <Button size="sm" onClick={nextStep}>
                   {tourStep < tourSteps.length - 1 ? 'Siguiente →' : '¡Comenzar!'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
