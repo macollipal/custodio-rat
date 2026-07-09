@@ -3,7 +3,6 @@ Tests del servicio de sugerencias automÃ¡ticas para el RAT.
 Valida: tipos conocidos, coincidencia parcial, tipos desconocidos, estructura de respuesta.
 """
 
-import pytest
 
 
 class TestSugerenciasAPI:

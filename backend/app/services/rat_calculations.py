@@ -97,7 +97,7 @@ def calcular_completitud(data: Mapping[str, Any]) -> int:
     # Penalizacion: base legal != 'Otra' sin documento adjunto
     base_legal = data.get("base_legal")
     if base_legal and str(base_legal).strip().lower() != "otra":
-        if not data.get("archivo_base_legal_datos"):
+        if not data.get("archivo_base_legal_datos") and not data.get("archivo_base_legal_storage_url"):
             completados = max(completados - 1, 0)
 
     return round((completados / total) * 100) if total else 0

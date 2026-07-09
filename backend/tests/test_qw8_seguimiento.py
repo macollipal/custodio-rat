@@ -3,7 +3,6 @@ Tests para QW8: Portal del Titular â€” Seguimiento por tracking_token.
 GET /seguimiento/{tracking_token} â€” pÃºblico, sin auth.
 """
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 

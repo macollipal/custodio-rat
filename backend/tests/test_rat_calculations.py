@@ -14,7 +14,6 @@ RAT.calcular_completitud vivia en el modelo y SQLAlchemy intento
 ejecutarla como columna de SQL — TypeError en runtime. La refactorizacion
 H3.1 movio la logica a funciones puras que aceptan dict, sin self.
 """
-import pytest
 
 from app.services import rat_calculations
 from app.services.rat_calculations import (
@@ -314,8 +313,6 @@ class TestRegresionIncidente20260708:
 
     def test_funciones_puras_aceptan_mapping_generico(self):
         """Compatibilidad con namedtuple / Row / dict (todos son Mappings)."""
-        from collections import namedtuple
-        Row = namedtuple("Row", ["nombre_proceso", "base_legal"])
 
         # Mapping-like (no dict literal pero dict-like)
         class MappingLike(dict):

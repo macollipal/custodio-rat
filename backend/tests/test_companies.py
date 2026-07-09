@@ -3,7 +3,6 @@ Tests CRUD de empresas: crear, listar, obtener, actualizar, eliminar.
 Incluye casos edge: duplicados, campos obligatorios, IDs inexistentes.
 """
 
-import pytest
 
 
 PAYLOAD_BASE = {

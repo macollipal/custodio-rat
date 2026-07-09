@@ -8,7 +8,6 @@ H5.4 — Tests de dashboard stats adicionales.
 4. encargados_sin_contrato: RAT con nombre_encargado sin tiene_contrato_encargado
 5. rats_sin_doc_base_legal: RAT con base_legal != 'Otra' sin archivo
 """
-import pytest
 
 
 class TestDashboardStatsAvanzados:

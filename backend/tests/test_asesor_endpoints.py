@@ -1,10 +1,8 @@
 ﻿"""
 Tests de los endpoints del Asesor.
 """
-import json
-import pytest
 
-from app.models.asesor import AsesorChunk, AsesorCorpusDocument
+from app.models.asesor import AsesorCorpusDocument
 
 
 def test_ask_sin_auth_retorna_401(client):

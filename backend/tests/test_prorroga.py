@@ -11,7 +11,6 @@ Covers:
 - LÃ­mite mÃ¡ximo de 10 dÃ­as
 """
 
-import pytest
 
 
 class TestProrrogaWorkflow:

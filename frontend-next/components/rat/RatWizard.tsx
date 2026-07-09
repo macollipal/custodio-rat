@@ -12,11 +12,12 @@ import CategoryChips from '@/components/ui/CategoryChips';
 import OnboardingTour from '@/components/ui/OnboardingTour';
 import { useStepValidation } from './ratWizardValidation';
 import type { Company, RAT, RATWizardData } from '@/types';
+import { useApp } from '@/context/AppContext';
 
-import { BASES_LEGALES, TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
+import { TIPOS_DATO_SENSIBLE, DRAFT_KEY_PREFIX, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 
 // H4.5: Constantes, hooks y tipos extraídos a ./WizardModular/
-import { STEPS, DESCRIPCIONES_BASE } from './WizardModular/types';
+import { STEPS } from './WizardModular/types';
 import { useDraftAutosave, useWizardNavigation } from './WizardModular';
 
 interface RatWizardProps {
@@ -26,6 +27,7 @@ interface RatWizardProps {
 }
 
 export default function RatWizard({ company, onDone, onCancel }: RatWizardProps) {
+  const { baseLegalOptions, baseLegalDescripciones } = useApp();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<RATWizardData>({});
   const [tipos, setTipos] = useState<string[]>([]);
@@ -787,7 +789,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             >
               <select
                 id="rw-base_legal"
-                value={data.base_legal ?? BASES_LEGALES[0]}
+                value={data.base_legal ?? baseLegalOptions[0]}
                 onChange={e => setData(d => ({ ...d, base_legal: e.target.value }))}
                 aria-required="true"
                 aria-invalid={!!fieldErrors.base_legal}
@@ -797,7 +799,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   borderColor: fieldErrors.base_legal ? '#DC2626' : '#D1D5DB',
                 }}
               >
-                {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+                {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               {baseLegalSugerida && rubroNombre && data.base_legal !== baseLegalSugerida.base_legal && (
                 <div
@@ -836,10 +838,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
             </FormField>
 
             <div className="space-y-3">
-              {data.base_legal && DESCRIPCIONES_BASE[data.base_legal] && (
+              {data.base_legal && baseLegalDescripciones[data.base_legal] && (
                 <div className="mt-2">
                   <AlertBanner
-                    message={DESCRIPCIONES_BASE[data.base_legal]}
+                    message={baseLegalDescripciones[data.base_legal]}
                     type={data.base_legal === 'Interés legítimo' || data.base_legal === 'Datos biométricos de identificación (Art. 16 BIS)' ? 'warning' : 'info'}
                   />
                 </div>
@@ -985,7 +987,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     }
                     return;
                   }
-                  if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
+                  if (!data.base_legal) setData(d => ({ ...d, base_legal: baseLegalOptions[0] }));
                   cambiarStep(4);
                 }}
                 disabled={!stepIsValid}

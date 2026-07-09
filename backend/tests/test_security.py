@@ -3,7 +3,6 @@ Tests de seguridad: token blacklist, RBAC, rate limiting.
 """
 
 import pytest
-import time
 
 
 class TestTokenBlacklist:
@@ -305,8 +304,6 @@ class TestCSVInjection:
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         token = login.json()["access_token"]
 
-        from app.models.rat import RAT
-        from app.models.company import Company
         from app.database.database import Base, engine_test
         Base.metadata.create_all(bind=engine_test)
 

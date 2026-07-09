@@ -2,11 +2,8 @@
 Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 â€” REC-06).
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from app.services.rat_validators import tiene_consentimiento_activo
-from app.models.rat import RAT
-from fastapi import HTTPException
 
 
 class TestConsentimientoExpreso:

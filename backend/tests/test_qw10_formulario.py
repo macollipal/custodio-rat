@@ -10,9 +10,6 @@ Estrategia de envÃ­o:
   (esto reproduce cÃ³mo el browser envÃ­a multipart/form-data cuando hay files + campos)
 """
 
-import json
-import pytest
-from fastapi.testclient import TestClient
 
 
 class TestQW10Representante:

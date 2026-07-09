@@ -3,8 +3,6 @@ Tests para el parser SMTP_URL (smtp_config.py).
 """
 
 import os
-import pytest
-from unittest.mock import patch
 
 
 class TestSmtpConfig:

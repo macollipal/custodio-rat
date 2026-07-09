@@ -6,7 +6,6 @@ H5.3 — Tests de exportacion CNI (formato APDC Ley 21.719).
 2. Content-Disposition con attachment + filename
 3. Contenido incluye campos del RAT en formato CNI
 """
-import pytest
 
 
 class TestExportCNI:

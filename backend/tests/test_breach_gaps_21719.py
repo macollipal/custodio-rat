@@ -6,7 +6,6 @@ evidencia_notificacion_APDP_folio, estado_cierre, fecha_cierre.
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
 """
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 

@@ -2,7 +2,6 @@
 Tests para B-03: Contrato formal de Encargado (Art. 14 quater â€” REC-03).
 """
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 

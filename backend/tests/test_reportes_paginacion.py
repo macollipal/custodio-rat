@@ -12,7 +12,6 @@ QW-ITER14-01: reportes deben paginar cuando hay >100 RATs para
 evitar memory issues en el cliente.
 """
 
-import pytest
 
 
 class TestReportesPaginacion:

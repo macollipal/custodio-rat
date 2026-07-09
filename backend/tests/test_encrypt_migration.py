@@ -3,13 +3,11 @@ Tests para scripts/migration/encrypt_existing_bytea.py (C1-F5).
 Valida: heurÃ­stica de detecciÃ³n, idempotencia, dry-run, manejo de errores.
 """
 
-import base64
 import os
 import sys
 import pytest
 import tempfile
-from io import StringIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from pathlib import Path
 
 os.environ["ENV"] = "test"
@@ -115,7 +113,6 @@ class TestAnalyzeTable:
         from sqlalchemy.orm import sessionmaker, scoped_session
         from app.database.database import Base
         from app.models.rat import RAT
-        from scripts.migration.encrypt_existing_bytea import is_already_encrypted
         from cryptography.fernet import Fernet
 
         engine = create_engine("sqlite:///:memory:", echo=False)
@@ -167,7 +164,6 @@ class TestMigrateTable:
         rat = make_rat(1, "Test", plain_data, archivo_base_legal_nombre="test.pdf", archivo_base_legal_tipo="application/pdf")
         db.add(rat)
         db.commit()
-        rat_id = rat.id
 
         with patch("scripts.migration.encrypt_existing_bytea.encrypt") as mock_encrypt:
             mock_encrypt.side_effect = lambda d: fernet.encrypt(d)
@@ -186,7 +182,7 @@ class TestMigrateTable:
         from sqlalchemy.orm import sessionmaker, scoped_session
         from app.database.database import Base
         from app.models.rat import RAT
-        from scripts.migration.encrypt_existing_bytea import _migrate_table, is_already_encrypted
+        from scripts.migration.encrypt_existing_bytea import _migrate_table
         from cryptography.fernet import Fernet
 
         engine = create_engine("sqlite:///:memory:", echo=False)
@@ -214,7 +210,7 @@ class TestMigrateTable:
         from sqlalchemy.orm import sessionmaker, scoped_session
         from app.database.database import Base
         from app.models.rat import RAT
-        from scripts.migration.encrypt_existing_bytea import _migrate_table, is_already_encrypted
+        from scripts.migration.encrypt_existing_bytea import _migrate_table
         from cryptography.fernet import Fernet
 
         engine = create_engine("sqlite:///:memory:", echo=False)
@@ -252,7 +248,7 @@ class TestMigrateTable:
         from sqlalchemy.orm import sessionmaker, scoped_session
         from app.database.database import Base
         from app.models.rat import RAT
-        from scripts.migration.encrypt_existing_bytea import _migrate_table, is_already_encrypted
+        from scripts.migration.encrypt_existing_bytea import _migrate_table
         from cryptography.fernet import Fernet
 
         engine = create_engine("sqlite:///:memory:", echo=False)
@@ -396,7 +392,6 @@ class TestEndToEnd:
     """Test end-to-end del script completo via main()."""
 
     def test_dry_run_analyzes_without_modifying(self):
-        import tempfile
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker, scoped_session
         from app.database.database import Base

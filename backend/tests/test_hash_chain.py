@@ -11,7 +11,6 @@ Covers:
 - Endpoint /rats/{id}/audit integration
 """
 
-import pytest
 from app.models.audit_log import AuditLog, GENESIS_HASH
 from app.services.audit_service import log_audit, verify_audit_chain, _compute_hash
 
@@ -58,7 +57,7 @@ class TestHashChainVerification:
             db.commit()
 
         all_logs = db.query(AuditLog).order_by(AuditLog.id.asc()).all()
-        assert len(all_logs) == 3, f"Expected 3 records, found {len(all_logs)}: {[l.id for l in all_logs]}"
+        assert len(all_logs) == 3, f"Expected 3 records, found {len(all_logs)}: {[lg.id for lg in all_logs]}"
 
         result = verify_audit_chain(db)
         assert result["valid"] is True, f"Chain invalid: {result}"

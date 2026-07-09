@@ -2,8 +2,6 @@
 Tests para B-02: MÃ³dulo de Transparencia PÃºblica (Art. 14 ter â€” REC-02).
 """
 
-import pytest
-from datetime import datetime, timezone
 
 
 class TestTransparenciaPublica:

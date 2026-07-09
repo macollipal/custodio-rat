@@ -56,7 +56,6 @@ class TestPerformanceBaseline:
 
     def _create_bulk(self, client, auth_headers, empresa, rat_base):
         """Helper: inserta BULK_SIZE RATs."""
-        import json
         created = []
         t0 = time.time()
         for i in range(BULK_SIZE):

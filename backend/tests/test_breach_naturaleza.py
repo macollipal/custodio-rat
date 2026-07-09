@@ -5,7 +5,7 @@ Cubre models/breach.py:NaturalezaBreach y schema BreachCreate.
 import pytest
 from datetime import datetime, timezone
 
-from app.models.breach import NaturalezaBreach, NivelRiesgo
+from app.models.breach import NaturalezaBreach
 
 
 class TestNaturalezaBreachEnum:

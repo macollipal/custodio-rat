@@ -70,7 +70,7 @@ def validar_base_legal_otra_requiere_archivo(data: dict) -> None:
     adjuntar el documento que respalde la invocacion de dicha base.
     """
     base_legal = (data.get("base_legal") or "").strip()
-    archivo = data.get("archivo_base_legal_datos")
+    archivo = data.get("archivo_base_legal_base64")
     if base_legal.lower() == "otra" and not archivo:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

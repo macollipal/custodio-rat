@@ -11,7 +11,6 @@ Covers:
 - Permisos: usuario no puede solicitar subsanaciÃ³n
 """
 
-import pytest
 
 
 class TestSubsanacionWorkflow:

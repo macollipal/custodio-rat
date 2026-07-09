@@ -7,7 +7,6 @@ H5.5 — Tests RBAC admin_empresa para endpoints RAT.
 3. admin_empresa puede crear RAT en su empresa
 4. admin_empresa NO puede eliminar RAT de otra empresa
 """
-import pytest
 
 
 class TestRBACAdminEmpresaLectura:

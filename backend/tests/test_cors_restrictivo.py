@@ -5,7 +5,6 @@ Valida que el middleware CORSMiddleware estÃ¡ configurado con listas
 explÃ­citas de mÃ©todos y headers (no comodines), en lÃ­nea con la guÃ­a
 de seguridad Z-02 (defense-in-depth).
 """
-import pytest
 
 
 def test_cors_preflight_allowed_method_returns_headers(client):

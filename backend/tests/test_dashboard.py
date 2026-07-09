@@ -3,7 +3,6 @@ Tests del endpoint de estadÃ­sticas del dashboard.
 Valida: estructura de respuesta, contadores, cÃ¡lculo de completitud, flags de riesgo.
 """
 
-import pytest
 
 
 class TestDashboard:

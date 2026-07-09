@@ -5,7 +5,6 @@ Cubre crear_brecha() en breach_service.py que encola una tarea
 NOTIFICAR_BRECHA_DPO con scheduled_for = fecha_deteccion + 72h.
 """
 import json
-import pytest
 from datetime import datetime, timedelta, timezone
 
 from app.models.task import TaskQueue, TaskType

@@ -12,7 +12,6 @@ Nota: el endpoint llama get_rat_for_user() que retorna 404 (no 403) cuando el
 usuario no tiene acceso, para no filtrar la existencia del RAT.
 """
 
-import pytest
 
 
 class TestAuditoriaEndpoint:

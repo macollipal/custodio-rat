@@ -15,8 +15,6 @@ Covers:
 - Export sin tickets â†’ archivo vacÃ­o (headers correctos)
 """
 
-import pytest
-import io
 
 
 class TestExportEndpoints:

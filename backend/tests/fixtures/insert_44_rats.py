@@ -69,7 +69,7 @@ def insert_rat(cur, nombre, categoria_datos, categoria_titulares,
 
 
 def main():
-    print(f"Conectando a BD...")
+    print("Conectando a BD...")
     conn = psycopg2.connect(DB_URL)
     cur = conn.cursor()
 

@@ -298,6 +298,16 @@ export async function listarTiposProceso(): Promise<string[]> {
   return data.tipos || [];
 }
 
+export interface BaseLegalOptionsResponse {
+  opciones: string[];
+  descripciones: Record<string, string>;
+}
+
+export async function listarBaseLegalOptions(): Promise<BaseLegalOptionsResponse> {
+  const res = await apiFetch(`${API_BASE}/rats/base-legal-opciones`);
+  return handle<BaseLegalOptionsResponse>(res);
+}
+
 export async function getAuditoria(ratId: number): Promise<AuditLog[]> {
   const res = await apiFetch(`${API_BASE}/rats/${ratId}/auditoria`);
   return handle<AuditLog[]>(res);

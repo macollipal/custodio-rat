@@ -9,7 +9,6 @@ Covers:
 - Sin asignaciÃ³n si no hay regla que aplique
 """
 
-import pytest
 
 
 class TestReglaAsignacionCRUD:

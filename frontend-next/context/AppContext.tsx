@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '@/types';
 import { STORAGE_KEYS, API_BASE } from '@/lib/constants';
+import { listarBaseLegalOptions } from '@/lib/api';
 
 interface AppState {
   token: string | null;
@@ -15,6 +16,8 @@ interface AppState {
   puedeEditar: boolean;
   rolGlobal: RolGlobal | null;
   darkMode: boolean;
+  baseLegalOptions: string[];
+  baseLegalDescripciones: Record<string, string>;
   setToken: (token: string) => void;
   setUser: (user: User) => void;
   setCompany: (company: Company) => void;
@@ -41,6 +44,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [rats, setRatsState] = useState<RAT[]>([]);
   const [dashboardStats, setDashboardStatsState] = useState<DashboardStats | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [baseLegalOptions, setBaseLegalOptions] = useState<string[]>([]);
+  const [baseLegalDescripciones, setBaseLegalDescripciones] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -60,6 +65,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    listarBaseLegalOptions()
+      .then(data => {
+        setBaseLegalOptions(data.opciones);
+        setBaseLegalDescripciones(data.descripciones);
+      })
+      .catch(() => {});
+  }, [token]);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => {
@@ -168,6 +183,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     puedeEditar,
     rolGlobal,
     darkMode,
+    baseLegalOptions,
+    baseLegalDescripciones,
     toggleDarkMode,
     setToken,
     setUser,
@@ -183,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     actualizarStatsEnCache,
   }), [
     token, user, company, companies, rats, dashboardStats, darkMode,
+    baseLegalOptions, baseLegalDescripciones,
     toggleDarkMode, setToken, setUser, setCompany, setCompanies,
     setRats, setDashboardStats, logout,
     actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,

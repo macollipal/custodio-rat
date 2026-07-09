@@ -4,7 +4,6 @@ Cubre: creaciÃ³n, listado, obtenciÃ³n, actualizaciÃ³n de estado, eliminaci
 completitud, flags de riesgo y casos edge.
 """
 
-import pytest
 
 
 class TestCrearRAT:
@@ -36,7 +35,7 @@ class TestCrearRAT:
         assert resp.status_code in (404, 400)
 
     def test_crear_rat_con_datos_sensibles(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "datos_sensibles": True, "evaluacion_impacto": True, "estado_eipd": "pendiente"}
+        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "Salud (física o mental)", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         data = resp.json()
@@ -66,7 +65,7 @@ class TestCrearRAT:
         assert resp.status_code == 201
 
     def test_crear_rat_con_transferencia_internacional(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "transferencia_internacional": True, "evaluacion_impacto": True, "estado_eipd": "pendiente", "pais_destino": "Estados Unidos"}
+        payload = {**rat_base, "transferencia_internacional": True, "garantias_transferencia_int": "Cláusulas contractuales tipo", "evaluacion_impacto": True, "estado_eipd": "pendiente", "pais_destino": "Estados Unidos"}
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         assert resp.json()["pais_destino"] == "Estados Unidos"
@@ -145,15 +144,22 @@ class TestActualizarRAT:
         assert resp.json()["estado"] == "en_revision"
 
     def test_cambiar_estado_a_aprobado(self, client, auth_headers, rat_base):
+        import base64
+        pdf_b64 = base64.b64encode(b"%PDF-1.4\nfake\n%%EOF").decode()
         completo = {**rat_base, "transferencia_datos": "No aplica", "datos_nna": "No aplica",
             "nivel_confidencialidad": "Alta", "estructura_dato": "Digital",
             "datos_anonimizados": False, "datos_seudonimizados": True,
+            "sistema_almacenamiento": "Base de datos segura", "volumen_titulares_estimado": 1000,
+            "responsable_tratamiento_email": "dpo@empresa.cl",
             "ciclo_procesamiento": "Recurrente", "automatizacion": "Parcialmente automatizado",
             "frecuencia": "Diaria", "transferencia_nacional": False,
             "doc_clausulas": "Clausula de proteccion de datos",
             "medidas_organizativas": "Controles de acceso basados en roles",
             "mecanismos_eliminacion": "Eliminacion segura tras plazo",
-            "tecnica_anonimizacion": "No aplica", "origen_dato_portabilidad": "Portal web"}
+            "tecnica_anonimizacion": "No aplica", "origen_dato_portabilidad": "Portal web",
+            "archivo_base_legal_base64": pdf_b64,
+            "archivo_base_legal_nombre": "consentimiento.pdf",
+            "archivo_base_legal_tipo": "application/pdf"}
         created = client.post("/rats/", json=completo, headers=auth_headers).json()
         resp = client.post(f"/rats/{created['id']}/aprobar", headers=auth_headers)
         assert resp.status_code == 200

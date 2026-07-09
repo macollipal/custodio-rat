@@ -1,5 +1,5 @@
 ﻿"""Test unitario: verifica que el schema permite no_requerida_justificada"""
-from app.schemas.rat import RATBase, RATOut, RATCreate
+from app.schemas.rat import RATBase, RATOut
 
 
 def test_estado_eipd_acepta_no_requerida_justificada():
@@ -20,7 +20,7 @@ def test_estado_eipd_acepta_no_requerida_justificada():
 def test_estado_eipd_rechaza_valor_invalido():
     """Test: schema debe rechazar valores invalidos."""
     try:
-        r = RATBase(
+        RATBase(
             nombre_proceso="Test",
             categoria_datos="X",
             finalidad="Y",

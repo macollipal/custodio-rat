@@ -6,8 +6,6 @@ causal_rechazo, medio_respuesta.
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
 """
 
-import pytest
-from fastapi.testclient import TestClient
 
 
 def _crear_ticket_base(client, headers, empresa, extra_payload=None):

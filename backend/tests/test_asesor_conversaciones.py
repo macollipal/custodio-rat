@@ -4,7 +4,6 @@ Tests para persistencia de conversaciones del Asesor IA (Arts. 19, 20 Ley 21.719
 Verifica que cada POST /asesor/ask persiste un registro en AsesorConversacion.
 """
 import json
-import pytest
 
 from app.models.asesor import AsesorConversacion
 
@@ -164,4 +163,4 @@ class TestAsesorConversacionesPersistencia:
             json={"question": "Test resiliencia", "context": ""},
             headers=auth_headers,
         )
-        assert resp.status_code == 200, f"Endpoint debio responder 200 a pesar de error de BD"
+        assert resp.status_code == 200, "Endpoint debio responder 200 a pesar de error de BD"

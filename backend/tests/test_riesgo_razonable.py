@@ -2,10 +2,9 @@
 Tests para B-05: Filtro de riesgo razonable en Brechas (Art. 14 sexies â€” REC-05).
 """
 
-import pytest
 from datetime import datetime, timezone
 from app.models.breach import SecurityBreach, NivelRiesgo
-from app.services.breach_service import _calcular_reportable, evaluar_riesgo_brecha
+from app.services.breach_service import _calcular_reportable
 
 
 class TestCalcularReportable:

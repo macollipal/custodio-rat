@@ -272,7 +272,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     """
     from app.models.company import Company
     from fastapi import HTTPException, status
-    from sqlalchemy import func, case, or_
+    from sqlalchemy import func
 
     if not db.query(Company).filter(Company.id == company_id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
@@ -292,17 +292,17 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     # Agregados booleanos via SQL
     sensibles = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.datos_sensibles == True)
+        .filter(RAT.company_id == company_id, RAT.datos_sensibles)
         .scalar()
     ) or 0
     con_transferencia_int = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.transferencia_internacional == True)
+        .filter(RAT.company_id == company_id, RAT.transferencia_internacional)
         .scalar()
     ) or 0
     requieren_eipd = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.evaluacion_impacto == True)
+        .filter(RAT.company_id == company_id, RAT.evaluacion_impacto)
         .scalar()
     ) or 0
 

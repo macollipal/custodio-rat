@@ -3,7 +3,6 @@ Tests End-to-End: flujos completos como los harÃ­a un usuario real.
 Simula: login â†’ crear empresa â†’ crear RAT â†’ ver dashboard â†’ exportar.
 """
 
-import pytest
 
 
 class TestFlujoCompletoUsuario:
@@ -203,5 +202,5 @@ class TestFlujoEdgeCases:
         assert resp.status_code == 200
         content = resp.content.decode("utf-8-sig")
         # Debe haber al menos 3 filas de datos (mÃ¡s la cabecera)
-        lines = [l for l in content.splitlines() if l.strip()]
+        lines = [ln for ln in content.splitlines() if ln.strip()]
         assert len(lines) >= 4  # 1 cabecera + 3 RATs

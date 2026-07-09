@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.routes.deps import get_client_ip, get_current_user, require_editor_or_admin_empresa
-from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut
+from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut, BaseLegalOptionsOut, BASE_LEGAL_OPTIONS
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
@@ -229,6 +229,23 @@ async def sugerencia_base_legal(
 @router.get("/sugerencias/tipos", response_model=SugerenciasTiposOut, summary="Listar tipos de proceso disponibles para sugerencias")
 async def tipos_proceso(current_user=Depends(get_current_user)):
     return SugerenciasTiposOut(tipos=listar_tipos_proceso())
+
+
+BASE_LEGAL_DESCRIPCIONES: dict[str, str] = {
+    "Consentimiento del titular": "Art. 12 - Debe ser libre, previo, expreso, informado, específico, revocable y sin condición negocial. Para datos sensibles, el consentimiento debe ser EXPRESO.",
+    "Ejecución de contrato": "Art. 13 b) - El tratamiento es necesario para ejecutar un contrato en que el titular es parte.",
+    "Obligación legal": "Art. 13 a) - El tratamiento es requerido por una norma legal vigente.",
+    "Interés legítimo": "Art. 16 - Requiere test de 3 pasos documentado: (1) ¿Existe interés legítimo real? (2) ¿El tratamiento es necesario? (3) ¿Prevalece sobre los derechos del titular?",
+    "Interés vital del titular": "Art. 13 c) - El tratamiento es necesario para proteger la vida o integridad física del titular o de otra persona.",
+    "Misión de interés público": "Art. 13 d) - El tratamiento se encuentra previstos en una norma legal para el cumplimiento de una misión realizada en interés público.",
+    "Datos biométricos de identificación (Art. 16 BIS)": "Art. 16 BIS - Datos biométricos para identificación inequívoca. Requiere EIPD obligatoria.",
+    "Otra": "Base legal distinta a las anteriores. Documentar específicamente en el campo correspondiente.",
+}
+
+
+@router.get("/base-legal-opciones", response_model=BaseLegalOptionsOut, summary="Lista de bases legales válidas (Art. 13 Ley 21.719)")
+async def base_legal_opciones(current_user=Depends(get_current_user)):
+    return BaseLegalOptionsOut(opciones=BASE_LEGAL_OPTIONS, descripciones=BASE_LEGAL_DESCRIPCIONES)
 
 
 @router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias autom+�ticas para un proceso")

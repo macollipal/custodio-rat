@@ -115,8 +115,8 @@ def main():
 
     # Use staged diff for pre-commit (more reliable than working tree vs HEAD)
     cmd = ["git", "diff", "--cached"]
-    out = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, text=True, check=False)
-    diff_text = out.stdout
+    out = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, check=False)
+    diff_text = out.stdout.decode("utf-8", errors="replace")
 
     if not diff_text:
         # Nothing staged → nothing to check

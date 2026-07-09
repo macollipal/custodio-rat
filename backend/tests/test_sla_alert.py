@@ -11,7 +11,6 @@ Covers:
 - enqueue_sla_alerts endpoint existe y requiere superadmin
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from app.models.task import TaskType
 

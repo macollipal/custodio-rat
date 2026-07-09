@@ -4,7 +4,6 @@ H5.6 — Test validacion de email invalido.
 1 escenario:
 - Crear usuario con email invalido → 422 Pydantic validation error
 """
-import pytest
 
 
 class TestEmailValidation:

@@ -6,7 +6,6 @@ import type { RATWizardData, RATSugerido } from '@/types';
 import FormField from '@/components/ui/FormField';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import CategoryChips from '@/components/ui/CategoryChips';
-import { BASES_LEGALES } from '@/lib/constants';
 
 interface Step1Props {
   data: RATWizardData;

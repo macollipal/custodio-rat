@@ -2,8 +2,6 @@
 Tests para B-04: Portabilidad per-titular (Art. 9 â€” REC-04).
 """
 
-import pytest
-from datetime import datetime, timezone
 
 
 class TestPortabilidad:

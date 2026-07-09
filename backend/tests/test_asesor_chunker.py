@@ -1,7 +1,6 @@
 ﻿"""
 Tests unitarios del Asesor Chunker.
 """
-import pytest
 
 from app.services.asesor_chunker import chunk_text, estimate_tokens, split_by_hierarchy
 

@@ -3,7 +3,6 @@ Tests de exportaciÃ³n CSV y PDF.
 Valida: content-type, headers de descarga, contenido mÃ­nimo, empresa sin RATs.
 """
 
-import pytest
 
 
 class TestExportCSV:

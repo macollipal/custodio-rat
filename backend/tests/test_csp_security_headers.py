@@ -6,7 +6,6 @@ Valida que el middleware SecurityHeadersMiddleware setea:
 - Strict-Transport-Security (HSTS)
 - Y que el resto de headers sigue presente
 """
-import pytest
 
 
 class TestContentSecurityPolicy:

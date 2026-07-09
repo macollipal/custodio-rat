@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import type { RAT, ReportesParams } from '@/types';
-import { BASES_LEGALES as basesLegalesConst } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Drawer from '@/components/ui/Drawer';
@@ -14,7 +13,6 @@ import { ReportTable } from '@/components/report';
 import { Field } from '@/components/ui/Field';
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const BASES_LEGALES = basesLegalesConst;
 
 const COLUMN_OPTIONS = [
   { key: 'nombre_proceso', label: 'Proceso' },
@@ -72,7 +70,7 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
 }
 
 export default function ReportesPage() {
-  const { company, puedeEditar } = useApp();
+  const { company, puedeEditar, baseLegalOptions } = useApp();
   const [rats, setRats] = useState<RAT[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -478,7 +476,7 @@ export default function ReportesPage() {
           </select>
           <select value={filters.base_legal ?? ''} onChange={e => setFilters(f => ({ ...f, base_legal: e.target.value }))} className={inputCls}>
             <option value="">Base legal (todas)</option>
-            {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+            {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <input type="text" value={filters.categoria_titulares ?? ''} onChange={e => setFilters(f => ({ ...f, categoria_titulares: e.target.value }))} placeholder="Categoría titulares..." className={inputCls} style={{ minWidth: 160 }} />
           <button onClick={limpiarFiltros} className="px-4 py-2 rounded-lg text-xs font-semibold border transition" style={{ background: '#CCFBF1', borderColor: '#06B6D4', color: '#0F766E' }}>

@@ -1,5 +1,4 @@
 """Fix script: replace 'borrador' literals with CAST for enum compatibility."""
-import re
 
 fp = r'C:\Users\chelo\Desktop\RAT_opencode\backend\tests\fixtures\insert_44_rats.py'
 

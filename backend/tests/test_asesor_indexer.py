@@ -1,9 +1,6 @@
 ﻿"""
 Tests del indexer del Asesor.
 """
-import os
-import json
-import pytest
 
 from app.services.asesor_indexer import _hash, _infer_source_type, _infer_title, list_corpus_files
 

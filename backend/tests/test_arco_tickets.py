@@ -15,8 +15,6 @@ Covers:
 - Historial de cambios de estado
 """
 
-import pytest
-from datetime import datetime, timezone
 
 
 def _crear_ticket(client, headers, company_id, tipo, prioridad="normal"):

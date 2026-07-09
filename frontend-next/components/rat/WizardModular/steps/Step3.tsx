@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import type { RATWizardData } from '@/types';
 import FormField from '@/components/ui/FormField';
 import AlertBanner from '@/components/dashboard/AlertBanner';
-import { BASES_LEGALES } from '@/lib/constants';
-import { DESCRIPCIONES_BASE } from '../types';
+import { useApp } from '@/context/AppContext';
 
 interface Step3Props {
   data: RATWizardData;
@@ -35,6 +34,10 @@ export function Step3({
   guardarDraft,
   onAplicarSugerencias,
 }: Step3Props) {
+  const { baseLegalOptions, baseLegalDescripciones } = useApp();
+  const opciones = baseLegalOptions.length > 0 ? baseLegalOptions : [];
+  const DESCRIPCIONES_BASE = baseLegalDescripciones;
+
   function cambiarStep(n: number) {
     onNext();
   }
@@ -77,7 +80,7 @@ export function Step3({
       >
         <select
           id="rw-base_legal"
-          value={data.base_legal ?? BASES_LEGALES[0]}
+          value={data.base_legal ?? opciones[0]}
           onChange={e => setData(d => ({ ...d, base_legal: e.target.value }))}
           aria-required="true"
           aria-invalid={!!fieldErrors.base_legal}
@@ -87,7 +90,7 @@ export function Step3({
             borderColor: fieldErrors.base_legal ? '#DC2626' : '#D1D5DB',
           }}
         >
-          {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+          {opciones.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
       </FormField>
 
@@ -241,7 +244,7 @@ export function Step3({
               }
               return;
             }
-            if (!data.base_legal) setData(d => ({ ...d, base_legal: BASES_LEGALES[0] }));
+            if (!data.base_legal) setData(d => ({ ...d, base_legal: opciones[0] }));
             cambiarStep(4);
           }}
           disabled={!stepIsValid}

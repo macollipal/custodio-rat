@@ -7,7 +7,6 @@ Notas de comportamiento real:
 - Con token vÃ¡lido pero sin permisos â†’ 403 Forbidden.
 """
 
-import pytest
 
 
 class TestLogin:

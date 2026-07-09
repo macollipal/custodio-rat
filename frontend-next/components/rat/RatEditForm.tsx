@@ -7,7 +7,8 @@ import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
 import Spinner from '@/components/ui/Spinner';
 import CategoryChips from '@/components/ui/CategoryChips';
-import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
+import { useApp } from '@/context/AppContext';
+import { TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
@@ -26,6 +27,7 @@ interface RatEditFormProps {
 }
 
 export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps) {
+  const { baseLegalOptions, baseLegalDescripciones } = useApp();
   const [step, setStep] = useState(1);
 
   // Parsear el test_interes_legitimo existente: JSON {paso1,paso2,paso3} o legacy "Paso 1:...\nPaso 2:...\nPaso 3:..."
@@ -66,7 +68,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     fecha_eipd:                  rat.fecha_eipd ?? '',
     decisiones_automatizadas:     rat.decisiones_automatizadas ?? false,
     finalidad:                    rat.finalidad ?? '',
-    base_legal:                   rat.base_legal ?? BASES_LEGALES[0],
+    base_legal:                   rat.base_legal ?? baseLegalOptions[0],
     test_interes_legitimo:        rat.test_interes_legitimo ?? '',
     plazo_retencion:              rat.plazo_retencion ?? '',
     medidas_seguridad:            rat.medidas_seguridad ?? '',
@@ -434,12 +436,12 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                 Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 13 Ley 21.719)</span>
               </label>
               <select value={form.base_legal} onChange={e => set('base_legal', e.target.value)} className={inputCls} style={inputStyle}>
-                {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+                {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
-              {form.base_legal && DESCRIPCIONES_BASE[form.base_legal] && (
+              {form.base_legal && baseLegalDescripciones[form.base_legal] && (
                 <div className="mt-2">
                   <AlertBanner
-                    message={DESCRIPCIONES_BASE[form.base_legal]}
+                    message={baseLegalDescripciones[form.base_legal]}
                     type={form.base_legal === 'Interés legítimo' || form.base_legal === 'Datos biométricos de identificación (Art. 16 BIS)' ? 'warning' : 'info'}
                   />
                 </div>

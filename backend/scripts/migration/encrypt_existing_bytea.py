@@ -34,20 +34,19 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 # Permitir imports del paquete app/
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.pool import QueuePool
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker, scoped_session  # noqa: E402
+from sqlalchemy.pool import QueuePool  # noqa: E402
 
-from app.core.config import settings
-from app.core.crypto import encrypt, _get_fernet
-from cryptography.fernet import Fernet
+from app.core.config import settings  # noqa: E402
+from app.core.crypto import encrypt  # noqa: E402
+from cryptography.fernet import Fernet  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -90,8 +89,8 @@ def _check_prerequisites() -> tuple[str, Fernet]:
         logger.critical(f"ENCRYPTION_KEY inválida (no es Fernet válida): {e}. Abortando.")
         sys.exit(1)
 
-    logger.info(f"ENCRYPTION_KEY válida (Fernet OK)")
-    logger.info(f"Conectando a: postgresql (Neon)")
+    logger.info("ENCRYPTION_KEY válida (Fernet OK)")
+    logger.info("Conectando a: postgresql (Neon)")
     return db_url, fernet
 
 

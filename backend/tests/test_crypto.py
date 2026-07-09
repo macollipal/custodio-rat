@@ -11,7 +11,7 @@ import pytest
 class TestFernetCrypto:
     def test_encrypt_decrypt_round_trip(self):
         """Datos cifrados y descifrados deben ser idÃ©nticos al original."""
-        from app.core.crypto import encrypt, decrypt, generate_key
+        from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
         from importlib import reload
@@ -29,7 +29,7 @@ class TestFernetCrypto:
 
     def test_encrypt_produces_different_output(self):
         """El mismo contenido cifrado dos veces debe producir outputs distintos (salts diferentes)."""
-        from app.core.crypto import encrypt, decrypt, generate_key
+        from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
         from importlib import reload
@@ -65,7 +65,7 @@ class TestFernetCrypto:
 
     def test_decrypt_with_wrong_key_fails_safely(self):
         """Descifrar con key equivocada debe retornar datos cifrados sin modificar (fail safe, no crash)."""
-        from app.core.crypto import encrypt, decrypt, generate_key
+        from app.core.crypto import generate_key
         key1 = generate_key()
         key2 = generate_key()
         os.environ["encryption_key"] = key1
@@ -87,7 +87,7 @@ class TestFernetCrypto:
 
     def test_encrypt_decrypt_pdf_bytes(self):
         """PDF binario real debe cifrarse y descifrarse correctamente."""
-        from app.core.crypto import encrypt, decrypt, generate_key
+        from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
         from importlib import reload
@@ -153,7 +153,6 @@ class TestEncryptIntegrationWithBYTEA:
     def test_download_rat_file_returns_decrypted_content(self, client, auth_headers, empresa, db):
         """Al descargar archivo RAT (BYTEA), el contenido debe estar descifrado."""
         from unittest.mock import patch
-        from app.core.crypto import encrypt, decrypt
 
         pdf_content = b"%PDF-1.4 download decryption test"
         pdf_b64 = base64.b64encode(pdf_content).decode()

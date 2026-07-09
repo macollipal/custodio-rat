@@ -7,7 +7,6 @@ DELETE /admin/asesor/documents/{id}
 """
 import hashlib
 import io
-import pytest
 from unittest.mock import patch, MagicMock
 
 from app.models.asesor import AsesorCorpusDocument

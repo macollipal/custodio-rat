@@ -6,6 +6,23 @@ import json
 from app.models.rat import EstadoRAT
 
 
+BASE_LEGAL_OPTIONS = [
+    "Consentimiento del titular",
+    "Ejecución de contrato",
+    "Obligación legal",
+    "Interés legítimo",
+    "Interés vital del titular",
+    "Misión de interés público",
+    "Datos biométricos de identificación (Art. 16 BIS)",
+    "Otra",
+]
+
+
+class BaseLegalOptionsOut(BaseModel):
+    opciones: list[str]
+    descripciones: dict[str, str]
+
+
 def _normalizar_test_il(val: Any) -> Optional[str]:
     """Normaliza test_interes_legitimo: acepta dict, JSON-string, o legacy string delimitado."""
     if val is None:
@@ -124,18 +141,9 @@ class RATCreate(RATBase):
     @field_validator("base_legal")
     @classmethod
     def base_legal_valida(cls, v: str) -> str:
-        opciones_validas = [
-            "Consentimiento del titular",
-            "Ejecución de contrato",
-            "Obligación legal",
-            "Interés legítimo",
-            "Interés vital del titular",
-            "Misión de interés público",
-            "Otra",
-        ]
         stripped = v.strip()
-        if stripped not in opciones_validas:
-            raise ValueError(f"base_legal debe ser una de las opciones válidas: {opciones_validas}")
+        if stripped not in BASE_LEGAL_OPTIONS:
+            raise ValueError(f"base_legal debe ser una de las opciones válidas: {BASE_LEGAL_OPTIONS}")
         return stripped
 
     @model_validator(mode='after')
@@ -171,19 +179,28 @@ class RATUpdate(RATBase):
     @model_validator(mode='before')
     @classmethod
     def _strip_unset_required_fields(cls, data):
-        """Permite que campos requeridos de RATBase sean opcionales en update."""
+        """Permite que campos requeridos de RATBase sean opcionales en update.
+
+        Campos con min_length > 1 necesitan placeholder para pasar validacion.
+        Campos sin min_length se dejan como None para que exclude_unset=True
+        en el servicio los excluya del model_dump.
+        """
         if isinstance(data, dict):
-            # Si el cliente no envia un campo requerido, no validarlo
-            # Pydantic requiere que el campo este presente (no None) si es required
-            # Workaround: removemos campos requeridos que vienen vacios/None
             from app.schemas.rat import RATBase as _RATBase
             required_fields = [
-                name for name, field in _RATBase.model_fields.items()
+                (name, field)
+                for name, field in _RATBase.model_fields.items()
                 if field.is_required()
             ]
-            for field_name in required_fields:
+            for field_name, field in required_fields:
                 if field_name not in data or data[field_name] is None:
-                    data.setdefault(field_name, "")
+                    min_len = 1
+                    for m in field.metadata:
+                        if hasattr(m, 'min_length'):
+                            min_len = m.min_length
+                            break
+                    placeholder = "." * max(min_len, 1)
+                    data[field_name] = placeholder
         return data
 
     @model_validator(mode='before')

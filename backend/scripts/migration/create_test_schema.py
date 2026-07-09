@@ -20,20 +20,12 @@ if not args.database_url:
 os.environ["ENV"] = "test"
 os.environ["DATABASE_URL"] = args.database_url
 
-from app.database.database import Base, engine
-from app.models import (
-    company, rat, user, audit_log, user_company, breach, eipd,
-    consentimiento, rubro, rats_sugerido,
-    token_blacklist, solicitud_token,
-    tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial,
-    tkt_plantilla, tkt_regla_asignacion,
-    asesor,
-)
+from app.database.database import Base, engine  # noqa: E402
 
 Base.metadata.create_all(bind=engine)
 print("Schema created")
 
-import psycopg2
+import psycopg2  # noqa: E402
 conn = psycopg2.connect(args.database_url)
 cur = conn.cursor()
 cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name")

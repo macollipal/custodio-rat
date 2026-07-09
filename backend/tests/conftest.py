@@ -13,16 +13,16 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 os.environ["ENV"] = "test"
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from sqlalchemy.pool import NullPool  # noqa: E402
 
-from app.main import app
-from app.database.database import Base, get_db
-from app.models.user import User
-from app.core.security import get_password_hash
+from app.main import app  # noqa: E402
+from app.database.database import get_db  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.core.security import get_password_hash  # noqa: E402
 
 TEST_DB_URL = os.environ.get("TEST_DATABASE_URL")
 if not TEST_DB_URL:
@@ -37,16 +37,6 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="function")
 def db():
-    from app.models import (
-        company, rat, user, audit_log, user_company, breach, eipd,
-        consentimiento, rubro, rats_sugerido,
-        token_blacklist, solicitud_token,
-        tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial,
-        tkt_plantilla,
-        tkt_regla_asignacion,
-        asesor,
-        module_permission,
-    )
     connection = engine_test.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)

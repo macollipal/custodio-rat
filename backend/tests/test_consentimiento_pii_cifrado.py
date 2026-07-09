@@ -7,7 +7,6 @@ Verifica que:
 - ip_origen_masked es /16 mask
 """
 import hashlib
-import pytest
 from datetime import datetime, timezone
 
 from app.core.crypto import decrypt
@@ -128,7 +127,6 @@ class TestConsentimientoPiiCifrado:
         """Si ip_origen es None al crear via service directo, _mask_ip retorna None."""
         from app.schemas.consentimiento import ConsentimientoCreate
         from app.services.consentimiento_service import crear_consentimiento
-        from app.models.rat import RAT as RATModel
 
         rat_id = _crear_rat(client, auth_headers, rat_base)
 

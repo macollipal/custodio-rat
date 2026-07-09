@@ -10,7 +10,6 @@ Covers:
 - Responder ticket con plantilla_id
 """
 
-import pytest
 
 
 class TestPlantillaCRUD:

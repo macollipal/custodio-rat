@@ -4,7 +4,6 @@
 
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent.parent

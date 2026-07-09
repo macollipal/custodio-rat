@@ -6,7 +6,6 @@ logica_automatizada, responsable_tratamiento_email.
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 
