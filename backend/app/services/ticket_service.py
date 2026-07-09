@@ -422,6 +422,18 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
     )
     tiempo_promedio = round(avg_seconds / 3600, 1) if avg_seconds else 0
 
+    # QW4 ARCO: derechos más ejercidos (1 GROUP BY extra por tipo)
+    tipo_counts = (
+        db.query(
+            TktSolicitudDerecho.tipo,
+            func.count(TktSolicitudDerecho.id).label("count"),
+        )
+        .filter(*base_filter)
+        .group_by(TktSolicitudDerecho.tipo)
+        .all()
+    )
+    por_tipo = {row.tipo: row.count for row in tipo_counts}
+
     return {
         "total": total,
         "abiertos": abiertos,
@@ -435,6 +447,7 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
         "vencidos": vencidos,
         "cumplimiento_sla": cumplimiento,
         "tiempo_promedio_horas": tiempo_promedio,
+        "por_tipo": por_tipo,
     }
 
 

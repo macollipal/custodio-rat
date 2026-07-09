@@ -284,6 +284,31 @@ export default function TktSolicitudDerechoPage() {
             <KpiCard label="Vencidos" value={dashboard.vencidos} color="#DC2626" icon="⚠️" />
           </div>
           <SlaBar cumplimiento={dashboard.cumplimiento_sla} />
+          {dashboard.por_tipo && Object.keys(dashboard.por_tipo).length > 0 && (
+            <div className="bg-white rounded-xl p-5" style={{ border: '1px solid #E5E7EB' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#6B7280' }}>
+                Derechos más ejercidos (Art. 12 Ley 21.719)
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {Object.entries(dashboard.por_tipo)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([tipo, count]) => (
+                    <div
+                      key={tipo}
+                      className="rounded-lg p-3"
+                      style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
+                    >
+                      <p className="text-xs font-medium capitalize" style={{ color: '#1E3A8A' }}>
+                        {tipo.replace(/_/g, ' ')}
+                      </p>
+                      <p className="text-2xl font-bold mt-1" style={{ color: '#1E3A8A' }}>
+                        {count}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </>
       ) : null}
 

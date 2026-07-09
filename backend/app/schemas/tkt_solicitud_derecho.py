@@ -154,6 +154,7 @@ class TktDashboardResponse(BaseModel):
     vencidos: int
     cumplimiento_sla: float
     tiempo_promedio_horas: float
+    por_tipo: dict = Field(default_factory=dict, description="QW4: derechos más ejercidos, agrupados por tipo (acceso, rectificacion, cancelacion, oposicion, portabilidad, bloqueo)")
 
 
 class TktListResponse(BaseModel):

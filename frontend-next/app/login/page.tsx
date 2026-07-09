@@ -42,7 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div
+    <main
       className="h-screen flex items-center justify-center p-4"
       style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)' }}
     >
@@ -104,7 +104,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

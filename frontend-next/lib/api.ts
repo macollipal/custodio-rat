@@ -674,6 +674,7 @@ export interface TktDashboard {
   prorrogas: number;
   cumplimiento_sla: number;
   tiempo_promedio_horas: number;
+  por_tipo?: Record<string, number>;
 }
 
 export interface TktListResponse {
