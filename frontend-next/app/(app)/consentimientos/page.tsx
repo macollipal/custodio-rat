@@ -8,6 +8,7 @@ import * as api from '@/lib/api';
 import type { RAT } from '@/types';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
 
 interface Consentimiento {
   id: number;
@@ -110,14 +111,12 @@ export default function ConsentimientosPage() {
             Gestión de consentimientos expresos (Art. 12 Ley 21.719)
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setShowCreate(true)}
           aria-label="Crear nuevo consentimiento"
-          className="px-4 py-2 rounded-lg text-white font-medium text-sm"
-          style={{ background: '#2563EB' }}
         >
           + Nuevo consentimiento
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -217,21 +216,27 @@ export default function ConsentimientosPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!min-h-0"
                           onClick={() => setDetail(c)}
                           aria-label={`Ver detalle de consentimiento de ${c.nombre_titular}`}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          style={{ color: '#1D4ED8' }}
                         >
                           Ver
-                        </button>
+                        </Button>
                         {c.activo && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="!min-h-0"
                             onClick={() => handleRevoke(c)}
                             aria-label={`Revocar consentimiento de ${c.nombre_titular}`}
-                            className="text-xs px-2 py-1 rounded text-red-700 hover:bg-red-50"
+                            style={{ color: '#DC2626' }}
                           >
                             Revocar
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -391,23 +396,22 @@ function CreateConsentimientoModal({
             />
           </div>
           <div className="flex gap-2 justify-end pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
               aria-label="Cancelar creacion de consentimiento"
-              className="px-4 py-2 rounded-lg border"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={saving}
+              loading={saving}
               aria-label="Guardar consentimiento"
-              className="px-4 py-2 rounded-lg text-white font-medium"
-              style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
             >
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+              Guardar
+            </Button>
           </div>
         </form>
       </div>
@@ -489,17 +493,11 @@ function DetailModal({
         </div>
         <div className="flex gap-2 justify-end mt-4">
           {onRevoke && (
-            <button
-              onClick={onRevoke}
-              className="px-4 py-2 rounded-lg text-white font-medium"
-              style={{ background: '#DC2626' }}
-            >
+            <Button variant="danger" onClick={onRevoke}>
               Revocar consentimiento
-            </button>
+            </Button>
           )}
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border">
-            Cerrar
-          </button>
+          <Button variant="secondary" onClick={onClose}>Cerrar</Button>
         </div>
       </div>
     </div>

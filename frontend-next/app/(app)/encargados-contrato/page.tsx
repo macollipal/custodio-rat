@@ -16,6 +16,7 @@ import type { RAT } from '@/types';
 import Drawer from '@/components/ui/Drawer';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
 
 function fmtDate(val: string | null | undefined): string {
   if (!val) return '—';
@@ -170,14 +171,12 @@ export default function EncargadosContratoPage() {
           <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Contratos de Encargado</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>Art. 14 quater — Ley 21.719</p>
         </div>
-        <button
+        <Button
           onClick={openNew}
           aria-label="Crear nuevo contrato de encargado"
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
-          style={{ background: '#2563EB' }}
         >
           + Nuevo Contrato
-        </button>
+        </Button>
       </div>
 
       {loading ? (
@@ -214,8 +213,8 @@ export default function EncargadosContratoPage() {
                 <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>{c.finalidad}</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => openEdit(c)} aria-label={`Editar contrato ${c.nombre_encargado}`} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Editar</button>
-                <button onClick={() => handleDelete(c.id)} aria-label={`Eliminar contrato ${c.nombre_encargado}`} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-red-50" style={{ borderColor: '#FCA5A5', color: '#DC2626' }}>Eliminar</button>
+                <Button variant="secondary" size="sm" onClick={() => openEdit(c)} aria-label={`Editar contrato ${c.nombre_encargado}`}>Editar</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)} aria-label={`Eliminar contrato ${c.nombre_encargado}`} style={{ color: '#DC2626', borderColor: '#FCA5A5', borderWidth: '1px', borderStyle: 'solid' }}>Eliminar</Button>
               </div>
             </div>
           ))}
@@ -306,10 +305,10 @@ export default function EncargadosContratoPage() {
           </label>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setDrawerOpen(false)} aria-label="Cancelar creacion de contrato" className="flex-1 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-            <button onClick={handleSave} disabled={saving} aria-label="Guardar contrato de encargado" className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: '#2563EB' }}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+            <Button variant="secondary" size="md" className="flex-1" onClick={() => setDrawerOpen(false)} aria-label="Cancelar creacion de contrato">Cancelar</Button>
+            <Button size="md" className="flex-1" onClick={handleSave} disabled={saving} loading={saving} aria-label="Guardar contrato de encargado">
+              Guardar
+            </Button>
           </div>
         </div>
       </Drawer>

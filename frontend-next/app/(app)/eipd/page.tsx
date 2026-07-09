@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { API_BASE } from '@/lib/constants';
 import * as api from '@/lib/api';
 import type { RAT } from '@/types';
+import { Button } from '@/components/ui/Button';
 
 interface EIPD {
   id: number;
@@ -131,13 +132,13 @@ export default function EIPDPage() {
             {ratsRequiringEipd.map((r) => (
               <li key={r.id} className="flex justify-between items-center bg-white/60 rounded p-2">
                 <span>• {r.nombre_proceso}</span>
-                <button
+                <Button
+                  size="sm"
                   onClick={() => setCreating(true)}
-                  className="text-xs px-2 py-1 rounded text-white"
-                  style={{ background: '#D97706' }}
+                  style={{ background: '#D97706', color: '#FFFFFF' }}
                 >
                   Crear EIPD
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -191,19 +192,25 @@ export default function EIPDPage() {
                     </td>
                     <td className="px-4 py-3">
                       {canEdit ? (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setEditing(e)}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          className="!min-h-0"
+                          style={{ color: '#1D4ED8' }}
                         >
                           Editar
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setEditing(e)}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          className="!min-h-0"
+                          style={{ color: '#1D4ED8' }}
                         >
                           Ver
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -577,14 +584,14 @@ function EIPDForm({
                 ← Volver al RAT
               </a>
             </div>
-            <button
+            <Button
               type="submit"
+              size="lg"
               disabled={saving}
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50"
-              style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
+              loading={saving}
             >
-              {saving ? 'Guardando...' : 'Guardar EIPD'}
-            </button>
+              Guardar EIPD
+            </Button>
           </div>
         </form>
       </div>

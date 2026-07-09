@@ -17,6 +17,7 @@ import { KpiCard } from '@/components/tkt/KpiCard';
 import { SlaBar } from '@/components/tkt/SlaBar';
 import { CreateTicketForm } from '@/components/tkt/CreateTicketForm';
 import { TicketDrawer } from '@/components/tkt/TicketDrawer';
+import { Button } from '@/components/ui/Button';
 
 const TKT_TIPO_MAP: Record<string, { label: string; color: string; abbr: string }> = {
   acceso: { label: 'Acceso', color: '#2563EB', abbr: 'AC' },
@@ -187,13 +188,13 @@ export default function TktSolicitudDerechoPage() {
               {slaAlertTickets.filter(t => (t.dias_restantes ?? 999) > 0 && (t.dias_restantes ?? 999) <= 2).length} vence(n) en 2 días o menos
             </p>
           </div>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => setTab('abierto')}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition"
-            style={{ background: '#DC2626' }}
           >
             Ver tickets
-          </button>
+          </Button>
         </div>
       )}
 
@@ -201,62 +202,64 @@ export default function TktSolicitudDerechoPage() {
         <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Solicitudes ARCO</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
-            <button
+            <Button
+              size="md"
               onClick={() => setCreateOpen(true)}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-white transition"
-              style={{ background: '#2563EB' }}
             >
               + Nueva Solicitud
-            </button>
+            </Button>
           )}
           <div className="relative">
-            <button
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => setExportOpen(o => !o)}
               disabled={exporting !== null}
-              className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50 disabled:opacity-60"
-              style={{ borderColor: '#E5E7EB', color: '#374151' }}
             >
               {exporting ? `⏳ Exportando ${exporting.toUpperCase()}...` : '⬇ Exportar'}
-            </button>
+            </Button>
             {exportOpen && (
               <div
                 className="absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg z-50 border"
                 style={{ background: 'white', borderColor: '#E5E7EB' }}
               >
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleExport('csv')}
                   disabled={!!exporting}
-                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
-                  style={{ color: '#374151' }}
+                  className="!min-h-0 w-full justify-start"
                 >
                   📄 CSV
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleExport('excel')}
                   disabled={!!exporting}
-                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
-                  style={{ color: '#374151' }}
+                  className="!min-h-0 w-full justify-start"
                 >
                   📊 Excel (.xlsx)
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleExport('pdf')}
                   disabled={!!exporting}
-                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition disabled:opacity-50"
-                  style={{ color: '#374151' }}
+                  className="!min-h-0 w-full justify-start"
                 >
                   📑 PDF
-                </button>
+                </Button>
               </div>
             )}
           </div>
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={fetchData}
-            className="px-3 py-2 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
-            style={{ borderColor: '#E5E7EB', color: '#374151' }}
           >
             🔄 Refrescar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -322,13 +325,12 @@ export default function TktSolicitudDerechoPage() {
             {tab === 'todos' ? 'No hay solicitudes ARCO registradas' : `No hay tickets en estado "${tab}"`}
           </p>
           {isAdmin && (
-            <button
+            <Button
+              className="mt-4"
               onClick={() => setCreateOpen(true)}
-              className="mt-4 px-4 py-2 rounded-lg text-sm font-medium text-white transition"
-              style={{ background: '#2563EB' }}
             >
               + Nueva Solicitud
-            </button>
+            </Button>
           )}
         </div>
       ) : (
@@ -414,13 +416,13 @@ export default function TktSolicitudDerechoPage() {
                         </span>
                       </td>
                       <td className="py-2.5 pr-3 pl-2">
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={e => { e.stopPropagation(); handleVerTicket(ticket); }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-100"
-                          style={{ borderColor: '#E5E7EB', color: '#374151' }}
                         >
                           Ver
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );

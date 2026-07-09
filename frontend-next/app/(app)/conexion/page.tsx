@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { API_BASE } from '@/lib/constants';
+import { Button } from '@/components/ui/Button';
 
 interface DbHealth {
   engine: string;
@@ -131,21 +132,19 @@ export default function ConexionPage() {
           </h2>
 
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="secondary"
               onClick={fetchDbHealth}
-              className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-              style={{ borderColor: '#E5E7EB', color: '#374151' }}
             >
               🔄 Refrescar
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={testLatency}
               disabled={testing}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
-              style={{ background: '#2563EB' }}
+              loading={testing}
             >
-              {testing ? 'Midiendo...' : '📡 Medir latencia'}
-            </button>
+              📡 Medir latencia
+            </Button>
           </div>
         </div>
 
