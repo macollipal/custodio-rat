@@ -4,6 +4,14 @@
 > **Estado actual:** Producción Inicial — Score 6.7/10
 > **Última actualización:** 2026-07-05
 
+## Handoff y estado de sesiones
+
+- [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) — **Punto de entrada para retomar sesiones** (resumen trabajo + pendientes)
+- [`STATUS.md`](STATUS.md) — Estado actual, score, pendientes activos
+- [`SESSION_STATE.md`](SESSION_STATE.md) — Handoff sesión 2026-07-03 (histórico)
+
+---
+
 ## Documentación oficial vigente
 
 La documentación oficial vigente (v1.9) está en [`documentacion_oficial/`](documentacion_oficial/). Ver la matriz de vigencia en [`documentacion_oficial/README.md`](documentacion_oficial/README.md) para identificar qué versión aplica a cada documento y qué versiones quedan como histórico.

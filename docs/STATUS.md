@@ -8,7 +8,7 @@
 | Campo | Valor |
 |---|---|
 | **Version** | v1.9 |
-| **Fecha** | 2026-07-07 |
+| **Fecha** | 2026-07-13 |
 | **Score Arquitectonico** | **7.7/10** (RAT: 9.0/10) |
 | **Delta vs v1.8** | +1.0 (gracias a auditoria RAT 2026-07-07) |
 | **RAT** | **9.0/10** ✅ (auditoria detallada 2026-07-07) |
@@ -17,6 +17,7 @@
 | **Madurez** | Produccion Inicial → candidato a **Produccion Empresarial** |
 | **Branch** | `qa` |
 | **Ultima auditoria** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
+| **Ultima sesion** | 2026-07-13 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
 
 ## Documentacion Vigente
 
@@ -31,9 +32,9 @@ Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 
 | ID | Descripcion | Prioridad | Estado | Notas |
 |---|---|---|---|---|
-| **Z-01** | Security headers (CSP, X-Frame-Options) | Media | Pendiente | Headers HTTP minimos de seguridad |
+| **Z-01** | Security headers (CSP, X-Frame-Options) | Media | **Cerrado** ✅ | `backend/app/main.py:145-167` — CSP, X-Frame-Options, HSTS, etc. Tests 6/6 |
 | **Z-02** | CORS restrictivo por ruta | Baja | Pendiente | Hoy se permite todo *.vercel.app |
-| **Z-03** | File upload validation tipo MIME | Media | **Parcial** | Limite BYTEA 10MB OK, falta validar tipo MIME |
+| **Z-03** | File upload validation tipo MIME | Media | **Cerrado** ✅ | Magic bytes en `rat_file._validate_magic_bytes()`. Commit `fe127b5` |
 | **Z-04** | `categoria_titulares NOT NULL` | Alta | **Cerrado v1.9** ✅ | Commit `b776cb9` + migration `2026_07_05_001` |
 | **Z-06** | Logs estructurados JSON / audit_log table | Media | Pendiente | Migrar logging a tabla en BD |
 
@@ -80,6 +81,20 @@ Ver detalle completo en [AUDITORIA_RAT_DETALLE.md](auditorias/2026-07-07_auditor
 
 ## Mejoras Recientes Cerradas
 
+### Sprint 2026-07-08 a 2026-07-13 (Sesión homologación UX + QW4)
+
+| Hallazgo | Tipo | Descripcion |
+|---|---|---|
+| H3.5 | Backend Code | BASES_LEGALES deduplicado — 1 endpoint + 5 componentes frontend migrados |
+| H3.12 | Backend Code | 4 endpoints de export refactorizados con helper DRY |
+| Z-03 | Security | Magic bytes validation PDF/JPEG/PNG/GIF en file uploads |
+| Z-01 | Security | Security headers (verificado — ya estaba implementado) |
+| Homologación UX | Frontend UX | 7 componentes átomo creados + 25+ archivos migrados a `<Button>` |
+| QW4 ARCO | Feature | Dashboard "Derechos más ejercidos" (por_tipo) — backend + frontend + tests |
+| a11y axe-core | Quality | Login page sin violaciones críticas/serias; nuevo `e2e/19-axe-a11y.spec.ts` |
+| WCAG Touch targets | A11y | Botones con `min-h-[44px]` (default en componente Button) |
+| WCAG Hover handlers | A11y | Eliminados `onMouseEnter/onMouseLeave` (mobile funcional) |
+
 ### Sprint 2026-07-07 (Auditoria RAT detallada — 11 hallazgos cerrados)
 
 | Hallazgo | Tipo | Descripcion |
@@ -115,10 +130,11 @@ Ver detalle en [AUDITORIA_V1.9.md](auditorias/2026-07-05_auditoria_v1.9/AUDITORI
 
 ### Corto Plazo (Sprint actual)
 
-1. Cerrar **Z-01** y **Z-02** (security headers + CORS).
-2. Cerrar **Z-03** (file upload MIME validation).
-3. Cerrar **Z-06** (audit_log table).
-4. Continuar remediacion RAT — ver [PLAN_REMEDIACION.md](auditorias/2026-07-07_auditoria_rat_detalle/PLAN_REMEDIACION.md).
+1. Crear carpeta `manual/` para clientes no-técnicos (ver conversación 2026-07-13)
+2. Implementar QWs del backlog (QW1-QW10 Empresas y ARCO) — ver `docs/backlog_seguimiento.md`
+3. Cerrar **Z-02** (CORS restrictivo) y **Z-06** (audit_log table)
+4. Actualizar `MANUAL_USUARIO.md` (wizard 4→5 pasos, roles, versión) — drift detectado
+5. Continuar remediacion RAT — ver [PLAN_REMEDIACION.md](auditorias/2026-07-07_auditoria_rat_detalle/PLAN_REMEDIACION.md)
 
 ### Mediano Plazo
 
