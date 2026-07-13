@@ -1,6 +1,9 @@
 # Session Handoff - Custodio RAT
 
-**Fecha:** 2026-07-13
+> ## 📅 **ÚLTIMO DOCUMENTO DE HANDOFF: 2026-07-13**
+> ## ⏰ **Versión vigente del documento** — Si tu copia es más vieja, este commit (`ed63eef`) fue el último update.
+> ## 🔖 **Identificador único**: `SESSION_HANDOFF_2026-07-13`
+
 **Branch:** `qa` (up-to-date con origin/qa)
 **Autor:** Emece <marcelocollipal@gmail.com>
 **Cuenta Vercel vinculada:** marcelocollipal-7370

@@ -6,7 +6,7 @@
 
 ## Handoff y estado de sesiones
 
-- [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) — **Punto de entrada para retomar sesiones** (resumen trabajo + pendientes)
+- 📅 [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) — **ÚLTIMO HANDOFF: 2026-07-13** — Punto de entrada para retomar sesiones (resumen trabajo + pendientes)
 - [`STATUS.md`](STATUS.md) — Estado actual, score, pendientes activos
 - [`SESSION_STATE.md`](SESSION_STATE.md) — Handoff sesión 2026-07-03 (histórico)
 
