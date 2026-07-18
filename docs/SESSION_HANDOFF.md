@@ -268,8 +268,26 @@ Opciones ranked:
 
 *Generado al cerrar sesión del 2026-07-13. Próxima sesión: retomar desde sección 3 (Pendientes) o sección 6 (próxima sesión) según prioridad.*
 
+## Cómo identificar el documento vigente
+
+Para verificar si tu copia local es la última versión:
+
+| Método | Detalle |
+|--------|---------|
+| Por fecha | Buscar `2026-07-13` en el banner inicial |
+| Por SHA | El último commit fue `aedaecb` — si tu versión no tiene ese SHA en el banner, está desactualizado |
+| Por ID único | Buscar `SESSION_HANDOFF_2026-07-13` |
+
+Comandos para sincronizar:
+```bash
+git fetch origin
+git log -1 --oneline origin/qa -- docs/SESSION_HANDOFF.md
+# Si el SHA no coincide, hacer: git pull origin qa -- docs/SESSION_HANDOFF.md
+```
+
 ## Log de cambios
 
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
 | 2026-07-13 | Creado SESSION_HANDOFF.md consolidando sesiones 2026-07-08 a 2026-07-13 | Emece |
+| 2026-07-13 | Banner destacado + ID único + sección "Cómo identificar el documento vigente" | Emece |
