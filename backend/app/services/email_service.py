@@ -285,46 +285,122 @@ def notificar_sla_alert_t2(
     email_dpo: str,
     nombre_dpo: str,
     nombre_empresa: str,
-    tickets: list[dict],
+    tickets: list[dict] = None,
+    rats: list[dict] = None,
 ) -> None:
     """
-    Notifica al DPO tickets ARCO próximos a vencer en T-2 días hábiles.
-    Agrupados por responsable para facilitar la gestión.
+    QW5 (Art. 14 Ley 21.719): Notifica al DPO tickets ARCO y RATs próximos
+    a vencer en T-2 días hábiles. Agrupados por tipo para facilitar la gestión.
+
+    Args:
+        email_dpo, nombre_dpo, nombre_empresa: datos del destinatario
+        tickets: lista de dicts con keys: id, tipo, titular_nombre, prioridad,
+                 dias_restantes, responsable_nombre
+        rats: lista de dicts con keys: id, nombre_proceso, estado, dias_restantes
     """
-    if not tickets:
+    tickets = tickets or []
+    rats = rats or []
+    if not tickets and not rats:
         return
+
     saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
-    total = len(tickets)
-    vencido_txt = "ya están vencidos" if any(t["dias_restantes"] < 0 for t in tickets) else f"vence(n) en los próximos {total} día(s)"
+    total_tickets = len(tickets)
+    total_rats = len(rats)
+    total = total_tickets + total_rats
+
     cuerpo = [
-        f"<p>Se gefunden <strong>{total}</strong> solicitud(es) ARCO que {vencido_txt}:</p>",
-        '<table style="width:100%;border-collapse:collapse;font-size:13px;">',
-        "<tr style='background:#2563EB;color:white;'>",
-        "<th style='padding:8px;text-align:left;'>ID</th>",
-        "<th style='padding:8px;text-align:left;'>Tipo</th>",
-        "<th style='padding:8px;text-align:left;'>Titular</th>",
-        "<th style='padding:8px;text-align:left;'>Responsable</th>",
-        "<th style='padding:8px;text-align:center;'>Días</th>",
-        "<th style='padding:8px;text-align:left;'>Prioridad</th>",
-        "</tr>",
+        f"<p>Estimado/a, le informamos que <strong>{nombre_empresa}</strong> tiene <strong>{total}</strong> "
+        "item(s) con deadline próximo:</p>"
     ]
-    for t in tickets:
-        dias = t["dias_restantes"]
-        color_fila = "#FEE2E2" if dias <= 0 else ("#FEF9C8" if dias <= 2 else "#DCFCE7")
-        badge = "🔴 VENCIDO" if dias < 0 else (f"🟡 T-{dias}d" if dias <= 2 else f"🟢 {dias}d")
-        cuerpo.append(f"<tr style='background:{color_fila};'>")
-        cuerpo.append(f"<td style='padding:6px;'>#{t['id']}</td>")
-        cuerpo.append(f"<td style='padding:6px;'>{t['tipo']}</td>")
-        cuerpo.append(f"<td style='padding:6px;'>{t['titular_nombre']}</td>")
-        cuerpo.append(f"<td style='padding:6px;'>{t.get('responsable_nombre') or 'Sin asignar'}</td>")
-        cuerpo.append(f"<td style='padding:6px;text-align:center;'>{badge}</td>")
-        cuerpo.append(f"<td style='padding:6px;'>{t['prioridad']}</td>")
-        cuerpo.append("</tr>")
-    cuerpo.append("</table>")
-    cuerpo.append("<p style='margin-top:16px;'>Recuerde que según el Art. 14 Ley 21.719, el plazo máximo de respuesta es de <strong>10 días hábiles</strong> desde la recepción.</p>")
-    footer = f"{total} solicitud(es) con deadline próximo · Custodio RAT Manager · Ley 21.719"
-    text, html = _render_template("Alerta SLA: solicitudes ARCO próximas a vencer", saludo, "".join(cuerpo), footer)
-    _send_raw(email_dpo, f"[Custodio] Alerta SLA: {total} solicitudes ARCO próximas a vencer", html, text)
+
+    # Seccion ARCO tickets
+    if total_tickets > 0:
+        vencido_txt = (
+            "ya están vencidos"
+            if any(t["dias_restantes"] < 0 for t in tickets)
+            else f"vence(n) en los próximos {total_tickets} día(s)"
+        )
+        cuerpo.append(
+            f"<p><strong>Solicitudes ARCO ({vencido_txt}):</strong></p>"
+            "<table style='width:100%;border-collapse:collapse;font-size:13px;'>"
+            "<tr style='background:#2563EB;color:white;'>"
+            "<th style='padding:8px;text-align:left;'>ID</th>"
+            "<th style='padding:8px;text-align:left;'>Tipo</th>"
+            "<th style='padding:8px;text-align:left;'>Titular</th>"
+            "<th style='padding:8px;text-align:left;'>Responsable</th>"
+            "<th style='padding:8px;text-align:center;'>Días</th>"
+            "<th style='padding:8px;text-align:left;'>Prioridad</th>"
+            "</tr>"
+        )
+        for t in tickets:
+            dias = t["dias_restantes"]
+            color_fila = "#FEE2E2" if dias <= 0 else ("#FEF9C8" if dias <= 2 else "#DCFCE7")
+            badge = (
+                "🔴 VENCIDO"
+                if dias < 0
+                else (f"🟡 T-{dias}d" if dias <= 2 else f"🟢 {dias}d")
+            )
+            cuerpo.append(f"<tr style='background:{color_fila};'>")
+            cuerpo.append(f"<td style='padding:6px;'>#{t['id']}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{t['tipo']}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{t['titular_nombre']}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{t.get('responsable_nombre') or 'Sin asignar'}</td>")
+            cuerpo.append(f"<td style='padding:6px;text-align:center;'>{badge}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{t['prioridad']}</td>")
+            cuerpo.append("</tr>")
+        cuerpo.append("</table>")
+        cuerpo.append(
+            "<p style='margin-top:8px;'>Recuerde que según el Art. 14 Ley 21.719, "
+            "el plazo máximo de respuesta es de <strong>10 días hábiles</strong> desde la recepción.</p>"
+        )
+
+    # Seccion RATs
+    if total_rats > 0:
+        cuerpo.append(
+            f"<p style='margin-top:16px;'><strong>RATs próximos a vencer revisión (180 días):</strong></p>"
+            "<table style='width:100%;border-collapse:collapse;font-size:13px;'>"
+            "<tr style='background:#7C3AED;color:white;'>"
+            "<th style='padding:8px;text-align:left;'>ID</th>"
+            "<th style='padding:8px;text-align:left;'>Nombre del proceso</th>"
+            "<th style='padding:8px;text-align:left;'>Estado</th>"
+            "<th style='padding:8px;text-align:center;'>Días restantes</th>"
+            "</tr>"
+        )
+        for r in rats:
+            dias = r.get("dias_restantes")
+            if dias is None:
+                color_fila, badge = "#F3F4F6", "N/A"
+            elif dias < 0:
+                color_fila, badge = "#FEE2E2", f"🔴 VENCIDO {-dias}d"
+            elif dias <= 2:
+                color_fila, badge = "#FEF9C8", f"🟡 T-{dias}d"
+            else:
+                color_fila, badge = "#DCFCE7", f"🟢 {dias}d"
+            cuerpo.append(f"<tr style='background:{color_fila};'>")
+            cuerpo.append(f"<td style='padding:6px;'>#{r['id']}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{r['nombre_proceso']}</td>")
+            cuerpo.append(f"<td style='padding:6px;'>{r['estado']}</td>")
+            cuerpo.append(f"<td style='padding:6px;text-align:center;'>{badge}</td>")
+            cuerpo.append("</tr>")
+        cuerpo.append("</table>")
+        cuerpo.append(
+            "<p style='margin-top:8px;'>Los RATs deben revisarse cada 180 días "
+            "para mantener la documentación actualizada según el Art. 16 Ley 21.719.</p>"
+        )
+
+    footer = f"{total} item(s) con deadline próximo · Custodio RAT Manager · Ley 21.719"
+    text, html = _render_template(
+        "Alerta SLA: deadlines próximos",
+        saludo,
+        "".join(cuerpo),
+        footer,
+    )
+    _send_raw(
+        email_dpo,
+        f"[Custodio] Alerta SLA: {total} deadlines próximos",
+        html,
+        text,
+    )
 
 
 def notificar_eipd_vencida(

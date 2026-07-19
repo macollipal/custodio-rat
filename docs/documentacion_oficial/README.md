@@ -1,6 +1,6 @@
 # Documentacion Oficial — Custodio RAT Manager
 
-> **Version vigente:** v1.9 (2026-07-05)
+> **Version vigente:** v1.10 (2026-07-18) — regenerada por auditoria de drift documental
 > **Politica:** los docs vigentes se versionan en git. Las versiones anteriores quedan como historico y NO se usan como fuente operativa.
 
 ## Matriz de Vigencia
@@ -9,18 +9,18 @@
 |---|---|---|---|---|
 | **00** | Indice | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/README.md` raiz hace esta funcion. |
 | **01** | Vision de Producto | _(no regenerado)_ | v1.0 | Sin equivalente v1.9. |
-| **02** | Requisitos | **v1.9** ✅ | v1.0–v1.8 | 9 RFs nuevos en v1.9 (RF-163 a RF-169). |
-| **03** | Historias de Usuario | **v1.9** ✅ | v1.0–v1.8 | 6 HUs nuevos en v1.9 (HU-098 a HU-103). |
-| **04** | Casos de Uso | **v1.10** ✅ | v1.0–v1.9 | 11 CUs nuevos en v1.10 (CU-15 a CU-25: export, dashboard, paginacion, duplicacion, bloqueo). Auditoria RAT 2026-07-07. |
+| **02** | Requisitos | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre RFs v1.9 + nuevos (RF-170 BaseLegal enum, etc.). |
+| **03** | Historias de Usuario | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre HUs v1.9 + SLA T-2, soft delete, etc. |
+| **04** | Casos de Uso | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18 (sobrescribe v1.10 de auditoría RAT). Cubre 25+ CUs con QW5 SLA T-2. |
 | **05** | Diseno Funcional | _(no regenerado)_ | v1.0, v1.1, v1.2, v1.3 | Sin equivalente v1.9 — evaluar si necesario. |
-| **06** | Arquitectura Software | **v1.9** ✅ | v1.0–v1.8 | 5 ADRs nuevos en v1.9 (ADR-29 a ADR-33). v1.6.5 y v1.9 son mas livianos que v1.7 (cambio de generacion). |
+| **06** | Arquitectura Software | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye versionamiento /api/v1/, soft delete, cifrado Fernet fail-loudly, DR plan. |
 | **07** | Modelo de Datos Detallado | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — evaluar si necesario. |
-| **08** | API REST | **v1.10** ✅ | v1.0–v1.9 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-07-07.** Cubre **20 endpoints** RAT (antes 6 en v1.9). Incluye fix H2.2 (verify-chain restringido a SUPERADMIN) y H1.1 (base_legal='Otra' requiere archivo). |
-| **09** | Backlog de Producto | **v1.9** ✅ | v1.0–v1.8 | 6 items cerrados nuevos (DT-ITER13-01 a DT-ITER13-06). |
-| **10** | Plan de QA | **v1.9** ✅ | v1.0–v1.8 (v1.5 falta) | 8 TCs nuevos en v1.9 (TC-039 a TC-046). |
+| **08** | API REST | **v1.10** ✅ | v1.0–v1.9 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-07-18.** Cubre **20+ endpoints** RAT incluyendo /api/v1/ y endpoints de compliance. |
+| **09** | Backlog de Producto | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye QW5 (SLA T-2 RATs) y QW4 cerrado. |
+| **10** | Plan de QA | **v1.10** ✅ | v1.0–v1.9 (v1.5 falta) | Regenerado 2026-07-18. Incluye tests E2E ARCO workflow (a7e7687). |
 | **11** | Manual de Despliegue | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/despliegue/` cumple esta funcion. |
-| **12** | Manual Tecnico | **v1.9** ✅ | v1.0–v1.8 | — |
-| **MTX** | Matriz de Trazabilidad | **v1.9** ✅ | v1.0–v1.8 | 7 RFs nuevos mapeados (RF-163 a RF-169). |
+| **12** | Manual Tecnico | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre C1+C2+C4+C6+C7+QW13+Fase 1. |
+| **MTX** | Matriz de Trazabilidad | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye RF-170 (BaseLegal), RF-171 (Soft delete), RF-172 (Versionamiento API), RF-173 (SLA T-2). |
 
 ## Documentos SIN Version v1.9 (vigente es historica)
 
@@ -75,4 +75,4 @@ Los siguientes documentos historicos NO tienen equivalente v1.9. Mantenerlos por
 
 ---
 
-*Ultima actualizacion: 2026-07-07 (auditoria RAT detallada — sprint 1)*
+*Ultima actualizacion: 2026-07-18 (regeneracion v1.10 por auditoria de drift documental)*

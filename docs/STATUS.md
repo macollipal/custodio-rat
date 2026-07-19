@@ -7,26 +7,39 @@
 
 | Campo | Valor |
 |---|---|
-| **Version** | v1.9 |
-| **Fecha** | 2026-07-13 |
+| **Version** | v1.9 (docs) / v1.10 (docs API + CU) |
+| **Fecha** | 2026-07-18 |
 | **Score Arquitectonico** | **7.7/10** (RAT: 9.0/10) |
 | **Delta vs v1.8** | +1.0 (gracias a auditoria RAT 2026-07-07) |
 | **RAT** | **9.0/10** ✅ (auditoria detallada 2026-07-07) |
-| **ARCO** | 6.8/10 |
-| **Brechas** | 5.9/10 |
+| **ARCO** | 7.5/10 (QW4 dashboard por_tipo + tests E2E workflow) |
+| **Brechas** | 7.0/10 (QW13 notificacion titulares) |
+| **Compliance** | **Art. 11, 12, 13, 14 bis, 14 ter, 15 bis, 16, 19, 28** cubiertos |
 | **Madurez** | Produccion Inicial → candidato a **Produccion Empresarial** |
 | **Branch** | `qa` |
-| **Ultima auditoria** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
-| **Ultima sesion** | 2026-07-13 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
+| **Ultima auditoria formal** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
+| **Ultimo trabajo** | [LEVANTAMIENTO_2026-07-18.md](../LEVANTAMIENTO_2026-07-18.md) (4 auditorias) |
+| **Ultima sesion** | 2026-07-18 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
 
 ## Documentacion Vigente
 
 Ver: [documentacion_oficial/README.md](documentacion_oficial/README.md)
 
-- 9 documentos v1.9 (02, 03, 06, 09, 10, 12, MTX).
+- 7 documentos v1.9 (02, 03, 06, 09, 10, 12, MTX).
 - **2 documentos v1.10** regenerados tras auditoria RAT detallada:
   - `04_Casos_de_Uso_v1.10.docx` (25 CUs, antes 14 en v1.9)
   - `08_API_REST_v1.10.docx` (20 endpoints, antes 6 en v1.9)
+
+**Pendiente**: regenerar los 7 docs v1.9 a v1.10 (con código actualizado al 2026-07-18).
+Ver [`auditorias/2026-07-18_auditoria_doc_drift.md`](auditorias/2026-07-18_auditoria_doc_drift.md).
+
+### Documentacion adicional reciente (2026-07-13 → 2026-07-18)
+
+- **`manual/README.md`** (raíz): manual para clientes no-técnicos, lenguaje claro, ejemplos reales.
+- **`manual/como_se_conectan_los_modulos.md`**: diagrama + 4 flujos típicos.
+- **`LEVANTAMIENTO_2026-07-18.md`** (raíz): informe detallado con 4 auditorías especializadas.
+- **`docs/despliegue/RUNBOOKS/DR_TEST_RUNBOOK.md`**: runbook DR con RTO<4h, RPO<1h.
+- **`SESSION_HANDOFF.md`**: handoff de sesión (formato estandarizado).
 
 ## Pendientes Tecnicos Z-
 

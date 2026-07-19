@@ -77,12 +77,29 @@ def _job_enqueue_solicitar_renovacion_consentimiento() -> None:
         db.close()
 
 
+def _job_enqueue_sla_alert_t2() -> None:
+    """Encola alerta SLA T-2 para tickets ARCO proximos a vencer plazo 10 dias habiles.
+
+    Art. 14 Ley 21.719: solicitudes ARCO deben responderse en 10 dias habiles.
+    Esta alerta avisa al DPO 2 dias antes (T-2) para que tenga tiempo de
+    responder. Tambien alerta tickets ya vencidos.
+    """
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_t2")
+        logger.info("Scheduler: tarea 'sla_alert_t2' encolada")
+    finally:
+        db.close()
+
+
 _JOBS = [
     (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
     (_job_enqueue_revisar_encargados_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_notificar_eipd_vencida, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_solicitar_renovacion_consentimiento, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_sla_alert_t2, 24 * 60 * 60),  # cada 24h (QW5 SLA T-2)
 ]  # type: ignore
 
 

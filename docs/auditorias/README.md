@@ -16,6 +16,9 @@
 | 2026-06-24 | Cierre sesión v1.7 | ✅ Documentación | 9.0/10 |
 | 2026-06-15 | Cierre sesión v1.6-BETA | ✅ Activo | 8.7/10 |
 | 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
+| 2026-07-07 | Auditoria RAT Detalle | ✅ Documentación | 9.0/10 (RAT) |
+| 2026-07-07 | Auditoria ARCO Arquitectura | ✅ Documentación | 8.6/10 |
+| 2026-07-18 | **Auditoría de Drift Documental** | 📋 Pendiente regeneración | — |
 
 ### 2026-06-24 — Cierre sesión v1.7
 - **Estado:** ✅ Documentación generada

@@ -10,11 +10,11 @@
 
 | Módulo | Quick Wins | En Progreso | Completado | Postergado | Total |
 |--------|-----------|-------------|------------|------------|-------|
-| Módulo Empresas (Clientes) | 10 | 0 | 0 | 0 | 10 |
-| Módulo ARCO (Tickets) | 10 | 0 | 2 | 1 | 10 |
+| Módulo Empresas (Clientes) | 10 | 0 | 1 | 0 | 10 |
+| Módulo ARCO (Tickets) | 10 | 0 | 3 | 1 | 10 |
 | Formulario Público ARCO | 10 | 0 | 2 | 0 | 10 |
 | Formulario Admin ARCO | 10 | 0 | 10 | 0 | 10 |
-| **Total** | **40** | **0** | **14** | **1** | **40** |
+| **Total** | **40** | **0** | **16** | **1** | **40** |
 
 ---
 
@@ -26,7 +26,7 @@
 | QW2 | Botón Exportar Reporte APDP (PDF) | CRÍTICO | MEDIO | MEDIA | 3-4 días | ⚪ Pendiente | — |
 | QW3 | Score de cumplimiento v1 | MEDIO | ALTO | MEDIA | 3-4 días | ⚪ Pendiente | — |
 | QW4 | Exportación CSV/Excel/PDF de tickets ARCO | ALTO | MEDIO | BAJA | 2-3 días | ⚪ Pendiente | — |
-| QW5 | SLA alert por email T-2 días | CRÍTICO | BAJO | BAJA | 2 días | ⚪ Pendiente | — |
+| QW5 | SLA alert por email T-2 días (ARCO + RATs) | CRÍTICO | BAJO | BAJA | 2 días | ✅ **Cerrado** | Emece (2026-07-18) |
 | QW6 | Ficha de empresa básica con tabs | MEDIO | ALTO | MEDIA | 3-5 días | ⚪ Pendiente | — |
 | QW7 | Banner de alertas en lista de empresas | MEDIO | ALTO | BAJA | 1 día | ⚪ Pendiente | — |
 | QW8 | Recordatorio ARCO T-2 días | ALTO | BAJO | BAJA | 1-2 días | ⚪ Pendiente | — |
@@ -49,7 +49,7 @@
 | QW1 | Exportación CSV/Excel/PDF | ALTO | MEDIO | BAJA | 3 días | ✅ Completado | — |
 | QW2 | SLA alert email T-2 días | CRÍTICO | BAJO | BAJA | 2 días | ✅ Completado | — |
 | QW3 | Firma digital + timestamp en respuesta | CRÍTICO | BAJO | BAJA | 1 día | ⏸ Postergado | — |
-| QW4 | Dashboard "derechos más ejercidos" | BAJO | MEDIO | BAJA | 1.5 días | ⚪ Pendiente | — |
+| QW4 | Dashboard "derechos más ejercidos" | BAJO | MEDIO | BAJA | 1.5 días | ✅ **Cerrado** | Emece (2026-07-09) |
 | QW5 | Bandeja de entrada del DPO | ALTO | ALTO | MEDIA | 3 días | ⚪ Pendiente | — |
 | QW6 | Recordatorio automático al titular | ALTO | MEDIO | BAJA | 2 días | ⚪ Pendiente | — |
 | QW7 | Plantillas con placeholders dinámicos | MEDIO | ALTO | MEDIA | 3 días | ⚪ Pendiente | — |
@@ -100,6 +100,8 @@
 | 2026-06-23 | 1.0 | Creación del backlog | Consultoría DPO+PM+UX+Auditor |
 | 2026-06-24 | 1.1 | Sprint 1 completo (Admin ARCO QW1-QW10 + Público QW2/QW6) + Sprint 2 QW1 (Export) + QW2 (SLA Alert) | Equipo desarrollo |
 | 2026-06-24 | 1.1b | ARCO-QW3 (Firma digital) postergado indefinidamente | Usuario |
+| 2026-07-09 | 1.2 | ARCO-QW4 (Dashboard "derechos más ejercidos") + QW5 SLA T-2 alertas | Emece |
+| 2026-07-18 | 1.3 | QW5 Empresas (SLA T-2 días RATs + ARCO) extendido a RATs | Emece |
 
 ---
 

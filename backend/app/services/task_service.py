@@ -187,6 +187,9 @@ def _run_sla_alert_t2(db: Session) -> int:
     """
     Revisa tickets ARCO con vencimiento en T-2 días hábiles (o menos)
     y envía alerta grupal al DPO de cada empresa.
+
+    QW5 (extendido): también notifica RATs próximos a vencer revisión
+    (DIAS_REVISION = 180 días desde el último updated_at).
     """
     from datetime import timedelta
     from app.models.company import Company
@@ -196,7 +199,9 @@ def _run_sla_alert_t2(db: Session) -> int:
 
     ahora = datetime.now(timezone.utc)
     umbral_t2 = ahora + timedelta(days=2)
+    DIAS_REVISION = 180  # debe coincidir con frontend/lib/constants.ts
 
+    # 1. ARCO tickets con vencimiento proximo
     estados_activos = ["abierto", "en_proceso", "pendiente", "subsanacion", "prorroga"]
     tickets = (
         db.query(TktSolicitudDerecho)
@@ -218,21 +223,51 @@ def _run_sla_alert_t2(db: Session) -> int:
     )
 
     tickets_vencidos = tickets + vencidos
-    if not tickets_vencidos:
+
+    # 2. RATs proximos a vencer revision (T-2 dias de 180)
+    # Buscamos RATs con updated_at entre (ahora + 178d) y (ahora + 180d)
+    # Solo notificados una vez por ventana (no re-notificar el mismo RAT).
+    umbral_rats_t2 = ahora + timedelta(days=DIAS_REVISION - 2)
+    umbral_rats_vencidos = ahora - timedelta(days=2)
+    rats_proximos = (
+        db.query(RAT)
+        .filter(
+            RAT.estado.in_(["borrador", "completo", "en_revision"]),
+            RAT.deleted_at.is_(None),  # excluir soft-deleted
+            RAT.updated_at <= umbral_rats_t2,
+            RAT.updated_at >= ahora,
+        )
+        .all()
+    )
+    rats_vencidos = (
+        db.query(RAT)
+        .filter(
+            RAT.estado.in_(["borrador", "completo", "en_revision"]),
+            RAT.deleted_at.is_(None),
+            RAT.updated_at < ahora,
+            RAT.updated_at >= umbral_rats_vencidos,
+        )
+        .all()
+    )
+
+    if not tickets_vencidos and not rats_proximos and not rats_vencidos:
         return 0
 
-    por_empresa: dict[int, list] = {}
+    # Agrupar por empresa
+    por_empresa: dict[int, dict] = {}
     for t in tickets_vencidos:
-        por_empresa.setdefault(t.company_id, []).append(t)
+        por_empresa.setdefault(t.company_id, {"tickets": [], "rats": []})["tickets"].append(t)
+    for r in rats_proximos + rats_vencidos:
+        por_empresa.setdefault(r.company_id, {"tickets": [], "rats": []})["rats"].append(r)
 
     notificados = 0
-    for company_id, tkt_list in por_empresa.items():
+    for company_id, grupos in por_empresa.items():
         empresa = db.query(Company).filter(Company.id == company_id).first()
         if not empresa or not empresa.email_dpo:
             continue
 
         tickets_data = []
-        for t in tkt_list:
+        for t in grupos["tickets"]:
             dias = calcular_dias_restantes(t.fecha_vencimiento)
             responsable_nombre = None
             if t.responsable_id:
@@ -248,12 +283,24 @@ def _run_sla_alert_t2(db: Session) -> int:
                 "responsable_nombre": responsable_nombre,
             })
 
+        rats_data = []
+        for r in grupos["rats"]:
+            delta = r.updated_at - ahora if r.updated_at else None
+            dias_restantes = delta.days if delta else None
+            rats_data.append({
+                "id": r.id,
+                "nombre_proceso": r.nombre_proceso,
+                "estado": r.estado,
+                "dias_restantes": dias_restantes,
+            })
+
         try:
             notificar_sla_alert_t2(
                 email_dpo=empresa.email_dpo,
                 nombre_dpo=empresa.contacto_dpo or "",
                 nombre_empresa=empresa.nombre,
                 tickets=tickets_data,
+                rats=rats_data,
             )
             notificados += 1
         except EmailError as e:
