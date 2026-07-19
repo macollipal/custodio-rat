@@ -118,8 +118,25 @@ def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: 
         except EmailError as e:
             logger.error(f"Brecha {breach_id}: fallo enviando notificación APDC: {e}")
 
-    if data.notificado_titulares and not _notificado_titulares_prev:
-        logger.info(f"Brecha {breach_id}: notificación a titulares activada (automatizar según canal disponible)")
+    # QW13 (Art. 14 bis): notificar a titulares afectados sin dilación indebida.
+    if data.notificado_titulares and not _notificado_titulares_prev and empresa:
+        from app.services.email_service import notificar_titulares_brecha
+        emails_titulares = _obtener_emails_titulares_afectados(db, empresa.id, breach)
+        if emails_titulares:
+            enviados = notificar_titulares_brecha(
+                emails_titulares=emails_titulares,
+                nombre_empresa=empresa.nombre,
+                descripcion=breach.descripcion or "Sin descripción",
+                fecha_deteccion=breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M"),
+                tipo_datos_afectados=breach.datos_comprometidos or "",
+            )
+            logger.info(
+                f"Brecha {breach_id}: notificación a titulares enviada a {enviados} destinatarios"
+            )
+        else:
+            logger.info(
+                f"Brecha {breach_id}: notificación a titulares activada pero sin emails registrados"
+            )
 
     log_audit(
         db=db,
@@ -187,3 +204,60 @@ def evaluar_riesgo_brecha(db: Session, breach_id: int) -> SecurityBreach:
     db.commit()
     db.refresh(breach)
     return breach
+
+
+def _obtener_emails_titulares_afectados(
+    db: Session, company_id: int, breach: SecurityBreach
+) -> list:
+    """
+    QW13: Obtiene los emails de los titulares afectados por una brecha.
+
+    Estrategia:
+    1. Si breach.rats_afectados tiene RAT IDs, obtener consentimientos activos
+       de esos RATs (los titulares dieron consentimiento y tenemos su email).
+    2. Si breach.datos_comprometidos menciona emails explícitamente, parsear.
+    3. Fallback: lista vacía (no podemos contactar sin emails).
+
+    Por compliance, no obtenemos emails de la BD de usuarios empresa
+    (esos son DPO/empleados, no titulares afectados).
+    """
+    emails: set = set()
+
+    # 1. Consentimientos de RATs afectados
+    if breach.rats_afectados:
+        try:
+            rat_ids = [int(x.strip()) for x in breach.rats_afectados.split(",") if x.strip().isdigit()]
+        except (ValueError, AttributeError):
+            rat_ids = []
+        if rat_ids:
+            from app.models.consentimiento import Consentimiento
+            consentimientos = (
+                db.query(Consentimiento)
+                .filter(
+                    Consentimiento.rat_id.in_(rat_ids),
+                    Consentimiento.company_id == company_id,
+                    Consentimiento.activo.is_(True),
+                )
+                .all()
+            )
+            for c in consentimientos:
+                # nombre_titular_cipher es BYTEA; usamos el placeholder
+                # que escribe el service (no es PII real).
+                # Para email usamos un campo diferente si existe.
+                pass  # El email está en email_titular_cipher (cifrado)
+
+    # 2. Por ahora, no tenemos acceso a emails cifrados sin descifrar
+    # cada uno. Eso requiere una clave de descifrado a nivel de servicio.
+    # En producción, se debe:
+    # - Descifrar email_titular_cipher de cada consentimiento
+    # - O tener un canal alternativo (ej. email en otra tabla no cifrada)
+    # - O enviar via DPO con CSV
+    #
+    # Por ahora retornamos lista vacia y loggeamos. El flujo de notificacion
+    # queda implementado en email_service.notificar_titulares_brecha para
+    # cuando se obtengan los emails (ej. via canal DPO con CSV).
+    logger.info(
+        f"Brecha {breach.id}: _obtener_emails_titulares_afectados no implementado "
+        f"completamente. Emails se obtendran via DPO en produccion."
+    )
+    return list(emails)

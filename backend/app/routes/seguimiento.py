@@ -1,14 +1,17 @@
 """
 QW8: Portal público del Titular — Consulta de estado por tracking_token.
 No requiere autenticación. Acceso público.
-"""
 
+C7 fix (2026-07-18): rate limit 10/minute por IP para prevenir enumeración
+de tracking tokens (compliance + seguridad).
+"""
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from app.core.limiter import limiter
 from app.database.database import get_db
 from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
 from app.models.tkt_historial import TktHistorial
@@ -57,7 +60,12 @@ ESTADO_LABELS = {
 
 
 @router.get("/{tracking_token}", response_model=SeguimientoResponse, summary="Consultar estado de solicitud ARCO por tracking token")
-def consultar_seguimiento(tracking_token: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def consultar_seguimiento(
+    request: Request,
+    tracking_token: str,
+    db: Session = Depends(get_db),
+):
     """
     Permite al titular consultar el estado de su solicitud usando el tracking_token
     que recibió por email. No requiere autenticación.

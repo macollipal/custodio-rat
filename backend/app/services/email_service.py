@@ -134,6 +134,72 @@ def notificar_nueva_brecha(
     _send_raw(email_dpo, f"[Custodio] Nueva brecha - {nombre_empresa}", html, text)
 
 
+def notificar_titulares_brecha(
+    emails_titulares: list,
+    nombre_empresa: str,
+    descripcion: str,
+    fecha_deteccion: str,
+    tipo_datos_afectados: str = "",
+) -> int:
+    """
+    QW13 (Art. 14 bis Ley 21.719): Notifica a los titulares afectados por una
+    brecha de seguridad. Se ejecuta sin dilación indebida cuando la brecha
+    afecta datos sensibles, menores o financieros.
+
+    Args:
+        emails_titulares: lista de emails de titulares a notificar
+        nombre_empresa: nombre de la empresa responsable
+        descripcion: descripción de la brecha
+        fecha_deteccion: fecha/hora de detección (str formato legible)
+        tipo_datos_afectados: descripción de los datos comprometidos
+
+    Returns:
+        int: cantidad de emails enviados exitosamente
+    """
+    if not emails_titulares:
+        logger.info("Brecha: no hay emails de titulares para notificar")
+        return 0
+
+    asunto = f"[Importante] Notificación de incidente de seguridad - {nombre_empresa}"
+    saludo = "Estimado/a:"
+    cuerpo = (
+        f"<p>Le informamos que <strong>{nombre_empresa}</strong> ha detectado "
+        f"un incidente de seguridad que puede haber afectado sus datos personales.</p>"
+        f"<ul>"
+        f"<li><strong>Fecha de detección:</strong> {fecha_deteccion}</li>"
+        f"<li><strong>Descripción:</strong> {descripcion}</li>"
+    )
+    if tipo_datos_afectados:
+        cuerpo += f"<li><strong>Datos potencialmente afectados:</strong> {tipo_datos_afectados}</li>"
+    cuerpo += (
+        f"</ul>"
+        f"<p>Estamos tomando las medidas necesarias para contener el incidente "
+        f"y minimizar su impacto. Si tiene preguntas o requiere información "
+        f"adicional, puede contactar al DPO de {nombre_empresa}.</p>"
+        f"<p>Este mensaje se envía en cumplimiento del Art. 14 bis de la "
+        f"ley 21.719 que establece la obligación de notificar a los titulares "
+        f"afectados sin dilación indebida.</p>"
+    )
+    footer = "Tiene derecho a ejercer los derechos ARCO (Acceso, Rectificación, Cancelación, Oposición) contactando a la empresa."
+    text, html = _render_template(
+        "Notificación de incidente de seguridad", saludo, cuerpo, footer
+    )
+
+    enviados = 0
+    for email in emails_titulares:
+        if not email or "@" not in email:
+            continue
+        try:
+            _send_raw(email, asunto, html, text)
+            enviados += 1
+        except EmailError as e:
+            logger.error(f"Brecha: fallo notificando titular {email}: {e}")
+    logger.info(
+        f"Brecha: notificación titulares enviada a {enviados}/{len(emails_titulares)} destinatarios"
+    )
+    return enviados
+
+
 def notificar_vencimiento_rat(
     email_dpo: str,
     nombre_dpo: str,
