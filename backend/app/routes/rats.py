@@ -321,7 +321,7 @@ async def crear_consentimiento(
         consentimiento = crear_consentimiento_service(db=db, data=data, usuario=current_user.username)
     except RATNotFoundError:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    return consentimiento
+    return ConsentimientoOut.from_orm_cifrado(consentimiento)
 
 
 @router.put("/{rat_id}", response_model=RATOut, summary="Actualizar registro RAT")

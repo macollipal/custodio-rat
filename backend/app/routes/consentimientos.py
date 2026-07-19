@@ -32,7 +32,7 @@ async def listar_consentimientos(
         db, company_id, rat_id, solo_activos, skip, limit
     )
     return ConsentimientoListResponse(
-        consentimientos=[ConsentimientoOut.model_validate(c) for c in items],
+        consentimientos=[ConsentimientoOut.from_orm_cifrado(c) for c in items],
         total=total,
         skip=skip,
         limit=limit,
@@ -50,7 +50,7 @@ async def obtener_consentimiento(
     except consentimiento_service.ConsentimientoNotFoundError:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
     check_company_access(current_user, c.company_id, db)
-    return c
+    return ConsentimientoOut.from_orm_cifrado(c)
 
 
 @router.post("/", response_model=ConsentimientoOut, status_code=201, summary="Crear consentimiento")
@@ -62,7 +62,7 @@ async def crear_consentimiento(
     try:
         c = consentimiento_service.crear_consentimiento(db, data, current_user.username)
         check_company_access(current_user, c.company_id, db)
-        return c
+        return ConsentimientoOut.from_orm_cifrado(c)
     except consentimiento_service.RATNotFoundError:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
 
@@ -80,4 +80,4 @@ async def revocar_consentimiento(
     except consentimiento_service.ConsentimientoYaRevocadoError:
         raise HTTPException(status_code=400, detail="El consentimiento ya fue revocado.")
     check_company_access(current_user, c.company_id, db)
-    return c
+    return ConsentimientoOut.from_orm_cifrado(c)

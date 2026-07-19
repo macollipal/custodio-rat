@@ -49,12 +49,25 @@ def _compute_hash(prev_hash: str, timestamp: datetime, accion: str, entidad: str
                  entidad_id: int, usuario: Optional[str], detalle: Optional[str]) -> str:
     """
     Computa el hash SHA-256 para el registro de auditoría.
-    Fórmula: sha256(prev_hash + timestamp.isoformat() + accion + entidad + str(entidad_id) + usuario + detalle)
+    Fórmula: sha256(prev_hash + timestamp_utc_isoformat + accion + entidad + str(entidad_id) + usuario + detalle)
+
+    El timestamp SIEMPRE se normaliza a UTC antes de hashear (Art. 28 Ley 21.719).
+    Esto garantiza que el hash sea determinístico independiente del timezone del
+    servidor o de las instancias en Vercel serverless (que pueden correr en
+    UTC, us-east-1, eu-west-1, etc.).
+
+    Si el datetime viene naive (sin tzinfo), se asume UTC.
     """
-    ts_normalized = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
+    if timestamp.tzinfo is None:
+        # Naive datetime: asumir UTC (no naive local).
+        ts_utc = timestamp.replace(tzinfo=timezone.utc)
+    else:
+        # Aware datetime: convertir a UTC.
+        ts_utc = timestamp.astimezone(timezone.utc)
+
     data = (
         f"{prev_hash}"
-        f"{ts_normalized.isoformat()}"
+        f"{ts_utc.isoformat()}"
         f"{accion}"
         f"{entidad}"
         f"{entidad_id}"

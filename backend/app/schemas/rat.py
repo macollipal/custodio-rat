@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from enum import Enum
 from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 import json
@@ -6,16 +7,36 @@ import json
 from app.models.rat import EstadoRAT
 
 
-BASE_LEGAL_OPTIONS = [
-    "Consentimiento del titular",
-    "Ejecución de contrato",
-    "Obligación legal",
-    "Interés legítimo",
-    "Interés vital del titular",
-    "Misión de interés público",
-    "Datos biométricos de identificación (Art. 16 BIS)",
-    "Otra",
-]
+class BaseLegal(str, Enum):
+    """Base legal taxativa del Art. 13 Ley 21.719.
+
+    Es string-Enum para serializar como string en JSON/API, pero provee
+    type-safety en Python (autocomplete en IDE, validación de typos).
+    """
+    CONSENTIMIENTO = "Consentimiento del titular"
+    CONTRATO = "Ejecución de contrato"
+    OBLIGACION_LEGAL = "Obligación legal"
+    INTERES_LEGITIMO = "Interés legítimo"
+    INTERES_VITAL = "Interés vital del titular"
+    INTERES_PUBLICO = "Misión de interés público"
+    BIOMETRICOS = "Datos biométricos de identificación (Art. 16 BIS)"
+    OTRA = "Otra"
+
+
+# Lista plana para mantener compatibilidad con UI y serialización.
+BASE_LEGAL_OPTIONS: list[str] = [b.value for b in BaseLegal]
+
+# Descripciones para tooltip/documentación en UI.
+BASE_LEGAL_DESCRIPCIONES: dict[str, str] = {
+    BaseLegal.CONSENTIMIENTO.value: "Art. 12 — El titular autorizó expresamente el tratamiento de sus datos personales.",
+    BaseLegal.CONTRATO.value: "Art. 13.2 — El tratamiento es necesario para la ejecución de un contrato.",
+    BaseLegal.OBLIGACION_LEGAL.value: "Art. 13.3 — El tratamiento es necesario para cumplir una obligación legal.",
+    BaseLegal.INTERES_LEGITIMO.value: "Art. 13.5 — Interés legítimo del responsable, documentado mediante test de 3 pasos.",
+    BaseLegal.INTERES_VITAL.value: "Art. 13.4 — Interés vital del titular (salud, seguridad).",
+    BaseLegal.INTERES_PUBLICO.value: "Art. 13.6 — Misión de interés público.",
+    BaseLegal.BIOMETRICOS.value: "Art. 16 BIS — Datos biométricos para identificación inequívoca. Requiere EIPD obligatoria.",
+    BaseLegal.OTRA.value: "Otra base legal no contemplada en las anteriores. Adjuntar documento legal que la justifique.",
+}
 
 
 class BaseLegalOptionsOut(BaseModel):
@@ -143,7 +164,10 @@ class RATCreate(RATBase):
     def base_legal_valida(cls, v: str) -> str:
         stripped = v.strip()
         if stripped not in BASE_LEGAL_OPTIONS:
-            raise ValueError(f"base_legal debe ser una de las opciones válidas: {BASE_LEGAL_OPTIONS}")
+            raise ValueError(
+                f"base_legal debe ser una de las {len(BASE_LEGAL_OPTIONS)} opciones válidas "
+                f"(Art. 13 Ley 21.719): {BASE_LEGAL_OPTIONS}"
+            )
         return stripped
 
     @model_validator(mode='after')

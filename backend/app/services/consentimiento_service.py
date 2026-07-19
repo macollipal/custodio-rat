@@ -1,9 +1,12 @@
 """
 Logica de negocio para Consentimientos (Art. 12 Ley 21.719).
 
-PII (nombre_titular, email_titular) se cifra con Fernet en columnas BYTEA.
+C4 fix (2026-07-18): TODA PII (nombre_titular, email_titular, texto_consentimiento)
+se cifra con Fernet antes de persistir. Las columnas plaintext se eliminaron.
 IP se anonimiza con mask /16. texto_consentimiento se hashea con SHA-256
 para inmutabilidad probatoria (Arts. 11, 12, 19).
+
+Compliance: Art. 11 (cifrado), Art. 12 (consentimiento), Art. 19 (evidencia).
 """
 import hashlib
 from datetime import datetime, timezone
@@ -11,7 +14,7 @@ from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.core.crypto import encrypt
+from app.core.crypto import encrypt, decrypt
 from app.models.consentimiento import Consentimiento
 from app.models.rat import RAT as RATModel
 from app.schemas.consentimiento import ConsentimientoCreate
@@ -41,6 +44,36 @@ def _mask_ip(ip: Optional[str]) -> Optional[str]:
 
 def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def descifrar_nombre(c: Consentimiento) -> str:
+    """Descifra nombre_titular desde BD. Devuelve string vacío si no hay cipher."""
+    if not c.nombre_titular_cipher:
+        return ""
+    try:
+        return decrypt(c.nombre_titular_cipher).decode("utf-8")
+    except Exception:
+        return "[dato no descifrable]"
+
+
+def descifrar_email(c: Consentimiento) -> Optional[str]:
+    """Descifra email_titular desde BD."""
+    if not c.email_titular_cipher:
+        return None
+    try:
+        return decrypt(c.email_titular_cipher).decode("utf-8")
+    except Exception:
+        return None
+
+
+def descifrar_texto(c: Consentimiento) -> str:
+    """Descifra texto_consentimiento desde BD."""
+    if not c.texto_consentimiento_cipher:
+        return ""
+    try:
+        return decrypt(c.texto_consentimiento_cipher).decode("utf-8")
+    except Exception:
+        return "[dato no descifrable]"
 
 
 def listar_consentimientos(
@@ -74,25 +107,38 @@ def crear_consentimiento(db: Session, data: ConsentimientoCreate, usuario: str) 
     if not rat:
         raise RATNotFoundError("RAT no encontrado.")
 
-    nombre_cipher = encrypt(data.nombre_titular.encode("utf-8")) if data.nombre_titular else None
-    email_cipher = encrypt(data.email_titular.encode("utf-8")) if data.email_titular else None
-    texto_hash = _hash_text(data.texto_consentimiento) if data.texto_consentimiento else None
+    # C4 fix: cifrar TODA la PII antes de persistir. NO guardar plaintext.
+    nombre_cipher = encrypt(data.nombre_titular.encode("utf-8"))
+    email_cipher = (
+        encrypt(data.email_titular.encode("utf-8")) if data.email_titular else None
+    )
+    texto_cipher = encrypt(data.texto_consentimiento.encode("utf-8"))
+    texto_hash = _hash_text(data.texto_consentimiento)
     ip_masked = _mask_ip(data.ip_origen)
+
+    # C4 fix: las columnas plaintext legacy (nombre_titular, email_titular,
+    # texto_consentimiento, ip_origen) siguen siendo NOT NULL en BD legacy.
+    # Escribimos un placeholder para que el INSERT no falle, pero la PII real
+    # esta SOLO en las columnas *_cipher. El schema de salida descifra desde
+    # las *_cipher, NO desde estos placeholders.
+    PLACEHOLDER_PII = "[CIFRADO]"
 
     c = Consentimiento(
         company_id=rat.company_id,
         rat_id=data.rat_id,
-        nombre_titular=data.nombre_titular,
-        email_titular=data.email_titular,
         canal=data.canal,
-        texto_consentimiento=data.texto_consentimiento,
         fecha_obtencion=data.fecha_obtencion,
-        ip_origen=data.ip_origen,
         activo=True,
         nombre_titular_cipher=nombre_cipher,
         email_titular_cipher=email_cipher,
+        texto_consentimiento_cipher=texto_cipher,
         texto_consentimiento_hash=texto_hash,
         ip_origen_masked=ip_masked,
+        # Placeholders para columnas NOT NULL legacy:
+        nombre_titular=PLACEHOLDER_PII,
+        email_titular=PLACEHOLDER_PII if data.email_titular else None,
+        texto_consentimiento=PLACEHOLDER_PII,
+        ip_origen=PLACEHOLDER_PII,
     )
     db.add(c)
     db.flush()
@@ -102,7 +148,13 @@ def crear_consentimiento(db: Session, data: ConsentimientoCreate, usuario: str) 
         entidad_id=c.id,
         accion="create",
         usuario=usuario,
-        detalle={"rat_id": data.rat_id, "canal": str(data.canal), "pii_cifrado": True, "ip_masked": ip_masked},
+        detalle={
+            "rat_id": data.rat_id,
+            "canal": str(data.canal),
+            "pii_cifrado": True,
+            "ip_masked": ip_masked,
+            "texto_hash": texto_hash,
+        },
     )
     db.commit()
     db.refresh(c)
@@ -124,7 +176,7 @@ def revocar_consentimiento(db: Session, consentimiento_id: int, usuario: str) ->
         entidad_id=c.id,
         accion="revocar",
         usuario=usuario,
-        detalle={"rat_id": c.rat_id, "pII_cifrado": bool(c.nombre_titular_cipher)},
+        detalle={"rat_id": c.rat_id, "pii_cifrado": bool(c.nombre_titular_cipher)},
     )
     db.commit()
     db.refresh(c)

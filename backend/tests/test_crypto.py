@@ -1,6 +1,11 @@
 ﻿"""
-Tests para app.core.crypto â€” cifrado simÃ©trico Fernet de datos en reposo.
+Tests para app.core.crypto — cifrado simétrico Fernet de datos en reposo.
 Cumple Ley 21.719 Art. 16.
+
+Comportamiento esperado (post C1):
+- encrypt() y decrypt() fallan loudly si no hay ENCRYPTION_KEY válida.
+- En desarrollo, settings.resolved_encryption_key usa _dev_encryption_key por defecto.
+- En producción/QA/staging, settings hace raise si no hay key → encrypt/decrypt propagan.
 """
 
 import base64
@@ -10,10 +15,11 @@ import pytest
 
 class TestFernetCrypto:
     def test_encrypt_decrypt_round_trip(self):
-        """Datos cifrados y descifrados deben ser idÃ©nticos al original."""
+        """Datos cifrados y descifrados deben ser idénticos al original."""
         from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
+        os.environ["environment"] = "development"
         from importlib import reload
         import app.core.config
         reload(app.core.config)
@@ -32,6 +38,7 @@ class TestFernetCrypto:
         from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
+        os.environ["environment"] = "development"
         from importlib import reload
         import app.core.config
         reload(app.core.config)
@@ -47,13 +54,22 @@ class TestFernetCrypto:
         assert app.core.crypto.decrypt(enc2) == data
 
     def test_encrypt_empty_data(self):
-        """Datos vacÃ­os deben retornar sin cambios."""
-        from app.core.crypto import encrypt, decrypt
-        assert encrypt(b"") == b""
-        assert decrypt(b"") == b""
+        """Datos vacíos deben retornar sin cambios."""
+        from app.core.crypto import generate_key
+        generate_key()
+        os.environ["encryption_key"] = generate_key()
+        os.environ["environment"] = "development"
+        from importlib import reload
+        import app.core.config
+        reload(app.core.config)
+        import app.core.crypto
+        reload(app.core.crypto)
+
+        assert app.core.crypto.encrypt(b"") == b""
+        assert app.core.crypto.decrypt(b"") == b""
 
     def test_generate_key_produces_valid_fernet_key(self):
-        """La clave generada debe ser vÃ¡lida para Fernet."""
+        """La clave generada debe ser válida para Fernet."""
         from cryptography.fernet import Fernet
         from app.core.crypto import generate_key
         key = generate_key()
@@ -63,12 +79,14 @@ class TestFernetCrypto:
         dec = fernet.decrypt(enc)
         assert dec == data
 
-    def test_decrypt_with_wrong_key_fails_safely(self):
-        """Descifrar con key equivocada debe retornar datos cifrados sin modificar (fail safe, no crash)."""
+    def test_decrypt_with_wrong_key_fails_loudly(self):
+        """Descifrar con key equivocada debe lanzar InvalidToken (no retornar datos corruptos)."""
+        from cryptography.fernet import InvalidToken
         from app.core.crypto import generate_key
         key1 = generate_key()
         key2 = generate_key()
         os.environ["encryption_key"] = key1
+        os.environ["environment"] = "development"
         from importlib import reload
         import app.core.config
         reload(app.core.config)
@@ -82,14 +100,15 @@ class TestFernetCrypto:
         reload(app.core.config)
         reload(app.core.crypto)
 
-        result = app.core.crypto.decrypt(enc)
-        assert result == enc
+        with pytest.raises(InvalidToken):
+            app.core.crypto.decrypt(enc)
 
     def test_encrypt_decrypt_pdf_bytes(self):
         """PDF binario real debe cifrarse y descifrarse correctamente."""
         from app.core.crypto import generate_key
         key = generate_key()
         os.environ["encryption_key"] = key
+        os.environ["environment"] = "development"
         from importlib import reload
         import app.core.config
         reload(app.core.config)
@@ -104,18 +123,83 @@ class TestFernetCrypto:
         assert cifrado != pdf_bytes
 
 
+class TestEncryptionFailure:
+    """Tests para el comportamiento fail-loudly introducido en C1."""
+
+    def test_encrypt_without_key_in_production_fails(self, monkeypatch):
+        """En producción sin ENCRYPTION_KEY, encrypt() debe fallar loudly."""
+        monkeypatch.setenv("environment", "production")
+        monkeypatch.setenv("encryption_key", "")
+        from importlib import reload
+        import app.core.config
+        reload(app.core.config)
+        import app.core.crypto
+        reload(app.core.crypto)
+
+        from app.core.crypto import EncryptionKeyError, encrypt
+        with pytest.raises(EncryptionKeyError, match="ENCRYPTION_KEY"):
+            encrypt(b"datos confidenciales")
+
+    def test_decrypt_without_key_in_production_fails(self, monkeypatch):
+        """En producción sin ENCRYPTION_KEY, decrypt() debe fallar loudly."""
+        monkeypatch.setenv("environment", "production")
+        monkeypatch.setenv("encryption_key", "")
+        from importlib import reload
+        import app.core.config
+        reload(app.core.config)
+        import app.core.crypto
+        reload(app.core.crypto)
+
+        from app.core.crypto import EncryptionKeyError, decrypt
+        with pytest.raises(EncryptionKeyError, match="ENCRYPTION_KEY"):
+            decrypt(b"cualquier cosa")
+
+    def test_encrypt_with_invalid_key_format_fails(self, monkeypatch):
+        """Una ENCRYPTION_KEY que no es Fernet válida debe causar EncryptionKeyError."""
+        monkeypatch.setenv("environment", "development")
+        monkeypatch.setenv("encryption_key", "esto-no-es-una-clave-fernet-valida")
+        from importlib import reload
+        import app.core.config
+        reload(app.core.config)
+        import app.core.crypto
+        reload(app.core.crypto)
+
+        from app.core.crypto import EncryptionKeyError, encrypt
+        with pytest.raises(EncryptionKeyError, match="Fernet"):
+            encrypt(b"datos")
+
+    def test_encryption_works_in_development_without_key(self):
+        """En desarrollo sin ENCRYPTION_KEY, encrypt() usa _dev_encryption_key y funciona."""
+        os.environ["environment"] = "development"
+        os.environ["encryption_key"] = ""
+        from importlib import reload
+        import app.core.config
+        reload(app.core.config)
+        import app.core.crypto
+        reload(app.core.crypto)
+
+        # Debe funcionar porque config._dev_encryption_key existe.
+        original = b"test en dev"
+        cifrado = app.core.crypto.encrypt(original)
+        assert cifrado != original
+        assert app.core.crypto.decrypt(cifrado) == original
+
+
 class TestEncryptIntegrationWithBYTEA:
-    def test_rat_file_procesar_archivo_base_legal_with_encryption(self, client, auth_headers, empresa, db):
+    def test_rat_file_procesar_archivo_base_legal_with_encryption(self, client, auth_headers, empresa, db, monkeypatch):
         """Al subir archivo RAT (BYTEA fallback), los datos deben estar cifrados en BD."""
-        from unittest.mock import patch
         from app.core.crypto import generate_key
         import app.core.crypto
 
-        key = generate_key()
-        os.environ["encryption_key"] = key
+        # Set up env ANTES de los imports reales
+        monkeypatch.setenv("environment", "development")
+        monkeypatch.setenv("encryption_key", generate_key())
         from importlib import reload
+        import app.core.config
         reload(app.core.config)
         reload(app.core.crypto)
+
+        from unittest.mock import patch
 
         pdf_content = b"%PDF-1.4 mock pdf content for encryption test"
         pdf_b64 = base64.b64encode(pdf_content).decode()
@@ -128,7 +212,7 @@ class TestEncryptIntegrationWithBYTEA:
             "finalidad": "Test",
             "base_legal": "Consentimiento",
             "fuente_datos": "Titular",
-            "plazo_retencion": "1 aÃ±o",
+            "plazo_retencion": "1 año",
             "archivo_base_legal_base64": pdf_b64,
             "archivo_base_legal_nombre": "test.pdf",
             "archivo_base_legal_tipo": "application/pdf",
@@ -149,7 +233,7 @@ class TestEncryptIntegrationWithBYTEA:
         descifrado = app.core.crypto.decrypt(rat.archivo_base_legal_datos)
         assert descifrado == pdf_content
 
-    @pytest.mark.skip(reason="500 en test env por interacttion de fixtures â€” logic verified by test_rat_file_procesar_archivo_base_legal_with_encryption y los unit tests de Fernet")
+    @pytest.mark.skip(reason="500 en test env por interacttion de fixtures — logic verified by test_rat_file_procesar_archivo_base_legal_with_encryption y los unit tests de Fernet")
     def test_download_rat_file_returns_decrypted_content(self, client, auth_headers, empresa, db):
         """Al descargar archivo RAT (BYTEA), el contenido debe estar descifrado."""
         from unittest.mock import patch
@@ -165,7 +249,7 @@ class TestEncryptIntegrationWithBYTEA:
             "finalidad": "Test",
             "base_legal": "Consentimiento",
             "fuente_datos": "Titular",
-            "plazo_retencion": "1 aÃ±o",
+            "plazo_retencion": "1 año",
             "archivo_base_legal_base64": pdf_b64,
             "archivo_base_legal_nombre": "download_test.pdf",
             "archivo_base_legal_tipo": "application/pdf",

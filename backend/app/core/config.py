@@ -61,7 +61,10 @@ class Settings(BaseSettings):
     OCI_KEY_CONTENT: str = ""
 
     ENCRYPTION_KEY: str = ""
-    _dev_encryption_key: str = "dev-key-do-not-use-in-production-use-openssl-rand-hex-32"
+    # Dev fallback Fernet key (solo para ENVIRONMENT=development).
+    # En prod/qa/staging ENCRYPTION_KEY es obligatoria (raise en resolved_encryption_key).
+    # Generada con Fernet.generate_key() — NO usar en prod.
+    _dev_encryption_key: str = "R8EgjyXk1YJCi1OWqngtCpMBEU1BILM7-54cJGy6Qms="
 
     class Config:
         env_file = ".env"

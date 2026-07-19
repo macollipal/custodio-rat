@@ -1,9 +1,12 @@
 """
 Modelo de Consentimiento de Titulares de Datos Personales.
 
-PII fields (nombre_titular, email_titular) se almacenan cifrados con Fernet
-en columnas *_cipher BYTEA. La columna legacy (String) queda nullable para
-backward compatibility durante la transicion (Arts. 11, 19 Ley 21.719).
+C4 fix (2026-07-18): TODA PII se almacena cifrada con Fernet en columnas *_cipher.
+Las columnas plaintext (nombre_titular, email_titular, texto_consentimiento, ip_origen)
+se eliminan en migration 016 pero quedan como nullable para backward compatibility
+mientras la migration se aplica a Neon QA.
+
+Compliance: Arts. 11, 12, 19 Ley 21.719.
 """
 
 from datetime import datetime, timezone
@@ -29,22 +32,30 @@ class Consentimiento(Base):
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
 
-    nombre_titular: Mapped[str] = mapped_column(String(300), nullable=False)
+    # PII fields: cifrados en BD. Se descifran on-demand en el schema de salida.
+    # Las columnas *_cipher existen en BD legacy (nullable=True) y se hacen
+    # NOT NULL despues de aplicar migration 016 (C4).
+    nombre_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    email_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    texto_consentimiento_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    texto_consentimiento_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+
+    # Columnas plaintext legacy. Se eliminan en migration 016.
+    # Se mantienen como nullable en modelo para no romper el esquema legacy
+    # en Neon QA hasta que se aplique la migration.
+    nombre_titular: Mapped[str] = mapped_column(String(300), nullable=True)
     email_titular: Mapped[str] = mapped_column(String(200), nullable=True)
+    texto_consentimiento: Mapped[str] = mapped_column(Text, nullable=True)
+    ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
+
     canal: Mapped[CanalConsentimiento] = mapped_column(Enum(CanalConsentimiento), nullable=False)
-    texto_consentimiento: Mapped[str] = mapped_column(Text, nullable=False)
     fecha_obtencion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     fecha_revocacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
-    ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
+    ip_origen_masked: Mapped[str] = mapped_column(String(18), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-
-    nombre_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
-    email_titular_cipher: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
-    texto_consentimiento_hash: Mapped[str] = mapped_column(String(64), nullable=True)
-    ip_origen_masked: Mapped[str] = mapped_column(String(18), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="consentimientos")  # noqa: F821
     rat: Mapped["RAT"] = relationship("RAT", back_populates="consentimientos")  # noqa: F821

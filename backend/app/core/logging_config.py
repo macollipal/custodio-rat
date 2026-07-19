@@ -121,6 +121,15 @@ def setup_logging() -> logging.Logger:
         root_logger.removeHandler(h)
 
     handler = logging.StreamHandler(sys.stdout)
+    # En Windows, sys.stdout usa codepage cp1252 que no soporta emojis/UTF-8.
+    # Forzamos utf-8 para evitar UnicodeEncodeError cuando se logean mensajes
+    # con caracteres no-ASCII (ej. emojis en alertas de auditoria).
+    # C2 fix complementario (era bug pre-existente que afectaba tests).
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
     handler.addFilter(PIIMaskingFilter())
     handler.addFilter(RequestIdFilter())
     if is_json_env:

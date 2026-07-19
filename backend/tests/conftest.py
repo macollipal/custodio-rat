@@ -3,12 +3,22 @@ Fixtures compartidas para toda la suite de tests.
 - BD PostgreSQL en Neon QA (aislada por transaction rollback)
  - TestClient con autenticación JWT real
  - Helpers para crear entidades de prueba
-
+ 
  SEGURIDAD: La variable TEST_DATABASE_URL debe estar configurada en .env antes de ejecutar tests.
  NO hardcodear credenciales en este archivo. Ver .env.example para configuración.
 """
 
 import os
+import sys
+# En Windows, sys.stdout usa cp1252 que no soporta emojis/UTF-8.
+# Forzamos utf-8 para que el log handler no rompa al logear caracteres no-ASCII
+# (ej. emojis en alertas de auditoria del RAT).
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
+
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 os.environ["ENV"] = "test"
@@ -35,6 +45,27 @@ engine_test = create_engine(TEST_DB_URL, poolclass=NullPool, connect_args={"conn
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
 
 
+@pytest.fixture(autouse=True)
+def _reset_env_from_dotenv():
+    """Restaura variables de entorno desde .env al inicio de cada test.
+
+    test_crypto.py y otros tests modifican os.environ directamente
+    (sin monkeypatch), lo que contamina tests posteriores que dependen
+    de ENCRYPTION_KEY o ENVIRONMENT.
+
+    Este autouse fixture recarga el .env antes de cada test.
+    """
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=True)
+    # Re-cargar módulos que leen env en import time
+    from importlib import reload
+    import app.core.config
+    import app.core.crypto
+    reload(app.core.config)
+    reload(app.core.crypto)
+    yield
+
+
 @pytest.fixture(scope="function")
 def db():
     connection = engine_test.connect()
@@ -55,7 +86,9 @@ def client(db):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app, raise_server_exceptions=False) as c:
+    # raise_server_exceptions=True para que las excepciones se propaguen al test
+    # (útil para debugging). Tests existentes validan via response.status_code.
+    with TestClient(app, raise_server_exceptions=True) as c:
         yield c
     app.dependency_overrides.clear()
 
