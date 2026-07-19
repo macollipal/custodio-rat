@@ -8,6 +8,7 @@
 
 - 📅 [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) — **ÚLTIMO HANDOFF: 2026-07-13** — Punto de entrada para retomar sesiones (resumen trabajo + pendientes)
 - 🔍 [`../LEVANTAMIENTO_2026-07-18.md`](../LEVANTAMIENTO_2026-07-18.md) — **LEVANTAMIENTO DETALLADO** con 4 auditorías especializadas (arquitectura, QA, frontend, compliance)
+- 📖 [`../manual/README.md`](../manual/README.md) — **Manual para clientes no-técnicos** (carpeta `manual/` raíz, simplificado, lenguaje claro)
 - [`STATUS.md`](STATUS.md) — Estado actual, score, pendientes activos
 - [`SESSION_STATE.md`](SESSION_STATE.md) — Handoff sesión 2026-07-03 (histórico)
 

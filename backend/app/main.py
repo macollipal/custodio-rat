@@ -182,6 +182,37 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 
+# F3.1: Versionamiento API /api/v1/
+# Mantenemos compatibilidad con los endpoints legacy (sin prefijo v1)
+# durante un periodo de deprecacion. Los nuevos clientes deben usar /api/v1/.
+from fastapi import APIRouter
+
+v1_router = APIRouter(prefix="/api/v1")
+v1_router.include_router(auth.router)
+v1_router.include_router(companies.router)
+v1_router.include_router(rats.router)
+v1_router.include_router(user_companies.router)
+v1_router.include_router(breaches.router)
+v1_router.include_router(ai.router)
+v1_router.include_router(rubros.router)
+v1_router.include_router(rubros.router_sugeridos)
+v1_router.include_router(tkt_solicitud_derecho.router)
+v1_router.include_router(tkt_plantillas.router)
+v1_router.include_router(tkt_reglas_asignacion.router)
+v1_router.include_router(encargados_contrato.router)
+v1_router.include_router(politica_transparencia.router)
+v1_router.include_router(seguimiento.router)
+v1_router.include_router(consentimientos.router)
+v1_router.include_router(eipd.router)
+v1_router.include_router(admin_tasks.router)
+v1_router.include_router(feriados.router)
+v1_router.include_router(asesor.router)
+v1_router.include_router(admin_asesor.router)
+v1_router.include_router(admin_companies.router)
+v1_router.include_router(export_tkt.router)
+v1_router.include_router(module_permissions.router)
+
+# Endpoints legacy (deprecated, mantener hasta migracion completa)
 app.include_router(auth.router)
 app.include_router(companies.router)
 app.include_router(rats.router)
@@ -206,12 +237,17 @@ app.include_router(admin_companies.router)
 app.include_router(export_tkt.router)
 app.include_router(module_permissions.router)
 
+# v1_router debe ir DESPUES de los routers legacy para que tome precedencia
+# en el orden de matching (FastAPI matchea por orden de inclusion).
+app.include_router(v1_router)
+
 
 @app.get("/", tags=["Sistema"])
 async def root():
     return {
         "sistema": settings.APP_NAME,
         "version": settings.APP_VERSION,
+        "api_versions": ["v1 (recomendado)", "legacy (deprecado, remover en Q1 2027)"],
         "estado": "operativo",
         "documentacion": "/docs",
     }

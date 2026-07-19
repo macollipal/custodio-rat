@@ -78,4 +78,13 @@ class SecurityBreach(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    # F3.2: Soft delete para compliance Art. 19 Ley 21.719.
+    # Permite "eliminar" breach sin perder trazabilidad de auditoria.
+    deleted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_by_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+
     company: Mapped["Company"] = relationship("Company")  # noqa: F821
