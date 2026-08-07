@@ -39,7 +39,7 @@ class AskResponse(BaseModel):
 async def ask_ai(request: Request, req: AskRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
     """
     Asistente IA sobre Ley 21.719 de Chile.
-    Usa MiniMax M2.7. Sin OpenAI — sin presupuesto.
+    Usa Groq llama-3.3-70b-versatile (endpoint compatible OpenAI).
     """
     import requests
 

@@ -8,8 +8,8 @@
 | Campo | Valor |
 |---|---|
 | **Version** | v1.9 (docs) / v1.10 (docs API + CU) |
-| **Fecha** | 2026-07-18 |
-| **Score Arquitectonico** | **7.7/10** (RAT: 9.0/10) |
+| **Fecha** | 2026-08-07 |
+| **Score Arquitectonico** | **7.8/10** (RAT: 9.0/10) |
 | **Delta vs v1.8** | +1.0 (gracias a auditoria RAT 2026-07-07) |
 | **RAT** | **9.0/10** ✅ (auditoria detallada 2026-07-07) |
 | **ARCO** | 7.5/10 (QW4 dashboard por_tipo + tests E2E workflow) |
@@ -19,7 +19,8 @@
 | **Branch** | `qa` |
 | **Ultima auditoria formal** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
 | **Ultimo trabajo** | [LEVANTAMIENTO_2026-07-18.md](../LEVANTAMIENTO_2026-07-18.md) (4 auditorias) |
-| **Ultima sesion** | 2026-07-18 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
+| **Ultima sesion** | 2026-08-07 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
+| **Administrador IA** | Claude Code (claude-sonnet-4-6) desde 2026-08-07 |
 
 ## Documentacion Vigente
 

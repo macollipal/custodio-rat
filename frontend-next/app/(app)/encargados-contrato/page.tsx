@@ -17,6 +17,7 @@ import Drawer from '@/components/ui/Drawer';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
 import { Button } from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 function fmtDate(val: string | null | undefined): string {
   if (!val) return '—';
@@ -48,6 +49,8 @@ export default function EncargadosContratoPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editItem, setEditItem] = useState<EncargadoContrato | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>({
     nombre_encargado: '', pais: '', direccion: '', objeto: '', duracion_inicio: '', duracion_fin: '',
     finalidad: '', tipo_datos: '', categorias_titulares: '', derechos_obligaciones: '',
@@ -150,7 +153,6 @@ export default function EncargadosContratoPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('¿Eliminar este contrato?')) return;
     try {
       await eliminarEncargadoContrato(id);
       toast.success('Contrato eliminado');
@@ -214,7 +216,7 @@ export default function EncargadosContratoPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="secondary" size="sm" onClick={() => openEdit(c)} aria-label={`Editar contrato ${c.nombre_encargado}`}>Editar</Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)} aria-label={`Eliminar contrato ${c.nombre_encargado}`} style={{ color: '#DC2626', borderColor: '#FCA5A5', borderWidth: '1px', borderStyle: 'solid' }}>Eliminar</Button>
+                <Button variant="ghost" size="sm" onClick={() => { setContractToDelete(c.id); setConfirmDeleteOpen(true); }} aria-label={`Eliminar contrato ${c.nombre_encargado}`} style={{ color: '#DC2626', borderColor: '#FCA5A5', borderWidth: '1px', borderStyle: 'solid' }}>Eliminar</Button>
               </div>
             </div>
           ))}
@@ -312,6 +314,16 @@ export default function EncargadosContratoPage() {
           </div>
         </div>
       </Drawer>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onClose={() => { setConfirmDeleteOpen(false); setContractToDelete(null); }}
+        onConfirm={() => { if (contractToDelete) handleDelete(contractToDelete); setConfirmDeleteOpen(false); setContractToDelete(null); }}
+        title="Eliminar contrato"
+        message="¿Estás seguro que quieres eliminar este contrato de encargado? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        variant="danger"
+      />
     </div>
   );
 }

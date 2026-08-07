@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import PasswordModal from '@/components/layout/PasswordModal';
+import Select from '@/components/ui/Select';
 import type { Company } from '@/types';
 
 type Page =
@@ -116,26 +117,17 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
           Empresa activa
         </div>
         {companies.length > 0 ? (
-          <select
+          <Select
             aria-label="Seleccionar empresa activa"
-            value={company?.id ?? ''}
+            value={String(company?.id ?? '')}
             onChange={e => {
               const emp = companies.find(c => c.id === Number(e.target.value));
               if (emp) setCompany(emp);
             }}
-            className="w-full px-3 py-2 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            style={{
-              background: '#1F2937',
-              color: '#E5E7EB',
-              border: '1px solid #374151',
-            }}
-          >
-            {companies.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
+            options={companies.map(c => ({ value: String(c.id), label: c.nombre }))}
+            className="text-xs font-medium"
+            style={{ backgroundColor: '#1F2937', color: '#E5E7EB', border: '1px solid #374151' }}
+          />
         ) : (
           <p className="text-gray-600 text-xs px-1">Sin empresas. Crea una primero.</p>
         )}

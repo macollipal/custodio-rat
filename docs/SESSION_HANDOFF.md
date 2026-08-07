@@ -1,14 +1,28 @@
 # Session Handoff - Custodio RAT
 
-> ## 📅 **ÚLTIMO DOCUMENTO DE HANDOFF: 2026-07-13**
-> ## ⏰ **Versión vigente del documento** — Si tu copia es más vieja, este commit (`ed63eef`) fue el último update.
-> ## 🔖 **Identificador único**: `SESSION_HANDOFF_2026-07-13`
+> ## 📅 **ÚLTIMO DOCUMENTO DE HANDOFF: 2026-08-07**
+> ## ⏰ **Versión vigente del documento** — Si tu copia es más vieja, este es el último update.
+> ## 🔖 **Identificador único**: `SESSION_HANDOFF_2026-08-07`
 
 **Branch:** `qa` (up-to-date con origin/qa)
 **Autor:** Emece <marcelocollipal@gmail.com>
 **Cuenta Vercel vinculada:** marcelocollipal-7370
+**Administrador IA del proyecto:** Claude Code (claude-sonnet-4-6)
 
-> **Para retomar:** abrir opencode en la raíz y decir "Lee docs/SESSION_HANDOFF.md y continuemos desde donde quedamos".
+> **Para retomar:** abrir Claude Code en la raíz y decir "Lee docs/SESSION_HANDOFF.md y continuemos desde donde quedamos".
+
+---
+
+## Nota de transición (2026-08-07)
+
+A partir de esta sesión, el proyecto es administrado con **Claude Code** (claude-sonnet-4-6). Las referencias anteriores a "Minimax" o "MiniMax" en comentarios de código eran legado histórico y ya fueron limpiadas — el stack IA del Asesor usa **Groq** (LLM: llama-3.3-70b-versatile) + **Cohere** (embeddings: embed-multilingual-v3.0), sin cambios planificados al stack técnico.
+
+**Mejoras UX aplicadas en esta sesión (sprint 2026-08-07):**
+- Fix XSS en `AlertBanner` — `dangerouslySetInnerHTML` eliminado, prop cambió a `ReactNode`
+- Reemplazo de `window.confirm()` con `<ConfirmDialog />` en 5 archivos
+- Sidebar: `<select>` nativo con colores hardcodeados → `<Select />` del design system
+- `RatWizard`: eliminado `forceUpdate({})` en interval; reemplazado por estado `savedLabel`
+- Limpieza completa de referencias legacy Minimax (`asesor_service.py`, `ai.py`, `config.py`, tests, `.env.example`, `CLAUDE.md`)
 
 ---
 

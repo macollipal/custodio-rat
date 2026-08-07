@@ -36,9 +36,6 @@ class Settings(BaseSettings):
     _dev_secret: str = "dev-secret-never-use-in-production"
     ALLOWED_ORIGINS: str = ""
 
-    MINIMAX_API_KEY: str = ""
-    MINIMAX_MODEL: str = "MiniMax-M2.7"
-
     GROQ_API_KEY: str = ""
     GROQ_CHAT_MODEL: str = "llama-3.3-70b-versatile"
 
@@ -99,7 +96,7 @@ class Settings(BaseSettings):
     def asesor_config(self) -> dict:
         """Retorna config del Asesor. Si ASESOR_CONFIG esta vacio, usa los defaults.
         Si tiene JSON, esos valores toman prioridad sobre los defaults.
-        Unica credencial: MINIMAX_API_KEY.
+        Credenciales: GROQ_API_KEY (LLM chat), COHERE_API_KEY (embeddings).
         """
         defaults = {
             "chunk_size": self.ASESOR_CHUNK_SIZE,

@@ -34,7 +34,7 @@ ASESOR_SYSTEM_PROMPT = (
 )
 
 
-def _call_llm_minimax(messages: list) -> str:
+def _call_llm_groq(messages: list) -> str:
     if not settings.GROQ_API_KEY:
         raise RuntimeError(
             "GROQ_API_KEY no configurada. "
@@ -116,7 +116,7 @@ async def ask(db: Session, question: str, context_extra: str = "") -> dict:
             "GROQ_API_KEY no configurada. "
             "El Asesor requiere GROQ_API_KEY para funcionar."
         )
-    answer = _call_llm_minimax(messages)
+    answer = _call_llm_groq(messages)
     provider = "groq"
 
     latency = int((time.time() - start) * 1000)

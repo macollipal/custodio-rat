@@ -6,6 +6,7 @@ import * as api from '@/lib/api';
 import type { Company, Rubro } from '@/types';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import Button from '@/components/ui/Button';
 
 interface CompanyEditFormProps {
   empresa: Company;
@@ -80,10 +81,10 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
         </div>
       </div>
       <div className="flex gap-2 justify-end">
-        <button onClick={onCancel} className="px-4 py-1.5 rounded-lg text-xs font-semibold border hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-        <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60" style={{ background: '#2563EB' }}>
+        <Button variant="secondary" size="sm" onClick={onCancel}>Cancelar</Button>
+        <Button variant="primary" size="sm" loading={saving} onClick={handleSave}>
           {saving ? 'Guardando...' : 'Guardar cambios'}
-        </button>
+        </Button>
       </div>
     </div>
   );

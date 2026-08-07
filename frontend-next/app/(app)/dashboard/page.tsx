@@ -171,10 +171,10 @@ export default function DashboardPage() {
         <AlertBanner
           message={
             !company?.contacto_dpo && !company?.email_dpo
-              ? '<strong>DPO no configurado.</strong> Complete el nombre y email del Delegado de Protección de Datos en la configuración de la empresa.'
+              ? <><strong>DPO no configurado.</strong> Complete el nombre y email del Delegado de Protección de Datos en la configuración de la empresa.</>
               : !company?.contacto_dpo
-              ? '<strong>Nombre del DPO no configurado.</strong> Complete el nombre del Delegado de Protección de Datos en la configuración de la empresa.'
-              : '<strong>Email del DPO no configurado.</strong> Complete el email del Delegado de Protección de Datos en la configuración de la empresa.'
+              ? <><strong>Nombre del DPO no configurado.</strong> Complete el nombre del Delegado de Protección de Datos en la configuración de la empresa.</>
+              : <><strong>Email del DPO no configurado.</strong> Complete el email del Delegado de Protección de Datos en la configuración de la empresa.</>
           }
           type="danger"
         />

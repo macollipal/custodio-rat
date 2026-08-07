@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Loader2, AlertCircle, CheckCircle2, XCircle, Clock, Ban, HelpCircle } from 'lucide-react';
+import Button from '@/components/ui/Button';
 import {
   getDiagramaPorTipo,
   getNodosAnteriores,
@@ -207,12 +208,9 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
             <div className="flex flex-col items-center justify-center h-64">
               <AlertCircle className="w-8 h-8 text-red-500 mb-3" />
               <p className="text-sm text-red-600 text-center px-4">{error}</p>
-              <button
-                onClick={renderDiagrama}
-                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-              >
+              <Button variant="primary" size="sm" onClick={renderDiagrama} className="mt-3">
                 Reintentar
-              </button>
+              </Button>
             </div>
           )}
 

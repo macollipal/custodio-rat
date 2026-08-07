@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react';
+
 type AlertType = 'success' | 'warning' | 'danger' | 'info';
 
 interface AlertBannerProps {
-  message: string;
+  message: ReactNode;
   type: AlertType;
 }
 
@@ -18,8 +20,9 @@ export default function AlertBanner({ message, type }: AlertBannerProps) {
     <div
       className="rounded-lg px-4 py-3 text-sm mb-3"
       style={{ background: s.bg, borderLeft: `3px solid ${s.border}`, color: s.color }}
-      dangerouslySetInnerHTML={{ __html: message }}
-    />
+    >
+      {message}
+    </div>
   );
 }
 

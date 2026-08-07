@@ -143,8 +143,10 @@ export default function CompanyAuditDrawer({
                 Filtrar por acción:
               </span>
               <button
+                type="button"
                 onClick={() => setFilterAccion('todas')}
-                className="px-2.5 py-1 rounded-full text-xs font-medium transition"
+                aria-pressed={filterAccion === 'todas'}
+                className="px-2.5 py-1 rounded-full text-xs font-medium transition min-h-[36px]"
                 style={{
                   background: filterAccion === 'todas' ? '#111827' : '#F3F4F6',
                   color: filterAccion === 'todas' ? 'white' : '#374151',
@@ -159,8 +161,10 @@ export default function CompanyAuditDrawer({
                 return (
                   <button
                     key={a}
+                    type="button"
                     onClick={() => setFilterAccion(a)}
-                    className="px-2.5 py-1 rounded-full text-xs font-medium transition"
+                    aria-pressed={isActive}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium transition min-h-[36px]"
                     style={{
                       background: isActive ? c.color : c.bg,
                       color: isActive ? 'white' : c.color,

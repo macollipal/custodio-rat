@@ -9,6 +9,7 @@ import type { RAT } from '@/types';
 
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
 import { Button } from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Consentimiento {
   id: number;
@@ -50,6 +51,8 @@ export default function ConsentimientosPage() {
   const [soloActivos, setSoloActivos] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState<Consentimiento | null>(null);
+  const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
+  const [pendingRevoke, setPendingRevoke] = useState<Consentimiento | null>(null);
 
   async function load() {
     if (!company) return;
@@ -77,7 +80,6 @@ export default function ConsentimientosPage() {
   }, [company, filtroRat, soloActivos]);
 
   async function handleRevoke(c: Consentimiento) {
-    if (!confirm(`¿Revocar el consentimiento de "${c.nombre_titular}"?`)) return;
     try {
       const res = await api.apiFetch(`${API_BASE}/consentimientos/${c.id}/revocar`, {
         method: 'POST',
@@ -231,7 +233,7 @@ export default function ConsentimientosPage() {
                             variant="ghost"
                             size="sm"
                             className="!min-h-0"
-                            onClick={() => handleRevoke(c)}
+                            onClick={() => { setPendingRevoke(c); setConfirmRevokeOpen(true); }}
                             aria-label={`Revocar consentimiento de ${c.nombre_titular}`}
                             style={{ color: '#DC2626' }}
                           >
@@ -264,9 +266,19 @@ export default function ConsentimientosPage() {
           consentimiento={detail}
           rat={rats.find((r) => r.id === detail.rat_id)}
           onClose={() => setDetail(null)}
-          onRevoke={detail.activo ? () => handleRevoke(detail) : undefined}
+          onRevoke={detail.activo ? () => { setPendingRevoke(detail); setConfirmRevokeOpen(true); } : undefined}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmRevokeOpen}
+        onClose={() => { setConfirmRevokeOpen(false); setPendingRevoke(null); }}
+        onConfirm={() => { if (pendingRevoke) handleRevoke(pendingRevoke); setConfirmRevokeOpen(false); setPendingRevoke(null); }}
+        title="Revocar consentimiento"
+        message={pendingRevoke ? `¿Revocar el consentimiento de "${pendingRevoke.nombre_titular}"? Esta acción no se puede deshacer.` : ''}
+        confirmText="Revocar"
+        variant="danger"
+      />
     </div>
   );
 }

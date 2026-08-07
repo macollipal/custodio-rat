@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { SecurityBreach } from '@/types';
 import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2 } from '@/lib/styles';
 
@@ -92,7 +93,7 @@ function BreachForm({
 
       <div className="rounded-lg p-4" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
         <AlertBanner
-          message="Las brechas de seguridad que afecten datos personales deben ser reportadas a la Agencia de Protección de Datos Personales (APDC) dentro de las <strong>72 horas</strong> desde su detección. Si la brecha afecta datos sensibles, menores o información financiera, también debe notificarse a los titulares afectados sin dilación."
+          message={<>Las brechas de seguridad que afecten datos personales deben ser reportadas a la Agencia de Protección de Datos Personales (APDC) dentro de las <strong>72 horas</strong> desde su detección. Si la brecha afecta datos sensibles, menores o información financiera, también debe notificarse a los titulares afectados sin dilación.</>}
           type="danger"
         />
       </div>
@@ -354,6 +355,8 @@ export default function BreachesPage() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [editingBreach, setEditingBreach] = useState<SecurityBreach | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [breachToDelete, setBreachToDelete] = useState<number | null>(null);
 
   async function load() {
     if (!company) return;
@@ -566,9 +569,7 @@ export default function BreachesPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              if (confirm('¿Eliminar esta brecha?')) handleDelete(b.id);
-                            }}
+                            onClick={() => { setBreachToDelete(b.id); setConfirmDeleteOpen(true); }}
                             style={{ color: '#DC2626' }}
                           >
                             🗑 Eliminar
@@ -621,6 +622,16 @@ export default function BreachesPage() {
           />
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onClose={() => { setConfirmDeleteOpen(false); setBreachToDelete(null); }}
+        onConfirm={() => { if (breachToDelete) handleDelete(breachToDelete); setConfirmDeleteOpen(false); setBreachToDelete(null); }}
+        title="Eliminar brecha"
+        message="¿Estás seguro que quieres eliminar esta brecha de seguridad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        variant="danger"
+      />
     </div>
   );
 }

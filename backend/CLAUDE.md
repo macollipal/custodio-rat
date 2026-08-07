@@ -303,7 +303,7 @@ completitud = round((completados / total) * 100)
 ### AI
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/ai/ask` | Chat IA (requiere MINIMAX_API_KEY u OPENAI_API_KEY) |
+| POST | `/ai/ask` | Chat IA genérico (requiere GROQ_API_KEY) |
 
 ### Consentimientos (Art. 12)
 | Método | Ruta | Descripción |

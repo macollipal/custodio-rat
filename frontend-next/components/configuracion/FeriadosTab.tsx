@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { API_BASE } from '@/lib/constants';
 import { getToken } from '@/lib/api';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface FeriadoItem {
   id: number;
@@ -23,6 +24,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   async function loadYears() {
     try {
@@ -95,7 +97,6 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
   }
 
   async function handleDelete() {
-    if (!confirm(`¿Eliminar todos los feriados del año ${selectedYear}?`)) return;
     try {
       const res = await fetch(`${API_BASE}/admin/feriados/${selectedYear}`, {
         method: 'DELETE',
@@ -142,7 +143,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
           </a>
           {feriados.length > 0 && (
             <button
-              onClick={handleDelete}
+              onClick={() => setConfirmDeleteOpen(true)}
               className="px-4 py-2 rounded-lg text-sm font-medium border transition hover:bg-red-50"
               style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
             >
@@ -203,6 +204,17 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        onConfirm={() => { handleDelete(); setConfirmDeleteOpen(false); }}
+        title={`Eliminar feriados ${selectedYear}`}
+        message={`¿Eliminar todos los feriados del año ${selectedYear}? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        variant="danger"
+        requireTyping={String(selectedYear)}
+      />
     </div>
   );
 }

@@ -41,7 +41,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [baseLegalSugerida, setBaseLegalSugerida] = useState<{ base_legal: string; descripcion?: string } | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
-  const [, forceUpdate] = useState({});
+  const [savedLabel, setSavedLabel] = useState<string>('');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const validation = useStepValidation(step, data);
@@ -67,12 +67,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     }
   }, [DRAFT_KEY_LOCAL]);
 
-  // Re-render cada 30s para actualizar el "Guardado hace X min"
+  // Actualiza solo el label de guardado cada 30s sin re-render del wizard completo
   useEffect(() => {
-    if (!draftSavedAt) return;
-    const id = setInterval(() => forceUpdate({}), 30_000);
+    if (!draftSavedAt) { setSavedLabel(''); return; }
+    const update = () => setSavedLabel(tiempoRelativo());
+    update();
+    const id = setInterval(update, 30_000);
     return () => clearInterval(id);
-  }, [draftSavedAt]);
+  }, [draftSavedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // H4.5: useDraftAutosave hook reemplaza el auto-save inline anterior
   // (30s interval, only if has data, error handling via try/catch)
@@ -329,9 +331,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           <h2 className="text-lg font-bold" style={{ color: '#111827' }}>Nuevo proceso RAT</h2>
         </div>
         <div className="flex items-center gap-3">
-          {draftSavedAt && (
+          {savedLabel && (
             <span className="text-xs font-medium" style={{ color: '#6B7280' }} aria-live="polite">
-              💾 Guardado {tiempoRelativo()}
+              💾 Guardado {savedLabel}
             </span>
           )}
           <Button

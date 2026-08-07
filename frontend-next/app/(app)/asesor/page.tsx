@@ -6,6 +6,7 @@ import type { ChatMessage } from '@/components/asesor/AsesorChat';
 import { askAsesor, getAsesorStats, indexAsesor } from '@/lib/asesor-api';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const STORAGE_KEY = 'custodio_asesor_history';
 
@@ -15,6 +16,7 @@ export default function AsesorPage() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<{ total_chunks: number; total_documents: number; provider: string } | null>(null);
   const [indexing, setIndexing] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const isSuperadmin = user?.rol_global === 'superadmin';
 
   useEffect(() => {
@@ -97,7 +99,6 @@ export default function AsesorPage() {
   }
 
   function clearHistory() {
-    if (!confirm('¿Borrar el historial de la sesión?')) return;
     setMessages([]);
   }
 
@@ -144,7 +145,7 @@ export default function AsesorPage() {
           )}
           <button
             type="button"
-            onClick={clearHistory}
+            onClick={() => setConfirmClearOpen(true)}
             className="text-xs px-3 py-1.5 rounded-lg font-medium transition"
             style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF' }}
           >
@@ -154,6 +155,16 @@ export default function AsesorPage() {
       </div>
 
       <AsesorChat messages={messages} onSend={handleSend} loading={loading} />
+
+      <ConfirmDialog
+        open={confirmClearOpen}
+        onClose={() => setConfirmClearOpen(false)}
+        onConfirm={() => { clearHistory(); setConfirmClearOpen(false); }}
+        title="Limpiar historial"
+        message="¿Borrar el historial de la sesión? Esta acción no se puede deshacer."
+        confirmText="Limpiar"
+        variant="danger"
+      />
     </div>
   );
 }
