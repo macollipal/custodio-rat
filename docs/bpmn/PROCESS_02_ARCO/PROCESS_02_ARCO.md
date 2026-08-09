@@ -6,11 +6,13 @@
 **Propietario:** DPO  
 **Clasificación:** Operacional - Crítico  
 
-> **Nota de actualización (2026-08-08):** El formulario público en `/solicitud_derecho`
-> fue eliminado en julio 2026. Las solicitudes ARCO se crean exclusivamente como tickets
-> internos por el staff (DPO / admin) vía `POST /tkt-solicitud-derecho/`. El seguimiento
-> público del titular sigue disponible en `/seguimiento/{tracking_token}`. Se actualizaron
-> todas las referencias en este documento.
+> **Nota de actualización (2026-08-08):** El formulario público legacy en `/solicitud_derecho`
+> fue eliminado en julio 2026 junto con el modelo `SolicitudDerecho`.
+>
+> **Nota de actualización (2026-08-09 — C-08):** Se implementó el nuevo formulario público
+> en `/ejercer-derechos` (frontend) que crea tickets `TktSolicitudDerecho` vía
+> `POST /publico/ejercer-derechos` (rate limit 10/h por IP, sin auth).
+> El seguimiento del titular sigue disponible en `/seguimiento/{tracking_token}`.
 
 ---
 
@@ -49,8 +51,9 @@ Cierre del proceso con actualización del hashchain de bitácora M1, archivado d
 
 ### FASE 1 - RECEPCIÓN
 
-**Inicio del Proceso:**
-- **StartEvent:** "Staff crea ticket ARCO interno" (endpoint `POST /tkt-solicitud-derecho/`, requiere auth)
+**Inicio del Proceso (dos canales):**
+- **StartEvent A:** "Titular envía solicitud vía formulario público" (`/ejercer-derechos` → `POST /publico/ejercer-derechos`, sin auth, rate limit 10/h)
+- **StartEvent B:** "Staff crea ticket ARCO interno" (endpoint `POST /tkt-solicitud-derecho/`, requiere auth)
 
 **Actividades del Staff/DPO (Lane: Staff):**
 - **TareaUsuario:** "Registrar solicitud ARCO recibida (email/carta/presencial)"
@@ -292,7 +295,8 @@ Cierre del proceso con actualización del hashchain de bitácora M1, archivado d
 ### Eventos de Inicio
 | Evento | Tipo | Descripción |
 |--------|------|-------------|
-| Ticket ARCO creado por staff | Start | DPO/admin registra solicitud recibida vía `POST /tkt-solicitud-derecho/` (auth requerida) |
+| Formulario público recibido | Start A | Titular envía solicitud vía `/ejercer-derechos` → `POST /publico/ejercer-derechos` (sin auth) |
+| Ticket creado por staff | Start B | DPO/admin registra solicitud recibida vía `POST /tkt-solicitud-derecho/` (auth requerida) |
 
 ### Eventos de Fin
 | Evento | Tipo | Descripción |
