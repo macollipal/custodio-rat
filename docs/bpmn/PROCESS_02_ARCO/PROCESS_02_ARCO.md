@@ -1,10 +1,16 @@
 # PROCESS_02_ARCO: Gestión Derechos ARCO
 ## Custodio SaaS Platform - Cumplimiento Ley 21.719 Chile
 
-**Versión:** 2.0  
-**Fecha:** 2026-06-18  
+**Versión:** 2.1  
+**Fecha:** 2026-08-08 (actualización) / 2026-06-18 (original)  
 **Propietario:** DPO  
 **Clasificación:** Operacional - Crítico  
+
+> **Nota de actualización (2026-08-08):** El formulario público en `/solicitud_derecho`
+> fue eliminado en julio 2026. Las solicitudes ARCO se crean exclusivamente como tickets
+> internos por el staff (DPO / admin) vía `POST /tkt-solicitud-derecho/`. El seguimiento
+> público del titular sigue disponible en `/seguimiento/{tracking_token}`. Se actualizaron
+> todas las referencias en este documento.
 
 ---
 
@@ -44,32 +50,31 @@ Cierre del proceso con actualización del hashchain de bitácora M1, archivado d
 ### FASE 1 - RECEPCIÓN
 
 **Inicio del Proceso:**
-- **StartEvent:** "Titular envía solicitud vía formulario público" (formulario en `/solicitud_derecho`)
+- **StartEvent:** "Staff crea ticket ARCO interno" (endpoint `POST /tkt-solicitud-derecho/`, requiere auth)
 
-**Actividades del Titular (Lane: Titular):**
-- **TareaUsuario:** "Completar formulario ARCO"
-  - Campos requeridos: `nombre`, `run`, `email`, `telefono`, `empresa`
-  - Campo `tipo_solicitud`: selección de 6 opciones (ACCESO, RECTIFICACION, CANCELACION, OPOSICION, BLOQUEO, PORTABILIDAD)
-  - Campo `descripcion`: texto libre con detalle de la solicitud
-  - Campo `archivos_adjuntos`: máximo 5 archivos, 5MB cada uno
+**Actividades del Staff/DPO (Lane: Staff):**
+- **TareaUsuario:** "Registrar solicitud ARCO recibida (email/carta/presencial)"
+  - Campos obligatorios: `titular_nombre`, `titular_email`, `tipo`, `descripcion`, `company_id`
+  - Campos opcionales: `titular_rut`, `telefono`, `rat_id`, `representante_nombre`, `representante_rut`
+  - Campo `tipo`: selección de 6 opciones (acceso, rectificacion, cancelacion, oposicion, bloqueo, portabilidad)
+  - El titular NO accede al sistema directamente para crear la solicitud
 
 **Actividades del Sistema (Lane: Sistema):**
-- **TareaSistema:** "Validar datos Eingang"
-  - Valida formato RUN (algoritmo módulo 23)
-  - Valida formato email (regex RFC 5322)
-  - Valida tipos y tamaño de archivos (jpg, png, pdf, doc, docx)
-  - Valida que empresa esté registrada en sistema
+- **TareaSistema:** "Validar datos de entrada"
+  - Valida campos obligatorios
+  - Valida tipo en enum permitido
+  - Valida company_id para el usuario autenticado
 
 - **GatewayExclusivo:** "¿Datos válidos?"
-  - **No** → **TareaSistema:** "Devolver con errores" (mensaje detallado al usuario)
+  - **No** → **TareaSistema:** "Retornar 422 con detalle del error"
   - **Sí** → Continúa flujo
 
 - **GatewayExclusivo:** "¿Es solicitud de REPRESENTANTE?"
-  - Campo `qw10` = toggle habilitado
-  - **Sí** → **TareaUsuario:** "Ingresar datos representante" (nombre, RUT representante, poder notarial)
+  - `representante_nombre` presente
+  - **Sí** → Staff registra `representante_nombre` + `representante_rut`
   - **No** → Continúa flujo
 
-- **TareaSistema:** "Crear TktSolicitudDerecho con estado=ABIERTO"
+- **TareaSistema:** "Crear TktSolicitudDerecho con estado=abierto"
   - Genera `tracking_token` (UUID v4 único)
   - Registra `rat_id` (identificador interno)
   - Timestamp de creación
@@ -287,7 +292,7 @@ Cierre del proceso con actualización del hashchain de bitácora M1, archivado d
 ### Eventos de Inicio
 | Evento | Tipo | Descripción |
 |--------|------|-------------|
-| Formulario público recibido | Start | El titular envía solicitud vía `/solicitud_derecho` |
+| Ticket ARCO creado por staff | Start | DPO/admin registra solicitud recibida vía `POST /tkt-solicitud-derecho/` (auth requerida) |
 
 ### Eventos de Fin
 | Evento | Tipo | Descripción |

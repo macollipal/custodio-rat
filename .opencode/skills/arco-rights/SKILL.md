@@ -26,7 +26,7 @@ Tipos de solicitud:
 
 ## Cuando Usar Esta Skill
 
-- Usuario crea o responde una SolicitudDerecho
+- Usuario crea o responde una TktSolicitudDerecho
 - Se detecta solicitud vencida (pasó plazo de 10 días hábiles)
 - Se prepara reporte de compliance ARCO
 - Se audita el flujo completo de ejercicio de derechos
@@ -36,9 +36,9 @@ Tipos de solicitud:
 ### Checklist de una Solicitud ARCO
 
 #### 1. Identificación del Titular
-- [ ] nombre_titular presente
-- [ ] rut_titular presente (opcional pero recomendado)
-- [ ] email_titular presente
+- [ ] titular_nombre presente
+- [ ] titular_rut presente (opcional pero recomendado)
+- [ ] titular_email presente
 - [ ] metodo_verificacion_identidad documentado (requerido Art. 12)
 
 #### 2. Datos de la Solicitud
@@ -61,7 +61,7 @@ si dias_habiles <= 10 y estado == "resuelto":
 - [ ] Plazo no superado
 
 #### 4. Respuesta
-- [ ] respuesta — texto de la respuesta
+- [ ] respuesta_texto — texto de la respuesta (obligatorio para resolver, Art. 12)
 - [ ] medio_respuesta — cómo se respondió (email/carta/etc)
 - [ ] evidencia_respuesta_hash — hash SHA-256 de la respuesta para integridad
 
@@ -87,7 +87,7 @@ si dias_habiles <= 10 y estado == "resuelto":
 
 **Solicitud ID:** {id}
 **Tipo:** {tipo}
-**Titular:** {nombre_titular}
+**Titular:** {titular_nombre}
 **Empresa:** {company}
 **Fecha Solicitud:** {fecha}
 **Días Hábiles Transcurridos:** {dias}/10
