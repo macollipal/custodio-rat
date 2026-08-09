@@ -859,7 +859,7 @@ def prorrogar_ticket(
     if not ticket:
         return None, "Ticket no encontrado"
 
-    if ticket.estado in ("resuelto", "rechazado", "bloqueado"):
+    if ticket.estado in ("resuelto", "rechazado", "bloqueado", "subsanacion"):
         return None, f"No se puede prorrogar desde estado '{ticket.estado}'"
 
     if ticket.prorroga_fecha is not None:
