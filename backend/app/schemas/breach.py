@@ -22,9 +22,9 @@ class BreachBase(BaseModel):
     # Campos nuevos gaps Ley 21.719 (Iter 10)
     fecha_ocurrencia_estimada: Optional[datetime] = None
     efectos_probables: Optional[str] = None
-    causa_raiz: Optional[str] = Field(default=None, max_length=50, description="Enum: error_humano, malware, acceso_no_autorizado, proveedor, perdida_equipo, otro")
+    causa_raiz: Optional[Literal["error_humano", "malware", "acceso_no_autorizado", "proveedor", "perdida_equipo", "otro"]] = None
     evidencia_notificacion_apdc_folio: Optional[str] = Field(default=None, max_length=100, description="Folio/ID de la notificación a APDC")
-    estado_cierre: Optional[str] = Field(default=None, max_length=20, description="Enum: abierta, investigando, contenida, notificada, cerrada")
+    estado_cierre: Optional[Literal["abierta", "investigando", "contenida", "notificada", "cerrada"]] = None
     fecha_cierre: Optional[datetime] = None
 
 
@@ -51,9 +51,9 @@ class BreachUpdate(BaseModel):
     # Campos nuevos gaps Ley 21.719 (Iter 10)
     fecha_ocurrencia_estimada: Optional[datetime] = None
     efectos_probables: Optional[str] = None
-    causa_raiz: Optional[str] = None
+    causa_raiz: Optional[Literal["error_humano", "malware", "acceso_no_autorizado", "proveedor", "perdida_equipo", "otro"]] = None
     evidencia_notificacion_apdc_folio: Optional[str] = None
-    estado_cierre: Optional[str] = None
+    estado_cierre: Optional[Literal["abierta", "investigando", "contenida", "notificada", "cerrada"]] = None
     fecha_cierre: Optional[datetime] = None
 
 

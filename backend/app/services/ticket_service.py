@@ -645,6 +645,13 @@ def responder_ticket_service(
             "(Art. 12 Ley 21.719). Editá el ticket y agregá 'metodo_verificacion_identidad'."
         )
 
+    if estado == "resuelto" and not (respuesta and respuesta.strip()):
+        return None, (
+            "La respuesta_texto es obligatoria para resolver una solicitud ARCO. "
+            "El responsable del tratamiento debe informar su decisión al titular (Art. 12 Ley 21.719). "
+            "Incluye la decisión y los motivos en el campo 'respuesta'."
+        )
+
     ahora = datetime.now(timezone.utc)
 
     ticket, err = cambiar_estado_ticket(

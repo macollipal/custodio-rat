@@ -503,3 +503,54 @@ def notificar_acuse_solicitud(
         html,
         text,
     )
+
+
+def notificar_brecha_sin_notificar_apdc(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    brechas: list,
+) -> None:
+    """Alerta al DPO sobre brechas que superaron 72h sin notificar a la APDP (Art. 14 bis Ley 21.719)."""
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    items = "".join(
+        f"<li><strong>Brecha #{b['id']}</strong> — detectada el {b['fecha_deteccion']} "
+        f"({b['horas_transcurridas']:.0f}h transcurridas): {b['descripcion'][:120]}...</li>"
+        for b in brechas
+    )
+    cuerpo = (
+        f"<p>La empresa <strong>{nombre_empresa}</strong> tiene {len(brechas)} brecha(s) de seguridad "
+        f"que <strong>superaron el plazo de 72 horas</strong> sin notificación a la APDP "
+        f"(Art. 14 bis Ley 21.719):</p>"
+        f"<ul>{items}</ul>"
+        f"<p><strong>Acción requerida:</strong> Realice la notificación a la APDP de forma inmediata "
+        f"y actualice el campo 'notificado_apdc' en el sistema.</p>"
+    )
+    footer = "Alerta crítica de compliance — Art. 14 bis Ley 21.719"
+    text, html = _render_template("ALERTA: Brechas sin notificar a APDP (>72h)", saludo, cuerpo, footer)
+    _send_raw(email_dpo, f"[Custodio] CRÍTICO: {len(brechas)} brecha(s) sin notificar APDP — {nombre_empresa}", html, text)
+
+
+def notificar_rats_plazo_retencion_vencido(
+    email_dpo: str,
+    nombre_dpo: str,
+    nombre_empresa: str,
+    rats: list,
+) -> None:
+    """Alerta al DPO sobre RATs cuyo plazo de retención de datos ha vencido (Art. 16 Ley 21.719)."""
+    saludo = f"Estimado/a {nombre_dpo or 'DPO'}:"
+    items = "".join(
+        f"<li><strong>{r['nombre_proceso']}</strong> (ID #{r['id']}) — "
+        f"plazo: {r['plazo_retencion']} — venció hace {r['dias_vencido']} día(s)</li>"
+        for r in rats
+    )
+    cuerpo = (
+        f"<p>La empresa <strong>{nombre_empresa}</strong> tiene {len(rats)} proceso(s) RAT con "
+        f"<strong>plazo de retención vencido</strong> (Art. 16 Ley 21.719):</p>"
+        f"<ul>{items}</ul>"
+        f"<p><strong>Acción requerida:</strong> Revise si los datos siguen siendo necesarios. "
+        f"Si no hay base legal vigente, inicie el proceso de eliminación o anonimización.</p>"
+    )
+    footer = "Compliance Ley 21.719 — Gestión de plazos de retención"
+    text, html = _render_template("RATs con plazo de retención vencido", saludo, cuerpo, footer)
+    _send_raw(email_dpo, f"[Custodio] {len(rats)} proceso(s) con plazo retención vencido — {nombre_empresa}", html, text)

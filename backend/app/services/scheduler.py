@@ -93,6 +93,32 @@ def _job_enqueue_sla_alert_t2() -> None:
         db.close()
 
 
+def _job_enqueue_sla_alert_brecha_72h() -> None:
+    """C-03: Monitor secundario — brechas sin notificar APDP que superaron 72h (Art. 14 bis Ley 21.719).
+
+    Complementa la notificación inmediata del POST /brechas: detecta casos donde
+    el email falló o la brecha se cargó sin triggear la alerta inicial.
+    """
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_brecha_72h")
+        logger.info("Scheduler: tarea 'sla_alert_brecha_72h' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_sla_alert_plazo_retencion() -> None:
+    """C-02: Alerta RATs aprobados cuyo plazo de retención venció (Art. 16 Ley 21.719)."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_plazo_retencion")
+        logger.info("Scheduler: tarea 'sla_alert_plazo_retencion' encolada")
+    finally:
+        db.close()
+
+
 _JOBS = [
     (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
@@ -100,6 +126,8 @@ _JOBS = [
     (_job_enqueue_notificar_eipd_vencida, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_solicitar_renovacion_consentimiento, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_sla_alert_t2, 24 * 60 * 60),  # cada 24h (QW5 SLA T-2)
+    (_job_enqueue_sla_alert_brecha_72h, 12 * 60 * 60),  # cada 12h (C-03 monitor 72h brechas)
+    (_job_enqueue_sla_alert_plazo_retencion, 24 * 60 * 60),  # cada 24h (C-02 plazo retención)
 ]  # type: ignore
 
 

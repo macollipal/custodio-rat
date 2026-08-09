@@ -30,6 +30,8 @@ class TaskType(str, PyEnum):
     SLA_ALERT_T2 = "sla_alert_t2"
     NOTIFICAR_EIPD_VENCIDA = "notificar_eipd_vencida"
     SOLICITAR_RENOVACION_CONSENTIMIENTO = "solicitar_renovacion_consentimiento"
+    SLA_ALERT_BRECHA_72H = "sla_alert_brecha_72h"
+    SLA_ALERT_PLAZO_RETENCION = "sla_alert_plazo_retencion"
 
 
 class TaskQueue(Base):

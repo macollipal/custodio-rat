@@ -410,6 +410,137 @@ def _run_solicitar_renovacion_consentimiento(db: Session) -> int:
     return notificados
 
 
+def _run_sla_alert_brecha_72h(db: Session) -> int:
+    """C-03: Revisa brechas sin notificar a la APDP que superaron las 72h (Art. 14 bis Ley 21.719).
+
+    Se ejecuta cada 12h para detectar brechas que el cron de creación pudo haber omitido
+    si el email falló o la brecha se creó sin disparar notificación.
+    """
+    from datetime import timedelta
+    from app.services.email_service import notificar_brecha_sin_notificar_apdc, EmailError
+
+    ahora = datetime.now(timezone.utc)
+    umbral_72h = ahora - timedelta(hours=72)
+
+    brechas = (
+        db.query(SecurityBreach)
+        .filter(
+            SecurityBreach.notificado_apdc == False,  # noqa: E712
+            SecurityBreach.fecha_deteccion <= umbral_72h,
+        )
+        .all()
+    )
+
+    if not brechas:
+        return 0
+
+    por_empresa: dict[int, list] = {}
+    for b in brechas:
+        por_empresa.setdefault(b.company_id, []).append(b)
+
+    notificados = 0
+    for company_id, lista in por_empresa.items():
+        empresa = db.query(Company).filter(Company.id == company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+        brechas_data = [
+            {
+                "id": b.id,
+                "descripcion": b.descripcion or "",
+                "fecha_deteccion": b.fecha_deteccion.strftime("%Y-%m-%d %H:%M UTC"),
+                "horas_transcurridas": (ahora - b.fecha_deteccion.replace(tzinfo=timezone.utc)).total_seconds() / 3600,
+            }
+            for b in lista
+        ]
+        try:
+            notificar_brecha_sin_notificar_apdc(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                brechas=brechas_data,
+            )
+            notificados += 1
+            logger.warning(
+                f"SLA brecha 72h: empresa {company_id} tiene {len(lista)} brecha(s) sin notificar APDP"
+            )
+        except EmailError as e:
+            logger.error(f"SLA brecha 72h empresa {company_id}: fallo email: {e}")
+
+    return notificados
+
+
+def _run_sla_alert_plazo_retencion(db: Session) -> int:
+    """C-02: Revisa RATs con plazo de retención vencido y notifica al DPO (Art. 16 Ley 21.719).
+
+    Parsea el campo de texto libre `plazo_retencion` usando regex para extraer años/meses/días,
+    calcula la fecha de expiración desde `created_at` y alerta si ya venció.
+    """
+    import re
+    from datetime import timedelta
+    from app.services.email_service import notificar_rats_plazo_retencion_vencido, EmailError
+
+    ahora = datetime.now(timezone.utc)
+
+    rats = (
+        db.query(RAT)
+        .filter(
+            RAT.deleted_at.is_(None),
+            RAT.estado == EstadoRAT.APROBADO,
+            RAT.plazo_retencion.isnot(None),
+        )
+        .all()
+    )
+
+    por_empresa: dict[int, list] = {}
+    for r in rats:
+        plazo = r.plazo_retencion or ""
+        total_dias = 0
+        for m in re.finditer(r"(\d+)\s*(?:año|años?)", plazo, re.IGNORECASE):
+            total_dias += int(m.group(1)) * 365
+        for m in re.finditer(r"(\d+)\s*(?:mes|meses?)", plazo, re.IGNORECASE):
+            total_dias += int(m.group(1)) * 30
+        for m in re.finditer(r"(\d+)\s*(?:día|días|dia|dias?)", plazo, re.IGNORECASE):
+            total_dias += int(m.group(1))
+        if total_dias == 0:
+            continue
+        created = r.created_at
+        if created is None:
+            continue
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        expiry = created + timedelta(days=total_dias)
+        if expiry >= ahora:
+            continue
+        dias_vencido = (ahora - expiry).days
+        por_empresa.setdefault(r.company_id, []).append({
+            "id": r.id,
+            "nombre_proceso": r.nombre_proceso,
+            "plazo_retencion": plazo,
+            "dias_vencido": dias_vencido,
+        })
+
+    if not por_empresa:
+        return 0
+
+    notificados = 0
+    for company_id, rats_data in por_empresa.items():
+        empresa = db.query(Company).filter(Company.id == company_id).first()
+        if not empresa or not empresa.email_dpo:
+            continue
+        try:
+            notificar_rats_plazo_retencion_vencido(
+                email_dpo=empresa.email_dpo,
+                nombre_dpo=empresa.contacto_dpo or "",
+                nombre_empresa=empresa.nombre,
+                rats=rats_data,
+            )
+            notificados += 1
+        except EmailError as e:
+            logger.error(f"SLA plazo retención empresa {company_id}: fallo email: {e}")
+
+    return notificados
+
+
 def run_task(db: Session, task: TaskQueue) -> bool:
     """Ejecuta una tarea individual. Retorna True si fue exitosa."""
     task.status = TaskStatus.RUNNING
@@ -452,6 +583,14 @@ def run_task(db: Session, task: TaskQueue) -> bool:
             count = _run_solicitar_renovacion_consentimiento(db)
             success = True
             detail = f"{count} empresas notificadas (consentimientos >2 años)"
+        elif task.task_type == TaskType.SLA_ALERT_BRECHA_72H.value:
+            count = _run_sla_alert_brecha_72h(db)
+            success = True
+            detail = f"{count} empresas notificadas (brechas sin notificar APDP >72h)"
+        elif task.task_type == TaskType.SLA_ALERT_PLAZO_RETENCION.value:
+            count = _run_sla_alert_plazo_retencion(db)
+            success = True
+            detail = f"{count} empresas notificadas (RATs con plazo retención vencido)"
         else:
             detail = f"Tipo de tarea desconocido: {task.task_type}"
             logger.warning(detail)
