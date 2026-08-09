@@ -1182,6 +1182,44 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+// ── C-08: Formulario público ARCO (sin auth) ─────────────────────────────────
+
+export interface EmpresaPublica { id: number; nombre: string; }
+
+export interface EjercerDerechosPayload {
+  company_id: number;
+  tipo: 'acceso' | 'rectificacion' | 'cancelacion' | 'oposicion' | 'bloqueo' | 'portabilidad';
+  titular_nombre: string;
+  titular_email: string;
+  titular_rut?: string;
+  descripcion: string;
+  telefono?: string;
+  representante_nombre?: string;
+  representante_rut?: string;
+  representante_poder_notarial_notas?: string;
+}
+
+export interface EjercerDerechosResponse { tracking_token: string; mensaje: string; }
+
+export async function getEmpresasPublicas(): Promise<EmpresaPublica[]> {
+  const res = await fetch(`${API_BASE}/publico/empresas`);
+  if (!res.ok) throw new Error('No se pudo cargar la lista de empresas');
+  return res.json();
+}
+
+export async function ejercerDerechoPublico(data: EjercerDerechosPayload): Promise<EjercerDerechosResponse> {
+  const res = await fetch(`${API_BASE}/publico/ejercer-derechos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error al enviar solicitud' }));
+    throw new Error(err.detail || 'Error al enviar la solicitud');
+  }
+  return res.json();
+}
+
 export async function descargarTktCsv(companyId: number, filters?: {
   estado?: string;
   prioridad?: string;

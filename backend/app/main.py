@@ -16,7 +16,7 @@ from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.csrf import CSRFMiddleware
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions, publico_arco
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 setup_logging()
@@ -202,6 +202,7 @@ v1_router.include_router(tkt_reglas_asignacion.router)
 v1_router.include_router(encargados_contrato.router)
 v1_router.include_router(politica_transparencia.router)
 v1_router.include_router(seguimiento.router)
+v1_router.include_router(publico_arco.router)
 v1_router.include_router(consentimientos.router)
 v1_router.include_router(eipd.router)
 v1_router.include_router(admin_tasks.router)
@@ -227,6 +228,7 @@ app.include_router(tkt_reglas_asignacion.router)
 app.include_router(encargados_contrato.router)
 app.include_router(politica_transparencia.router)
 app.include_router(seguimiento.router)
+app.include_router(publico_arco.router)
 app.include_router(consentimientos.router)
 app.include_router(eipd.router)
 app.include_router(admin_tasks.router)

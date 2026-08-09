@@ -217,6 +217,7 @@ def crear_ticket(
     rat_id: Optional[int] = None,
     representante_nombre: Optional[str] = None,
     representante_rut: Optional[str] = None,
+    representante_poder_notarial_notas: Optional[str] = None,
     telefono: Optional[str] = None,
     fecha_nacimiento: Optional[str] = None,
     pais: Optional[str] = None,
@@ -250,6 +251,7 @@ def crear_ticket(
         rat_id=rat_id,
         representante_nombre=representante_nombre,
         representante_rut=representante_rut,
+        representante_poder_notarial_notas=representante_poder_notarial_notas,
         telefono=telefono,
         pais=pais,
         # Campos nuevos gaps Ley 21.719 (Iter 10)
