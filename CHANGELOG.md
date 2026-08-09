@@ -1,5 +1,75 @@
 # Changelog — Custodio RAT Manager
 
+## [Unreleased] - 2026-08-09
+
+### Sprint UX — Mejoras de interfaz
+
+#### B-02 — Banner NNA en RatWizard (Step 2)
+- Alerta visual cuando `datos_nna != "ninguno"` advirtiendo restricción de base legal (Art. 16 Ley 21.719)
+- `components/rat/WizardModular/steps/Step2.tsx`
+
+#### M-04 — Editor de Política de Transparencia (Art. 14 ter)
+- Nueva columna `overrides_json` en `politicas_transparencia` — permite personalizar cada ítem
+- `PUT /transparencia/{company_id}` (autenticado, admin_empresa o superadmin)
+- Frontend: modo edición inline por ítem, badge "personalizado", botón "↩ Automático"
+- Hash SHA-256 se recalcula en cada guardado
+- Migración: `2026_08_09_001_politica_overrides.sql`
+
+#### Select.tsx — Fix de merge de estilos
+- Extraído `style` del spread `{...rest}` y mergeado con defaults del componente
+- Evita que un style parcial (solo border/color) pise el fondo/texto internos
+
+---
+
+## [Unreleased] - 2026-08-08
+
+### Sprint B — Compliance Ley 21.719 (backend)
+
+#### B-01 — BreachUpdate con Literal types
+- `causa_raiz` y `estado_cierre` en `BreachUpdate` ahora son `Literal` enforced (igual que `BreachBase`)
+
+#### M-01 — respuesta_texto obligatoria en ARCO
+- `ticket_service.py`: bloquea resolver un ticket ARCO sin `respuesta_texto` no vacía (Art. 12 Ley 21.719)
+
+#### C-03 — Monitor secundario brechas 72h
+- Nuevo `TaskType.SLA_ALERT_BRECHA_72H` + job scheduler cada 12h
+- Detecta `SecurityBreach` con `notificado_apdc=False` y `fecha_deteccion < ahora - 72h`
+- Alerta al DPO de cada empresa afectada (Art. 14 bis Ley 21.719)
+
+#### C-02 — Alerta plazo de retención vencido
+- Nuevo `TaskType.SLA_ALERT_PLAZO_RETENCION` + job scheduler cada 24h
+- Parsea `plazo_retencion` (texto libre) con regex años/meses/días
+- Calcula expiración desde `created_at` y notifica DPO de RATs aprobados vencidos (Art. 16)
+
+---
+
+## [Unreleased] - 2026-08-07
+
+### Sprint A — Compliance Ley 21.719 (backend)
+
+#### C-01 — Soft delete RAT
+- `delete_rat()` ahora asigna `deleted_at = datetime.now(UTC)` en lugar de `db.delete(rat)`
+- `get_rats()` y `get_rat()` filtran `deleted_at IS NULL` (Art. 19 + 28 cadena de custodia)
+
+#### C-04 — Test interés legítimo obligatorio
+- `validar_test_interes_legitimo()` bloquea create/update cuando `base_legal` contiene "Interés legítimo" sin test ≥50 chars (Art. 16)
+
+#### C-05 — EIPD gate en aprobación
+- `aprobar_rat()` llama `validar_eipd_obligatoria()` antes de cambiar estado a APROBADO
+- Antes era posible aprobar con `datos_sensibles=True` sin EIPD (Art. 15 bis)
+
+#### C-06 — NNA requiere base legal reforzada
+- `validar_datos_nna_base_legal()`: cuando `datos_nna != "ninguno"` solo acepta Consentimiento, Interés vital u Obligación legal (Art. 16)
+
+#### C-07 — Delete RAT bloquea con consentimientos activos
+- `delete_rat()` verifica `tiene_consentimiento_activo()` antes de soft delete
+- Retorna 409 Conflict si hay consentimientos activos (Art. 12)
+
+#### M-05 — Mutex anonimizado/seudonimizado
+- `model_validator` en `RATBase` bloquea `datos_anonimizados=True AND datos_seudonimizados=True` simultáneo
+
+---
+
 ## [Unreleased] - 2026-07-03
 
 ### Mejora Continua — Higiene y Compliance

@@ -37,9 +37,9 @@ RAT_opencode/
 │   │   │                 PoliticaTransparencia, TaskQueue, TokenBlacklist
 │   │   ├── schemas/      Validación Pydantic
 │   │   ├── routes/       Endpoints: /auth, /auth/refresh, /companies, /rats, /brechas, /ai,
-│   │   │                 /rubros, /encargados-contrato, /politica-transparencia,
+│   │   │                 /rubros, /encargados-contrato, /transparencia, /publico/transparencia,
 │   │   │                 /tkt-solicitud-derecho, /consentimientos, /eipd,
-│   │   │                 /solicitudes-derecho, /admin/tasks
+│   │   │                 /seguimiento, /admin/tasks, /feriados, /module-permissions
 │   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro,
 │   │                      ticket, email (SMTP), scheduler (enqueue), task_service (cola),
 │   │                      audit (transversal), policy, eipd
@@ -51,7 +51,7 @@ RAT_opencode/
 │   ├── app/
 │   │   ├── login/        Pantalla de autenticación
 │   │   ├── onboarding/   Configuración inicial (primera empresa)
-│   │   ├── solicitud_derecho/  Formulario público ARCO
+│   │   ├── seguimiento/  Consulta pública de estado ARCO (titular, sin auth)
 │   │   ├── (app)/
 │   │   │   ├── dashboard/   KPIs, gráfico, alertas + OnboardingChecklist
 │   │   │   ├── rat/         CRUD procesos RAT + wizard 4 pasos + exportación
@@ -62,7 +62,7 @@ RAT_opencode/
 │   │   │   ├── conexion/     Diagnóstico de conexión
 │   │   │   ├── rubros/       Gestión de rubros y sugerencias
 │   │   │   ├── encargados-contrato/  CRUD contratos Art. 14 quater
-│   │   │   ├── transparencia/   Política de transparencia Art. 14 ter
+│   │   │   ├── transparencia/   Política de transparencia Art. 14 ter (editor M-04)
 │   │   │   ├── tkt_solicitud_derecho/  Gestión tickets ARCO
 │   │   │   ├── consentimientos/   Gestión de consentimientos (Art. 12)
 │   │   │   ├── eipd/            EIPD editable (Art. 15 bis)
@@ -241,8 +241,8 @@ npm run test:e2e:headed
 | `DATABASE_URL` | Connection string | `postgresql://...neon.tech` | `postgresql://...neon.tech` |
 | `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | `http://localhost:3000` | **Requerida en todos los ambientes** |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
-| `MINIMAX_API_KEY` | IA chat | — | Opcional |
-| `OPENAI_API_KEY` | IA chat | — | Opcional |
+| `GROQ_API_KEY` | LLM chat IA (llama-3.3-70b-versatile via Groq) | — | Opcional |
+| `COHERE_API_KEY` | Embeddings para el Asesor IA (Cohere) | — | Opcional |
 | `SMTP_URL` | SMTP DSN (ej. `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT`) | — | Opcional |
 
 > **Nota:** Si `SMTP_URL` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
@@ -263,7 +263,7 @@ npm run test:e2e:headed
 - Pydantic 2.10
 - JWT + Bcrypt
 - ReportLab (exportación PDF)
-- Zod (validación)
+- Groq (LLM chat) + Cohere (embeddings)
 
 **Frontend:**
 - Next.js 16.2 (App Router)
@@ -348,14 +348,15 @@ npm run test:e2e:headed
 - Fechas de elaboración y aprobación
 - Audit log automático en todas las operaciones
 
-### Cola de Tareas Asíncronas — NUEVO
+### Cola de Tareas Asíncronas
 - Modelo `task_queue` persistente en BD
-- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`
-- Scheduler actualizado a **modo enqueue** (compatible con Vercel serverless)
+- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`, `revisar_encargados_vencidos`, `sla_alert_t2`, `notificar_eipd_vencida`, `solicitar_renovacion_consentimiento`, `sla_alert_brecha_72h`, `sla_alert_plazo_retencion`
+- Scheduler en **modo enqueue** (compatible con Vercel serverless) — 8 jobs periódicos
 - Endpoint `POST /admin/tasks/run` para que un cron externo procese la cola
 - Dashboard de admin: `/admin/tasks/stats` y `/admin/tasks/` para listar
 - Reintentos automáticos con backoff (max 3 intentos)
-- Las notificaciones de brechas ahora son asíncronas (no bloquean la request)
+- Monitor brechas 72h (C-03): cada 12h detecta brechas sin notificar APDC y alerta al DPO
+- Alerta plazo retención (C-02): cada 24h notifica RATs con plazo de retención vencido
 
 ### Gestión RAT
 - CRUD completo de procesos RAT con wizard de 4 pasos
@@ -384,7 +385,7 @@ npm run test:e2e:headed
   - Historial de cambios (auditoría)
   - **Botón Exportar PDF** → descarga PDF individual del RAT
 - Chat IA flotante (botón 🤚 esquina inferior derecha)
-  - Requiere `MINIMAX_API_KEY` o `OPENAI_API_KEY` en `backend/.env`
+  - Requiere `GROQ_API_KEY` en `backend/.env`
 
 ### Módulo de Brechas de Seguridad (Art. 14 bis Ley 21.719)
 - Gestión de brechas con plazos legales obligatorios
@@ -398,19 +399,23 @@ npm run test:e2e:headed
 
 ### Módulo de Transparencia (Art. 14 ter Ley 21.719)
 - Política de transparencia pública generada dinámicamente desde los RATs
-- Versionado con hash SHA-256
-- Disponible en `/transparencia` para cada empresa
+- **Editor por ítem** (M-04): admin_empresa puede personalizar cada sección; override se persiste en BD
+- Versionado con hash SHA-256 recalculado en cada guardado
+- Disponible en `/transparencia` (autenticado, con editor) y `/publico/transparencia/{id}` (público)
 
-### Módulo ARCO — Solicitudes de Derecho (Art. 14 y 16 bis Ley 21.719)
-- **Formulario público** (`/solicitud_derecho`): permite a cualquier persona ejercer sus derechos ARCO
+### Módulo ARCO — Solicitudes de Derecho (Art. 12 y 14 Ley 21.719)
+- **Gestión interna de tickets** (`/tkt_solicitud_derecho`): el staff crea y gestiona solicitudes ARCO
   - Tipos: Acceso, Rectificación, Cancelación, Oposición, Bloqueo temporal, Portabilidad
   - Validación de RUT chileno, email, límite de 2000 caracteres en descripción
-  - Creación de ticket → registra `solicitud_fecha`
-- **Gestión tickets** (`/tkt_solicitud_derecho`): gestión completa de solicitudes ARCO
-  - Tabla con paginación
-  - Historial de cambios de estado
-  - Notas internas y adjuntos
+  - Tabla con paginación, historial de cambios de estado, notas internas y adjuntos
   - Respuesta al titular + notificación por email automática (si SMTP configurado)
+  - Plazo legal 10 días hábiles con cálculo de feriados Chile hasta 2040
+  - Prórroga de plazo (+10 días hábiles, Art. 12 bis) — 1 vez por ticket
+  - Causal de rechazo (enum), verificación de identidad obligatoria para resolver
+  - Hash de integridad SHA-256 al resolver (Art. 12.5)
+- **Consulta pública** (`/seguimiento/{tracking_token}`): titular consulta estado sin autenticación
+- **Monitor SLA** (C-03): job cada 12h alerta DPO por brechas sin notificar APDC >72h
+- Tabla canónica: `tkt_solicitud_derecho` (tabla legacy `solicitudes_derecho` eliminada jul-2026)
 
 ### Exportación
 - CSV por empresa

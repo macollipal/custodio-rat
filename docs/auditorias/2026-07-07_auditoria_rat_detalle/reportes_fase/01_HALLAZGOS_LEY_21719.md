@@ -2,20 +2,24 @@
 
 **Fecha:** 2026-07-07
 **Versión auditada:** v1.9
+**Actualización:** 2026-08-09 — Sprints A/B aplicados (ver estado por hallazgo)
 **Skills aplicadas:** `rat-compliance`, `eipd-management`, `consentimiento-management`, `encargado-tratamiento`, `breach-management`, `arco-rights`, `politica-transparencia`, `dpo-custodio`
-**Score global compliance:** **8.2/10**
+**Score global compliance:** ~~8.2/10~~ → **8.8/10** (estimado post-Sprint A/B/UX)
 
 ---
 
 ## Resumen Ejecutivo
 
-El módulo RAT cumple **sustancialmente** con los artículos de la Ley 21.719. Los 7 campos obligatorios del Art. 16 están implementados con `nullable=False`, los flagsc condicionales (datos sensibles, transferencia internacional, decisiones automatizadas) tienen validators en schemas, y existe flujo EIPD + consentimiento + encargado vinculado. La fórmula de completitud es comprehensiva (25 campos: 7+3+5+10).
+El módulo RAT cumple **sustancialmente** con los artículos de la Ley 21.719. Los 7 campos obligatorios del Art. 16 están implementados con `nullable=False`, los flags condicionales (datos sensibles, transferencia internacional, decisiones automatizadas) tienen validators en schemas, y existe flujo EIPD + consentimiento + encargado vinculado. La fórmula de completitud es comprehensiva (25 campos: 7+3+5+10).
 
 **Hallazgos principales:**
 - ✅ Art. 16 — 7 obligatorios implementados correctamente
 - ✅ Art. 15 bis — EIPD workflow con validación obligatoria
 - ✅ Art. 12 — Consentimientos cifrados Fernet + revocación
 - ✅ Art. 14 quater — Contratos PDF + validación
+- ✅ **RESUELTO (Sprint A, 2026-08-07):** Soft delete RAT (C-01), test IL obligatorio (C-04), EIPD gate en aprobación (C-05), NNA base legal (C-06), delete RAT con consentimientos (C-07), mutex anonimizado (M-05)
+- ✅ **RESUELTO (Sprint B, 2026-08-08):** BreachUpdate Literal types (B-01), respuesta ARCO obligatoria (M-01), monitor brechas 72h (C-03), alerta plazo retención (C-02)
+- ✅ **RESUELTO (UX, 2026-08-09):** Banner NNA wizard (B-02), editor política transparencia (M-04)
 - ⚠️ Hallazgos menores en cobertura de Edge Cases (documentados abajo)
 
 ---

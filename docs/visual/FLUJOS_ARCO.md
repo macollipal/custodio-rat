@@ -1,5 +1,7 @@
 # Flujos ARCO — Custodio RAT
 
+> **⚠️ NOTA DE ACTUALIZACIÓN (2026-08-09):** La sección 3 ("Vista del titular — Formulario público `/solicitud_derecho`") describe una funcionalidad **eliminada en julio 2026**. El formulario público ARCO ya no existe. Los flujos de creación de solicitudes son exclusivamente internos (staff autenticado via `/tkt-solicitud-derecho/`). El titular puede consultar el estado de su solicitud en `/seguimiento/{tracking_token}` sin autenticación. La tabla canónica es `tkt_solicitud_derecho` (no `solicitudes_derecho`).
+
 > Documentación visual de los flujos de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición, Bloqueo, Portabilidad) implementados en Custodio RAT, conforme a la Ley 21.719.
 
 ## Tabla de contenidos
