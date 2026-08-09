@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class BreachBase(BaseModel):
@@ -33,7 +33,7 @@ class BreachCreate(BreachBase):
 
 
 class BreachUpdate(BaseModel):
-    descripcion: Optional[str] = None
+    descripcion: Optional[str] = Field(default=None, min_length=1)
     fecha_deteccion: Optional[datetime] = None
     rats_afectados: Optional[str] = None
     datos_comprometidos: Optional[str] = None
@@ -55,6 +55,15 @@ class BreachUpdate(BaseModel):
     evidencia_notificacion_apdc_folio: Optional[str] = None
     estado_cierre: Optional[Literal["abierta", "investigando", "contenida", "notificada", "cerrada"]] = None
     fecha_cierre: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def set_fecha_notificacion_defaults(self) -> "BreachUpdate":
+        ahora = datetime.now(timezone.utc)
+        if self.notificado_apdc and not self.fecha_notificacion_apdc:
+            self.fecha_notificacion_apdc = ahora
+        if self.notificado_titulares and not self.fecha_notificacion_titulares:
+            self.fecha_notificacion_titulares = ahora
+        return self
 
 
 class BreachOut(BreachBase):

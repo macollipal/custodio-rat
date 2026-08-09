@@ -166,7 +166,7 @@ def revocar_consentimiento(db: Session, consentimiento_id: int, usuario: str) ->
     if not c:
         raise ConsentimientoNotFoundError("Consentimiento no encontrado.")
     if c.fecha_revocacion:
-        raise ConsentimientoYaRevocadoError("El consentimiento ya fue revocado.")
+        return c  # Idempotente: ya estaba revocado, no es error
 
     c.activo = False
     c.fecha_revocacion = datetime.now(timezone.utc)

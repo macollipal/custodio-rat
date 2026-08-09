@@ -249,6 +249,7 @@ def crear_ticket(
         fecha_vencimiento=fecha_vencimiento,
         created_by=created_by,
         rat_id=rat_id,
+        tracking_token=str(uuid.uuid4()),
         representante_nombre=representante_nombre,
         representante_rut=representante_rut,
         representante_poder_notarial_notas=representante_poder_notarial_notas,

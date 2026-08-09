@@ -58,7 +58,9 @@ export default function EjercerDerechosPage() {
   const [globalError, setGlobalError] = useState('');
 
   useEffect(() => {
-    getEmpresasPublicas().then(setEmpresas).catch(() => {});
+    getEmpresasPublicas()
+      .then(setEmpresas)
+      .catch(() => setGlobalError('No se pudo cargar la lista de empresas. Intente más tarde.'));
     const empresaParam = searchParams.get('empresa');
     if (empresaParam) setForm(f => ({ ...f, company_id: empresaParam }));
   }, [searchParams]);

@@ -81,7 +81,7 @@ class TktSolicitudDerecho(Base):
     rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True)
     plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     portability_data: Mapped[str] = mapped_column(Text, nullable=True)
-    tracking_token: Mapped[str] = mapped_column(String(36), nullable=True, unique=True)
+    tracking_token: Mapped[str] = mapped_column(String(36), nullable=False, unique=True)
     acuse_enviado_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     subsanacion_detalle: Mapped[str] = mapped_column(String(1000), nullable=True)
     subsanacion_fecha_pedido: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

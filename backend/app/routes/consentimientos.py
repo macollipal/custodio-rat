@@ -77,7 +77,5 @@ async def revocar_consentimiento(
         c = consentimiento_service.revocar_consentimiento(db, consentimiento_id, current_user.username)
     except consentimiento_service.ConsentimientoNotFoundError:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
-    except consentimiento_service.ConsentimientoYaRevocadoError:
-        raise HTTPException(status_code=400, detail="El consentimiento ya fue revocado.")
     check_company_access(current_user, c.company_id, db)
     return ConsentimientoOut.from_orm_cifrado(c)

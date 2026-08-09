@@ -163,7 +163,10 @@ export default function DashboardPage() {
   const completos  = por_estado?.completo  ?? 0;
   const borradores = por_estado?.borrador  ?? 0;
 
-  const kpiColor = completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
+  const sinProcesos = total_procesos === 0;
+  const kpiColor = sinProcesos
+    ? '#9CA3AF'
+    : completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
 
   return (
     <div className="p-8 space-y-6">
@@ -211,8 +214,8 @@ export default function DashboardPage() {
           icon="📋" color="#2563EB"
         />
         <KPICard
-          title="Completitud promedio" value={`${completitud_promedio}%`}
-          subtitle="Nivel de madurez del RAT"
+          title="Completitud promedio" value={sinProcesos ? '—' : `${completitud_promedio}%`}
+          subtitle={sinProcesos ? 'Sin procesos registrados' : 'Nivel de madurez del RAT'}
           icon="📊" color={kpiColor}
         />
         <KPICard

@@ -37,10 +37,13 @@ async function tryRefreshToken(): Promise<string | null> {
   }
   isRefreshing = true;
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`${API_BASE}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
     if (!res.ok) return null;
     const data = await res.json();
     if (data.access_token) {

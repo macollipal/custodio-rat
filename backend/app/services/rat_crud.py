@@ -241,6 +241,15 @@ def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] 
 
     rat = get_rat(db, rat_id)
 
+    if rat.estado == EstadoRAT.APROBADO:
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail=(
+                "No se puede eliminar un RAT en estado 'aprobado'. "
+                "Revise el Art. 19 Ley 21.719: los registros aprobados forman parte de la cadena de custodia."
+            ),
+        )
+
     if tiene_consentimiento_activo(db, rat_id):
         raise HTTPException(
             status_code=http_status.HTTP_409_CONFLICT,
@@ -271,7 +280,9 @@ def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] 
             except Exception:
                 pass
 
-    rat.deleted_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    rat.deleted_at = now
+    rat.updated_at = now
     log_audit(db, "rat", rat_id, "eliminar", usuario, {"nombre_proceso": nombre}, ip_origen)
     db.commit()
     return {"message": f"Registro '{nombre}' eliminado del RAT."}
