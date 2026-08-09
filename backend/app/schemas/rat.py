@@ -148,6 +148,16 @@ class RATBase(BaseModel):
     def test_interes_legitimo_normalizar(cls, v: Any) -> Any:
         return _normalizar_test_il(v)
 
+    @model_validator(mode='after')
+    def validar_anonimizado_mutex(self) -> 'RATBase':
+        if self.datos_anonimizados and self.datos_seudonimizados:
+            raise ValueError(
+                "Un dato no puede ser simultáneamente anonimizado y seudonimizado: "
+                "son técnicas mutuamente excluyentes (anonimización es irreversible; "
+                "seudonimización mantiene la posibilidad de reidentificación)."
+            )
+        return self
+
 
 class RATCreate(RATBase):
     company_id: int

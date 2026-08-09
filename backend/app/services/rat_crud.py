@@ -26,7 +26,9 @@ from app.services.rat_validators import (
     validar_base_legal_otra_requiere_archivo,
     validar_contrato_encargado,
     validar_consentimiento_sensibles,
+    validar_datos_nna_base_legal,
     validar_eipd_obligatoria,
+    validar_test_interes_legitimo,
 )
 from app.services.rat_calculations import calcular_completitud, rat_to_dict
 
@@ -97,14 +99,14 @@ def get_rats(db: Session, company_id: Optional[int] = None, skip: int = 0, limit
     query = db.query(RAT).options(
         selectinload(RAT.company),
         selectinload(RAT.consentimientos),
-    )
+    ).filter(RAT.deleted_at.is_(None))
     if company_id:
         query = query.filter(RAT.company_id == company_id)
     return query.offset(skip).limit(limit).all()
 
 
 def get_rat(db: Session, rat_id: int) -> RAT:
-    rat = db.query(RAT).filter(RAT.id == rat_id).first()
+    rat = db.query(RAT).filter(RAT.id == rat_id, RAT.deleted_at.is_(None)).first()
     if not rat:
         from fastapi import HTTPException, status
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Registro RAT no encontrado.")
@@ -161,6 +163,8 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
     datos = data.model_dump()
     validar_eipd_obligatoria(datos)
     validar_base_legal_otra_requiere_archivo(datos)
+    validar_test_interes_legitimo(datos)
+    validar_datos_nna_base_legal(datos)
 
     archivo_fields = procesar_archivo_base_legal(datos)
     datos.update(archivo_fields)
@@ -218,6 +222,8 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     if rat_dict_validacion.get("datos_sensibles") or rat_dict_validacion.get("transferencia_internacional"):
         validar_eipd_obligatoria(rat_dict_validacion, rat_id=rat_id, db=db)
     validar_base_legal_otra_requiere_archivo(rat_dict_validacion)
+    validar_test_interes_legitimo(rat_dict_validacion)
+    validar_datos_nna_base_legal(rat_dict_validacion)
 
     log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
     db.commit()
@@ -226,8 +232,24 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
 
 
 def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
-    """Elimina un RAT: mueve archivo a archive bucket antes de borrar de DB."""
+    """Soft delete de RAT con archivo a bucket archive (Art. 19 + 28 Ley 21.719).
+
+    C-01: usa deleted_at en lugar de db.delete para preservar cadena de custodia.
+    C-07: bloquea si hay consentimientos activos — los datos siguen siendo tratados legalmente.
+    """
+    from fastapi import HTTPException, status as http_status
+
     rat = get_rat(db, rat_id)
+
+    if tiene_consentimiento_activo(db, rat_id):
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail=(
+                "No se puede eliminar un RAT que tiene consentimientos activos. "
+                "Revoque todos los consentimientos antes de eliminar el registro (Art. 16 Ley 21.719)."
+            ),
+        )
+
     nombre = rat.nombre_proceso
 
     storage_url = rat.archivo_base_legal_storage_url
@@ -249,8 +271,8 @@ def delete_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str] 
             except Exception:
                 pass
 
+    rat.deleted_at = datetime.now(timezone.utc)
     log_audit(db, "rat", rat_id, "eliminar", usuario, {"nombre_proceso": nombre}, ip_origen)
-    db.delete(rat)
     db.commit()
     return {"message": f"Registro '{nombre}' eliminado del RAT."}
 
@@ -424,6 +446,11 @@ def aprobar_rat(db: Session, rat_id: int, usuario: str, ip_origen: Optional[str]
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"El RAT debe estar 100% completo para poder aprobarlo. Completitud actual: {completitud}%",
         )
+
+    # C-05: validar EIPD obligatoria antes de aprobar (Art. 15 bis Ley 21.719)
+    rat_dict = {c.name: getattr(rat, c.name) for c in rat.__table__.columns}
+    if rat_dict.get("datos_sensibles") or rat_dict.get("transferencia_internacional"):
+        validar_eipd_obligatoria(rat_dict, rat_id=rat_id, db=db)
 
     rat.estado = EstadoRAT.APROBADO
     rat.aprobado_por = usuario

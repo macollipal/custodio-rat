@@ -9,6 +9,8 @@ from fastapi import HTTPException, status
 
 from app.services.rat_constants import UMBRAL_JUSTIFICACION_EIPD
 
+UMBRAL_TEST_INTERES_LEGITIMO = 50
+
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from app.models.rat import RAT
@@ -58,6 +60,49 @@ def validar_contrato_encargado(db: "Session", rat: "RAT") -> None:
                 "Para registrar un encargado es obligatorio contar con un contrato que establezca las instrucciones "
                 "de tratamiento, confidencialidad y seguridad (Art. 14 quater Ley 21.719). "
                 "Cree el contrato mediante POST /encargados-contrato antes de guardar el RAT."
+            ),
+        )
+
+
+def validar_test_interes_legitimo(data: dict) -> None:
+    """Valida que base_legal='Interés legítimo' exija test de 3 pasos documentado (Art. 16 Ley 21.719).
+
+    Sin test documentado, la base legal no puede considerarse legítima: la ley exige
+    acreditar que el interés prevalece sobre los derechos del titular.
+    """
+    base_legal = (data.get("base_legal") or "").strip().lower()
+    if "interés legítimo" not in base_legal and "interes legitimo" not in base_legal:
+        return
+    test = (data.get("test_interes_legitimo") or "").strip()
+    if not test or len(test) < UMBRAL_TEST_INTERES_LEGITIMO:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"La base legal 'Interés legítimo' requiere un test de 3 pasos documentado "
+                f"con al menos {UMBRAL_TEST_INTERES_LEGITIMO} caracteres (Art. 16 Ley 21.719). "
+                "Complete los campos paso1, paso2 y paso3 antes de guardar el RAT."
+            ),
+        )
+
+
+def validar_datos_nna_base_legal(data: dict) -> None:
+    """Valida que datos de menores (NNA) usen base legal reforzada (Art. 16 Ley 21.719).
+
+    El tratamiento de datos de menores requiere consentimiento del titular/apoderado
+    o interés vital — no admite bases legales como 'Interés legítimo' o 'Contrato'.
+    """
+    datos_nna = (data.get("datos_nna") or "").strip().lower()
+    if datos_nna in ("ninguno", "", "no"):
+        return
+    base_legal = (data.get("base_legal") or "").strip().lower()
+    bases_permitidas = ("consentimiento", "interés vital", "interes vital", "obligación legal", "obligacion legal")
+    if not any(b in base_legal for b in bases_permitidas):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "El tratamiento de datos de menores de edad (NNA) requiere base legal "
+                "'Consentimiento del titular', 'Interés vital' u 'Obligación legal' "
+                "(Art. 16 Ley 21.719). La base legal seleccionada no es admisible para NNA."
             ),
         )
 
