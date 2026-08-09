@@ -2,6 +2,7 @@
 Servicio de negocio para módulos TKT (ticketing).
 Maneja lógica de SLA, estados, y estadísticas.
 """
+import json
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -700,6 +701,15 @@ def guardar_portability_data(
 
     if ticket.tipo != "portabilidad":
         return None, "El ticket no es de portabilidad"
+
+    try:
+        parsed = json.loads(portability_data)
+    except (ValueError, TypeError):
+        return None, "portability_data debe ser un JSON válido (Art. 9 portabilidad)"
+    if not isinstance(parsed, (dict, list)):
+        return None, "portability_data debe ser un objeto o array JSON"
+    if not parsed:
+        return None, "portability_data no puede estar vacío"
 
     estado_anterior = ticket.estado
 

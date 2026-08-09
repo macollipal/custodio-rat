@@ -39,4 +39,4 @@ def actualizar_politica(
         ids = get_empresas_usuario(db, current_user.id)
         if company_id not in ids:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Sin acceso a esta empresa.")
-    return guardar_overrides(db, company_id, body.overrides)
+    return guardar_overrides(db, company_id, body.overrides, usuario=current_user.username)

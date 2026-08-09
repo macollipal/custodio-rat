@@ -14,6 +14,7 @@ from app.models.company import Company
 from app.models.rat import RAT
 from app.models.politica_transparencia import PoliticaTransparencia
 from app.schemas.politica_transparencia import PoliticaTransparenciaOut
+from app.services.audit_service import log_audit
 
 
 DERECHOS_ARCO = (
@@ -184,7 +185,7 @@ def _incrementar_version(version: str) -> str:
     return f"{version}.1"
 
 
-def guardar_overrides(db: Session, company_id: int, overrides: dict) -> PoliticaTransparenciaOut:
+def guardar_overrides(db: Session, company_id: int, overrides: dict, usuario: str = "system") -> PoliticaTransparenciaOut:
     """Persiste overrides de ítems de la política y regenera (M-04).
 
     Un override con valor None o cadena vacía elimina el override para ese ítem
@@ -223,6 +224,16 @@ def guardar_overrides(db: Session, company_id: int, overrides: dict) -> Politica
             existing[key] = value
 
     politica.overrides_json = json.dumps(existing, ensure_ascii=False) if existing else None
+
+    log_audit(
+        db=db,
+        entidad="politica_transparencia",
+        entidad_id=politica.id,
+        accion="update_overrides",
+        usuario=usuario,
+        detalle={"company_id": company_id, "items_modificados": list(overrides.keys())},
+    )
+
     db.commit()
 
     return generar_politica(db, company_id)

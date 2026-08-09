@@ -92,6 +92,7 @@ class TktSolicitudDerecho(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     representante_nombre: Mapped[str] = mapped_column(String(255), nullable=True)
     representante_rut: Mapped[str] = mapped_column(String(20), nullable=True)
+    representante_poder_notarial_notas: Mapped[str] = mapped_column(Text, nullable=True)
     telefono: Mapped[str] = mapped_column(String(50), nullable=True)
     fecha_nacimiento: Mapped[datetime] = mapped_column(Date, nullable=True)
     pais: Mapped[str] = mapped_column(String(100), nullable=True)

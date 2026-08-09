@@ -3,7 +3,7 @@ Schemas Pydantic para el módulo TKT Solicitudes ARCO.
 """
 from datetime import datetime
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 TktTipoEnum = Literal["acceso", "rectificacion", "cancelacion", "oposicion", "bloqueo", "portabilidad"]
@@ -36,8 +36,21 @@ class TktTicketCreate(BaseModel):
     pais: Optional[str] = Field(default=None, max_length=100)
     representante_nombre: Optional[str] = Field(default=None, max_length=255)
     representante_rut: Optional[str] = Field(default=None, max_length=20)
+    representante_poder_notarial_notas: Optional[str] = Field(
+        default=None,
+        description="Descripción o referencia del poder notarial que acredita la representación (Art. 14 quater)",
+    )
     # Campos nuevos gaps Ley 21.719 (Iter 10)
     metodo_verificacion_identidad: Optional[str] = Field(default=None, max_length=50, description="Enum: cedula, firma_digital, video_call, otro")
+
+    @model_validator(mode="after")
+    def validar_poder_notarial_representante(self):
+        if self.representante_nombre and not self.representante_poder_notarial_notas:
+            raise ValueError(
+                "Si hay representante, debe especificarse representante_poder_notarial_notas "
+                "con la referencia o descripción del poder notarial (Art. 14 quater)."
+            )
+        return self
     evidencia_identidad: Optional[str] = Field(default=None, description="Descripción de docs/verificación usada")
     evidencia_respuesta_hash: Optional[str] = Field(default=None, max_length=64, description="SHA-256 de la respuesta enviada")
     causal_rechazo: Optional[CausalRechazoEnum] = Field(default=None, description="Causal de rechazo (Art. 29 RL): falta_identidad, solicitud_manifiestamente_infundada, solicitud_excesiva, falta_poder_notorial, plazo_vencido, identidad_no_verificada, otro")
@@ -112,6 +125,7 @@ class TktTicketResponse(BaseModel):
     created_at: Optional[datetime]
     representante_nombre: Optional[str] = None
     representante_rut: Optional[str] = None
+    representante_poder_notarial_notas: Optional[str] = None
     telefono: Optional[str] = None
     fecha_nacimiento: Optional[datetime] = None
     pais: Optional[str] = None
