@@ -970,6 +970,18 @@ export async function getPoliticaTransparencia(companyId: number): Promise<Polit
   return handle<PoliticaTransparencia>(res);
 }
 
+export async function updatePoliticaTransparencia(
+  companyId: number,
+  overrides: Partial<Record<string, string | null>>,
+): Promise<PoliticaTransparencia> {
+  const res = await apiFetch(`${API_BASE}/transparencia/${companyId}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ overrides }),
+  });
+  return handle<PoliticaTransparencia>(res);
+}
+
 // ── Consentimientos ─────────────────────────────────────────────────────────────
 
 export interface ConsentimientoItem {
