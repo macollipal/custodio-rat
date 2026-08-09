@@ -404,6 +404,25 @@ export default function ReportesPage() {
           <Button variant="secondary" size="md" onClick={() => exportPDF()}>
             📥 PDF
           </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={async () => {
+              if (!company) return;
+              try {
+                const blob = await api.exportarPdfApdp(company.id);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `APDP_${company.nombre}_${new Date().toISOString().slice(0, 10)}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success('Reporte APDP exportado');
+              } catch { toast.error('Error al exportar Reporte APDP'); }
+            }}
+          >
+            📋 Reporte APDP
+          </Button>
           <Button variant="secondary" size="md" onClick={() => load()}>
             🔄 Actualizar
           </Button>

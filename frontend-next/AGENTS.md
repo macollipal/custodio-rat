@@ -225,7 +225,7 @@ Incluye: `observaciones_auditoria`, `estado`, `tiene_contrato_encargado`, parseo
   - Historial de cambios (auditoría)
 - **Botón Exportar PDF** en drawer → descarga PDF del RAT individual (endpoint `/rats/{id}/export/pdf`)
 - **AsesorCustodio (Chat IA)** — flotante (botón 🤚 esquina inferior derecha)
-  - Requiere `MINIMAX_API_KEY` o `OPENAI_API_KEY` en `backend/.env`
+  - Requiere `GROQ_API_KEY` (LLM) y `COHERE_API_KEY` (embeddings) en `backend/.env`
   - System prompt sobre Ley 21.719 Chile
   - Pasa contexto de empresa + RATs activos
   - Endpoint backend: `POST /ai/ask`

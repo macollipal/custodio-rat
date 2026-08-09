@@ -339,40 +339,32 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         .filter(RAT.company_id == company_id)
         .all()
     )
-    completitud_promedio = (
-        round(sum(calcular_completitud(rat_to_dict(r)) for r in rats_complex) / total, 1) if total else 0
-    )
-    eipd_pendientes = sum(
-        1 for r in rats_complex
-        if r.evaluacion_impacto and (r.estado_eipd or "pendiente") not in ("completada",)
-    )
-    transferencias_sin_garantias = sum(
-        1 for r in rats_complex
-        if r.transferencia_internacional and not r.garantias_transferencia_int
-    )
-    interes_legitimo_sin_test = sum(
-        1 for r in rats_complex
-        if (
-            ("interés legítimo" in (r.base_legal or "").lower()
-            or "interes legitimo" in (r.base_legal or "").lower())
-        )
-        and not r.test_interes_legitimo
-    )
-    encargados_sin_contrato = sum(
-        1 for r in rats_complex
-        if r.nombre_encargado and not r.tiene_contrato_encargado
-    )
-    rats_sin_doc = sum(
-        1 for r in rats_complex
-        if r.base_legal and r.base_legal.strip().lower() != "otra"
-        and not r.archivo_base_legal_datos
-    )
-
-    # Rats por vencer/vencidos: regex parsing por fecha
+    # Un solo loop sobre rats_complex para todos los cómputos Python (C5).
+    completitud_sum = 0
+    eipd_pendientes = 0
+    transferencias_sin_garantias = 0
+    interes_legitimo_sin_test = 0
+    encargados_sin_contrato = 0
+    rats_sin_doc = 0
     rats_por_vencer = 0
     rats_vencidos = 0
     now = datetime.now(timezone.utc)
+
     for r in rats_complex:
+        completitud_sum += calcular_completitud(rat_to_dict(r))
+
+        if r.evaluacion_impacto and (r.estado_eipd or "pendiente") not in ("completada",):
+            eipd_pendientes += 1
+        if r.transferencia_internacional and not r.garantias_transferencia_int:
+            transferencias_sin_garantias += 1
+        base = (r.base_legal or "").lower()
+        if ("interés legítimo" in base or "interes legitimo" in base) and not r.test_interes_legitimo:
+            interes_legitimo_sin_test += 1
+        if r.nombre_encargado and not r.tiene_contrato_encargado:
+            encargados_sin_contrato += 1
+        if r.base_legal and r.base_legal.strip().lower() != "otra" and not r.archivo_base_legal_datos:
+            rats_sin_doc += 1
+
         plazo = r.plazo_retencion or ""
         total_dias = 0
         for years_m in re.finditer(r"(\d+)\s*(?:año|años?)", plazo, re.IGNORECASE):
@@ -381,23 +373,23 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
             total_dias += int(meses_m.group(1)) * 30
         for dias_m in re.finditer(r"(\d+)\s*(?:día|días|dia|dias?)", plazo, re.IGNORECASE):
             total_dias += int(dias_m.group(1))
-        if total_dias == 0:
-            continue
-        created = r.created_at
-        if created is None:
-            continue
-        if isinstance(created, str):
-            try:
-                created = datetime.fromisoformat(created.replace("Z", "+00:00"))
-            except Exception:
-                continue
-        if created.tzinfo is None:
-            created = created.replace(tzinfo=timezone.utc)
-        expiry = created + timedelta(days=total_dias)
-        if expiry < now:
-            rats_vencidos += 1
-        elif expiry - timedelta(days=90) < now:
-            rats_por_vencer += 1
+        if total_dias > 0 and r.created_at is not None:
+            created = r.created_at
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except Exception:
+                    created = None
+            if created is not None:
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                expiry = created + timedelta(days=total_dias)
+                if expiry < now:
+                    rats_vencidos += 1
+                elif expiry - timedelta(days=90) < now:
+                    rats_por_vencer += 1
+
+    completitud_promedio = round(completitud_sum / total, 1) if total else 0
 
     return {
         "total_procesos": total,

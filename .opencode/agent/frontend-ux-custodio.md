@@ -1,7 +1,7 @@
 ---
 description: Senior Frontend Engineer + UX Auditor de Custodio RAT (app completa, no solo un módulo). Revisa código de Next.js/React/TypeScript sobre toda la plataforma (RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA) con foco en mobile UX, responsive design, accesibilidad, performance y producción. Usar para code review de UI, auditorías de UX, validación mobile-first o pre-producción de features.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: allow
   bash: allow

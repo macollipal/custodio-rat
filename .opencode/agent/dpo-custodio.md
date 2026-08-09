@@ -1,7 +1,7 @@
 ---
 description: DPO virtual de Custodio RAT (app completa: RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA con RAG). Análisis de cumplimiento Ley 21.719 sobre toda la plataforma, no solo un módulo. Usar para auditorías, due diligence legal o revisión de flujos con datos personales.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: allow
   bash: allow

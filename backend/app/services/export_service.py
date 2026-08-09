@@ -8,6 +8,6 @@ Modulos:
 Este archivo existe unicamente para no romper imports existentes.
 """
 from app.services.csv_export import exportar_csv, sanitize_csv_value, CAMPOS_RAT
-from app.services.pdf_export import exportar_pdf
+from app.services.pdf_export import exportar_pdf, exportar_pdf_apdp
 
-__all__ = ["exportar_csv", "exportar_pdf", "sanitize_csv_value", "CAMPOS_RAT"]
+__all__ = ["exportar_csv", "exportar_pdf", "exportar_pdf_apdp", "sanitize_csv_value", "CAMPOS_RAT"]

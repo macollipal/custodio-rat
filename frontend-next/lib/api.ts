@@ -387,6 +387,12 @@ export async function exportarPdf(companyId: number): Promise<Blob> {
   return res.blob();
 }
 
+export async function exportarPdfApdp(companyId: number): Promise<Blob> {
+  const res = await apiFetch(`${API_BASE}/rats/export/apdp?company_id=${companyId}`);
+  if (!res.ok) throw new Error('Error al exportar Reporte APDP');
+  return res.blob();
+}
+
 export async function exportarRatPdf(ratId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/${ratId}/export/pdf`);
   if (!res.ok) throw new Error('Error al exportar PDF');

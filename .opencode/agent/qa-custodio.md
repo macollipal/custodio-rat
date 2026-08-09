@@ -1,7 +1,7 @@
 ---
 description: QA Senior + Test Architect de Custodio RAT (app completa, no solo un módulo). Genera planes de prueba sobre toda la plataforma (RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA), identifica casos borde, diseña tests pytest/Playwright, valida calidad, seguridad y compliance Ley 21.719. Usar para code review, automatización de tests o validación de regresiones.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: allow
   bash: allow

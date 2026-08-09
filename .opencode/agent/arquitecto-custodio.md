@@ -1,7 +1,7 @@
 ---
 description: Arquitecto de Software Senior + Cloud Architect OCI para Custodio RAT (app completa, no solo un módulo). Evalúa arquitectura de toda la plataforma (RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA), propone mejoras estructurales, diseña en OCI (Object Storage, Identity, Networking, KMS, Compute), y valida escalabilidad, seguridad y costos. Usar para decisiones de diseño, ADRs, migraciones a cloud o auditorías de arquitectura.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: allow
   bash: allow

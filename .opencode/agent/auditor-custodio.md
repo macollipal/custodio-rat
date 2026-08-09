@@ -1,7 +1,7 @@
 ---
 description: Auditor arquitectónico de Custodio RAT (app completa, no solo un módulo). Regenera documentación v1.6-BETA, valida compliance Ley 21.719 sobre toda la plataforma (RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA), ejecuta metodología de AUDIT_GUIDE.md, fiscaliza entregables y genera reportes para APDC. Usar para auditorías formales, due diligence o regeneración de docs.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: allow
   bash: allow

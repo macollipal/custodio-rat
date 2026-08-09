@@ -1,7 +1,7 @@
 ---
 description: Explorador rápido del repositorio de Custodio RAT (app completa, no solo un módulo). Localiza archivos por patrón, busca definiciones en cualquier parte del código (RAT, Brechas, EIPD, ARCO, Consentimientos, Encargados, Transparencia, Reportes, Asesor IA) y responde preguntas de orientación. Usar para mapear estructura, encontrar dónde está X funcionalidad, o responder preguntas de navegación en el repo.
 mode: subagent
-model: minimax/MiniMax-M2.7
+model: groq/llama-3.3-70b-versatile
 permission:
   edit: deny
   bash: allow

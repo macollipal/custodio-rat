@@ -18,7 +18,7 @@ from app.services.rat_service import (
     get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
 from app.services.rat_crud import clone_rat
-from app.services.export_service import exportar_csv, exportar_pdf
+from app.services.export_service import exportar_csv, exportar_pdf, exportar_pdf_apdp
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
 from app.services.user_company_service import get_empresas_usuario
@@ -585,6 +585,25 @@ async def exportar_a_pdf(
     company = get_company(db, company_id)
     contenido = exportar_pdf(rats, company)
     filename = _safe_filename(f"RAT_{company.nombre}_{company.rut}.pdf")
+    return Response(
+        content=contenido,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export/apdp", summary="Exportar Reporte APDP (Art. 16 Ley 21.719)")
+async def exportar_reporte_apdp(
+    company_id: int = Query(..., description="ID de la empresa"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+) -> Response:
+    """Genera el informe formal para la Agencia de Protección de Datos Personales."""
+    check_company_access(current_user, company_id, db)
+    rats = get_rats(db, company_id)
+    company = get_company(db, company_id)
+    contenido = exportar_pdf_apdp(rats, company)
+    filename = _safe_filename(f"APDP_{company.nombre}_{company.rut}.pdf")
     return Response(
         content=contenido,
         media_type="application/pdf",
