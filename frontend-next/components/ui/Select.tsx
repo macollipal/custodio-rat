@@ -29,6 +29,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
     id,
     className = '',
     required,
+    style: externalStyle,
     ...rest
   },
   ref,
@@ -62,6 +63,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
         style={{
           backgroundColor: '#FFFFFF',
           color: '#111827',
+          ...externalStyle,
         }}
         {...rest}
       >

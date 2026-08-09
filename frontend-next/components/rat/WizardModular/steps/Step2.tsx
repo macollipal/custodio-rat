@@ -183,7 +183,7 @@ export function Step2({
       <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
         <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Clasificación y NNA</h4>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
+          <div className="space-y-2">
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
               Tratamiento de NNA
             </label>
@@ -195,6 +195,12 @@ export function Step2({
             >
               {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
+            {data.datos_nna && data.datos_nna !== 'ninguno' && (
+              <AlertBanner
+                message="Datos de menores de edad: la base legal debe ser Consentimiento del titular/apoderado, Interés vital u Obligación legal. No se admite Interés legítimo ni Contrato (Art. 16 Ley 21.719). El sistema bloqueará el guardado si la base legal no es compatible."
+                type="warning"
+              />
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
