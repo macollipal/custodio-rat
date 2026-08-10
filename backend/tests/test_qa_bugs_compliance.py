@@ -35,7 +35,7 @@ def _rat_completo(empresa):
         "categoria_titulares": "Empleados",
         "categoria_datos": "Datos de contacto",
         "finalidad": "Gestión de recursos humanos",
-        "base_legal": "Contrato",
+        "base_legal": "Ejecución de contrato",
         "fuente_datos": "Titular",
         "plazo_retencion": "5 años",
         "medidas_seguridad": "Cifrado AES-256",
@@ -124,17 +124,23 @@ class TestM01RespuestaTextoObligatoria:
         )
 
     def test_resolver_con_respuesta_texto_ok(self, client, auth_headers, empresa):
-        """PATCH estado=resuelto con respuesta_texto + metodo_verificacion → 200."""
+        """PATCH estado=resuelto con respuesta_texto + metodo_verificacion previo → 200."""
         ticket = _crear_ticket(client, auth_headers, empresa)
         ticket_id = ticket["id"]
+
+        # Primero registrar metodo_verificacion (el check en la route lee el ticket de BD)
+        client.patch(
+            f"/tkt-solicitud-derecho/{ticket_id}",
+            json={"metodo_verificacion_identidad": "cedula",
+                  "evidencia_identidad": "Foto de cédula de identidad verificada"},
+            headers=auth_headers,
+        )
 
         resp = client.patch(
             f"/tkt-solicitud-derecho/{ticket_id}",
             json={
                 "estado": "resuelto",
                 "respuesta_texto": "Le informamos que sus datos personales son: nombre, email.",
-                "metodo_verificacion_identidad": "cedula",
-                "evidencia_identidad": "Foto de cédula de identidad verificada",
             },
             headers=auth_headers,
         )

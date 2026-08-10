@@ -27,7 +27,7 @@ class AuditLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     entidad: Mapped[str] = mapped_column(String(50), nullable=False)
     entidad_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    accion: Mapped[str] = mapped_column(String(20), nullable=False)
+    accion: Mapped[str] = mapped_column(String(50), nullable=False)
     usuario: Mapped[str] = mapped_column(String(100), nullable=True)
     detalle: Mapped[str] = mapped_column(Text, nullable=True)
     ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
