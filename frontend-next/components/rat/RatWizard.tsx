@@ -31,8 +31,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const { baseLegalOptions, baseLegalDescripciones } = useApp();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<RATWizardData>({});
-  const [tipos, setTipos] = useState<string[]>([]);
-  const [tipoSel, setTipoSel] = useState('');
   const [saving, setSaving] = useState(false);
   const [draftToastShown, setDraftToastShown] = useState(false);
   const [sugerencias, setSugerencias] = useState<import('@/types').RATSugerido[]>([]);
@@ -86,10 +84,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
       const seen = localStorage.getItem('rat_wizard_onboarding_seen');
       if (!seen) setShowOnboarding(true);
     } catch {}
-  }, []);
-
-  useEffect(() => {
-    api.listarTiposProceso().then(setTipos).catch(() => {});
   }, []);
 
   // Inicializa base_legal con la primera opción cuando cargan las opciones del backend
@@ -168,29 +162,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   function cambiarStep(n: number) {
     setStep(n);
     guardarDraft();
-  }
-
-  async function aplicarSugerencias() {
-    if (!tipoSel || tipoSel.startsWith('—')) return;
-    try {
-      const sug = await api.sugerirRat(tipoSel);
-      setData(d => ({
-        ...d,
-        categoria_datos:        sug.categoria_datos as string ?? '',
-        categoria_titulares:    sug.categoria_titulares as string ?? '',
-        finalidad:              sug.finalidad as string ?? '',
-        base_legal:             sug.base_legal as string ?? '',
-        plazo_retencion:        sug.plazo_retencion_sugerido as string ?? '',
-        datos_sensibles:        sug.datos_sensibles as boolean ?? false,
-        tipo_dato_sensible:     sug.tipo_dato_sensible as string ?? '',
-        evaluacion_impacto:     sug.evaluacion_impacto as boolean ?? false,
-        decisiones_automatizadas: sug.decisiones_automatizadas as boolean ?? false,
-        _sug_observacion:       sug.observacion as string ?? '',
-      }));
-      toast.success(`Sugerencias aplicadas para: ${tipoSel}`);
-    } catch {
-      toast.error('No se pudieron obtener sugerencias.');
-    }
   }
 
   async function guardar() {
@@ -369,37 +340,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
                   {validation.completedCount} / {validation.requiredCount} obligatorios completos
                 </p>
-              )}
-            </div>
-
-            {/* Sugerencias */}
-            <div className="rounded-xl p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-              <p className="text-sm font-semibold mb-1" style={{ color: '#111827' }}>🤖 Sugerencias inteligentes</p>
-              <p className="text-xs mb-3" style={{ color: '#6B7280' }}>
-                Selecciona el tipo de proceso y Custodio completará automáticamente los campos más relevantes.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <select
-                  value={tipoSel}
-                  onChange={e => setTipoSel(e.target.value)}
-                  className={inputCls + ' flex-1'}
-                  style={inputStyle}
-                >
-                  <option value="">— Selecciona para obtener sugerencias —</option>
-                  {tipos.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <Button
-                  onClick={aplicarSugerencias}
-                  disabled={!tipoSel || tipoSel.startsWith('—')}
-                  className="flex-shrink-0"
-                >
-                  Aplicar
-                </Button>
-              </div>
-              {data._sug_observacion && (
-                <div className="mt-3">
-                  <AlertBanner message={data._sug_observacion} type="info" />
-                </div>
               )}
             </div>
 
