@@ -220,19 +220,24 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         </div>
       </div>
 
-      <StepIndicator steps={STEPS} current={step} />
-
-      <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+      <div className="bg-white rounded-xl shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="px-6 pt-5 pb-4" style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <StepIndicator steps={STEPS} current={step} className="" />
+        </div>
+        <div className="p-6">
         {/* PASO 1 */}
         {step === 1 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Nombre y tipo de actividad de tratamiento que deseas registrar.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
+                <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Nombre y tipo de actividad de tratamiento que deseas registrar.</p>
+              </div>
               {validation.requiredCount > 0 && (
-                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
-                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
-                </p>
+                <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                  style={{ background: validation.isValid ? '#D1FAE5' : '#FEF2F2', color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount}/{validation.requiredCount}
+                </span>
               )}
             </div>
 
@@ -336,8 +341,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button
+                size="lg"
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -362,13 +368,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {/* PASO 2 */}
         {step === 2 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
+                <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
+              </div>
               {validation.requiredCount > 0 && (
-                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
-                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
-                </p>
+                <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                  style={{ background: validation.isValid ? '#D1FAE5' : '#FEF2F2', color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount}/{validation.requiredCount}
+                </span>
               )}
             </div>
 
@@ -581,15 +590,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(1)}>← Anterior</Button>
               <Button
-                variant="secondary"
                 size="lg"
-                onClick={() => cambiarStep(1)}
-              >
-                ← Anterior
-              </Button>
-              <Button
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -614,13 +618,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {/* PASO 3 */}
         {step === 3 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
+                <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+              </div>
               {validation.requiredCount > 0 && (
-                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
-                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
-                </p>
+                <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                  style={{ background: validation.isValid ? '#D1FAE5' : '#FEF2F2', color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount}/{validation.requiredCount}
+                </span>
               )}
             </div>
 
@@ -796,15 +803,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </details>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(2)}>← Anterior</Button>
               <Button
-                variant="secondary"
                 size="lg"
-                onClick={() => cambiarStep(2)}
-              >
-                ← Anterior
-              </Button>
-              <Button
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de continuar.');
@@ -829,13 +831,16 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {/* PASO 4 */}
         {step === 4 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
+                <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+              </div>
               {validation.requiredCount > 0 && (
-                <p className="text-xs font-medium" style={{ color: validation.isValid ? '#059669' : '#DC2626' }}>
-                  {validation.completedCount} / {validation.requiredCount} obligatorios completos
-                </p>
+                <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                  style={{ background: validation.isValid ? '#D1FAE5' : '#FEF2F2', color: validation.isValid ? '#059669' : '#DC2626' }}>
+                  {validation.completedCount}/{validation.requiredCount}
+                </span>
               )}
             </div>
 
@@ -1006,23 +1011,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </div>
             </details>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => cambiarStep(3)}
-              >
-                ← Anterior
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => cambiarStep(5)}
-              >
-                Compliance avanzado →
-              </Button>
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(3)}>← Anterior</Button>
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(5)}>Compliance →</Button>
               <Button
                 variant="success"
+                size="lg"
                 onClick={() => {
                   if (!stepIsValid) {
                     toast.error('Completa los campos obligatorios antes de guardar.');
@@ -1043,14 +1037,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {/* PASO 5 */}
         {step === 5 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 2 — ProBest)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos operativos del template ProBest para compliance total Ley 21.719. Opcionales pero recomendados para auditorías.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado</h3>
+                <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Campos operativos ProBest para compliance total Ley 21.719. Opcionales pero recomendados para auditorías.</p>
+              </div>
+              <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                Opcional
+              </span>
             </div>
 
-            {/* Tier 2 — Operativos (ProBest template) */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 2 — Operativos (ProBest template)</h4>
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={data.transferencia_nacional ?? false} onChange={e => setData(d => ({ ...d, transferencia_nacional: e.target.checked }))} className="mt-0.5 rounded" />
@@ -1060,39 +1058,40 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentación de cláusulas</label>
-                  <textarea value={data.doc_clausulas ?? ''} onChange={e => setData(d => ({ ...d, doc_clausulas: e.target.value }))} rows={2} placeholder="Politica de privacidad, aviso de privacidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <textarea value={data.doc_clausulas ?? ''} onChange={e => setData(d => ({ ...d, doc_clausulas: e.target.value }))} rows={2} placeholder="Politica de privacidad, aviso de privacidad..." className={inputCls} style={inputStyle} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas organizativas</label>
-                  <textarea value={data.medidas_organizativas ?? ''} onChange={e => setData(d => ({ ...d, medidas_organizativas: e.target.value }))} rows={2} placeholder="Designación RAI, procedimientos de acceso..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <textarea value={data.medidas_organizativas ?? ''} onChange={e => setData(d => ({ ...d, medidas_organizativas: e.target.value }))} rows={2} placeholder="Designación RAI, procedimientos de acceso..." className={inputCls} style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminación</label>
-                  <textarea value={data.mecanismos_eliminacion ?? ''} onChange={e => setData(d => ({ ...d, mecanismos_eliminacion: e.target.value }))} rows={2} placeholder="Borrado seguro NIST 800-88, destrucción física..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <textarea value={data.mecanismos_eliminacion ?? ''} onChange={e => setData(d => ({ ...d, mecanismos_eliminacion: e.target.value }))} rows={2} placeholder="Borrado seguro NIST 800-88, destrucción física..." className={inputCls} style={inputStyle} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Técnica de anonimización</label>
-                  <input value={data.tecnica_anonimizacion ?? ''} onChange={e => setData(d => ({ ...d, tecnica_anonimizacion: e.target.value }))} placeholder="Pseudonimización, k-anonimidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <input value={data.tecnica_anonimizacion ?? ''} onChange={e => setData(d => ({ ...d, tecnica_anonimizacion: e.target.value }))} placeholder="Pseudonimización, k-anonimidad..." className={inputCls} style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Origen del dato (portabilidad)</label>
-                  <input value={data.origen_dato_portabilidad ?? ''} onChange={e => setData(d => ({ ...d, origen_dato_portabilidad: e.target.value }))} placeholder="Directamente del titular, de otro responsable..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <input value={data.origen_dato_portabilidad ?? ''} onChange={e => setData(d => ({ ...d, origen_dato_portabilidad: e.target.value }))} placeholder="Directamente del titular, de otro responsable..." className={inputCls} style={inputStyle} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fecha de levantamiento</label>
-                  <input type="date" value={data.fecha_levantamiento ?? ''} onChange={e => setData(d => ({ ...d, fecha_levantamiento: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <input type="date" value={data.fecha_levantamiento ?? ''} onChange={e => setData(d => ({ ...d, fecha_levantamiento: e.target.value }))} className={inputCls} style={inputStyle} />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
-              <Button variant="secondary" size="lg" onClick={() => cambiarStep(4)}>Anterior</Button>
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => cambiarStep(4)}>← Anterior</Button>
               <Button
                 variant="success"
+                size="lg"
                 onClick={() => {
                   if (!data.nombre_proceso?.trim() || !data.categoria_titulares?.trim() || !data.fuente_datos?.trim()) {
                     toast.error('Faltan campos obligatorios en el Paso 1. Revísalo antes de guardar.');
@@ -1118,12 +1117,14 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 }}
                 disabled={saving}
                 loading={saving}
+                className="flex-1"
               >
-                Guardar en el RAT
+                ✓ Guardar en el RAT
               </Button>
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <ConfirmDialog
