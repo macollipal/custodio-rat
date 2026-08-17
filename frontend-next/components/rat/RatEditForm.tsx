@@ -195,16 +195,18 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         </h2>
       </div>
 
-      <StepIndicator steps={STEPS} current={step} />
-
-      <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+      <div className="bg-white rounded-xl shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="px-6 pt-5 pb-4" style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <StepIndicator steps={STEPS} current={step} className="" />
+        </div>
+        <div className="p-6">
 
         {/* PASO 1 */}
         {step === 1 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Información básica del proceso de tratamiento.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Información básica del proceso de tratamiento.</p>
             </div>
 
             <div>
@@ -251,14 +253,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button
+                size="lg"
                 onClick={() => {
                   if (!form.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
                   if (!form.categoria_titulares?.trim()) { toast.error('Las categorías de titulares son obligatorias.'); return; }
                   if (!form.fuente_datos?.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
                   setStep(2);
                 }}
+                className="flex-1"
               >
                 Siguiente →
               </Button>
@@ -270,8 +274,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
             </div>
 
             <div>
@@ -401,13 +405,15 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button variant="secondary" size="lg" onClick={() => setStep(1)}>← Anterior</Button>
               <Button
+                size="lg"
                 onClick={() => {
                   if (!form.categoria_datos?.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
                   setStep(3);
                 }}
+                className="flex-1"
               >
                 Siguiente →
               </Button>
@@ -419,8 +425,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
             </div>
 
             <div>
@@ -581,9 +587,10 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             )}
 
-            <div className="flex justify-between pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button variant="secondary" size="lg" onClick={() => setStep(2)}>← Anterior</Button>
               <Button
+                size="lg"
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
                   if (form.base_legal === 'Interés legítimo') {
@@ -594,6 +601,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   }
                   setStep(4);
                 }}
+                className="flex-1"
               >
                 Siguiente →
               </Button>
@@ -605,8 +613,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
             </div>
 
             {/* Iter 10 fields — storage system and volume */}
@@ -732,9 +740,10 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button variant="secondary" size="lg" onClick={() => setStep(3)}>← Anterior</Button>
               <Button
+                size="lg"
                 onClick={() => {
                   const err = validatePaso4(form);
                   if (err) {
@@ -743,7 +752,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                   }
                   setStep(5);
                 }}
-                style={{ background: '#7C3AED', color: '#FFFFFF' }}
+                className="flex-1"
               >
                 Siguiente →
               </Button>
@@ -755,14 +764,11 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos de cierre de gaps críticos y operativos - ProBest template.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Campos de cierre de gaps críticos y operativos. Opcionales pero recomendados para auditorías.</p>
             </div>
 
-            {/* Tier 2 — Operativos (ProBest template) */}
             <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
-              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Tier 2 — Operativos (ProBest template)</h4>
-
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.transferencia_nacional} onChange={e => set('transferencia_nacional', e.target.checked)} className="mt-0.5 rounded" />
                 <span className="text-sm font-medium" style={{ color: '#374151' }}>Existe transferencia de datos a nivel nacional (dentro de Chile)</span>
@@ -798,21 +804,24 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
               <Button variant="secondary" size="lg" onClick={() => setStep(4)}>← Anterior</Button>
               <Button
                 variant="success"
+                size="lg"
                 onClick={() => {
                   if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
                   handleSave();
                 }}
                 loading={saving}
+                className="flex-1"
               >
                 ✓ Guardar cambios
               </Button>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
