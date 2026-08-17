@@ -33,10 +33,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
   const [data, setData] = useState<RATWizardData>({});
   const [saving, setSaving] = useState(false);
   const [draftToastShown, setDraftToastShown] = useState(false);
-  const [sugerencias, setSugerencias] = useState<import('@/types').RATSugerido[]>([]);
-  const [mostrarPaso0, setMostrarPaso0] = useState(false);
-  const [rubroNombre, setRubroNombre] = useState('');
-  const [baseLegalSugerida, setBaseLegalSugerida] = useState<{ base_legal: string; descripcion?: string } | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [savedLabel, setSavedLabel] = useState<string>('');
@@ -92,44 +88,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
       setData(d => ({ ...d, base_legal: d.base_legal ?? baseLegalOptions[0] }));
     }
   }, [baseLegalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (company.rubro_id) {
-      api.sugerenciasPorRubro(company.rubro_id).then(sugs => {
-        setSugerencias(sugs);
-        setMostrarPaso0(sugs.length > 0);
-      }).catch(() => {});
-      api.listarRubros().then(rubros => {
-        const r = rubros.find(rub => rub.id === company.rubro_id);
-        if (r) setRubroNombre(r.nombre);
-      }).catch(() => {});
-      api.sugerenciaBaseLegalPorRubro(company.rubro_id).then(s => {
-        setBaseLegalSugerida({ base_legal: s.base_legal, descripcion: s.descripcion });
-      }).catch(() => setBaseLegalSugerida(null));
-    }
-  }, [company.rubro_id]);
-
-  function usarSugerencia(sug: import('@/types').RATSugerido) {
-    setData(d => ({
-      ...d,
-      nombre_proceso: sug.nombre_proceso,
-      categoria_datos: sug.categoria_datos,
-      categoria_titulares: sug.categoria_titulares || '',
-      finalidad: sug.finalidad || '',
-      base_legal: sug.base_legal || 'Consentimiento del titular',
-      plazo_retencion: sug.plazo_retencion || '',
-      datos_sensibles: sug.datos_sensibles,
-      evaluacion_impacto: sug.evaluacion_impacto,
-      decisiones_automatizadas: sug.decisiones_automatizadas,
-    }));
-    setMostrarPaso0(false);
-    setStep(1);
-  }
-
-  function crearPersonalizado() {
-    setMostrarPaso0(false);
-    setStep(1);
-  }
 
   function guardarDraft(manual = false) {
     const now = Date.now();
@@ -243,60 +201,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
   return (
     <div className="overflow-y-auto pb-4 -mx-4 px-4 min-h-0">
-      {/* PASO 0: Sugerencias por rubro */}
-      {mostrarPaso0 && step === 0 && (
-        <div className="space-y-6">
-          <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)' }}>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Rat sugeridos para tu rubro</p>
-            <h3 className="text-lg font-bold text-white">{rubroNombre || '...'}</h3>
-            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Selecciona un proceso predefinido o crea uno personalizado</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sugerencias.map(sug => (
-              <div
-                key={sug.id}
-                className="rounded-xl p-4 cursor-pointer transition hover:shadow-md"
-                style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}
-                onClick={() => usarSugerencia(sug)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm" style={{ color: '#111827' }}>{sug.nombre_proceso}</p>
-                    <p className="text-xs mt-1" style={{ color: '#6B7280' }}>{sug.categoria_datos}</p>
-                    {sug.categoria_titulares && (
-                      <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Titulares: {sug.categoria_titulares}</p>
-                    )}
-                    <div className="flex gap-1 flex-wrap mt-2">
-                      {sug.datos_sensibles && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>⚠️ Datos sensibles</span>}
-                      {sug.evaluacion_impacto && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📋 EIPD</span>}
-                      {sug.decisiones_automatizadas && <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Dec. auto</span>}
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="ml-3 flex-shrink-0"
-                    onClick={e => { e.stopPropagation(); usarSugerencia(sug); }}
-                  >
-                    Usar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={crearPersonalizado}
-            >
-              + Crear proceso personalizado
-            </Button>
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-3">
           <Button
@@ -769,38 +673,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               >
                 {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
-              {baseLegalSugerida && rubroNombre && data.base_legal !== baseLegalSugerida.base_legal && (
-                <div
-                  className="mt-2 rounded-lg p-3 flex items-start gap-3"
-                  style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
-                >
-                  <span className="text-base flex-shrink-0">💡</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold" style={{ color: '#1E40AF' }}>
-                      Sugerencia para tu rubro &laquo;{rubroNombre}&raquo;
-                    </p>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: '#111827' }}>
-                      {baseLegalSugerida.base_legal}
-                    </p>
-                    {baseLegalSugerida.descripcion && (
-                      <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-                        {baseLegalSugerida.descripcion}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="flex-shrink-0"
-                    onClick={() => {
-                      setData(d => ({ ...d, base_legal: baseLegalSugerida.base_legal }));
-                      toast.success(`Base legal aplicada: ${baseLegalSugerida.base_legal}`);
-                    }}
-                  >
-                    Aplicar
-                  </Button>
-                </div>
-              )}
             </FormField>
 
             <div className="space-y-3">
