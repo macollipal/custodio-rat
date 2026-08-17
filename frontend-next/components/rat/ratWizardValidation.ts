@@ -39,6 +39,9 @@ export function validateStep2(d: RATWizardData): StepValidation {
   if (d.datos_sensibles && !d.tipo_dato_sensible?.trim()) {
     errors.tipo_dato_sensible = 'Selecciona el tipo de dato sensible (Art. 2 letra g).';
   }
+  if (d.datos_anonimizados && d.datos_seudonimizados) {
+    errors.datos_anonimizados = 'Un dato no puede ser simultáneamente anonimizado y seudonimizado (son técnicas mutuamente excluyentes).';
+  }
   const requiredCount = 1 + (d.datos_sensibles ? 1 : 0);
   const completedCount = requiredCount - Object.keys(errors).length;
   const firstErrorField = Object.keys(errors)[0];
@@ -50,7 +53,12 @@ export function validateStep3(d: RATWizardData): StepValidation {
   const errors: FieldErrors = {};
   if (!d.finalidad?.trim()) errors.finalidad = 'La finalidad es obligatoria.';
   if (!d.base_legal?.trim()) errors.base_legal = 'La base legal es obligatoria.';
-  const requiredCount = 2;
+  if (d.base_legal === 'Interés legítimo') {
+    if (!d._testIL?.paso1?.trim() || !d._testIL?.paso2?.trim() || !d._testIL?.paso3?.trim()) {
+      errors._testIL = 'El test de interés legítimo es obligatorio (Art. 16). Complete los 3 pasos documentados.';
+    }
+  }
+  const requiredCount = 2 + (d.base_legal === 'Interés legítimo' ? 1 : 0);
   const completedCount = requiredCount - Object.keys(errors).length;
   const firstErrorField = Object.keys(errors)[0];
   return { errors, isValid: Object.keys(errors).length === 0, requiredCount, completedCount, firstErrorField };
@@ -76,6 +84,7 @@ export function validateStep4(d: RATWizardData): StepValidation {
 export function useStepValidation(step: number, data: RATWizardData): StepValidation {
   return useMemo(() => {
     switch (step) {
+      case 0: return { errors: {}, isValid: true, requiredCount: 0, completedCount: 0, firstErrorField: undefined };
       case 1: return validateStep1(data);
       case 2: return validateStep2(data);
       case 3: return validateStep3(data);

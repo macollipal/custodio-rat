@@ -55,7 +55,7 @@ export interface Step3Props extends StepProps {
   onAplicarSugerencias: () => Promise<void>;
 }
 
-export const DRAFT_KEY = (companyId: number): string => `custodio_rat_draft_${companyId}`;
+export const DRAFT_KEY = (companyId: number): string => `custodio_wizard_draft_${companyId}`;
 
 export const DESCRIPCIONES_BASE: Record<string, string> = {
   'Consentimiento del titular':

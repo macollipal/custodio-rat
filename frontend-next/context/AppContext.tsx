@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '@/types';
-import { STORAGE_KEYS, API_BASE } from '@/lib/constants';
+import { STORAGE_KEYS, API_BASE, DRAFT_KEY_PREFIX } from '@/lib/constants';
 import { listarBaseLegalOptions } from '@/lib/api';
 
 interface AppState {
@@ -118,8 +118,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCompany = useCallback((c: Company) => {
+    setCompanyState(prev => {
+      if (prev?.id && prev.id !== c.id) {
+        localStorage.removeItem(`${DRAFT_KEY_PREFIX}${prev.id}`);
+      }
+      return c;
+    });
     localStorage.setItem(STORAGE_KEYS.COMPANY, JSON.stringify(c));
-    setCompanyState(c);
     setRatsState([]);
     setDashboardStatsState(null);
   }, []);

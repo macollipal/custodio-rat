@@ -92,6 +92,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
     api.listarTiposProceso().then(setTipos).catch(() => {});
   }, []);
 
+  // Inicializa base_legal con la primera opción cuando cargan las opciones del backend
+  useEffect(() => {
+    if (baseLegalOptions.length > 0) {
+      setData(d => ({ ...d, base_legal: d.base_legal ?? baseLegalOptions[0] }));
+    }
+  }, [baseLegalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (company.rubro_id) {
       api.sugerenciasPorRubro(company.rubro_id).then(sugs => {
@@ -437,7 +444,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   id="rw-fuente_datos"
                   type="text"
                   value={data.fuente_datos ?? ''}
-                  onChange={e => { setData(d => { const n = { ...d, fuente_datos: e.target.value }; guardarDraft(); return n; }); }}
+                  onChange={e => { setData(d => ({ ...d, fuente_datos: e.target.value })); guardarDraft(); }}
                   placeholder="Ej: Directamente del titular, base interna, terceros"
                   aria-required="true"
                   aria-invalid={!!fieldErrors.fuente_datos}
@@ -450,7 +457,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               </FormField>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                  Destinatarios / Encargados del tratamiento
+                  Destinatarios / Encargados del tratamiento <span className="font-normal text-xs" style={{ color: '#6B7280' }}>(recomendado)</span>
                 </label>
                 <input
                   type="text"
@@ -488,6 +495,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   </span>
                 </label>
               </div>
+              {data.nombre_encargado && !data.tiene_contrato_encargado && (
+                <AlertBanner
+                  message="⚠️ Encargado registrado sin contrato. El Art. 14 quáter Ley 21.719 exige contrato escrito con todo encargado externo."
+                  type="warning"
+                />
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
@@ -553,7 +566,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       ...d,
                       datos_sensibles: e.target.checked,
                       tipo_dato_sensible: e.target.checked ? d.tipo_dato_sensible : '',
-                      evaluacion_impacto: e.target.checked ? true : d.evaluacion_impacto,
+                      evaluacion_impacto: e.target.checked ? true : (d.transferencia_internacional ? d.evaluacion_impacto : false),
                     }))}
                     className="mt-0.5 rounded"
                   />
@@ -592,6 +605,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                         <input type="email" value={data.consentimiento_email ?? ''} onChange={e => setData(d => ({ ...d, consentimiento_email: e.target.value }))} placeholder="Email del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
                       </div>
                       <textarea value={data.consentimiento_texto ?? ''} onChange={e => setData(d => ({ ...d, consentimiento_texto: e.target.value }))} rows={2} placeholder="Texto del consentimiento expreso..." className="w-full mt-2 px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
+                      {(!data.consentimiento_nombre || !data.consentimiento_email) && (
+                        <p className="text-xs mt-1" style={{ color: '#92400E' }}>Si no completas nombre y email, el consentimiento no se registrará automáticamente al guardar.</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -672,6 +688,11 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   >
                     {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
+                  {data.datos_nna && data.datos_nna !== 'ninguno' && (
+                    <p className="text-xs mt-1" style={{ color: '#92400E' }}>
+                      ⚠️ NNA: la base legal debe ser Consentimiento del representante legal o Interés vital. Verifique en el Paso 3 (Art. 16).
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
@@ -707,15 +728,23 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   </select>
                 </div>
               </div>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={data.datos_anonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_anonimizados: e.target.checked }))} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={data.datos_seudonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_seudonimizados: e.target.checked }))} className="mt-0.5 rounded" />
-                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
-                </label>
+              <div className="space-y-2">
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input id="rw-datos_anonimizados" type="checkbox" checked={data.datos_anonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_anonimizados: e.target.checked }))} className="mt-0.5 rounded" aria-invalid={!!fieldErrors.datos_anonimizados} />
+                    <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={data.datos_seudonimizados ?? false} onChange={e => setData(d => ({ ...d, datos_seudonimizados: e.target.checked }))} className="mt-0.5 rounded" />
+                    <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                  </label>
+                </div>
+                {fieldErrors.datos_anonimizados && (
+                  <p role="alert" className="text-xs flex items-center gap-1" style={{ color: '#DC2626' }}>
+                    <span aria-hidden="true">⚠</span>
+                    {fieldErrors.datos_anonimizados}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -855,7 +884,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               {data.base_legal && data.base_legal !== 'Otra' && (
                 <div className="mt-4 p-4 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
                   <label className="block text-sm font-semibold mb-2" style={{ color: '#374151' }}>
-                    📄 Documento que respalda la base legal *
+                    📄 Documento que respalda la base legal <span className="font-normal text-xs" style={{ color: '#6B7280' }}>(recomendado)</span>
                   </label>
                   <p className="text-xs mb-3" style={{ color: '#6B7280' }}>
                     Adjunte el documento correspondiente: consentimiento firmado, contrato, norma legal, EIPD, etc. (PDF, imagen o Word, máx. 10MB).
@@ -924,7 +953,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     <textarea
                       rows={2}
                       value={data._testIL?.paso1 ?? ''}
-                      onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL!, paso1: e.target.value } }))}
+                      onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL, paso1: e.target.value } }))}
                       placeholder="Describa el interés legítimo: marketing directo, seguridad, prevención de fraude..."
                       className={inputCls}
                       style={inputStyle}
@@ -985,7 +1014,6 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     }
                     return;
                   }
-                  if (!data.base_legal) setData(d => ({ ...d, base_legal: baseLegalOptions[0] }));
                   cambiarStep(4);
                 }}
                 disabled={!stepIsValid}
@@ -1031,8 +1059,9 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 </label>
                 <input
                   type="number"
+                  min={1}
                   value={data.volumen_titulares_estimado ?? ''}
-                  onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? parseInt(e.target.value) : undefined }))}
+                  onChange={e => setData(d => ({ ...d, volumen_titulares_estimado: e.target.value ? Math.max(1, parseInt(e.target.value)) : undefined }))}
                   placeholder="Ej: 50000"
                   className={inputCls}
                   style={inputStyle}
@@ -1060,7 +1089,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 </FormField>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                    Medidas de seguridad implementadas
+                    Medidas de seguridad implementadas <span className="font-normal text-xs" style={{ color: '#6B7280' }}>(recomendado)</span>
                   </label>
                   <textarea
                     value={data.medidas_seguridad ?? ''}
@@ -1091,7 +1120,10 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                     <input
                       type="checkbox"
                       checked={data.transferencia_internacional ?? false}
-                      onChange={e => setData(d => ({ ...d, transferencia_internacional: e.target.checked, pais_destino: e.target.checked ? d.pais_destino : undefined, evaluacion_impacto: e.target.checked ? true : (d.datos_sensibles ? true : d.evaluacion_impacto) }))}
+                      onChange={e => {
+                        if (e.target.checked) toast.info('Transferencia internacional activa: se marcó EIPD como requerida (Art. 15 bis).');
+                        setData(d => ({ ...d, transferencia_internacional: e.target.checked, pais_destino: e.target.checked ? d.pais_destino : undefined, evaluacion_impacto: e.target.checked ? true : (d.datos_sensibles ? true : d.evaluacion_impacto) }));
+                      }}
                       className="mt-0.5 rounded"
                     />
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>
@@ -1182,6 +1214,13 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                 ← Anterior
               </Button>
               <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => cambiarStep(5)}
+              >
+                Compliance avanzado →
+              </Button>
+              <Button
                 variant="success"
                 onClick={() => {
                   if (!stepIsValid) {
@@ -1204,8 +1243,8 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 1 + Tier 2)</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Campos críticos y operativos del template ProBest para compliance total Ley 21.719.</p>
+              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado (Tier 2 — ProBest)</h3>
+              <p className="text-sm" style={{ color: '#6B7280' }}>Campos operativos del template ProBest para compliance total Ley 21.719. Opcionales pero recomendados para auditorías.</p>
             </div>
 
             {/* Tier 2 — Operativos (ProBest template) */}
@@ -1219,12 +1258,12 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentacion de clausulas</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentación de cláusulas</label>
                   <textarea value={data.doc_clausulas ?? ''} onChange={e => setData(d => ({ ...d, doc_clausulas: e.target.value }))} rows={2} placeholder="Politica de privacidad, aviso de privacidad..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas organizativas</label>
-                  <textarea value={data.medidas_organizativas ?? ''} onChange={e => setData(d => ({ ...d, medidas_organizativas: e.target.value }))} rows={2} placeholder="Designacion RAI, procedimientos de acceso..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
+                  <textarea value={data.medidas_organizativas ?? ''} onChange={e => setData(d => ({ ...d, medidas_organizativas: e.target.value }))} rows={2} placeholder="Designación RAI, procedimientos de acceso..." className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1254,8 +1293,23 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
               <Button
                 variant="success"
                 onClick={() => {
+                  if (!data.nombre_proceso?.trim() || !data.categoria_titulares?.trim() || !data.fuente_datos?.trim()) {
+                    toast.error('Faltan campos obligatorios en el Paso 1. Revísalo antes de guardar.');
+                    setStep(1);
+                    return;
+                  }
+                  if (!data.categoria_datos?.trim()) {
+                    toast.error('Falta la categoría de datos (Paso 2).');
+                    setStep(2);
+                    return;
+                  }
+                  if (!data.finalidad?.trim() || !data.base_legal?.trim()) {
+                    toast.error('Faltan campos obligatorios en el Paso 3 (finalidad o base legal).');
+                    setStep(3);
+                    return;
+                  }
                   if (!data.plazo_retencion?.trim()) {
-                    toast.error('Vuelve al paso 4 y completa el plazo de retención.');
+                    toast.error('Falta el plazo de retención (Paso 4).');
                     setStep(4);
                     return;
                   }
@@ -1303,7 +1357,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
           onCancel();
         }}
         title="¿Salir del wizard?"
-        message="Los datos no guardados se perderán.\nSi tienes un borrador, no se restaurará al volver a entrar."
+        message="Al salir se eliminará el borrador guardado. Los datos ingresados no podrán recuperarse."
         confirmText="Sí, salir"
         cancelText="Continuar aquí"
         variant="danger"
