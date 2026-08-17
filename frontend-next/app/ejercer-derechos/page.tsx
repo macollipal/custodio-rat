@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   getEmpresasPublicas,
@@ -49,6 +49,14 @@ const INITIAL: FormState = {
 };
 
 export default function EjercerDerechosPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#6B7280' }}>Cargando…</span></div>}>
+      <EjercerDerechosInner />
+    </Suspense>
+  );
+}
+
+function EjercerDerechosInner() {
   const searchParams = useSearchParams();
   const [empresas, setEmpresas] = useState<EmpresaPublica[]>([]);
   const [form, setForm] = useState<FormState>(INITIAL);
