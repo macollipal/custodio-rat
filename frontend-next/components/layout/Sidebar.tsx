@@ -73,7 +73,7 @@ interface SidebarProps {
 export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
   const { user, company, setCompany, logout, darkMode, toggleDarkMode } = useApp();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [ratInfoOpen, setRatInfoOpen] = useState(false);
+
 
   const inicial = user?.full_name?.[0]?.toUpperCase() ?? 'U';
   const nombre = user?.full_name ?? 'Usuario';
@@ -181,71 +181,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
         </nav>
       </div>
 
-      {/* Info RAT */}
-      <div className="px-4 pb-2">
-        <div className="relative">
-          <button
-            onClick={() => setRatInfoOpen(v => !v)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-            style={{ color: '#9CA3AF', background: ratInfoOpen ? '#1F2937' : 'transparent' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1F2937'; }}
-            onMouseLeave={e => { if (!ratInfoOpen) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            aria-expanded={ratInfoOpen}
-            aria-label="¿Qué es un RAT? — información sobre el registro de actividades de tratamiento"
-          >
-            <span aria-hidden="true" className="text-sm">❓</span> ¿Qué es un RAT?
-          </button>
-          {ratInfoOpen && (
-            <div
-              className="absolute left-0 top-full mt-1 sm:relative sm:left-0 sm:top-auto sm:mt-0 bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
-              style={{ border: '1px solid #E5E7EB', width: 320, color: '#374151' }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: '#E5E7EB', color: '#111827', background: '#F9FAFB' }}>
-                <span aria-hidden="true" style={{ fontSize: 14 }}>📋</span> ¿Qué es un RAT?
-              </div>
-              <div className="p-4 text-xs leading-relaxed" style={{ color: '#6B7280', maxHeight: 360, overflowY: 'auto' }}>
-                <p className="mb-2">
-                  <strong style={{ color: '#111827' }}>Registro de Actividades de Tratamiento</strong> — Art. 16 Ley 21.719.
-                  Todo responsable que trata datos personales debe mantener un registro que documente:
-                </p>
-                <ul className="list-disc list-inside mb-3 space-y-1">
-                  <li>Qué datos se tratan</li>
-                  <li>Para qué finalidad</li>
-                  <li>Con qué base legal</li>
-                  <li>Cuánto tiempo se conservan</li>
-                  <li>Si se transfieren internacionalmente</li>
-                </ul>
-                <p className="mb-2" style={{ color: '#111827' }}>
-                  <strong>7 campos obligatorios mínimo:</strong> nombre_proceso, categoria_datos, categoria_titulares, finalidad, base_legal, fuente_datos, plazo_retencion.
-                </p>
-                <p className="mb-2" style={{ color: '#111827' }}>
-                  <strong>Ejemplos de procesos RAT:</strong>
-                </p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>"Gestión de nómina" → obligación legal</li>
-                  <li>"Marketing por email" → consentimiento</li>
-                  <li>"Control de acceso biométrico" → obligación legal + EIPD</li>
-                  <li>"Videovigilancia" → interés legítimo</li>
-                  <li>"Facturación electrónica" → obligación legal</li>
-                </ul>
-                <div className="mt-3 p-2 rounded-lg text-center" style={{ background: '#EFF6FF', color: '#2563EB' }}>
-                  Cuando termines tu primer RAT, puedes duplicarlo como plantilla para crear más rápidamente.
-                </div>
-              </div>
-              <div className="px-4 py-2 border-t text-center" style={{ borderColor: '#E5E7EB' }}>
-                <button
-                  onClick={() => setRatInfoOpen(false)}
-                  className="text-xs px-3 py-1 rounded-lg hover:bg-gray-100 transition"
-                  style={{ color: '#6B7280' }}
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+
 {/* Usuario + logout */}
       <div className="border-t border-gray-700/50 p-4 flex-shrink-0">
         <div className="flex items-center gap-2.5 mb-3">
