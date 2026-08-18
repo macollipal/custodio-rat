@@ -104,7 +104,7 @@ def list_corpus_files(db_or_path: Optional[Union[Session, str]] = None, corpus_p
     return files
 
 
-async def index_corpus(
+def index_corpus(
     db: Session,
     paths: Optional[List[str]] = None,
     force: bool = False,
