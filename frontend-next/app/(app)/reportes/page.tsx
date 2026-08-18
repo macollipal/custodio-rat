@@ -589,7 +589,7 @@ export default function ReportesPage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title="Detalle RAT"
-        size="lg"
+        size="xl"
         extraAction={
           <button
             onClick={async () => {

@@ -94,7 +94,7 @@ export default function RatDetailModal({
       open={!!rat}
       onClose={handleClose}
       title="RAT"
-      size="lg"
+      size="xl"
     >
       <div>
         <div
