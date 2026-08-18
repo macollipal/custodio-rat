@@ -184,7 +184,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
   if (!open) return null;
 
   return (
-    <Drawer open={open} onClose={onClose} title="" size="lg">
+    <Drawer open={open} onClose={onClose} title="" size="xl">
       <form onSubmit={handleSubmit} className="space-y-0">
         <div
           className="rounded-xl p-4 flex items-center gap-3 mb-5"

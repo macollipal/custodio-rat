@@ -223,7 +223,7 @@ export default function EncargadosContratoPage() {
         </div>
       )}
 
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Contrato de Encargado" size="md">
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Contrato de Encargado" size="xl">
         <div className="space-y-4">
           <div className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, #1E40AF, #3730A3)' }}>
             <p className="font-semibold text-white text-sm">{editItem ? 'Editar Contrato' : 'Nuevo Contrato de Encargado'}</p>

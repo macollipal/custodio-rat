@@ -327,7 +327,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
   const sla = getSlaColor(ticket.dias_restantes);
 
   return (
-    <Drawer open={open} onClose={onClose} title="Solicitud de Derecho" size="lg">
+    <Drawer open={open} onClose={onClose} title="Solicitud de Derecho" size="xl">
       <div className="space-y-4">
         <div
           className="rounded-2xl p-5"
