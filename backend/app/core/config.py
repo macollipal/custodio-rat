@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = ""
 
     GROQ_API_KEY: str = ""
-    GROQ_CHAT_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_CHAT_MODEL: str = "llama3-70b-8192"
 
     COHERE_API_KEY: str = ""
 
