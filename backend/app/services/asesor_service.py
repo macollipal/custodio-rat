@@ -56,6 +56,10 @@ def _call_llm_groq(messages: list) -> str:
         "https://api.groq.com/openai/v1/chat/completions",
         json=payload, headers=headers, timeout=60,
     )
+    if resp.status_code == 429:
+        retry_after = resp.headers.get("retry-after") or resp.headers.get("x-ratelimit-reset-requests")
+        espera = f" Intenta en {retry_after} segundos." if retry_after else " Intenta en unos segundos."
+        raise RuntimeError(f"Límite de consultas alcanzado en el servicio de IA.{espera}")
     resp.raise_for_status()
     data = resp.json()
 

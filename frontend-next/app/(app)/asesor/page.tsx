@@ -71,13 +71,17 @@ export default function AsesorPage() {
       };
       setMessages((m) => [...m, assistantMsg]);
     } catch (e: any) {
+      const msg = e?.message || 'desconocido';
+      const isRateLimit = msg.includes('Límite de consultas') || msg.includes('429');
       const errMsg: ChatMessage = {
         role: 'assistant',
-        content: `Lo siento, ocurrió un error: ${e?.message || 'desconocido'}. Intenta de nuevo o contacta al administrador.`,
+        content: isRateLimit
+          ? msg
+          : `Lo siento, ocurrió un error: ${msg}. Intenta de nuevo o contacta al administrador.`,
         ts: Date.now(),
       };
       setMessages((m) => [...m, errMsg]);
-      toast.error('Error al consultar el Asesor');
+      toast.error(isRateLimit ? msg : 'Error al consultar el Asesor');
     } finally {
       setLoading(false);
     }
