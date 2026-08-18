@@ -70,11 +70,15 @@ def _call_llm_groq(messages: list) -> str:
         )
 
 
+_MAX_CHUNK_CHARS = 600
+
+
 def _build_prompt(question: str, chunks: List[dict]) -> list:
     context_parts = []
     for i, c in enumerate(chunks, start=1):
         title = c.get("title") or c["source"]
-        context_parts.append(f"[{i}] Fuente: {c['source']} — {title} (score: {c['score']})\n{c['content']}")
+        content = (c.get("content") or "")[:_MAX_CHUNK_CHARS]
+        context_parts.append(f"[{i}] Fuente: {c['source']} — {title} (score: {c['score']})\n{content}")
     context = "\n\n---\n\n".join(context_parts)
     user = (
         f"Pregunta: {question}\n\n"
