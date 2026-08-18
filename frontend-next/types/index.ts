@@ -8,6 +8,8 @@ export interface User {
   rol_global: RolGlobal;
   empresa_nombre?: string;
   empresa_id?: number;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export interface Company {
