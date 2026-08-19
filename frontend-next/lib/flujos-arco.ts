@@ -220,8 +220,13 @@ export function aplicarColores(diagrama: string, tipo: TipoArco, estadoActual: s
     resultado += `\n    class Z finalNode`;
   }
 
-  if (resultado.includes('{"<b>')) {
-    resultado += `\n    class C decisionNode`;
+  const decisionPattern = /\b([A-Z]+)\{/g;
+  let dm: RegExpExecArray | null;
+  while ((dm = decisionPattern.exec(diagrama)) !== null) {
+    const nodeId = dm[1];
+    if (nodoIdsEnDiagrama.has(nodeId) && nodeId !== nodoActual) {
+      resultado += `\n    class ${nodeId} decisionNode`;
+    }
   }
 
   resultado = resultado.replace('flowchart TD',

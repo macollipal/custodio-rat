@@ -196,16 +196,16 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
 
         {subPaso && <SubPasoPanel subPaso={subPaso} tipo={tipo} estadoActual={estadoActual} />}
 
-        <div className="flex-1 overflow-auto px-6 py-4 bg-gray-50">
+        <div className="flex-1 overflow-auto px-6 py-4 bg-gray-50 relative">
           {loading && (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/95 z-10">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
               <p className="text-sm text-gray-500">Renderizando flujo...</p>
             </div>
           )}
 
           {error && (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/95 z-10">
               <AlertCircle className="w-8 h-8 text-red-500 mb-3" />
               <p className="text-sm text-red-600 text-center px-4">{error}</p>
               <Button variant="primary" size="sm" onClick={renderDiagrama} className="mt-3">
@@ -214,12 +214,10 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
             </div>
           )}
 
-          {!loading && !error && (
-            <div
-              ref={svgContainerRef}
-              className="flex justify-center"
-            />
-          )}
+          <div
+            ref={svgContainerRef}
+            className="flex justify-center min-h-[200px]"
+          />
         </div>
 
         <div className="px-6 py-3 border-t border-gray-200 bg-white shrink-0">
