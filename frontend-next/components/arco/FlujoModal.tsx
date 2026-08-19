@@ -107,21 +107,24 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
           startOnLoad: false,
           theme: 'base',
           themeVariables: {
-            primaryColor: '#3b82f6',
-            primaryTextColor: '#fff',
-            primaryBorderColor: '#1d4ed8',
-            lineColor: '#6b7280',
-            secondaryColor: '#f3f4f6',
-            tertiaryColor: '#f9fafb',
-            fontFamily: 'inherit'
+            primaryColor: '#EFF6FF',
+            primaryTextColor: '#1E3A5F',
+            primaryBorderColor: '#93C5FD',
+            lineColor: '#94A3B8',
+            secondaryColor: '#F8FAFC',
+            tertiaryColor: '#F1F5F9',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            edgeLabelBackground: '#FFFFFF',
           },
           flowchart: {
             htmlLabels: true,
             curve: 'basis',
-            nodeSpacing: 20,
-            rankSpacing: 30
+            nodeSpacing: 40,
+            rankSpacing: 50,
+            padding: 20,
           },
-          securityLevel: 'loose'
+          securityLevel: 'loose',
         } as any);
         mermaidRef.current = mermaid;
         setMermaidReady(true);
@@ -220,25 +223,31 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
           />
         </div>
 
-        <div className="px-6 py-3 border-t border-gray-200 bg-white shrink-0">
-          <div className="flex items-center gap-6 text-xs">
+        <div className="px-6 py-3 border-t border-gray-100 bg-white shrink-0">
+          <div className="flex items-center gap-5 flex-wrap text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-yellow-300 rounded-full ring-2 ring-yellow-500"></span>
-              <span className="text-gray-700 font-medium">
-                ★ Actual: <span className="uppercase">{estadoActual.replace('_', ' ')}</span>
-              </span>
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#4F46E5' }}></span>
+              <span className="font-semibold text-indigo-700">★ Actual: {estadoActual.replace(/_/g, ' ')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-gray-800 rounded-full"></span>
-              <span className="text-gray-600">Completado ({nodosAnteriores.length})</span>
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#1E293B' }}></span>
+              <span className="text-gray-500">Completado ({nodosAnteriores.length})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-gray-200 rounded-full"></span>
-              <span className="text-gray-600">Pendiente</span>
+              <span className="inline-block w-3 h-3 rounded border border-dashed" style={{ background: '#F8FAFC', borderColor: '#E2E8F0' }}></span>
+              <span className="text-gray-500">Pendiente</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-3 bg-emerald-500 rounded-full"></span>
-              <span className="text-gray-600">Resuelto</span>
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#10B981' }}></span>
+              <span className="text-gray-500">Resuelto</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#FB7185' }}></span>
+              <span className="text-gray-500">Rechazado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block w-3 h-3 rounded" style={{ background: '#FEF9C3', border: '1.5px solid #F59E0B' }}></span>
+              <span className="text-gray-500">Decisión</span>
             </div>
           </div>
         </div>
