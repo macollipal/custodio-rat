@@ -58,7 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
       { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
       { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
-      { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa'] },
     ],
   },
 ];
