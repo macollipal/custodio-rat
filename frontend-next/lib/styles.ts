@@ -9,6 +9,7 @@ export const inputCls =
 export const inputStyle: React.CSSProperties = {
   borderColor: '#D1D5DB',
   backgroundColor: '#FFFFFF',
+  color: '#111827',
 };
 
 export const selectCls =
