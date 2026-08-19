@@ -13,8 +13,6 @@ import {
   type TktTicket,
   type TktDashboard,
 } from '@/lib/api';
-import { KpiCard } from '@/components/tkt/KpiCard';
-import { SlaBar } from '@/components/tkt/SlaBar';
 import { CreateTicketForm } from '@/components/tkt/CreateTicketForm';
 import { TicketDrawer } from '@/components/tkt/TicketDrawer';
 import { Button } from '@/components/ui/Button';
@@ -271,19 +269,74 @@ export default function TktSolicitudDerechoPage() {
         </div>
       ) : dashboard ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-10 gap-3">
-            <KpiCard label="Total" value={dashboard.total} color="#2563EB" icon="📋" />
-            <KpiCard label="Abiertos" value={dashboard.abiertos} color="#2563EB" icon="📬" />
-            <KpiCard label="En Proceso" value={dashboard.en_proceso} color="#7C3AED" icon="⚙️" />
-            <KpiCard label="Pendientes" value={dashboard.pendientes} color="#D97706" icon="⏳" />
-            <KpiCard label="Bloqueados" value={dashboard.bloqueados ?? 0} color="#DC2626" icon="🔒" />
-            <KpiCard label="Subsanación" value={dashboard.subsanacion ?? 0} color="#D97706" icon="📝" />
-            <KpiCard label="Prórroga" value={dashboard.prorrogas ?? 0} color="#7C3AED" icon="⏰" />
-            <KpiCard label="Resueltos" value={dashboard.resueltos} color="#059669" icon="✅" />
-            <KpiCard label="Rechazados" value={dashboard.rechazados ?? 0} color="#991B1B" icon="🚫" />
-            <KpiCard label="Vencidos" value={dashboard.vencidos} color="#DC2626" icon="⚠️" />
+          {/* Panel de estadísticas unificado */}
+          <div className="bg-white rounded-xl overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
+            {/* Fila superior: total + SLA + alerta vencidos */}
+            <div className="px-5 py-4 flex flex-wrap items-center gap-4 border-b" style={{ borderColor: '#F3F4F6' }}>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold" style={{ color: '#111827' }}>{dashboard.total}</span>
+                <span className="text-sm font-medium" style={{ color: '#6B7280' }}>solicitudes totales</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-1.5 rounded-full" style={{ background: '#E5E7EB' }}>
+                  <div
+                    className="h-1.5 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, dashboard.cumplimiento_sla ?? 0)}%`,
+                      background: (dashboard.cumplimiento_sla ?? 0) >= 80 ? '#059669' : (dashboard.cumplimiento_sla ?? 0) >= 50 ? '#D97706' : '#DC2626',
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-semibold" style={{
+                  color: (dashboard.cumplimiento_sla ?? 0) >= 80 ? '#059669' : (dashboard.cumplimiento_sla ?? 0) >= 50 ? '#D97706' : '#DC2626',
+                }}>
+                  SLA {dashboard.cumplimiento_sla ?? 0}%
+                </span>
+              </div>
+              {dashboard.vencidos > 0 && (
+                <button
+                  onClick={() => setTab('vencido')}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:opacity-80 transition"
+                  style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}
+                >
+                  <span>⚠️</span>
+                  <span className="text-sm font-semibold" style={{ color: '#DC2626' }}>
+                    {dashboard.vencidos} vencida{dashboard.vencidos !== 1 ? 's' : ''}
+                  </span>
+                </button>
+              )}
+            </div>
+            {/* Tira de estados — clickeable para filtrar */}
+            <div className="overflow-x-auto">
+              <div className="flex divide-x divide-gray-100 min-w-max">
+                {([
+                  { key: 'abierto'     as TabType, label: 'Abiertos',    value: dashboard.abiertos,         color: '#2563EB' },
+                  { key: 'en_proceso'  as TabType, label: 'En proceso',  value: dashboard.en_proceso,        color: '#7C3AED' },
+                  { key: 'pendiente'   as TabType, label: 'Pendientes',  value: dashboard.pendientes,        color: '#D97706' },
+                  { key: 'bloqueado'   as TabType, label: 'Bloqueados',  value: dashboard.bloqueados ?? 0,   color: '#DC2626' },
+                  { key: 'subsanacion' as TabType, label: 'Subsanación', value: dashboard.subsanacion ?? 0,  color: '#D97706' },
+                  { key: 'prorroga'    as TabType, label: 'Prórroga',    value: dashboard.prorrogas ?? 0,    color: '#7C3AED' },
+                  { key: 'resuelto'    as TabType, label: 'Resueltos',   value: dashboard.resueltos,         color: '#059669' },
+                  { key: 'rechazado'   as TabType, label: 'Rechazados',  value: dashboard.rechazados ?? 0,   color: '#991B1B' },
+                  { key: 'vencido'     as TabType, label: 'Vencidos',    value: dashboard.vencidos,          color: '#DC2626' },
+                ] as const).map(({ key, label, value, color }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className="flex-1 px-5 py-4 text-center hover:bg-gray-50 transition min-w-[90px]"
+                    style={{ borderBottom: tab === key ? `2px solid ${color}` : '2px solid transparent' }}
+                  >
+                    <p className="text-2xl font-bold" style={{ color: value > 0 ? color : '#E5E7EB' }}>
+                      {value}
+                    </p>
+                    <p className="text-xs mt-0.5 whitespace-nowrap" style={{ color: value > 0 ? '#6B7280' : '#D1D5DB' }}>
+                      {label}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <SlaBar cumplimiento={dashboard.cumplimiento_sla} />
           {dashboard.por_tipo && Object.keys(dashboard.por_tipo).length > 0 && (
             <div className="bg-white rounded-xl p-5" style={{ border: '1px solid #E5E7EB' }}>
               <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#6B7280' }}>

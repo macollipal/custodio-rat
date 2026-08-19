@@ -164,3 +164,4 @@ frontend-next/.last-run.json
 # Local API keys (no subir)
 *.local.key
 .minimax_key.txt
+.vercel
