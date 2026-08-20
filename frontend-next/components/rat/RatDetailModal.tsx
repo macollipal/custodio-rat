@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import Drawer from '@/components/ui/Drawer';
 import RatDetailView from './RatDetailView';
 import RatEditForm from './RatEditForm';
@@ -48,6 +48,19 @@ export default function RatDetailModal({
 }: RatDetailModalProps) {
   const [currentMode, modeDispatch] = useReducer(modeReducer, mode);
   const [auditLogs, auditDispatch] = useReducer(auditReducer, []);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  async function handleExportPdf() {
+    if (!rat || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      await api.descargarRatPdf(rat.id, rat.nombre_proceso);
+    } catch {
+      // silencioso — el navegador mostrará error de descarga si falla
+    } finally {
+      setExportingPdf(false);
+    }
+  }
 
   useEffect(() => { modeDispatch({ type: 'SET_MODE', mode }); }, [mode]);
 
@@ -150,21 +163,39 @@ export default function RatDetailModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => modeDispatch({ type: 'SET_MODE', mode: 'view' })}
-              className={currentMode === 'view' ? activeTabCls : inactiveTabCls}
-            >
-              Ver
-            </button>
-            {puedeEditar && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
               <button
-                onClick={handleSwitchToEdit}
-                className={currentMode === 'edit' ? activeTabCls : inactiveTabCls}
+                onClick={() => modeDispatch({ type: 'SET_MODE', mode: 'view' })}
+                className={currentMode === 'view' ? activeTabCls : inactiveTabCls}
               >
-                Editar
+                Ver
               </button>
-            )}
+              {puedeEditar && (
+                <button
+                  onClick={handleSwitchToEdit}
+                  className={currentMode === 'edit' ? activeTabCls : inactiveTabCls}
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleExportPdf}
+              disabled={exportingPdf}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
+              title="Exportar este RAT como PDF"
+            >
+              {exportingPdf ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Exportando…
+                </>
+              ) : (
+                <>⬇ PDF</>
+              )}
+            </button>
           </div>
         </div>
 

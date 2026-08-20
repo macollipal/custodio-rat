@@ -402,6 +402,12 @@ export async function exportarRatPdf(ratId: number): Promise<Blob> {
   return res.blob();
 }
 
+export async function descargarRatPdf(ratId: number, nombreProceso: string): Promise<void> {
+  const blob = await exportarRatPdf(ratId);
+  const slug = nombreProceso.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
+  downloadBlob(blob, `rat_${ratId}_${slug}.pdf`);
+}
+
 export async function descargarArchivoRAT(ratId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/${ratId}/archivo`);
   if (!res.ok) throw new Error('Error al descargar el documento');
