@@ -61,11 +61,56 @@ const SORT_OPTIONS = [
 
 const SAVED_FILTERS_KEY = 'custodio_saved_filters';
 
-function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
+const ESTADO_COLOR: Record<string, string> = {
+  borrador:    '#94A3B8',
+  completo:    '#3B82F6',
+  en_revision: '#F59E0B',
+  aprobado:    '#10B981',
+};
+
+const RIESGO_COLOR: Record<string, string> = {
+  'Crítico': '#DC2626',
+  'Alto':    '#F59E0B',
+  'Medio':   '#3B82F6',
+  'Bajo':    '#10B981',
+};
+
+function HBarChart({
+  data, title, getColor,
+}: {
+  data: Record<string, number>;
+  title: string;
+  getColor?: (key: string) => string;
+}) {
+  const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+  const total  = sorted.reduce((s, [, v]) => s + v, 0) || 1;
   return (
-    <div className="flex flex-col p-4 rounded-xl" style={{ background: 'white', border: '1px solid #E5E7EB' }}>
-      <span className="text-xs font-medium" style={{ color: '#6B7280' }}>{label}</span>
-      <span className="text-2xl font-bold mt-1" style={{ color }}>{value}</span>
+    <div className="bg-white rounded-xl p-5" style={{ border: '1px solid #E5E7EB' }}>
+      <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: '#6B7280' }}>{title}</p>
+      {sorted.length === 0 ? (
+        <p className="text-xs" style={{ color: '#D1D5DB' }}>Sin datos</p>
+      ) : (
+        <div className="space-y-3">
+          {sorted.map(([key, count]) => {
+            const pct   = Math.round((count / total) * 100);
+            const color = getColor ? getColor(key) : '#2563EB';
+            const label = key.replace(/_/g, ' ');
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium truncate max-w-[60%]" style={{ color: '#374151' }} title={label}>{label}</span>
+                  <span className="text-xs font-bold tabular-nums ml-2 flex-shrink-0" style={{ color }}>
+                    {count} <span className="font-normal" style={{ color: '#9CA3AF' }}>({pct}%)</span>
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full" style={{ background: '#F3F4F6' }}>
+                  <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -368,20 +413,6 @@ export default function ReportesPage() {
     return { porEstado, porBaseLegal, porRiesgo, completitudAvg: rats.length ? Math.round(sumaComp / rats.length) : 0 };
   }
 
-  function renderMiniChart(data: Record<string, number>, color: string) {
-    const max = Math.max(...Object.values(data), 1);
-    return (
-      <div className="flex items-center gap-1">
-        {Object.entries(data).slice(0, 5).map(([k, v]) => (
-          <div key={k} className="flex flex-col items-center gap-0.5" style={{ minWidth: 40 }}>
-            <div className="text-xs font-bold" style={{ color }}>{v}</div>
-            <div className="h-1.5 rounded-full" style={{ width: Math.max(4, (v / max) * 40), background: color, opacity: 0.7 }} />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   const tieneFiltrosActivos = Object.values(filtrosActivos).some(Boolean) || filters.search || filters.estado || filters.base_legal || filters.categoria_titulares;
   const stats = calcStats();
   const totalPages = Math.ceil(total / limit);
@@ -392,9 +423,9 @@ export default function ReportesPage() {
     <div className="p-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Reportes RAT</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Reportes & Analíticas</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
-            {total} proceso(s) encontrado(s) · página {page + 1} de {totalPages || 1}
+            {total} proceso(s) · página {page + 1} de {totalPages || 1}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -434,30 +465,40 @@ export default function ReportesPage() {
         </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
-        <StatCard label="Total" value={total} color="#2563EB" />
-        <StatCard label="Completitud prom." value={`${stats.completitudAvg}%`} color={stats.completitudAvg >= 75 ? '#059669' : stats.completitudAvg >= 50 ? '#D97706' : '#DC2626'} />
-        <StatCard label="Datos sensibles" value={rats.filter(r => r.datos_sensibles).length} color="#D97706" />
-        <StatCard label="Requieren EIPD" value={rats.filter(r => r.evaluacion_impacto).length} color="#2563EB" />
-        <StatCard label="Transf. int." value={rats.filter(r => r.transferencia_internacional).length} color="#7C3AED" />
-        <StatCard label="Dec. automatizadas" value={rats.filter(r => r.decisiones_automatizadas).length} color="#374151" />
+      {/* Panel de analytics */}
+      <div className="bg-white rounded-xl overflow-hidden mb-6" style={{ border: '1px solid #E5E7EB' }}>
+        {/* KPI strip */}
+        <div className="flex flex-wrap divide-x divide-gray-100 border-b" style={{ borderColor: '#F3F4F6' }}>
+          {(() => {
+            const nSensibles = rats.filter(r => r.datos_sensibles).length;
+            const nAprobados = stats.porEstado['aprobado'] ?? 0;
+            const compColor  = stats.completitudAvg >= 75 ? '#059669' : stats.completitudAvg >= 50 ? '#D97706' : '#DC2626';
+            const items = [
+              { label: 'Procesos totales', value: total,                                  color: '#2563EB' },
+              { label: 'Aprobados',         value: `${nAprobados} (${total ? Math.round(nAprobados/total*100) : 0}%)`, color: '#059669' },
+              { label: 'Completitud prom.', value: `${stats.completitudAvg}%`,            color: compColor },
+              { label: 'Datos sensibles',   value: `${nSensibles} (${total ? Math.round(nSensibles/total*100) : 0}%)`, color: '#D97706' },
+              { label: 'Requieren EIPD',    value: rats.filter(r => r.evaluacion_impacto).length, color: '#2563EB' },
+              { label: 'Transfer. int.',    value: rats.filter(r => r.transferencia_internacional).length, color: '#7C3AED' },
+            ];
+            return items.map(({ label, value, color }) => (
+              <div key={label} className="flex-1 px-5 py-4 min-w-[120px]">
+                <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>{label}</p>
+                <p className="text-xl font-bold" style={{ color }}>{value}</p>
+              </div>
+            ));
+          })()}
+        </div>
+        {/* Bar charts */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 divide-x divide-gray-100">
+          <HBarChart title="Por estado"     data={stats.porEstado}    getColor={k => ESTADO_COLOR[k] ?? '#94A3B8'} />
+          <HBarChart title="Por riesgo"     data={stats.porRiesgo}    getColor={k => RIESGO_COLOR[k] ?? '#6B7280'} />
+        </div>
       </div>
 
-      {/* Mini bar charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por estado</p>
-          {renderMiniChart(stats.porEstado, '#2563EB')}
-        </div>
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por riesgo</p>
-          {renderMiniChart(stats.porRiesgo, '#DC2626')}
-        </div>
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por base legal</p>
-          {renderMiniChart(stats.porBaseLegal, '#059669')}
-        </div>
+      {/* Gráfico base legal (ancho completo) */}
+      <div className="mb-6">
+        <HBarChart title="Distribución por base legal" data={stats.porBaseLegal} getColor={() => '#4F46E5'} />
       </div>
 
       {/* Filtros */}

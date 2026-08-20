@@ -187,11 +187,11 @@ class TestARCOTodosLosCamposJuntos:
             f"/tkt-solicitud-derecho/{ticket_id}",
             json={
                 "evidencia_respuesta_hash": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-                "causal_rechazo": "excesiva",
+                "causal_rechazo": "solicitud_excesiva",
             },
             headers=auth_headers
         )
         assert update_resp.status_code == 200
         data = update_resp.json()
         assert data["evidencia_respuesta_hash"] == "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-        assert data["causal_rechazo"] == "excesiva"
+        assert data["causal_rechazo"] == "solicitud_excesiva"
