@@ -2,7 +2,7 @@
 Schemas Pydantic del módulo Asesor.
 """
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
 
@@ -70,8 +70,7 @@ class AsesorCorpusDocumentSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AsesorUploadResponse(BaseModel):

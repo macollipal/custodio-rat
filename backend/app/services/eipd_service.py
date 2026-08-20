@@ -3,6 +3,8 @@ Lógica de negocio para EIPD (Evaluación de Impacto en Protección de Datos).
 Art. 15 bis Ley 21.719.
 """
 
+import hashlib
+import json as _json
 from typing import Optional, Tuple, List
 
 from sqlalchemy.orm import Session
@@ -153,13 +155,27 @@ def actualizar_eipd(db: Session, eipd_id: int, data: EIPDUpdate, usuario: str) -
     if rat is not None:
         _sync_rat_estado_eipd(db, rat, eipd.resultado)
 
+    content_for_hash = _json.dumps({
+        "rat_id": eipd.rat_id,
+        "metodologia": eipd.metodologia,
+        "riesgos_identificados": eipd.riesgos_identificados,
+        "medidas_propuestas": eipd.medidas_propuestas,
+        "resultado": str(eipd.resultado),
+    }, sort_keys=True, ensure_ascii=False)
+    content_hash = hashlib.sha256(content_for_hash.encode()).hexdigest()
+
     log_audit(
         db=db,
         entidad="eipd",
         entidad_id=eipd.id,
         accion="update",
         usuario=usuario,
-        detalle={"rat_id": eipd.rat_id, "campos": list(cambios.keys()), "rat_estado_eipd": rat.estado_eipd if rat else None},
+        detalle={
+            "rat_id": eipd.rat_id,
+            "campos": list(cambios.keys()),
+            "rat_estado_eipd": rat.estado_eipd if rat else None,
+            "content_hash": content_hash,
+        },
     )
     db.commit()
     db.refresh(eipd)
