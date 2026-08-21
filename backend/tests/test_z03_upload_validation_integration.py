@@ -156,7 +156,7 @@ class TestZ03UploadValidation:
         """
         known_upload_paths = [
             "/admin/asesor/upload",
-            "/feriados/upload",
+            "/admin/feriados/upload",
         ]
         for path in known_upload_paths:
             uses_helper, src = _uses_validate_upload(path)

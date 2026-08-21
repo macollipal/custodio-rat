@@ -184,6 +184,8 @@ async def listar(
         from app.models.rat import RAT as RATModel
         rats_list = db.query(RATModel).filter(RATModel.company_id.in_(ids)).offset(skip).limit(limit).all()
     else:
+        if company_id is not None and current_user.rol_global != "superadmin":
+            check_company_access(current_user, company_id, db)
         rats_list = get_rats(db, company_id, skip, limit)
 
     result = []
@@ -397,7 +399,12 @@ async def eliminar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = get_rat_for_user(db, rat_id, current_user)
+    from app.models.rat import RAT as RATModel
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    if current_user.rol_global != "superadmin":
+        check_company_access(current_user, rat.company_id, db)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return delete_rat(db, rat_id, current_user.username, get_client_ip(request))
 

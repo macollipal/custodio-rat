@@ -304,9 +304,6 @@ class TestCSVInjection:
         login = client.post("/auth/login", json={"username": "admin", "password": "admin1234"})
         token = login.json()["access_token"]
 
-        from app.database.database import Base, engine_test
-        Base.metadata.create_all(bind=engine_test)
-
         rat_resp = client.post("/rats/", json={
             "company_id": empresa["id"],
             "nombre_proceso": "=CMD|'/C calc'!A0",

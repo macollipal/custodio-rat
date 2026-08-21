@@ -78,7 +78,7 @@ class TestCreateUser:
         with pytest.raises(HTTPException) as exc:
             create_user(db, data2)
         assert exc.value.status_code == 409
-        assert "nombre de usuario ya estÃ¡ en uso" in exc.value.detail
+        assert "nombre de usuario ya está en uso" in exc.value.detail
 
     def test_create_user_duplicate_email(self, db):
         from app.schemas.user import UserCreate
@@ -102,7 +102,7 @@ class TestCreateUser:
         with pytest.raises(HTTPException) as exc:
             create_user(db, data2)
         assert exc.value.status_code == 409
-        assert "email ya estÃ¡ registrado" in exc.value.detail
+        assert "email ya está registrado" in exc.value.detail
 
     def test_create_user_invalid_rol(self, db):
         from app.schemas.user import UserCreate
@@ -117,7 +117,7 @@ class TestCreateUser:
         with pytest.raises(HTTPException) as exc:
             create_user(db, data)
         assert exc.value.status_code == 400
-        assert "Rol global invÃ¡lido" in exc.value.detail
+        assert "Rol global inválido" in exc.value.detail
 
     def test_create_user_admin_empresa_without_company(self, db):
         from app.schemas.user import UserCreate

@@ -66,6 +66,9 @@ class TestSubsanacionWorkflow:
         ticket_id = ticket_resp.json()["id"]
 
         client.patch(f"/tkt-solicitud-derecho/{ticket_id}", json={
+            "metodo_verificacion_identidad": "email_verificado",
+        }, headers=auth_headers)
+        client.patch(f"/tkt-solicitud-derecho/{ticket_id}", json={
             "estado": "resuelto",
             "respuesta_texto": "Datos entregados",
         }, headers=auth_headers)
