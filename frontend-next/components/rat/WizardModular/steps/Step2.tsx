@@ -131,18 +131,18 @@ export function Step2({
                 className="mt-0.5 rounded"
               />
               <span className="text-sm font-medium" style={{ color: '#374151' }}>
-                📋 Requiere Evaluación de Impacto (EIPD) {data.datos_sensibles ? '(obligatoria por datos sensibles — Art. 15 bis)' : ''}
+                📋 Requiere Evaluación de Impacto (EIPD) {data.datos_sensibles ? '(obligatoria por datos sensibles — Art. 15 ter)' : ''}
               </span>
             </label>
             {data.datos_sensibles && (
               <AlertBanner
-                message="EIPD obligatoria: el tratamiento de datos sensibles requiere evaluación de impacto documentada antes de iniciar (Art. 15 bis Ley 21.719)."
+                message="EIPD obligatoria: el tratamiento de datos sensibles requiere evaluación de impacto documentada antes de iniciar (Art. 15 ter Ley 21.719)."
                 type="warning"
               />
             )}
             {data.evaluacion_impacto && !data.datos_sensibles && (
               <AlertBanner
-                message="La EIPD debe realizarse y documentarse antes de iniciar el tratamiento (Art. 15 bis)."
+                message="La EIPD debe realizarse y documentarse antes de iniciar el tratamiento (Art. 15 ter)."
                 type="info"
               />
             )}

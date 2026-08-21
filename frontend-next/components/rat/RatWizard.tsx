@@ -466,18 +466,18 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       className="mt-0.5 rounded"
                     />
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>
-                      📋 Requiere Evaluación de Impacto (EIPD) {data.datos_sensibles ? '(obligatoria por datos sensibles — Art. 15 bis)' : ''}
+                      📋 Requiere Evaluación de Impacto (EIPD) {data.datos_sensibles ? '(obligatoria por datos sensibles — Art. 15 ter)' : ''}
                     </span>
                   </label>
                   {data.datos_sensibles && (
                     <AlertBanner
-                      message="EIPD obligatoria: el tratamiento de datos sensibles requiere evaluación de impacto documentada antes de iniciar (Art. 15 bis Ley 21.719)."
+                      message="EIPD obligatoria: el tratamiento de datos sensibles requiere evaluación de impacto documentada antes de iniciar (Art. 15 ter Ley 21.719)."
                       type="warning"
                     />
                   )}
                   {data.evaluacion_impacto && !data.datos_sensibles && (
                     <AlertBanner
-                      message="La EIPD debe realizarse y documentarse antes de iniciar el tratamiento (Art. 15 bis)."
+                      message="La EIPD debe realizarse y documentarse antes de iniciar el tratamiento (Art. 15 ter)."
                       type="info"
                     />
                   )}
@@ -753,7 +753,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                   📋 Test de interés legítimo (3 pasos)
                 </summary>
                 <div className="px-4 pt-2 pb-4 space-y-3">
-                  <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDC." type="warning" />
+                  <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDP." type="warning" />
                   <div>
                     <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
                       Paso 1 — ¿Existe un interés legítimo real?
@@ -927,7 +927,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                       type="checkbox"
                       checked={data.transferencia_internacional ?? false}
                       onChange={e => {
-                        if (e.target.checked) toast.info('Transferencia internacional activa: se marcó EIPD como requerida (Art. 15 bis).');
+                        if (e.target.checked) toast.info('Transferencia internacional activa: se marcó EIPD como requerida (Art. 15 ter).');
                         setData(d => ({ ...d, transferencia_internacional: e.target.checked, pais_destino: e.target.checked ? d.pais_destino : undefined, evaluacion_impacto: e.target.checked ? true : (d.datos_sensibles ? true : d.evaluacion_impacto) }));
                       }}
                       className="mt-0.5 rounded"
@@ -968,7 +968,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
                           }}
                         >
                           <option value="">— Garantías aplicables (obligatorio) —</option>
-                          <option value="Nivel adecuado de protección (decisión APDC o UE)">Nivel adecuado de protección (decisión APDC o UE)</option>
+                          <option value="Nivel adecuado de protección (decisión APDP o UE)">Nivel adecuado de protección (decisión APDP o UE)</option>
                           <option value="Cláusulas Contractuales Tipo (SCC)">Cláusulas Contractuales Tipo (SCC)</option>
                           <option value="Normas Corporativas Vinculantes (BCR)">Normas Corporativas Vinculantes (BCR)</option>
                           <option value="Consentimiento explícito del titular para la transferencia">Consentimiento explícito del titular para la transferencia</option>

@@ -372,7 +372,7 @@ export default function ConfiguracionPage() {
                 <span className="text-sm flex-shrink-0" aria-hidden="true">📄</span>
                 <div>
                   <p className={labelCls} style={{ color: '#374151' }}>PDF</p>
-                  <p className="text-xs" style={{ color: '#9CA3AF' }}>Formato oficial para presentar ante la APDC. Incluye todos los campos y es apta para impresión.</p>
+                  <p className="text-xs" style={{ color: '#9CA3AF' }}>Formato oficial para presentar ante la APDP. Incluye todos los campos y es apta para impresión.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">

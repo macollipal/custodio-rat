@@ -32,7 +32,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'dashboard', label: 'Dashboard', icon: '▣', roles: ['superadmin', 'admin_empresa', 'usuario'] },
       { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'tkt_solicitud_derecho', label: 'Tickets ARCO', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'tkt_solicitud_derecho', label: 'Tickets ARCOP+', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
       { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
     ],
   },

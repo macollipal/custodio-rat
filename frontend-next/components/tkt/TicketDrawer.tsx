@@ -567,7 +567,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
               />
               {nuevoEstado === 'rechazado' && (
                 <p className="text-xs mt-1" style={{ color: '#92400E' }}>
-                  La causal debe estar justificada conforme a la Ley 21.719 para ser válida ante la APDC.
+                  La causal debe estar justificada conforme a la Ley 21.719 para ser válida ante la APDP.
                 </p>
               )}
               <Button variant="success" onClick={handleGuardarRespuesta} loading={guardando}>

@@ -95,7 +95,7 @@ export default function SeguimientoPage() {
             Consultá el estado de tu solicitud
           </h1>
           <p className="text-base" style={{ color: '#6B7280' }}>
-            Ingresá el número de seguimiento que recibiste por email al momento de hacer tu solicitud ARCO.
+            Ingresá el número de seguimiento que recibiste por email al momento de hacer tu solicitud ARCOP+.
           </p>
         </div>
 
@@ -254,7 +254,7 @@ export default function SeguimientoPage() {
         )}
 
         <div className="text-center text-xs" style={{ color: '#9CA3AF' }}>
-          <p>Este portal es parte de <strong>Custodio RAT</strong>, gestión de derechos ARCO conforme a la Ley 21.719.</p>
+          <p>Este portal es parte de <strong>Custodio RAT</strong>, gestión de derechos ARCOP+ conforme a la Ley 21.719.</p>
         </div>
       </div>
     </div>

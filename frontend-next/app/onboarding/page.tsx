@@ -203,7 +203,7 @@ export default function OnboardingPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Canal para ejercer derechos ARCO (opcional)
+                Canal para ejercer derechos ARCOP+ (opcional)
               </label>
               <input
                 type="text"

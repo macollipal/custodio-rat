@@ -179,7 +179,7 @@ export default function TktSolicitudDerechoPage() {
           <span className="text-xl">⚠️</span>
           <div className="flex-1">
             <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>
-              {slaAlertTickets.length} solicitud(es) ARCO con SLA próximo a vencer
+              {slaAlertTickets.length} solicitud(es) ARCOP+ con SLA próximo a vencer
             </p>
             <p className="text-xs" style={{ color: '#B91C1C' }}>
               {slaAlertTickets.filter(t => (t.dias_restantes ?? 999) <= 0).length} vencido(s) ·
@@ -197,7 +197,7 @@ export default function TktSolicitudDerechoPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Solicitudes ARCO</h1>
+        <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Solicitudes ARCOP+</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <Button
@@ -400,7 +400,7 @@ export default function TktSolicitudDerechoPage() {
           <p className="text-4xl mb-2">📭</p>
           <p className="text-sm font-medium" style={{ color: '#374151' }}>No hay tickets</p>
           <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-            {tab === 'todos' ? 'No hay solicitudes ARCO registradas' : `No hay tickets en estado "${tab}"`}
+            {tab === 'todos' ? 'No hay solicitudes ARCOP+ registradas' : `No hay tickets en estado "${tab}"`}
           </p>
           {isAdmin && (
             <Button

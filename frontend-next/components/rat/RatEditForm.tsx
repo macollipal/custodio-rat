@@ -321,7 +321,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                         {ESTADOS_EIPD.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                       </select>
                       <input type="date" value={form.fecha_eipd ?? ''} onChange={e => set('fecha_eipd', e.target.value)} className={inputCls} style={inputStyle} />
-                      <AlertBanner message="La EIPD debe completarse antes de iniciar el tratamiento (Art. 15 bis)." type="info" />
+                      <AlertBanner message="La EIPD debe completarse antes de iniciar el tratamiento (Art. 15 ter)." type="info" />
                       <a
                         href={`/eipd?rat_id=${rat.id}`}
                         target="_blank"
@@ -541,7 +541,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     {[testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim().length} / 50+ caracteres
                   </span>
                 </div>
-                <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Mínimo 50 caracteres necesarios para ser válido como documentación ante la APDC." type="warning" />
+                <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Mínimo 50 caracteres necesarios para ser válido como documentación ante la APDP." type="warning" />
                 <div>
                   <label htmlFor="ef-testil-paso1" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
                     Paso 1 — ¿Existe un interés legítimo real?

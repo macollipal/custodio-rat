@@ -172,7 +172,7 @@ function EjercerDerechosInner() {
             <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>Ley 21.719 — Art. 12</span>
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#111827', marginBottom: 8 }}>
-            Ejercer mis Derechos ARCO
+            Ejercer mis Derechos ARCOP+
           </h1>
           <p style={{ color: '#6B7280', fontSize: 15, maxWidth: 480, margin: '0 auto' }}>
             Acceso, Rectificación, Cancelación, Oposición y derechos adicionales sobre tus datos personales
@@ -346,7 +346,7 @@ function EjercerDerechosInner() {
                 width: '100%', transition: 'background 0.15s',
               }}
             >
-              {submitting ? 'Enviando solicitud…' : 'Enviar solicitud ARCO'}
+              {submitting ? 'Enviando solicitud…' : 'Enviar solicitud ARCOP+'}
             </button>
 
             <p style={{ textAlign: 'center', fontSize: 12, color: '#9CA3AF' }}>

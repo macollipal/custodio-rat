@@ -67,7 +67,7 @@ export const DESCRIPCIONES_BASE: Record<string, string> = {
     'Art. 13 a) — El tratamiento es requerido por una norma legal vigente (ley, decreto, etc.). Identifique la norma específica que habilita el tratamiento.',
   'Interés legítimo':
     'Art. 16 — Requiere documentar el test de 3 pasos: (1) ¿existe interés legítimo real? (2) ¿el tratamiento es necesario para ese interés? ' +
-    '(3) ¿prevalece sobre los derechos del titular? Sin este test documentado, la base no sirve como defensa ante la APDC.',
+    '(3) ¿prevalece sobre los derechos del titular? Sin este test documentado, la base no sirve como defensa ante la APDP.',
   'Interés vital del titular':
     'Art. 13 c) — Proteger intereses vitales del titular u otra persona (situaciones de riesgo para la vida o la integridad física).',
   'Datos biométricos de identificación (Art. 16 BIS)':

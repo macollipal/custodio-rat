@@ -42,7 +42,7 @@ export function computeCompanyAlerts(companies: Company[]): AlertItem[] {
   if (totalSolicitudesVencidas > 0) {
     alerts.push({
       icon: '📋',
-      titulo: `${totalSolicitudesVencidas} solicitud${totalSolicitudesVencidas !== 1 ? 'es' : ''} ARCO vencida${totalSolicitudesVencidas !== 1 ? 's' : ''}`,
+      titulo: `${totalSolicitudesVencidas} solicitud${totalSolicitudesVencidas !== 1 ? 'es' : ''} ARCOP+ vencida${totalSolicitudesVencidas !== 1 ? 's' : ''}`,
       detalle: `Han superado el plazo legal de respuesta (Art. 14 Ley 21.719). ${totalSolicitudesPendientes} pendiente${totalSolicitudesPendientes !== 1 ? 's' : ''} en total.`,
       color: '#7F1D1D',
       bg: '#FEE2E2',

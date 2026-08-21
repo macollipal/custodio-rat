@@ -77,7 +77,7 @@ export default function DashboardPage() {
     { target: '[style*="grid"]', title: 'KPIs de cumplimiento', content: 'Estas tarjetas muestran el resumen de tus procesos RAT: total de procesos, completitud promedio, datos sensibles y EIPDs pendientes.' },
     { target: 'button[style*="2563EB"]', title: 'Crear procesos RAT', content: 'Haz clic aquí para crear tu primer proceso RAT. Cada proceso documenta cómo tu organización trata datos personales.' },
     { target: '[style*="F9FAFB"]', title: 'Alertas de cumplimiento', content: 'Las alertas te avisan de problemas críticos que requieren atención inmediata, como EIPDs pendientes o transferencias sin garantías.' },
-    { target: '.\\32 xl\\:grid-cols-4', title: 'Procesos recientes', content: 'Aquí puedes ver los últimos procesos RAT creados o modificados. Haz clic en cualquier proceso para ver su detalle completo.' },
+    { target: '.\\32 xl\\:grid-cols-4', title: 'Tratamientos de datos personales recientes', content: 'Aquí puedes ver los últimos tratamientos de datos personales creados o modificados. Haz clic en cualquier proceso para ver su detalle completo.' },
   ];
 
   function nextStep() {
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                 ⚠️ Brechas abiertas ({brechaCount})
               </h3>
               <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
-                Ley 21.719 Art. 14 bis: notificación APDC en 72h, titulares sin dilación
+                Ley 21.719 Art. 14 sexies: notificación APDP sin dilación
               </p>
             </div>
             <Button variant="danger" size="sm" onClick={() => router.push('/breaches')}>
@@ -382,15 +382,15 @@ export default function DashboardPage() {
                           : `🟡 ${Math.floor(restantes)}h restantes`}
                       </div>
                       <div className="text-xs mt-1" style={{ color: '#6B7280' }}>
-                        72h APDC
+                        72h APDP
                       </div>
                       <div className="flex gap-1 mt-1 justify-end">
                         <span
                           className="text-xs px-1.5 py-0.5 rounded"
                           style={{ background: apdcOk ? '#DCFCE7' : '#FEE2E2', color: apdcOk ? '#166534' : '#7F1D1D' }}
-                          title={apdcOk ? 'APDC notificada' : 'APDC NO notificada'}
+                          title={apdcOk ? 'APDP notificada' : 'APDP NO notificada'}
                         >
-                          APDC {apdcOk ? '✓' : '✗'}
+                          APDP {apdcOk ? '✓' : '✗'}
                         </span>
                         {titOk !== undefined && (
                           <span
@@ -413,7 +413,7 @@ export default function DashboardPage() {
 
       <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
         <h3 className="font-semibold text-sm mb-4" style={{ color: '#111827' }}>
-          Procesos recientes
+          Tratamientos de datos personales recientes
         </h3>
         {recientes.length === 0 ? (
           <div className="text-center py-8">

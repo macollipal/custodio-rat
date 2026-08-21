@@ -46,13 +46,13 @@ export function useDashboardAlerts(
       a.push({ type: 'warning', message: <>Completitud del RAT en <strong>{completitud_promedio}%</strong>. Complete los campos obligatorios para estar preparado ante fiscalización.</> });
 
     if (eipd_pendientes > 0)
-      a.push({ type: 'danger', message: <><strong>{eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 bis).</> });
+      a.push({ type: 'danger', message: <><strong>{eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 ter).</> });
 
     if (transferencias_sin_garantias > 0)
       a.push({ type: 'warning', message: <><strong>{transferencias_sin_garantias} transferencia(s)</strong> internacional(es) sin garantías documentadas. Documente SCC, BCR u otras garantías (Art. 28).</> });
 
     if (interes_legitimo_sin_test > 0)
-      a.push({ type: 'warning', message: <><strong>{interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.</> });
+      a.push({ type: 'warning', message: <><strong>{interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDP sin esto.</> });
 
     if (encargados_sin_contrato > 0)
       a.push({ type: 'info', message: <><strong>{encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).</> });

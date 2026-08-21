@@ -17,18 +17,18 @@ const MODULE_INFO: Record<string, { nombre: string; descripcion: string; icon: s
     icon: '📋',
   },
   ARCO: {
-    nombre: 'Solicitudes ARCO',
-    descripcion: 'Tickets de derechos de Acceso, Rectificacion, Cancelacion y Oposicion (Art. 14).',
+    nombre: 'Solicitudes ARCOP+',
+    descripcion: 'Tickets de derechos de Acceso, Rectificación, Cancelación, Oposición y Portabilidad (Art. 14).',
     icon: '✉️',
   },
   BRECHAS: {
     nombre: 'Brechas de Seguridad',
-    descripcion: 'Gestion de incidentes con notificacion APDC en 72h (Art. 14 bis).',
+    descripcion: 'Gestión de incidentes con notificación APDP en 72h (Art. 14 sexies).',
     icon: '🚨',
   },
   EIPD: {
     nombre: 'Evaluacion de Impacto',
-    descripcion: 'EIPD para tratamientos de alto riesgo (Art. 15 bis).',
+    descripcion: 'EIPD para tratamientos de alto riesgo (Art. 15 ter).',
     icon: '🔍',
   },
   CONSENTIMIENTOS: {

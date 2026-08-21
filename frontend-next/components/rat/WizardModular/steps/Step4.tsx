@@ -173,7 +173,7 @@ export function Step4({
                     }}
                   >
                     <option value="">— Garantías aplicables (obligatorio) —</option>
-                    <option value="Nivel adecuado de protección (decisión APDC o UE)">Nivel adecuado de protección (decisión APDC o UE)</option>
+                    <option value="Nivel adecuado de protección (decisión APDP o UE)">Nivel adecuado de protección (decisión APDP o UE)</option>
                     <option value="Cláusulas Contractuales Tipo (SCC)">Cláusulas Contractuales Tipo (SCC)</option>
                     <option value="Normas Corporativas Vinculantes (BCR)">Normas Corporativas Vinculantes (BCR)</option>
                     <option value="Consentimiento explícito del titular para la transferencia">Consentimiento explícito del titular para la transferencia</option>

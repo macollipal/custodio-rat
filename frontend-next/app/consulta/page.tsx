@@ -174,7 +174,7 @@ function TrackingForm() {
         Ingresá tu número de seguimiento
       </h2>
       <p className="text-sm" style={{ color: '#6B7280' }}>
-        Es el código que recibiste al enviar tu solicitud ARCO.
+        Es el código que recibiste al enviar tu solicitud ARCOP+.
       </p>
 
       {notFound && (
@@ -212,7 +212,7 @@ export default function ConsultarSolicitudPage() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: '#111827' }}>
-            🔍 Consultar solicitud ARCO
+            🔍 Consultar solicitud ARCOP+
           </h1>
           <p className="text-base" style={{ color: '#6B7280' }}>
             Ley 21.719 — Protección de Datos Personales de Chile

@@ -96,7 +96,7 @@ export default function EIPDPage() {
             📑 Evaluaciones de Impacto (EIPD)
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Art. 15 bis Ley 21.719 — Obligatoria para datos sensibles y transferencias de alto riesgo
+            Art. 15 ter Ley 21.719 — Obligatoria para datos sensibles y tratamientos de alto riesgo
           </p>
         </div>
       </div>
@@ -372,7 +372,7 @@ function EIPDForm({
             {eipd ? '📋 Editar EIPD' : '🆕 Nueva EIPD'}
           </h2>
           <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            Art. 15 bis Ley 21.719 — Evaluación de Impacto en Protección de Datos
+            Art. 15 ter Ley 21.719 — Evaluación de Impacto en Protección de Datos
           </p>
         </div>
 
@@ -516,7 +516,7 @@ function EIPDForm({
                   required
                   className={inputCls}
                   style={inputStyle}
-                  placeholder="Explique por qué el tratamiento no requiere EIPD pese a tener datos sensibles (Art. 15 bis Ley 21.719)."
+                  placeholder="Explique por qué el tratamiento no requiere EIPD pese a tener datos sensibles (Art. 15 ter Ley 21.719)."
                 />
                 <div className="text-xs mt-1" style={{ color: justificacionNoAplica.length < 20 ? '#DC2626' : '#059669' }}>
                   {justificacionNoAplica.length} / 20 caracteres

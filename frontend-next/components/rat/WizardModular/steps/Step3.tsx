@@ -177,7 +177,7 @@ export function Step3({
             📋 Test de interés legítimo (3 pasos)
           </summary>
           <div className="px-4 pt-2 pb-4 space-y-3">
-            <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDC." type="warning" />
+            <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDP." type="warning" />
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
                 Paso 1 — ¿Existe un interés legítimo real?

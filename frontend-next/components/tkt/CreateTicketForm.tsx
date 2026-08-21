@@ -197,7 +197,7 @@ export function CreateTicketForm({ open, onClose, onSuccess, companyId }: Create
             + NUEVA
           </span>
           <div>
-            <p className="font-semibold text-white text-sm">Nueva Solicitud ARCO</p>
+            <p className="font-semibold text-white text-sm">Nueva Solicitud ARCOP+</p>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Complete los datos del titular</p>
           </div>
         </div>
