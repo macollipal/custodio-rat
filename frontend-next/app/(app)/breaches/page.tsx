@@ -563,7 +563,7 @@ export default function BreachesPage() {
                         <div className="px-4 py-2 font-bold" style={{ background: '#2563EB', color: 'white' }}>
                           Campos requeridos para notificación APDP — Art. 14 sexies Ley 21.719
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x" style={{ divideColor: '#DBEAFE' }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y divide-blue-200 sm:divide-y-0 sm:divide-x sm:divide-blue-200">
                           {[
                             { label: 'Naturaleza de la brecha', value: b.naturaleza ? { confidencialidad: 'Confidencialidad (acceso no autorizado)', integridad: 'Integridad (modificación no autorizada)', disponibilidad: 'Disponibilidad (datos inaccesibles)' }[b.naturaleza] ?? b.naturaleza : null },
                             { label: 'Fecha detección', value: new Date(b.fecha_deteccion).toLocaleString('es-CL') },
