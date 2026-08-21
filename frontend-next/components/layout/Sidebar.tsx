@@ -71,7 +71,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
-  const { user, company, setCompany, logout, darkMode, toggleDarkMode } = useApp();
+  const { user, company, setCompany, logout, theme, cycleTheme } = useApp();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
 

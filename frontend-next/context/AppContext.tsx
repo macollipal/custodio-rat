@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '@/types';
+
+export type Theme = 'light' | 'dark' | 'mac';
 import { STORAGE_KEYS, API_BASE, DRAFT_KEY_PREFIX } from '@/lib/constants';
 import { listarBaseLegalOptions } from '@/lib/api';
 
@@ -15,6 +17,7 @@ interface AppState {
   rolEnEmpresa: RolEmpresa | null;
   puedeEditar: boolean;
   rolGlobal: RolGlobal | null;
+  theme: Theme;
   darkMode: boolean;
   baseLegalOptions: string[];
   baseLegalDescripciones: Record<string, string>;
@@ -24,6 +27,7 @@ interface AppState {
   setCompanies: (companies: Company[]) => void;
   setRats: (rats: RAT[]) => void;
   setDashboardStats: (stats: DashboardStats) => void;
+  cycleTheme: () => void;
   toggleDarkMode: () => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -43,7 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [companies, setCompaniesState] = useState<Company[]>([]);
   const [rats, setRatsState] = useState<RAT[]>([]);
   const [dashboardStats, setDashboardStatsState] = useState<DashboardStats | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState<Theme>('light');
   const [baseLegalOptions, setBaseLegalOptions] = useState<string[]>([]);
   const [baseLegalDescripciones, setBaseLegalDescripciones] = useState<Record<string, string>>({});
 
@@ -59,10 +63,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('custodio_dark_mode');
-    if (stored === 'true') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
+    const stored = localStorage.getItem('custodio_theme') as Theme | null;
+    if (stored === 'dark' || stored === 'mac') {
+      setTheme(stored);
+      document.documentElement.classList.add(stored);
+    } else if (!stored) {
+      // migración: leer clave legacy
+      const legacy = localStorage.getItem('custodio_dark_mode');
+      if (legacy === 'true') {
+        setTheme('dark');
+        document.documentElement.classList.add('dark');
+      }
     }
   }, []);
 
@@ -76,18 +87,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [token]);
 
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => {
-      const next = !prev;
-      localStorage.setItem('custodio_dark_mode', String(next));
-      if (next) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+  const cycleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next: Theme = prev === 'light' ? 'dark' : prev === 'dark' ? 'mac' : 'light';
+      localStorage.setItem('custodio_theme', next);
+      document.documentElement.classList.remove('dark', 'mac');
+      if (next !== 'light') document.documentElement.classList.add(next);
       return next;
     });
   }, []);
+
+  const toggleDarkMode = cycleTheme;
 
   useEffect(() => {
     if (!token) return;
@@ -187,9 +197,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     rolEnEmpresa,
     puedeEditar,
     rolGlobal,
-    darkMode,
+    theme,
+    darkMode: theme === 'dark',
     baseLegalOptions,
     baseLegalDescripciones,
+    cycleTheme,
     toggleDarkMode,
     setToken,
     setUser,
@@ -204,9 +216,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     eliminarRatDeCache,
     actualizarStatsEnCache,
   }), [
-    token, user, company, companies, rats, dashboardStats, darkMode,
+    token, user, company, companies, rats, dashboardStats, theme,
     baseLegalOptions, baseLegalDescripciones,
-    toggleDarkMode, setToken, setUser, setCompany, setCompanies,
+    cycleTheme, toggleDarkMode, setToken, setUser, setCompany, setCompanies,
     setRats, setDashboardStats, logout,
     actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,
     rolEnEmpresa, rolGlobal, puedeEditar,

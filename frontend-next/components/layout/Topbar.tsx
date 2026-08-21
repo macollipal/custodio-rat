@@ -8,7 +8,7 @@ interface TopbarProps {
 }
 
 export default function Topbar({ onMenuClick }: TopbarProps) {
-  const { user, company, companies, setCompany, dashboardStats, darkMode, toggleDarkMode } = useApp();
+  const { user, company, companies, setCompany, dashboardStats, theme, cycleTheme } = useApp();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -120,11 +120,14 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
 <div className="flex items-center gap-3">
         <button
-          onClick={toggleDarkMode}
-          aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          onClick={cycleTheme}
+          aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : theme === 'dark' ? 'Cambiar a tema Mac Aqua' : 'Cambiar a modo claro'}
           className="p-2 rounded-lg transition hover:bg-gray-100"
+          title={theme === 'light' ? 'Modo claro' : theme === 'dark' ? 'Modo oscuro' : 'Tema Mac Aqua'}
         >
-          <span aria-hidden="true" role="img" style={{ fontSize: 16 }}>{darkMode ? '☀️' : '🌙'}</span>
+          <span aria-hidden="true" role="img" style={{ fontSize: 16 }}>
+            {theme === 'light' ? '🌞' : theme === 'dark' ? '🌙' : '🍎'}
+          </span>
         </button>
         {alertCount > 0 && (
           <div className="relative">
