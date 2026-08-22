@@ -79,7 +79,7 @@ function KpiCard({ label, value, color }: { label: string; value: number; color:
 }
 
 export default function UsersPage() {
-  const { user: currentUser, companies } = useApp();
+  const { user: currentUser, companies, company } = useApp();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -90,13 +90,13 @@ export default function UsersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setUsers(await api.listarUsuarios());
+      setUsers(await api.listarUsuarios(company?.id));
     } catch {
       toast.error('No se pudieron cargar los usuarios.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [company?.id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -172,7 +172,8 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Gestión de usuarios</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
-            {users.length} usuario{users.length !== 1 ? 's' : ''} en el sistema
+            {users.length} usuario{users.length !== 1 ? 's' : ''}
+            {company ? ` en ${company.nombre}` : ' en el sistema'}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)}>+ Nuevo usuario</Button>

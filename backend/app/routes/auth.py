@@ -184,21 +184,43 @@ async def cambiar_password(
 async def listar_usuarios(
     skip: int = 0,
     limit: int = 100,
+    company_id: int | None = None,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
-    users, total = get_users(db, skip=skip, limit=limit)
+    from app.models.company import Company
+    from app.models.user_company import UserCompany
+
+    if company_id is not None:
+        # Filtrar solo usuarios que pertenecen a la empresa solicitada
+        user_ids = [
+            row.user_id
+            for row in db.query(UserCompany.user_id).filter(UserCompany.company_id == company_id).all()
+        ]
+        from app.models.user import User as UserModel
+        query = db.query(UserModel).filter(UserModel.id.in_(user_ids))
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+        company_obj = db.query(Company).filter(Company.id == company_id).first()
+        empresa_nombre_fija = company_obj.nombre if company_obj else None
+    else:
+        users, total = get_users(db, skip=skip, limit=limit)
+        empresa_nombre_fija = None
+
     result = []
     for u in users:
-        empresas = get_empresas_usuario(db, u.id)
-        empresa_nombre = None
-        empresa_id = None
-        if empresas:
-            from app.models.company import Company
-            company = db.query(Company).filter(Company.id == empresas[0]).first()
-            if company:
-                empresa_nombre = company.nombre
-                empresa_id = empresas[0]
+        if empresa_nombre_fija is not None:
+            emp_nombre = empresa_nombre_fija
+            emp_id = company_id
+        else:
+            empresas = get_empresas_usuario(db, u.id)
+            emp_nombre = None
+            emp_id = None
+            if empresas:
+                c = db.query(Company).filter(Company.id == empresas[0]).first()
+                if c:
+                    emp_nombre = c.nombre
+                    emp_id = empresas[0]
         result.append({
             "id": u.id,
             "username": u.username,
@@ -207,7 +229,7 @@ async def listar_usuarios(
             "is_active": u.is_active,
             "rol_global": u.rol_global,
             "created_at": u.created_at,
-            "empresa_id": empresa_id,
-            "empresa_nombre": empresa_nombre,
+            "empresa_id": emp_id,
+            "empresa_nombre": emp_nombre,
         })
     return UserListResponse(usuarios=result, total=total, skip=skip, limit=limit)

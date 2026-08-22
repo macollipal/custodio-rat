@@ -551,8 +551,11 @@ export async function removerAcceso(companyId: number, userId: number): Promise<
 
 // ── Usuarios (solo admin) ─────────────────────────────────────────────────────
 
-export async function listarUsuarios(): Promise<User[]> {
-  const res = await apiFetch(`${API_BASE}/auth/users`);
+export async function listarUsuarios(companyId?: number): Promise<User[]> {
+  const url = companyId
+    ? `${API_BASE}/auth/users?company_id=${companyId}`
+    : `${API_BASE}/auth/users`;
+  const res = await apiFetch(url);
   const data = await handle<{ usuarios: User[]; total: number; skip: number; limit: number }>(res);
   return data.usuarios;
 }
