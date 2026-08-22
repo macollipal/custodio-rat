@@ -80,6 +80,7 @@ const SIDEBAR_PALETTE = {
     userText: '#E5E7EB', userRole: '#6B7280', avatarBg: '#2563EB',
     logoBg: 'linear-gradient(135deg, #2563EB, #7C3AED)',
     actionText: '#9CA3AF', actionHoverText: '#FFFFFF', actionHoverBg: '#374151',
+    iconFilter: 'none',
   },
   dark: {
     bg: '#0D1117', border: 'rgba(30,41,59,0.8)',
@@ -90,6 +91,7 @@ const SIDEBAR_PALETTE = {
     userText: '#F1F5F9', userRole: '#64748B', avatarBg: '#2563EB',
     logoBg: 'linear-gradient(135deg, #2563EB, #7C3AED)',
     actionText: '#94A3B8', actionHoverText: '#FFFFFF', actionHoverBg: '#334155',
+    iconFilter: 'none',
   },
   mac: {
     bg: '#D4D4D4', border: 'rgba(171,171,171,0.6)',
@@ -100,6 +102,7 @@ const SIDEBAR_PALETTE = {
     userText: '#000000', userRole: '#555555', avatarBg: '#5EA0D7',
     logoBg: 'linear-gradient(135deg, #5EA0D7, #3075D1)',
     actionText: '#555555', actionHoverText: '#000000', actionHoverBg: '#B8B8B8',
+    iconFilter: 'grayscale(1)',
   },
 };
 
@@ -204,7 +207,7 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
                           if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
                         }}
                       >
-                        <span aria-hidden="true" className="text-base w-5 text-center">{item.icon}</span>
+                        <span aria-hidden="true" className="text-base w-5 text-center" style={{ filter: p.iconFilter }}>{item.icon}</span>
                         {item.label}
                       </button>
                     );
