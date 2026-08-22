@@ -57,7 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'companies', label: 'Empresas', icon: '🏢', roles: ['superadmin', 'admin_empresa'] },
       { key: 'usuarios', label: 'Usuarios', icon: '👤', roles: ['superadmin'] },
-      { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] },
+      // { key: 'rubros', label: 'Rubros', icon: '🏷', roles: ['superadmin', 'admin_empresa'] }, // wizard por sector sin implementar
       { key: 'configuracion', label: 'Configuración', icon: '⚙', roles: ['superadmin', 'admin_empresa'] },
     ],
   },
