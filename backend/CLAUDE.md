@@ -441,7 +441,7 @@ python reset_test_db.py
 python -m pytest tests/ -v
 
 # 3. Ejecutar solo tests ARCO (más rápido para desarrollo iterativo)
-python -m pytest tests/test_arco_consolidation.py tests/test_arco_tickets.py \
+python -m pytest tests/test_arco_tickets.py \
   tests/test_subsanacion.py tests/test_prorroga.py \
   tests/test_qw8_seguimiento.py tests/test_qw10_formulario.py \
   tests/test_plantillas.py tests/test_reglas_asignacion.py \
