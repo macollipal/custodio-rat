@@ -35,6 +35,7 @@ class SeguimientoResponse(BaseModel):
     fecha_vencimiento: Optional[str]
     dias_restantes: Optional[int]
     company_nombre: Optional[str]
+    evidencia_respuesta_hash: Optional[str] = None
     historial: List[SeguimientoEntry]
 
 
@@ -102,6 +103,7 @@ def consultar_seguimiento(
         fecha_vencimiento=ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
         dias_restantes=dias_restantes,
         company_nombre=company_nombre,
+        evidencia_respuesta_hash=ticket.evidencia_respuesta_hash if hasattr(ticket, "evidencia_respuesta_hash") else None,
         historial=[
             SeguimientoEntry(
                 estado_anterior=h.estado_anterior,

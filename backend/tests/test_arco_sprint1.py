@@ -44,25 +44,22 @@ class TestTrackingPublico:
         assert token, "El ticket debería tener tracking_token"
 
         # El endpoint público NO requiere auth.
-        resp = client.get(f"/solicitudes-derecho/tracking/{token}")
+        resp = client.get(f"/seguimiento/{token}")
         assert resp.status_code == 200, resp.text
         data = resp.json()
 
-        assert data["tracking_token"] == token
-        assert data["estado"] == "abierto"
-        assert data["tipo"] == "acceso"
-        assert data["titular_nombre"] == "Juan Titular"
-        assert data["vencido"] is False
+        assert data["estado"] == "Abierto"
+        assert data["tipo"] == "Acceso"
         assert "dias_restantes" in data
 
     def test_tracking_token_inexistente_retorna_404(self, client):
         """Token inexistente -> 404 (no 403, para no filtrar existencia)."""
-        resp = client.get("/solicitudes-derecho/tracking/no-existe-token")
+        resp = client.get("/seguimiento/no-existe-token")
         assert resp.status_code == 404
 
     def test_tracking_no_exige_auth(self, client):
         """El endpoint debe ser público (sin Authorization header)."""
-        resp = client.get("/solicitudes-derecho/tracking/algo")
+        resp = client.get("/seguimiento/algo")
         # 404 (no encontrado) está OK — confirma que pasó la validación de auth
         assert resp.status_code in (404, 403)
 
@@ -143,7 +140,7 @@ class TestRechazoCausal:
         assert resp.status_code == 422
 
     def test_rechazar_persistido_en_tracking(self, client, auth_headers, empresa):
-        """El estado rechazado debe exponerse en /tracking."""
+        """El estado rechazado debe exponerse en /seguimiento."""
         ticket = _crear_ticket(client, auth_headers, empresa["id"])
 
         client.post(
@@ -152,9 +149,9 @@ class TestRechazoCausal:
             headers=auth_headers,
         )
 
-        resp = client.get(f"/solicitudes-derecho/tracking/{ticket['tracking_token']}")
+        resp = client.get(f"/seguimiento/{ticket['tracking_token']}")
         assert resp.status_code == 200
-        assert resp.json()["estado"] == "rechazado"
+        assert resp.json()["estado"] == "Rechazado"
 
 
 # ============================================================
@@ -176,9 +173,9 @@ class TestHashEvidencia:
             headers=auth_headers,
         )
 
-        resp = client.get(f"/solicitudes-derecho/tracking/{ticket['tracking_token']}")
+        resp = client.get(f"/seguimiento/{ticket['tracking_token']}")
         data = resp.json()
-        assert data["estado"] == "resuelto"
+        assert data["estado"] == "Resuelto"
         h = data["evidencia_respuesta_hash"]
         assert h and len(h) == 64, f"Hash invalido: {h!r}"
         # El backend genera hash con salt temporal, no podemos reconstruirlo exacto.

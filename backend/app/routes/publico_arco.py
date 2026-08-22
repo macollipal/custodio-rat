@@ -3,6 +3,10 @@ C-08: Formulario público ARCO (Art. 12 Ley 21.719).
 Permite al titular ejercer sus derechos sin autenticación.
 Rate limited: 10 solicitudes/hora por IP.
 """
+import hashlib
+import hmac
+import os
+import time
 from typing import Optional, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -58,6 +62,32 @@ class EjercerDerechosRequest(BaseModel):
 class EjercerDerechosResponse(BaseModel):
     tracking_token: str
     mensaje: str
+
+
+class CsrfTokenResponse(BaseModel):
+    token: str
+    header_name: str
+    expires_in_seconds: int
+
+
+_CSRF_SECRET = os.environ.get("SECRET_KEY", "csrf-dev-secret")[:32]
+_CSRF_TTL = 3600  # 1 hora
+
+
+@router.get("/csrf-token", response_model=CsrfTokenResponse, summary="Obtener CSRF token para formulario público")
+@limiter.limit("30/minute")
+def csrf_token(request: Request):
+    """Genera un CSRF token HMAC-SHA256 para proteger el formulario público ARCO."""
+    ts = str(int(time.time()))
+    nonce = os.urandom(16).hex()
+    payload = f"{ts}.{nonce}"
+    sig = hmac.new(_CSRF_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    token = f"{payload}.{sig}"
+    return CsrfTokenResponse(
+        token=token,
+        header_name="X-CSRF-Token",
+        expires_in_seconds=_CSRF_TTL,
+    )
 
 
 @router.get("/empresas", response_model=list[EmpresaPublicaOut])

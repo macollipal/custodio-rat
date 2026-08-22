@@ -174,7 +174,7 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
         obs = datos["observaciones_auditoria"]
         observaciones = (obs + "\n" + observaciones) if observaciones else obs
 
-    rat_data = {k: v for k, v in datos.items() if k not in ("observaciones_auditoria", "archivo_base_legal_base64")}
+    rat_data = {k: v for k, v in datos.items() if k not in ("observaciones_auditoria", "archivo_base_legal_base64", "justificacion_no_aplica")}
     rat = RAT(
         **rat_data,
         observaciones_auditoria=observaciones.strip() if observaciones else None,

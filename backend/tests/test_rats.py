@@ -323,7 +323,29 @@ class TestAuditoriaVerifyChain:
         resp = client.get("/rats/auditoria/verify-chain")
         assert resp.status_code == 401
 
-    def test_verify_chain_admin_empresa_falla_403(self, client, auth_headers):
+    def test_verify_chain_admin_empresa_falla_403(self, client, db, empresa):
         """admin_empresa NO debe poder verificar la cadena global (H2.2)."""
-        resp = client.get("/rats/auditoria/verify-chain", headers=auth_headers)
+        from app.models.user import User
+        from app.models.user_company import UserCompany, RolEmpresa
+        from app.core.security import get_password_hash
+
+        admin_emp = User(
+            username="admin_emp_vc_test",
+            email="admin_emp_vc@test.cl",
+            full_name="Admin Empresa VC",
+            hashed_password=get_password_hash("pass1234"),
+            is_active=True,
+            is_admin=False,
+            rol_global="admin_empresa",
+        )
+        db.add(admin_emp)
+        db.commit()
+        db.refresh(admin_emp)
+        uc = UserCompany(user_id=admin_emp.id, company_id=empresa["id"], rol=RolEmpresa.ADMIN)
+        db.add(uc)
+        db.commit()
+
+        login = client.post("/auth/login", json={"username": "admin_emp_vc_test", "password": "pass1234"})
+        token = login.json()["access_token"]
+        resp = client.get("/rats/auditoria/verify-chain", headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 403

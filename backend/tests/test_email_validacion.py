@@ -9,7 +9,7 @@ H5.6 — Test validacion de email invalido.
 class TestEmailValidation:
     def test_crear_usuario_email_invalido_retorna_422(self, client, auth_headers):
         """Email sin formato valido es rechazado por Pydantic (EmailStr)."""
-        resp = client.post("/users/", json={
+        resp = client.post("/auth/users", json={
             "username": "user_email_inv",
             "email": "no-es-un-email",
             "full_name": "Usuario Email Invalido",
@@ -20,7 +20,7 @@ class TestEmailValidation:
 
     def test_crear_usuario_email_sin_aroba_retorna_422(self, client, auth_headers):
         """Email sin @ es rechazado."""
-        resp = client.post("/users/", json={
+        resp = client.post("/auth/users", json={
             "username": "user_email_inv2",
             "email": "email-sin-aroba.cl",
             "full_name": "Usuario Sin @",
@@ -31,7 +31,7 @@ class TestEmailValidation:
 
     def test_crear_usuario_email_valido_retorna_201(self, client, auth_headers):
         """Email con formato valido es aceptado."""
-        resp = client.post("/users/", json={
+        resp = client.post("/auth/users", json={
             "username": "user_email_ok",
             "email": "valido@test.cl",
             "full_name": "Usuario Email Valido",

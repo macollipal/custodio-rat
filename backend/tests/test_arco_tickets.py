@@ -134,6 +134,9 @@ class TestActualizarTicketARCO:
         resp2 = client.patch(f"/tkt-solicitud-derecho/{ticket_id}", json={
             "estado": "resuelto",
             "respuesta_texto": "Se entregan todos los datos solicitados.",
+            "metodo_verificacion_identidad": "email_verificado",
+            "evidencia_identidad": "Email del titular verificado",
+            "medio_respuesta": "email",
         }, headers=auth_headers)
         assert resp2.status_code == 200
         data = resp2.json()

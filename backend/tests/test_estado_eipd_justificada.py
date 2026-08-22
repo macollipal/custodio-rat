@@ -7,6 +7,7 @@ def test_estado_eipd_acepta_no_requerida_justificada():
     r = RATBase(
         nombre_proceso="Test",
         categoria_datos="X",
+        categoria_titulares="Clientes",
         finalidad="Y",
         base_legal="Consentimiento",
         fuente_datos="Web",
@@ -43,6 +44,7 @@ def test_rat_out_valida_con_no_requerida_justificada():
         company_id=1,
         nombre_proceso="Test",
         categoria_datos="X",
+        categoria_titulares="Clientes",
         finalidad="Y",
         base_legal="Consentimiento",
         fuente_datos="Web",

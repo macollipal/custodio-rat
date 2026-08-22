@@ -39,7 +39,7 @@ class TestQW8Seguimiento:
         """Un tracking_token que no existe devuelve 404."""
         resp = client.get("/seguimiento/00000000-0000-0000-0000-000000000000")
         assert resp.status_code == 404
-        assert "No se encontrÃ³" in resp.json()["detail"]
+        assert "No se encontró" in resp.json()["detail"]
 
     def test_consulta_sin_token_retorna_404(self, client):
         """Sin tracking_token devuelve 404 (not found)."""
@@ -72,7 +72,7 @@ class TestQW8Seguimiento:
         resp = client.get(f"/seguimiento/{ticket.tracking_token}")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["estado"] == "SubsanaciÃ³n"
+        assert data["estado"] == "Subsanación"
 
     def test_consulta_con_historial(self, client, db, empresa):
         """El endpoint devuelve el historial de cambios."""

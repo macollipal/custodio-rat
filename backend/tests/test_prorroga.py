@@ -69,6 +69,9 @@ class TestProrrogaWorkflow:
         client.patch(f"/tkt-solicitud-derecho/{ticket_id}", json={
             "estado": "resuelto",
             "respuesta_texto": "Datos entregados",
+            "metodo_verificacion_identidad": "email_verificado",
+            "evidencia_identidad": "Email verificado",
+            "medio_respuesta": "email",
         }, headers=auth_headers)
 
         resp = client.post(f"/tkt-solicitud-derecho/{ticket_id}/prorrogar", json={

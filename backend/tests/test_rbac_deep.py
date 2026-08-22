@@ -218,7 +218,10 @@ class TestAdminEmpresaRBAC:
             "nombre": "Empresa Ajena Get",
             "rut": "77.777.777-7",
             "rubro": "Test",
+            "contacto_dpo": "DPO Test",
+            "email_dpo": "dpo@empresaajena.cl",
         }, headers=auth_headers)
+        assert resp_emp.status_code == 201, f"Error creando empresa: {resp_emp.text}"
         empresa_ajena_id = resp_emp.json()["id"]
 
         uc = UserCompany(user_id=user.id, company_id=empresa_ajena_id, rol=RolEmpresa.ADMIN)

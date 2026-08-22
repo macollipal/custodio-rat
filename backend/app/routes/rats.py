@@ -503,6 +503,29 @@ async def auditoria(
     return get_audit_logs(db, rat_id)
 
 
+@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor+�a")
+async def verificar_cadena_auditoria(
+    limit: int = Query(1000, description="L+�mite de registros a verificar"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Verifica la integridad de la cadena de hashes de auditor+�a.
+    Retorna estado de validaci+�n y el ID del primer registro roto (si hay).
+    Solo SUPERADMIN puede verificar la cadena global (H2.2 — auditor+�a 2026-07-07).
+    """
+    from app.services.audit_service import verify_audit_chain
+
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(
+            status_code=403,
+            detail="Solo SUPERADMIN puede verificar la cadena de auditor+�a global.",
+        )
+
+    result = verify_audit_chain(db, limit=limit)
+    return result
+
+
 @router.get("/auditoria/{company_id}", summary="Historial de auditor+�a global de la empresa")
 async def auditoria_global(
     company_id: int,
@@ -536,29 +559,6 @@ async def auditoria_global(
         .all()
     )
     return [{"id": log.id, "rat_id": log.entidad_id, "accion": log.accion, "usuario": log.usuario, "timestamp": log.timestamp, "detalle": log.detalle} for log in logs]
-
-
-@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor+�a")
-async def verificar_cadena_auditoria(
-    limit: int = Query(1000, description="L+�mite de registros a verificar"),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """
-    Verifica la integridad de la cadena de hashes de auditor+�a.
-    Retorna estado de validaci+�n y el ID del primer registro roto (si hay).
-    Solo SUPERADMIN puede verificar la cadena global (H2.2 — auditor+�a 2026-07-07).
-    """
-    from app.services.audit_service import verify_audit_chain
-
-    if current_user.rol_global != "superadmin":
-        raise HTTPException(
-            status_code=403,
-            detail="Solo SUPERADMIN puede verificar la cadena de auditor+�a global.",
-        )
-
-    result = verify_audit_chain(db, limit=limit)
-    return result
 
 
 # ������ Exportaci+�n ���������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������

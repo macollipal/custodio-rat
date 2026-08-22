@@ -49,7 +49,7 @@ class TestExportCSV:
             headers=auth_headers,
         )
         content = resp.content.decode("utf-8-sig")
-        assert "GestiÃ³n de Clientes Web" in content
+        assert "Gestión de Clientes Web" in content
 
     def test_csv_empresa_sin_rats_no_falla(self, client, auth_headers, empresa):
         resp = client.get(

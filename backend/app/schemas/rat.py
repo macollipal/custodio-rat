@@ -87,6 +87,7 @@ class RATBase(BaseModel):
     tipo_dato_sensible: Optional[str] = None
     evaluacion_impacto: bool = False
     estado_eipd: Optional[str] = "no_requerida"
+    justificacion_no_aplica: Optional[str] = None
     fecha_eipd: Optional[date] = None
     decisiones_automatizadas: bool = False
     # Campos nuevos gaps Ley 21.719 (Iter 10)
@@ -124,6 +125,17 @@ class RATBase(BaseModel):
     archivo_base_legal_tipo: Optional[str] = None
     archivo_base_legal_base64: Optional[str] = None
     archivo_base_legal_storage_url: Optional[str] = None
+
+    @field_validator('responsable_tratamiento_email')
+    @classmethod
+    def responsable_email_valido(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        import re
+        pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$'
+        if not re.match(pattern, v):
+            raise ValueError("responsable_tratamiento_email debe tener formato de email válido")
+        return v
 
     @field_validator('estado_eipd')
     @classmethod
@@ -179,6 +191,8 @@ class RATCreate(RATBase):
                 raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
         if self.datos_sensibles and not self.tipo_dato_sensible:
             raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
+        if self.decisiones_automatizadas and not self.logica_automatizada:
+            raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True (Art. 8 Ley 21.719)")
         return self
 
 
@@ -236,11 +250,6 @@ class RATUpdate(RATBase):
                     raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
                 if not garantias or not str(garantias).strip():
                     raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
-            ds = data.get('datos_sensibles')
-            if ds is True:
-                tipo = data.get('tipo_dato_sensible')
-                if not tipo or not str(tipo).strip():
-                    raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
         return data
 
 

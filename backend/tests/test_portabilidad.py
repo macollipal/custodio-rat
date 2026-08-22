@@ -6,21 +6,18 @@ Tests para B-04: Portabilidad per-titular (Art. 9 â€” REC-04).
 
 class TestPortabilidad:
     def test_crear_solicitud_portabilidad(self, client, empresa):
-        resp = client.get("/solicitudes-derecho/token")
-        token = resp.json()["token"]
-
         payload = {
             "company_id": empresa["id"],
             "tipo": "portabilidad",
-            "nombre_titular": "Pedro SÃ¡nchez",
-            "rut_titular": "11.111.111-1",
-            "email_titular": "pedro@test.cl",
+            "titular_nombre": "Pedro Sánchez",
+            "titular_rut": "11.111.111-1",
+            "titular_email": "pedro@test.cl",
             "descripcion": "Solicito copia de todos mis datos personales.",
         }
-        resp = client.post("/solicitudes-derecho/", json={**payload, "token": token})
-        assert resp.status_code == 200
+        resp = client.post("/publico/ejercer-derechos", json=payload)
+        assert resp.status_code == 201
         data = resp.json()
-        assert data["tipo"] == "portabilidad"
+        assert "tracking_token" in data
 
     def test_export_portabilidad_json(self, client, auth_headers, empresa):
         resp = client.post("/tkt-solicitud-derecho/", json={

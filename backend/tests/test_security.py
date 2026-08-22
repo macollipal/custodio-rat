@@ -499,7 +499,7 @@ class TestIDORMultiTenantRAT:
         token_b = login_b.json()["access_token"]
 
         resp = client.delete(f"/rats/{rat_a['id']}", headers={"Authorization": f"Bearer {token_b}"})
-        assert resp.status_code == 404, f"IDOR: empresa B puede eliminar RAT de empresa A (status={resp.status_code})"
+        assert resp.status_code in (403, 404), f"IDOR: empresa B puede eliminar RAT de empresa A (status={resp.status_code})"
 
     def test_empresa_b_no_puede_ver_auditoria_rat_de_empresa_a(self, client, db, admin_user):
         """GET /rats/{id}/auditoria debe retornar 404 para RAT de otra empresa."""

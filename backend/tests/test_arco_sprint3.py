@@ -16,33 +16,28 @@ import pytest
 # S3.1: Magic-bytes validation
 # ============================================================
 class TestMagicBytes:
-    def test_pdf_magico_valido(self, client):
-        """Un PDF con magic bytes válidos debe pasar."""
-        token_resp = client.get("/solicitudes-derecho/token")
-        token = token_resp.json()["token"]
-
-        companies = client.get("/companies/publico").json()
-        if isinstance(companies, dict):
-            companies = companies.get("companies", [])
+    def test_pdf_magico_valido(self, client, empresa):
+        """Un PDF con magic bytes válidos debe pasar (via nuevo endpoint público)."""
+        companies = client.get("/publico/empresas").json()
         if not companies:
             pytest.skip("No hay empresas públicas")
         company_id = companies[0]["id"]
 
         # PDF real (magic bytes %PDF-) — para tests unit del helper.
         resp = client.post(
-            "/solicitudes-derecho/",
+            "/publico/ejercer-derechos",
             json={
                 "company_id": company_id,
                 "tipo": "acceso",
-                "nombre_titular": "Titular PDF Real",
-                "email_titular": f"pdf+{uuid.uuid4().hex[:6]}@ejemplo.cl",
-                "descripcion": "PDF adjuntado correctamente",
-                "token": token,
+                "titular_nombre": "Titular PDF Real",
+                "titular_email": f"pdf+{uuid.uuid4().hex[:6]}@ejemplo.cl",
+                "titular_rut": "12.345.678-5",
+                "descripcion": "PDF adjuntado correctamente en test de magic bytes",
             },
         )
-        assert resp.status_code == 200, resp.text
-        # Nota: el contenido se subio como JSON; el test unit de magic-bytes
-        # ya se valida via validate_upload() o cuando se sube via multipart.
+        assert resp.status_code == 201, resp.text
+        # El formulario público no adjunta archivos directamente (JSON only)
+        # El test unit de magic-bytes se valida en test_validate_upload_rechaza_archivo_renombrado
 
     def test_validate_upload_rechaza_archivo_renombrado(self):
         """Un .txt renombrado a .pdf debe ser rechazado por magic bytes."""
@@ -97,7 +92,7 @@ class TestMagicBytes:
 class TestCsrfToken:
     def test_csrf_token_devuelve_token_firmado(self, client):
         """El endpoint GET /csrf-token devuelve un token firmado."""
-        resp = client.get("/solicitudes-derecho/csrf-token")
+        resp = client.get("/publico/csrf-token")
         assert resp.status_code == 200
         data = resp.json()
         assert "token" in data
@@ -109,8 +104,8 @@ class TestCsrfToken:
 
     def test_csrf_token_multiple_requests_distintos(self, client):
         """Cada llamada a /csrf-token genera un token único."""
-        t1 = client.get("/solicitudes-derecho/csrf-token").json()["token"]
-        t2 = client.get("/solicitudes-derecho/csrf-token").json()["token"]
+        t1 = client.get("/publico/csrf-token").json()["token"]
+        t2 = client.get("/publico/csrf-token").json()["token"]
         assert t1 != t2
 
 
@@ -183,7 +178,7 @@ class TestIdorMultiTenant:
 
         # Intentar acceder con auth_headers de empresa1
         resp = client.get(
-            f"/solicitudes-derecho/{tkt2.id}",
+            f"/tkt-solicitud-derecho/{tkt2.id}",
             headers=auth_headers,
         )
         # 404 (no 403, para no filtrar existencia) o 403 son válidos.
@@ -212,34 +207,22 @@ class TestWorkflowCompleto:
             headers=auth_headers,
         ).json()
 
-        # 2. Rechazar con causal fundada
-        rej = client.post(
-            f"/tkt-solicitud-derecho/{tkt['id']}/rechazar",
-            json={
-                "causal_rechazo": "identidad_no_verificada",
-                "motivo_detalle": "Falta documento de identidad",
-            },
-            headers=auth_headers,
-        )
-        assert rej.status_code == 200
-        assert rej.json()["estado"] == "rechazado"
-
-        # 3. Pedir subsanación (cambia a estado subsanacion)
+        # 2. Pedir subsanación (desde abierto → subsanacion; subsanar desde rechazado no está permitido)
         sub = client.post(
             f"/tkt-solicitud-derecho/{tkt['id']}/subsanar",
             json={"detalle": "Por favor envíe su cédula de identidad"},
             headers=auth_headers,
         )
-        assert sub.status_code == 200
+        assert sub.status_code == 200, sub.text
 
-        # 4. Completar subsanación → vuelve a en_proceso
+        # 3. Completar subsanación → vuelve a en_proceso
         comp = client.post(
             f"/tkt-solicitud-derecho/{tkt['id']}/completar-subsanacion",
             headers=auth_headers,
         )
-        assert comp.status_code == 200
+        assert comp.status_code == 200, comp.text
 
-        # 5. Resolver (con verificación de identidad)
+        # 4. Resolver (con verificación de identidad)
         res = client.patch(
             f"/tkt-solicitud-derecho/{tkt['id']}",
             json={
@@ -255,3 +238,11 @@ class TestWorkflowCompleto:
         data = res.json()
         assert data["estado"] == "resuelto"
         assert data["evidencia_respuesta_hash"]
+
+        # 5. Verificar que rechazar un ticket resuelto (terminal) falla
+        rej = client.post(
+            f"/tkt-solicitud-derecho/{tkt['id']}/rechazar",
+            json={"causal_rechazo": "identidad_no_verificada", "motivo_detalle": "No aplica"},
+            headers=auth_headers,
+        )
+        assert rej.status_code in (400, 422), f"Rechazar desde resuelto debería fallar, got {rej.status_code}"

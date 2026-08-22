@@ -11,8 +11,17 @@ Covers:
 - Endpoint /rats/{id}/audit integration
 """
 
+import pytest
 from app.models.audit_log import AuditLog, GENESIS_HASH
 from app.services.audit_service import log_audit, verify_audit_chain, _compute_hash
+
+
+@pytest.fixture(autouse=True)
+def limpiar_audit_logs(db):
+    """Elimina todos los registros de audit_logs antes de cada test para evitar contaminación entre runs."""
+    db.execute(AuditLog.__table__.delete())
+    db.commit()
+    yield
 
 
 class TestHashChainGenesis:

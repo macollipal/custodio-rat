@@ -145,6 +145,8 @@ class TestBaseLegalIntegracion:
                 "fuente_datos": "Titular",
                 "plazo_retencion": "1 año",
             }
+            if "Interés legítimo" in opt or "interes legitimo" in opt.lower():
+                payload["test_interes_legitimo"] = '{"paso1": "Identificamos interés legítimo válido de gestión interna", "paso2": "Verificamos que no prevalecen derechos del titular", "paso3": "Medidas adoptadas para minimizar impacto en privacidad"}'
             resp = client.post("/rats/", json=payload, headers=auth_headers)
             assert resp.status_code == 201, f"Falló con base_legal={opt}: {resp.text}"
             rat_id = resp.json()["id"]
