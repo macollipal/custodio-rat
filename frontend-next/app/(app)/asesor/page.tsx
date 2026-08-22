@@ -113,7 +113,7 @@ export default function AsesorPage() {
         style={{ background: 'linear-gradient(135deg, #0D4F3C, #0a3d2e)', color: '#FFFFFF' }}
       >
         <div>
-          <h1 className="text-base sm:text-lg font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <span aria-hidden="true">⚖️</span>
             Custodio Asesor
             <span

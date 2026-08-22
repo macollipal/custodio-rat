@@ -23,6 +23,7 @@ interface AuditEntry {
 
 const BASE_TABS = [
   { key: 'sistema', label: 'Sistema' },
+  { key: 'portal_arco', label: 'Portal público' },
   { key: 'registros', label: 'Último log' },
   { key: 'exportacion', label: 'Exportación' },
   { key: 'almacenamiento', label: 'Almacenamiento' },
@@ -121,7 +122,7 @@ export default function ConfiguracionPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Configuración</h1>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Configuración</h1>
       </div>
 
       <div className="flex gap-1 border-b" style={{ borderColor: '#E5E7EB' }}>
@@ -237,6 +238,10 @@ export default function ConfiguracionPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {tab === 'portal_arco' && (
+        <PortalArcoTab company={company} cardCls={cardCls} labelCls={labelCls} />
       )}
 
       {tab === 'registros' && (
@@ -403,6 +408,119 @@ export default function ConfiguracionPage() {
       {tab === 'modulos' && isSuperadmin && <ModulosTab />}
 
       {tab === 'feriados' && <FeriadosTab currentTab={tab} />}
+    </div>
+  );
+}
+
+function PortalArcoTab({
+  company,
+  cardCls,
+  labelCls,
+}: {
+  company: { id: number; nombre: string } | null | undefined;
+  cardCls: string;
+  labelCls: string;
+}) {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const arcoUrl = company ? `${origin}/ejercer-derechos?empresa=${company.id}` : `${origin}/ejercer-derechos`;
+  const seguimientoUrl = `${origin}/seguimiento`;
+
+  function copiar(url: string) {
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Enlace copiado');
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className={cardCls} style={{ border: '1px solid #E5E7EB' }}>
+        <h2 className="text-base font-semibold mb-1" style={{ color: '#111827' }}>Portal ARCOP+ público</h2>
+        <p className="text-xs mb-6" style={{ color: '#9CA3AF' }}>
+          Formulario sin login para que cualquier persona ejerza sus derechos (Art. 12, Ley 21.719).
+          Comparte el enlace en tu sitio web, política de privacidad o correo.
+        </p>
+
+        <div className="space-y-5">
+          <div>
+            <p className={labelCls} style={{ color: '#374151' }}>
+              {company ? `Enlace preseleccionado — ${company.nombre}` : 'Enlace general (sin empresa preseleccionada)'}
+            </p>
+            <p className="text-xs mt-0.5 mb-2" style={{ color: '#9CA3AF' }}>
+              {company
+                ? 'La empresa ya viene seleccionada al abrir el formulario.'
+                : 'Selecciona una empresa activa para obtener el enlace directo.'}
+            </p>
+            <div className="flex gap-2 items-stretch">
+              <code
+                className="flex-1 px-3 py-2 rounded-lg text-xs overflow-x-auto"
+                style={{ background: '#F3F4F6', color: '#374151', border: '1px solid #E5E7EB', fontFamily: 'monospace', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}
+              >
+                {arcoUrl}
+              </code>
+              <button
+                onClick={() => copiar(arcoUrl)}
+                className="flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition hover:bg-gray-100"
+                style={{ border: '1px solid #E5E7EB', color: '#374151' }}
+              >
+                Copiar
+              </button>
+              <a
+                href={arcoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                style={{ background: '#2563EB' }}
+              >
+                Abrir
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p className={labelCls} style={{ color: '#374151' }}>Consulta de estado (titular)</p>
+            <p className="text-xs mt-0.5 mb-2" style={{ color: '#9CA3AF' }}>
+              El titular puede revisar el avance de su solicitud con el código que recibió por email.
+            </p>
+            <div className="flex gap-2 items-stretch">
+              <code
+                className="flex-1 px-3 py-2 rounded-lg text-xs overflow-x-auto"
+                style={{ background: '#F3F4F6', color: '#374151', border: '1px solid #E5E7EB', fontFamily: 'monospace', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}
+              >
+                {seguimientoUrl}
+              </code>
+              <button
+                onClick={() => copiar(seguimientoUrl)}
+                className="flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition hover:bg-gray-100"
+                style={{ border: '1px solid #E5E7EB', color: '#374151' }}
+              >
+                Copiar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={cardCls} style={{ border: '1px solid #E5E7EB' }}>
+        <h2 className="text-base font-semibold mb-4" style={{ color: '#111827' }}>Flujo del titular</h2>
+        <div className="space-y-3">
+          {[
+            { paso: '1', texto: 'Accede al portal público y completa el formulario con sus datos y tipo de derecho.' },
+            { paso: '2', texto: 'Recibe un código de seguimiento por pantalla (sin email requerido).' },
+            { paso: '3', texto: 'Tú gestionas la solicitud desde el módulo ARCOP+ → Solicitudes.' },
+            { paso: '4', texto: 'El titular consulta el avance en /seguimiento usando su código.' },
+          ].map(({ paso, texto }) => (
+            <div key={paso} className="flex items-start gap-3">
+              <span
+                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                style={{ background: '#2563EB' }}
+              >
+                {paso}
+              </span>
+              <p className="text-sm" style={{ color: '#374151' }}>{texto}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

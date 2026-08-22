@@ -67,7 +67,7 @@ export default function ConexionPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6" style={{ color: '#111827' }}>
+      <h1 className="text-2xl font-bold tracking-tight mb-6" style={{ color: '#111827' }}>
         Conexión a base de datos
       </h1>
 

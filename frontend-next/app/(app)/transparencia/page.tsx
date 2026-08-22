@@ -116,7 +116,7 @@ export default function TransparenciaPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Política de Transparencia</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Política de Transparencia</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
             {politica.nombre_empresa} · Versión {politica.version}
           </p>

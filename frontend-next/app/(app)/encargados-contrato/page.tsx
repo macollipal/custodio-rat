@@ -170,7 +170,7 @@ export default function EncargadosContratoPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Contratos de Encargado</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Contratos de Encargado</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>Art. 14 quater — Ley 21.719</p>
         </div>
         <Button
