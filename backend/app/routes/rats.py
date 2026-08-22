@@ -75,7 +75,7 @@ async def reportes(
     sort_col = sort_by if sort_by in SORTABLE_FIELDS else "created_at"
     sort_dir = "desc" if sort_order == "desc" else "asc"
 
-    query = db.query(RATModel)
+    query = db.query(RATModel).filter(RATModel.deleted_at.is_(None))
 
     if company_id is not None:
         query = query.filter(RATModel.company_id == company_id)
@@ -182,7 +182,7 @@ async def listar(
     if not current_user.rol_global == "superadmin" and company_id is None:
         ids = get_empresas_usuario(db, current_user.id)
         from app.models.rat import RAT as RATModel
-        rats_list = db.query(RATModel).filter(RATModel.company_id.in_(ids)).offset(skip).limit(limit).all()
+        rats_list = db.query(RATModel).filter(RATModel.company_id.in_(ids), RATModel.deleted_at.is_(None)).offset(skip).limit(limit).all()
     else:
         if company_id is not None and current_user.rol_global != "superadmin":
             check_company_access(current_user, company_id, db)
@@ -547,7 +547,7 @@ async def auditoria_global(
     if company_id not in ids:
         raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
 
-    rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id).all()]
+    rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id, RATModel.deleted_at.is_(None)).all()]
     if not rat_ids:
         return []
     logs = (
