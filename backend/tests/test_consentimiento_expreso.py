@@ -62,6 +62,14 @@ class TestConsentimientoExpreso:
         resp = client.post(f"/rats/{rat_id}/consentimientos", json=consentimiento, headers=auth_headers)
         assert resp.status_code == 201
 
-        resp = client.put(f"/rats/{rat_id}", json={"datos_sensibles": True}, headers=auth_headers)
+        # Crear EIPD en BD (requerida por Art. 15 bis cuando datos_sensibles=True)
+        resp_eipd = client.post("/eipd/", json={"rat_id": rat_id, "resultado": "en_proceso"}, headers=auth_headers)
+        assert resp_eipd.status_code == 201, f"Error creando EIPD: {resp_eipd.text}"
+
+        resp = client.put(
+            f"/rats/{rat_id}",
+            json={"datos_sensibles": True, "evaluacion_impacto": True, "estado_eipd": "pendiente"},
+            headers=auth_headers,
+        )
         assert resp.status_code == 200, f"Error: {resp.text}"
         assert resp.json()["datos_sensibles"] is True

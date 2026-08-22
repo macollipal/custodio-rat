@@ -176,10 +176,32 @@ class TestIdorMultiTenant:
         db.commit()
         db.refresh(tkt2)
 
-        # Intentar acceder con auth_headers de empresa1
+        # Crear admin_empresa de empresa 1 (distinto al superadmin de auth_headers)
+        admin1 = User(
+            username=f"admin1_{uuid.uuid4().hex[:6]}",
+            full_name="Admin Empresa 1",
+            email=f"admin1+{uuid.uuid4().hex[:6]}@test.cl",
+            hashed_password=get_password_hash("admin1234"),
+            is_active=True,
+            is_admin=False,
+            rol_global="admin_empresa",
+        )
+        db.add(admin1)
+        db.commit()
+        db.refresh(admin1)
+
+        from app.models.user_company import UserCompany as UC1
+        uc1 = UC1(user_id=admin1.id, company_id=empresa["id"], rol="admin")
+        db.add(uc1)
+        db.commit()
+
+        login_resp = client.post("/auth/login", json={"username": admin1.username, "password": "admin1234"})
+        admin1_headers = {"Authorization": f"Bearer {login_resp.json()['access_token']}"}
+
+        # Intentar acceder con token de admin_empresa de empresa1 (no superadmin)
         resp = client.get(
             f"/tkt-solicitud-derecho/{tkt2.id}",
-            headers=auth_headers,
+            headers=admin1_headers,
         )
         # 404 (no 403, para no filtrar existencia) o 403 son válidos.
         assert resp.status_code in (403, 404)

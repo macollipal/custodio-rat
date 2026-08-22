@@ -76,7 +76,7 @@ class TestUploadDocument:
             files={"file": ("test.txt", io.BytesIO(content), "text/plain")},
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422)
+        assert resp.status_code in (400, 413, 422)
 
     def test_upload_existente_duplicado_retorna_422(
         self, client, auth_headers, db

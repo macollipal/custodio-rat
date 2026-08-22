@@ -589,6 +589,10 @@ def rechazar_ticket(
     if motivo not in [e.value for e in CausalRechazo]:
         return None, f"causal_rechazo inválida (esperado: {[e.value for e in CausalRechazo]})"
 
+    ESTADOS_TERMINALES = {"resuelto", "rechazado"}
+    if ticket.estado in ESTADOS_TERMINALES:
+        return None, f"No se puede rechazar un ticket en estado '{ticket.estado}' (estado terminal)"
+
     estado_anterior = ticket.estado
 
     ticket.estado = "rechazado"

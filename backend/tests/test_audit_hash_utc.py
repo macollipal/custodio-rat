@@ -8,6 +8,7 @@ Cubre:
 - Hash cambia si cambia cualquier input
 - Hash chain es verificable después de múltiples inserciones
 """
+import pytest
 from datetime import datetime, timezone, timedelta
 
 from app.services.audit_service import _compute_hash, GENESIS_HASH
@@ -84,6 +85,14 @@ class TestComputeHashUTC:
 
 class TestAuditChainIntegration:
     """Tests de integración con la BD: la cadena debe ser verificable."""
+
+    @pytest.fixture(autouse=True)
+    def limpiar_audit_logs(self, db):
+        """Elimina todos los audit_logs antes de cada test de integración para evitar contaminación."""
+        from app.models.audit_log import AuditLog
+        db.query(AuditLog).delete()
+        db.commit()
+        yield
 
     def test_cadena_construible_y_verificable(self, db):
         """Insertar varios audit logs y verificar que la cadena es íntegra."""
