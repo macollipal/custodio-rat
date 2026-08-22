@@ -164,6 +164,7 @@ def _rat_payload(empresa) -> dict:
         "company_id": empresa["id"],
         "nombre_proceso": "Test RAT gaps",
         "categoria_datos": "Datos de contacto",
+        "categoria_titulares": "Clientes y usuarios del servicio",
         "finalidad": "GestiÃ³n de clientes",
         "base_legal": "Consentimiento del titular",
         "fuente_datos": "Formulario web",

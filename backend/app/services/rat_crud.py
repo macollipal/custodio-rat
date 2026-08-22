@@ -191,9 +191,23 @@ def create_rat(db: Session, data: RATCreate, usuario: str, ip_origen: Optional[s
     return rat
 
 
+_REQUIRED_RAT_FIELDS = frozenset({
+    'nombre_proceso', 'categoria_datos', 'categoria_titulares',
+    'finalidad', 'base_legal', 'fuente_datos', 'plazo_retencion',
+})
+_PLACEHOLDER_RE = re.compile(r'^\.*$')
+
+
 def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_origen: Optional[str] = None) -> RAT:
     rat = get_rat(db, rat_id)
-    cambios = data.model_dump(exclude_unset=True, exclude_none=True)
+    _raw = data.model_dump(exclude_unset=True, exclude_none=True)
+    # _strip_unset_required_fields inyecta "." / "..." como placeholders para los campos
+    # obligatorios de RATBase que no están en el payload del PATCH/PUT. Esos valores
+    # no deben sobreescribir los datos reales en BD; se filtran aquí.
+    cambios = {
+        k: v for k, v in _raw.items()
+        if not (k in _REQUIRED_RAT_FIELDS and isinstance(v, str) and _PLACEHOLDER_RE.match(v))
+    }
 
     archivo_fields = procesar_archivo_base_legal(cambios)
     cambios.update(archivo_fields)

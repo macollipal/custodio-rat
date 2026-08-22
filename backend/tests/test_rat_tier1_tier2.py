@@ -25,6 +25,7 @@ class TestRATTier1Tier2Schema:
             company_id=1,
             nombre_proceso="Test proceso",
             categoria_datos="Nombre, email",
+            categoria_titulares="Clientes y usuarios del servicio",
             finalidad="GestiÃ³n de clientes",
             base_legal="Consentimiento del titular",
             fuente_datos="Del propio titular",
@@ -70,6 +71,7 @@ class TestRATTier1Tier2Schema:
             company_id=1,
             nombre_proceso="Test sin campos nuevos",
             categoria_datos="Nombre",
+            categoria_titulares="Clientes",
             finalidad="Test",
             base_legal="Consentimiento del titular",
             fuente_datos="Web",
@@ -99,6 +101,7 @@ class TestRATTier1Tier2Schema:
                 company_id=1,
                 nombre_proceso="Test",
                 categoria_datos="Test",
+                categoria_titulares="Clientes",
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
@@ -115,6 +118,7 @@ class TestRATTier1Tier2Schema:
                 company_id=1,
                 nombre_proceso="Test",
                 categoria_datos="Test",
+                categoria_titulares="Clientes",
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
@@ -131,6 +135,7 @@ class TestRATTier1Tier2Schema:
                 company_id=1,
                 nombre_proceso="Test",
                 categoria_datos="Test",
+                categoria_titulares="Clientes",
                 finalidad="Test",
                 base_legal="Consentimiento del titular",
                 fuente_datos="Web",
@@ -147,7 +152,7 @@ class TestRATTier1Tier2Schema:
             nivel_confidencialidad="DC3",
             estructura_dato="semiestructurado",
             datos_anonimizados=True,
-            datos_seudonimizados=True,
+            datos_seudonimizados=False,
             ciclo_procesamiento="uso",
             automatizacion="mayoritariamente automatizado",
             frecuencia="diaria",
@@ -163,7 +168,7 @@ class TestRATTier1Tier2Schema:
         assert update.nivel_confidencialidad == "DC3"
         assert update.estructura_dato == "semiestructurado"
         assert update.datos_anonimizados is True
-        assert update.datos_seudonimizados is True
+        assert update.datos_seudonimizados is False
         assert update.ciclo_procesamiento == "uso"
         assert update.automatizacion == "mayoritariamente automatizado"
         assert update.frecuencia == "diaria"
@@ -182,6 +187,7 @@ class TestRATTier1Tier2Schema:
             company_id=1,
             nombre_proceso="Test",
             categoria_datos="Test",
+            categoria_titulares="Clientes",
             finalidad="Test",
             base_legal="Consentimiento del titular",
             fuente_datos="Web",
@@ -292,7 +298,7 @@ class TestRATTier1Tier2Persistence:
             "nivel_confidencialidad": "DC1",
             "estructura_dato": "fisico",
             "datos_anonimizados": True,
-            "datos_seudonimizados": True,
+            "datos_seudonimizados": False,
             "ciclo_procesamiento": "archivo",
             "automatizacion": "100% automatizado",
             "frecuencia": "puntual",
@@ -312,7 +318,7 @@ class TestRATTier1Tier2Persistence:
         assert rat.nivel_confidencialidad == "DC1"
         assert rat.estructura_dato == "fisico"
         assert rat.datos_anonimizados is True
-        assert rat.datos_seudonimizados is True
+        assert rat.datos_seudonimizados is False
         assert rat.ciclo_procesamiento == "archivo"
         assert rat.automatizacion == "100% automatizado"
         assert rat.frecuencia == "puntual"

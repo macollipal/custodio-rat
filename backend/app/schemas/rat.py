@@ -133,16 +133,6 @@ class RATBase(BaseModel):
             raise ValueError(f"estado_eipd debe ser uno de {opciones}")
         return v
 
-    @field_validator('responsable_tratamiento_email')
-    @classmethod
-    def email_formato_responsable(cls, v: Optional[str]) -> Optional[str]:
-        import re
-        if v and v.strip():
-            patron = r'^[\w.\-]+@[\w.\-]+\.\w{2,}$'
-            if not re.match(patron, v.strip()):
-                raise ValueError("responsable_tratamiento_email debe ser un email válido (ej: dpo@empresa.cl)")
-        return v
-
     @field_validator('test_interes_legitimo', mode='before')
     @classmethod
     def test_interes_legitimo_normalizar(cls, v: Any) -> Any:
@@ -187,9 +177,6 @@ class RATCreate(RATBase):
                 raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
             if not self.garantias_transferencia_int or not self.garantias_transferencia_int.strip():
                 raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
-        if self.decisiones_automatizadas:
-            if not self.logica_automatizada or not self.logica_automatizada.strip():
-                raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True")
         if self.datos_sensibles and not self.tipo_dato_sensible:
             raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
         return self
@@ -249,11 +236,6 @@ class RATUpdate(RATBase):
                     raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
                 if not garantias or not str(garantias).strip():
                     raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
-            da = data.get('decisiones_automatizadas')
-            if da is True:
-                logica = data.get('logica_automatizada')
-                if not logica or not str(logica).strip():
-                    raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True")
             ds = data.get('datos_sensibles')
             if ds is True:
                 tipo = data.get('tipo_dato_sensible')
