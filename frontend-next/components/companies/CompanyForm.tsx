@@ -17,7 +17,7 @@ interface CompanyFormProps {
 export function CompanyForm({ onDone, onCancel }: CompanyFormProps) {
   const { setCompany, setCompanies, companies } = useApp();
   const [form, setForm] = useState({
-    nombre: '', rut: '', rubro: '', direccion: '', contacto_dpo: '', email_dpo: '', descripcion: '',
+    nombre: '', rut: '', rubro: '', direccion: '', contacto_dpo: '', email_dpo: '', descripcion: '', canal_ejercicio_derechos: '',
   });
   const [rutError, setRutError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -113,6 +113,11 @@ export function CompanyForm({ onDone, onCancel }: CompanyFormProps) {
         <div>
           <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Descripción (opcional)</label>
           <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={2} placeholder="Breve descripción de la empresa y sus actividades principales." className={inputCls} style={inputStyle} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Canal de ejercicio de derechos <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 12 Ley 21.719)</span></label>
+          <textarea value={form.canal_ejercicio_derechos} onChange={e => set('canal_ejercicio_derechos', e.target.value)} rows={2} placeholder="Ej: Formulario en www.empresa.cl/derechos o email a dpo@empresa.cl" className={inputCls} style={inputStyle} />
         </div>
 
         <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#DBEAFE', borderLeft: '3px solid #2563EB', color: '#1E3A8A' }}>

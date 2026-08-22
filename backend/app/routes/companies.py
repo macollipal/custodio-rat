@@ -2,8 +2,7 @@
 Endpoints CRUD para empresas (responsables del tratamiento).
 """
 
-import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -19,11 +18,10 @@ from app.models.user import RolGlobal
 from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate, CompanyListResponse
 from app.services.company_service import (
     create_company, delete_company, deactivate_company, get_companies, get_company,
-    reactivate_company, update_company,
+    reactivate_company, update_company, calcular_metricas_empresa,
 )
 from app.services.user_company_service import get_empresas_usuario, get_rol_usuario
 from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
-from app.services.rat_calculations import calcular_completitud, rat_to_dict
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
@@ -114,33 +112,7 @@ async def listar(
         out.total_rats = rat_counts.get(c.id, 0)
         rats = rats_by_company.get(c.id, [])
 
-        if rats:
-            out.completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
-            vencidos = 0
-            for r in rats:
-                plazo = r.plazo_retencion or ""
-                match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
-                if not match:
-                    continue
-                years = int(match.group(1))
-                created = r.created_at
-                if created is None:
-                    continue
-                if isinstance(created, str):
-                    try:
-                        created = datetime.fromisoformat(created.replace("Z", "+00:00"))
-                    except Exception:
-                        continue
-                if created.tzinfo is None:
-                    created = created.replace(tzinfo=timezone.utc)
-                expiry = created + timedelta(days=years * 365)
-                if expiry < now:
-                    vencidos += 1
-            out.rats_vencidos = vencidos
-        else:
-            out.completitud_promedio = 0
-            out.rats_vencidos = 0
-
+        out.completitud_promedio, out.rats_vencidos = calcular_metricas_empresa(rats, now)
         out.solicitudes_pendientes = pending_by_company.get(c.id, 0)
         out.solicitudes_vencidas_sla = vencidas_by_company.get(c.id, 0)
         out.has_politica_transparencia = c.id in politicas_exists
@@ -163,35 +135,8 @@ async def obtener(
     rats = c.rats
     out.total_rats = len(rats)
 
-    if rats:
-        out.completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
-        vencidos = 0
-        now = datetime.now(timezone.utc)
-        for r in rats:
-            plazo = r.plazo_retencion or ""
-            match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
-            if not match:
-                continue
-            years = int(match.group(1))
-            created = r.created_at
-            if created is None:
-                continue
-            if isinstance(created, str):
-                try:
-                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
-                except Exception:
-                    continue
-            if created.tzinfo is None:
-                created = created.replace(tzinfo=timezone.utc)
-            expiry = created + timedelta(days=years * 365)
-            if expiry < now:
-                vencidos += 1
-        out.rats_vencidos = vencidos
-    else:
-        out.completitud_promedio = 0
-        out.rats_vencidos = 0
-
     now = datetime.now(timezone.utc)
+    out.completitud_promedio, out.rats_vencidos = calcular_metricas_empresa(rats, now)
     estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
     out.solicitudes_pendientes = db.query(func.count(TktSolicitudDerecho.id)).filter(
         TktSolicitudDerecho.company_id == company_id,
@@ -221,6 +166,10 @@ async def desactivar(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, company_id, db)
+    if current_user.rol_global != "superadmin":
+        rol = get_rol_usuario(db, current_user.id, company_id)
+        if not rol or rol.value == "viewer":
+            raise HTTPException(status_code=403, detail="Se requiere rol Editor o Admin para desactivar una empresa.")
     return deactivate_company(db, company_id, current_user.username, get_client_ip(request))
 
 
@@ -255,6 +204,10 @@ async def actualizar(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, company_id, db)
+    if current_user.rol_global != "superadmin":
+        rol = get_rol_usuario(db, current_user.id, company_id)
+        if not rol or rol.value == "viewer":
+            raise HTTPException(status_code=403, detail="Se requiere rol Editor o Admin para editar una empresa.")
     return update_company(db, company_id, data, current_user.username, get_client_ip(request))
 
 

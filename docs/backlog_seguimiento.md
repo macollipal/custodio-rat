@@ -10,7 +10,7 @@
 
 | Módulo | Quick Wins | En Progreso | Completado | Postergado | Total |
 |--------|-----------|-------------|------------|------------|-------|
-| Módulo Empresas (Clientes) | 10 | 0 | 1 | 0 | 10 |
+| Módulo Empresas (Clientes) | 7 | 0 | 4 | 0 | 10 |
 | Módulo ARCO (Tickets) | 10 | 0 | 3 | 1 | 10 |
 | Formulario Público ARCO | 10 | 0 | 2 | 0 | 10 |
 | Formulario Admin ARCO | 10 | 0 | 10 | 0 | 10 |
@@ -22,13 +22,13 @@
 
 | # | Mejora | Impacto Legal | Impacto Comercial | Complejidad | Esfuerzo | Estado | Asignado |
 |---|--------|---------------|-------------------|-------------|----------|--------|----------|
-| QW1 | Vista de auditoría per-empresa | ALTO | MEDIO | BAJA | 2-3 días | ⚪ Pendiente | — |
-| QW2 | Botón Exportar Reporte APDP (PDF) | CRÍTICO | MEDIO | MEDIA | 3-4 días | ⚪ Pendiente | — |
+| QW1 | Vista de auditoría per-empresa | ALTO | MEDIO | BAJA | 2-3 días | ✅ **Cerrado** | Emece (2026-08-21) |
+| QW2 | Botón Exportar Reporte APDP (PDF) | CRÍTICO | MEDIO | MEDIA | 3-4 días | ✅ **Cerrado** | Emece (2026-08-21) |
 | QW3 | Score de cumplimiento v1 | MEDIO | ALTO | MEDIA | 3-4 días | ⚪ Pendiente | — |
 | QW4 | Exportación CSV/Excel/PDF de tickets ARCO | ALTO | MEDIO | BAJA | 2-3 días | ⚪ Pendiente | — |
 | QW5 | SLA alert por email T-2 días (ARCO + RATs) | CRÍTICO | BAJO | BAJA | 2 días | ✅ **Cerrado** | Emece (2026-07-18) |
 | QW6 | Ficha de empresa básica con tabs | MEDIO | ALTO | MEDIA | 3-5 días | ⚪ Pendiente | — |
-| QW7 | Banner de alertas en lista de empresas | MEDIO | ALTO | BAJA | 1 día | ⚪ Pendiente | — |
+| QW7 | Banner de alertas en lista de empresas | MEDIO | ALTO | BAJA | 1 día | ✅ **Cerrado** | Emece (2026-08-21) |
 | QW8 | Recordatorio ARCO T-2 días | ALTO | BAJO | BAJA | 1-2 días | ⚪ Pendiente | — |
 | QW9 | Editar RUT post-creación | BAJO | MEDIO | BAJA | 0.5 día | ⚪ Pendiente | — |
 | QW10 | Plantillas de RAT por rubro (seed) | MEDIO | ALTO | MEDIA | 5 días | ⚪ Pendiente | — |

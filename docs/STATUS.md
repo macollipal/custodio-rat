@@ -19,7 +19,7 @@
 | **Branch** | `qa` |
 | **Ultima auditoria formal** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
 | **Ultimo trabajo** | [LEVANTAMIENTO_2026-07-18.md](../LEVANTAMIENTO_2026-07-18.md) (4 auditorias) |
-| **Ultima sesion** | 2026-08-07 — ver [SESSION_HANDOFF.md](SESSION_HANDOFF.md) |
+| **Ultima sesion** | 2026-08-21 — fixes CSRF/politica_transparencia/SLA-T2/tier1-tier2; mejoras módulo empresas (B1-B2, F3-F4, S5, D6) |
 | **Administrador IA** | Claude Code (claude-sonnet-4-6) desde 2026-08-07 |
 
 ## Documentacion Vigente

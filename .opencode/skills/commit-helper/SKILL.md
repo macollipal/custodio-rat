@@ -61,7 +61,7 @@ conventional commits del proyecto (ver docs/desarrollo/COMMIT_POLICY.md).
 ## Ejemplos de mensajes correctos del proyecto
 
 Bien (estilo del repo):
-- `feat(asesor): agregar timeout de 30s a MiniMax API`
+- `feat(asesor): aumentar timeout a 60s en Groq chat completions`
 - `fix(auth): aceptar ñ y @ en contraseñas`
 - `refactor(rats): extraer useRatsData hook`
 - `docs(ci): documentar workflow de GitHub Actions`

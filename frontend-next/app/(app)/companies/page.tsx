@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
@@ -20,6 +22,7 @@ type View = 'list' | 'create';
 
 export default function CompaniesPage() {
   const { company: activeCompany, setCompany, companies, setCompanies, user } = useApp();
+  const router = useRouter();
   const [view, setView] = useState<View>('list');
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -154,6 +157,16 @@ export default function CompaniesPage() {
                                 {emp.rats_vencidos} RAT{emp.rats_vencidos > 1 ? 's' : ''} vencid{emp.rats_vencidos > 1 ? 'os' : 'o'}
                               </span>
                             )}
+                            {(emp.solicitudes_pendientes ?? 0) > 0 && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#FEF9C8', color: '#854D0E' }} title="Solicitudes ARCO pendientes">
+                                {emp.solicitudes_pendientes} ARCO pendiente{(emp.solicitudes_pendientes ?? 0) > 1 ? 's' : ''}
+                              </span>
+                            )}
+                            {(emp.solicitudes_vencidas_sla ?? 0) > 0 && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#FEE2E2', color: '#991B1B' }} title="Solicitudes ARCO con SLA vencido">
+                                {emp.solicitudes_vencidas_sla} SLA vencid{(emp.solicitudes_vencidas_sla ?? 0) > 1 ? 'os' : 'o'}
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm" style={{ color: '#6B7280' }}>
                             RUT: <strong>{emp.rut}</strong>
@@ -207,6 +220,14 @@ export default function CompaniesPage() {
                           </span>
                         )}
                         <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => { setCompany(emp); router.push('/rat'); }}
+                          title="Ir al módulo RAT con esta empresa seleccionada"
+                        >
+                          Ver RATs →
+                        </Button>
+                        <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => setEditingId(editingId === emp.id ? null : emp.id)}
@@ -251,9 +272,9 @@ export default function CompaniesPage() {
                           📄 Reporte APDP
                         </Button>
                         {user?.rol_global === 'superadmin' ? (
-                          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ color: '#9CA3AF', background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-                            Gestión en Configuración
-                          </span>
+                          <Link href="/configuracion" className="px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:bg-gray-100" style={{ color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                            Gestión en Configuración →
+                          </Link>
                         ) : (
                           <Button
                             variant="ghost"

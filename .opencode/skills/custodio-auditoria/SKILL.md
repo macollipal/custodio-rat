@@ -18,7 +18,7 @@ Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo
 | **Ubicación** | `C:\Users\chelo\Desktop\RAT_opencode` |
 | **Bucket Activo** | `custodio-documents-qa` |
 | **Bucket Archive** | `custodio-documents-qa-archive` |
-| **Última Auditoría** | 2026-06-26 v1.8 (Iter 11+12) |
+| **Última Auditoría** | 2026-07-05 v1.9 |
 | **Score Actual** | 6.3/10 (audit-loop RAT 6.2, ARCO 6.8, Brechas 5.9) |
 | **Madurez** | Beta → Producción Inicial |
 
@@ -204,15 +204,15 @@ RAT_opencode/
 
 ## Reglas de AI Provider
 
-| Proveedor | Rol | Modelo por defecto |
-|-----------|-----|-------------------|
-| **MiniMax** | Primario | MiniMax-M2.7 (chat), embeddings del proveedor |
-| **OpenAI** | Fallback opcional | gpt-4o-mini (chat), text-embedding-3-small (embeddings, 1536 dim) |
+| Proveedor | Rol | Modelo / API key |
+|-----------|-----|-----------------|
+| **Groq** | LLM Chat | `llama-3.3-70b-versatile` — requiere `GROQ_API_KEY` |
+| **Cohere** | Embeddings | `embed-multilingual-v3.0` (1024 dim) — requiere `COHERE_API_KEY` |
 
 **En documentación, diagramas y código:**
-- Usar "MiniMax (primario), OpenAI (fallback opcional)"
-- En variables de entorno: `MINIMAX_API_KEY` y `OPENAI_API_KEY` (ambas opcionales, pero al menos una debe estar)
-- `OPENAI_API_KEY` es **legítimo y se mantiene** — es fallback real, no error
+- Usar "Groq (LLM chat) + Cohere (embeddings)" — no hay fallback, ambas son requeridas
+- Variables de entorno activas: `GROQ_API_KEY` y `COHERE_API_KEY`
+- MiniMax y OpenAI fueron proveedores anteriores — **no están en el stack actual**
 
 ---
 

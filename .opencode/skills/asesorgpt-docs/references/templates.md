@@ -294,7 +294,7 @@ add_styled_table(doc, ["Código", "Causa"],
                  [
                      ["401", "Token JWT inválido o expirado"],
                      ["429", "Rate limit excedido"],
-                     ["503", "No hay LLM configurado (ni MINIMAX_API_KEY ni OPENAI_API_KEY)"],
+                     ["503", "No hay LLM configurado (GROQ_API_KEY no configurada)"],
                  ],
                  col_widths_cm=[2.0, 15.59])
 ```

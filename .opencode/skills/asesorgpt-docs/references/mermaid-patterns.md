@@ -21,7 +21,7 @@ flowchart TB
 
     subgraph Externos["Sistemas externos"]
         EXT1[(Neon PostgreSQL<br/>+ pgvector)]
-        EXT2{{LLM<br/>MiniMax / OpenAI}}
+        EXT2{{LLM<br/>Groq / Cohere}}
     end
 
     U1 --> SYS
@@ -128,7 +128,7 @@ erDiagram
         text question
         json sources "array de {source, score}"
         float top_score
-        string provider "minimax|openai"
+        string provider "groq|cohere"
         string embedding_provider
         int latency_ms
         datetime created_at
@@ -145,7 +145,7 @@ erDiagram
 flow_index = """
 flowchart LR
     A[Corpus MD/PDF] --> B[Chunker<br/>800 tokens + 100 overlap]
-    B --> C[Embedder<br/>MiniMax / OpenAI]
+    B --> C[Embedder<br/>Cohere embed-multilingual-v3.0]
     C --> D[Hash sha256]
     D -->|ya existe| E[Skip]
     D -->|nuevo| F[UPSERT<br/>asesor_chunks]
@@ -180,13 +180,11 @@ gantt
 ```python
 graph_provider = """
 flowchart TD
-    A[/asesor/ask] --> B{MINIMAX_API_KEY?}
-    B -->|Sí| C{Tiene endpoint<br/>embeddings?}
-    B -->|No| D{OPENAI_API_KEY?}
-    C -->|Sí| E[Usar MiniMax embeddings]
-    C -->|No| D
-    D -->|Sí| F[Usar OpenAI embeddings]
-    D -->|No| G[Error 503]
+    A[/asesor/ask] --> B{GROQ_API_KEY?}
+    B -->|Sí| C{COHERE_API_KEY?}
+    B -->|No| G[Error 503<br/>GROQ_API_KEY faltante]
+    C -->|Sí| E[LLM: Groq llama-3.3-70b<br/>Embeddings: Cohere v3.0]
+    C -->|No| G2[Error 503<br/>COHERE_API_KEY faltante]
 """
 ```
 

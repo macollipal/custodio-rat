@@ -66,7 +66,7 @@ export function CreateUserModal({ onClose, onCreated }: CreateUserModalProps) {
             <select value={form.rol_global} onChange={e => set('rol_global', e.target.value)} className="px-2 py-1 rounded border text-sm" style={{ borderColor: '#E5E7EB' }}>
               <option value="usuario">Usuario</option>
               <option value="admin_empresa">Admin empresa</option>
-              <option value="admin">Administrador</option>
+              <option value="superadmin">Superadmin</option>
             </select>
           </label>
         </div>

@@ -195,7 +195,7 @@ class TestHardDeleteEmpresa:
         eid = r.json()["id"]
 
         resp = client.post(
-            f"/companies/{eid}/hard-delete",
+            f"/admin/companies/{eid}/hard-delete",
             json={"password": "wrong_password"},
             headers=auth_headers,
         )
@@ -207,7 +207,7 @@ class TestHardDeleteEmpresa:
         eid = r.json()["id"]
 
         resp = client.post(
-            f"/companies/{eid}/hard-delete",
+            f"/admin/companies/{eid}/hard-delete",
             json={},
             headers=auth_headers,
         )

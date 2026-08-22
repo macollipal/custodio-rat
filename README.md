@@ -332,6 +332,27 @@ npm run test:e2e:headed
 - Gestión multi-empresa con usuarios por empresa (`user_companies`)
 - Topbar con nombre de usuario en negrita + badge de rol con colores diferenciados
 
+### Módulo Empresas
+
+Gestión de responsables del tratamiento de datos personales.
+
+**Endpoints:** `GET/POST /companies`, `GET/PUT/DELETE /companies/{id}`, `PATCH /companies/{id}/desactivar`, `GET /companies/{id}/usuarios/`, `GET /admin/companies/{id}/hard-delete`
+
+**Campos destacados en `CompanyOut`:**
+- `completitud_promedio` — promedio de completitud de todos los RATs de la empresa
+- `rats_vencidos` — RATs cuyo plazo de retención ha expirado
+- `solicitudes_pendientes` — tickets ARCO en estado abierto o en_proceso
+- `solicitudes_vencidas_sla` — tickets ARCO con plazo legal vencido
+- `has_politica_transparencia` — si existe política Art. 14 ter publicada
+- `canal_ejercicio_derechos` — canal oficial para ejercicio de derechos (Art. 12)
+- `desactivada_por` — username que desactivó la empresa
+
+**Roles de empresa (tabla `user_companies`):** `admin` | `editor` | `viewer`
+- VIEWER solo puede consultar; no puede editar ni desactivar.
+- Solo superadmin puede realizar hard-delete.
+
+**Frontend:** `/companies` — cards con badges de alertas (RATs vencidos, ARCO pendientes/SLA), botón "Ver RATs →", drawer de auditoría, gestión de accesos, exportación APDP.
+
 ### Módulo de Consentimientos (Art. 12 Ley 21.719) — NUEVO
 - Página `/consentimientos` con tabla y KPIs (Total / Activos / Revocados)
 - Filtros: por RAT, solo activos

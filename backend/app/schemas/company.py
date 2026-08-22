@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class CompanyBase(BaseModel):
@@ -24,7 +24,7 @@ class CompanyBase(BaseModel):
     rubro_id: Optional[int] = None
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
-    email_dpo: Optional[str] = None
+    email_dpo: Optional[EmailStr] = None
     telefono_dpo: Optional[str] = None
     representante_legal: Optional[str] = None
     descripcion: Optional[str] = None
@@ -42,7 +42,14 @@ class CompanyUpdate(BaseModel):
     rubro_id: Optional[int] = None
     direccion: Optional[str] = None
     contacto_dpo: Optional[str] = None
-    email_dpo: Optional[str] = None
+    email_dpo: Optional[EmailStr] = None
+
+    @field_validator("nombre", mode="before")
+    @classmethod
+    def nombre_no_vacio(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not str(v).strip():
+            raise ValueError("La razón social no puede estar vacía.")
+        return v
     telefono_dpo: Optional[str] = None
     representante_legal: Optional[str] = None
     descripcion: Optional[str] = None
@@ -62,6 +69,7 @@ class CompanyOut(CompanyBase):
     solicitudes_vencidas_sla: Optional[int] = 0
     activa: Optional[bool] = True
     desactivada_at: Optional[datetime] = None
+    desactivada_por: Optional[str] = None
     has_politica_transparencia: Optional[bool] = False
 
     model_config = {"from_attributes": True}

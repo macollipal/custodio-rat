@@ -22,6 +22,7 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
     contacto_dpo: empresa.contacto_dpo ?? '',
     email_dpo: empresa.email_dpo ?? '',
     descripcion: empresa.descripcion ?? '',
+    canal_ejercicio_derechos: empresa.canal_ejercicio_derechos ?? '',
   });
   const [saving, setSaving] = useState(false);
   const [rubros, setRubros] = useState<Rubro[]>([]);
@@ -78,6 +79,10 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
         <div className="col-span-2">
           <label className={labelCls} style={labelStyle}>Descripción</label>
           <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
+        </div>
+        <div className="col-span-2">
+          <label className={labelCls} style={labelStyle}>Canal de ejercicio de derechos <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 12)</span></label>
+          <textarea value={form.canal_ejercicio_derechos} onChange={e => set('canal_ejercicio_derechos', e.target.value)} rows={2} placeholder="Ej: Formulario en www.empresa.cl/derechos o email a dpo@empresa.cl" className={inputCls} style={inputStyle} />
         </div>
       </div>
       <div className="flex gap-2 justify-end">

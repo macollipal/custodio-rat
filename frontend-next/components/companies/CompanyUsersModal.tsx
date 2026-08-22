@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import * as api from '@/lib/api';
-
-interface UserRow {
-  id: number;
-  username: string;
-  full_name: string;
-  email: string;
-  rol_global: string;
-}
+import type { UserCompany } from '@/types';
 
 interface CompanyUsersModalProps {
   companyId: number;
@@ -17,21 +10,23 @@ interface CompanyUsersModalProps {
 }
 
 export function CompanyUsersModal({ companyId, onClose }: CompanyUsersModalProps) {
-  const [usuarios, setUsuarios] = useState<UserRow[]>([]);
+  const [usuarios, setUsuarios] = useState<UserCompany[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    api.listarUsuarios().then(data => {
-      setUsuarios(Array.isArray(data) ? data.filter((u: any) => u.empresa_id === companyId) : []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api.listarAccesos(companyId)
+      .then((data) => {
+        setUsuarios(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, [companyId]);
 
   function rolBadge(rol: string) {
-    if (rol === 'superadmin') return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F3E8FF', color: '#7C3AED' }}>Superadmin</span>;
-    if (rol === 'admin_empresa') return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>Admin empresa</span>;
-    return <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#F3F4F6', color: '#6B7280' }}>Usuario</span>;
+    if (rol === 'admin') return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>Admin</span>;
+    if (rol === 'editor') return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#D1FAE5', color: '#059669' }}>Editor</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#F3F4F6', color: '#6B7280' }}>Viewer</span>;
   }
 
   return (
@@ -55,7 +50,7 @@ export function CompanyUsersModal({ companyId, onClose }: CompanyUsersModalProps
               <thead>
                 <tr className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280', background: '#F9FAFB', borderBottom: '1px solid #D1D5DB' }}>
                   <th className="px-4 py-3 text-left">Usuario</th>
-                  <th className="px-4 py-3 text-right">Rol global</th>
+                  <th className="px-4 py-3 text-right">Rol empresa</th>
                 </tr>
               </thead>
               <tbody>
@@ -67,7 +62,7 @@ export function CompanyUsersModal({ companyId, onClose }: CompanyUsersModalProps
                       <div className="text-xs" style={{ color: '#9CA3AF' }}>{u.email}</div>
                     </td>
                     <td className="px-4 py-3 text-right align-middle">
-                      {rolBadge(u.rol_global)}
+                      {rolBadge(u.rol)}
                     </td>
                   </tr>
                 ))}

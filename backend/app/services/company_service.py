@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+import re
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -9,6 +10,42 @@ from app.models.breach import SecurityBreach
 from app.models.politica_transparencia import PoliticaTransparencia
 from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.audit_service import log_audit
+
+
+def calcular_metricas_empresa(rats: list, now: datetime) -> tuple[int, int]:
+    """Retorna (completitud_promedio, rats_vencidos) para una lista de RATs de una empresa."""
+    from app.services.rat_calculations import calcular_completitud, rat_to_dict
+    if not rats:
+        return 0, 0
+    completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
+    vencidos = 0
+    for r in rats:
+        plazo = r.plazo_retencion or ""
+        match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
+        if not match:
+            continue
+        years = int(match.group(1))
+        created = r.created_at
+        if created is None:
+            continue
+        if isinstance(created, str):
+            try:
+                created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            except Exception:
+                continue
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        if created + timedelta(days=years * 365) < now:
+            vencidos += 1
+    return completitud_promedio, vencidos
+
+
+def _delete_company_orphans(db: Session, company_id: int) -> None:
+    """Elimina registros huérfanos sin cascade antes de borrar la empresa."""
+    from sqlalchemy import delete
+    db.execute(delete(EncargadoContrato).where(EncargadoContrato.company_id == company_id))
+    db.execute(delete(SecurityBreach).where(SecurityBreach.company_id == company_id))
+    db.execute(delete(PoliticaTransparencia).where(PoliticaTransparencia.company_id == company_id))
 
 
 def get_companies(db: Session, skip: int = 0, limit: int = 100, incluir_inactivas: bool = False) -> tuple[list[Company], int]:
@@ -61,6 +98,7 @@ def update_company(db: Session, company_id: int, data: CompanyUpdate, usuario: s
 
 def delete_company(db: Session, company_id: int, usuario: str, ip_origen: Optional[str] = None) -> dict:
     company = get_company(db, company_id)
+    _delete_company_orphans(db, company_id)
     log_audit(db, "company", company_id, "eliminar", usuario, {"nombre": company.nombre}, ip_origen)
     db.delete(company)
     db.commit()
@@ -119,11 +157,7 @@ def hard_delete_company(
     company = get_company(db, company_id)
     nombre = company.nombre
 
-    from sqlalchemy import delete
-
-    db.execute(delete(EncargadoContrato).where(EncargadoContrato.company_id == company_id))
-    db.execute(delete(SecurityBreach).where(SecurityBreach.company_id == company_id))
-    db.execute(delete(PoliticaTransparencia).where(PoliticaTransparencia.company_id == company_id))
+    _delete_company_orphans(db, company_id)
 
     log_audit(
         db, "company", company_id, "hard_delete",
