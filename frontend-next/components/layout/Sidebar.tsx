@@ -49,7 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Análisis',
     items: [
       { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'REPORTES' },
-      { key: 'asesor', label: 'Asesor IA', icon: '🤖', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'ASESOR' },
+      { key: 'asesor', label: 'Asesor IA', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'ASESOR' },
     ],
   },
   {

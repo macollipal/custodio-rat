@@ -54,7 +54,7 @@ const MODULE_INFO: Record<string, { nombre: string; descripcion: string; icon: s
   ASESOR: {
     nombre: 'Asesor IA',
     descripcion: 'Chat con RAG sobre Ley 21.719 y documentacion interna.',
-    icon: '🤖',
+    icon: '⚖️',
   },
 };
 
