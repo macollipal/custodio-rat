@@ -1,6 +1,6 @@
 # Documentacion Oficial — Custodio RAT Manager
 
-> **Version vigente:** v1.10 (2026-07-18) — regenerada por auditoria de drift documental
+> **Version vigente:** v1.11 (2026-08-22) — regenerada por auditoria QA total (78 fallos → 0)
 > **Politica:** los docs vigentes se versionan en git. Las versiones anteriores quedan como historico y NO se usan como fuente operativa.
 
 ## Matriz de Vigencia
@@ -15,11 +15,11 @@
 | **05** | Diseno Funcional | _(no regenerado)_ | v1.0, v1.1, v1.2, v1.3 | Sin equivalente v1.9 — evaluar si necesario. |
 | **06** | Arquitectura Software | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye versionamiento /api/v1/, soft delete, cifrado Fernet fail-loudly, DR plan. |
 | **07** | Modelo de Datos Detallado | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — evaluar si necesario. |
-| **08** | API REST | **v1.10** ✅ | v1.0–v1.9 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-07-18.** Cubre **20+ endpoints** RAT incluyendo /api/v1/ y endpoints de compliance. |
+| **08** | API REST | **v1.11** ✅ | v1.0–v1.10 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-08-22.** POST /auth/users → 201, GET /publico/csrf-token, PUT /transparencia/{id}. |
 | **09** | Backlog de Producto | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye QW5 (SLA T-2 RATs) y QW4 cerrado. |
-| **10** | Plan de QA | **v1.10** ✅ | v1.0–v1.9 (v1.5 falta) | Regenerado 2026-07-18. Incluye tests E2E ARCO workflow (a7e7687). |
+| **10** | Plan de QA | **v1.11** ✅ | v1.0–v1.10 (v1.5 falta) | Regenerado 2026-08-22. TC-047 a TC-055 (QA total 78→0 fallos). 732 tests passing. |
 | **11** | Manual de Despliegue | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/despliegue/` cumple esta funcion. |
-| **12** | Manual Tecnico | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre C1+C2+C4+C6+C7+QW13+Fase 1. |
+| **12** | Manual Tecnico | **v1.11** ✅ | v1.0–v1.10 | Regenerado 2026-08-22. Sprint A+B+UX + fixes QA (auth 201, prorroga, encrypt_migration). |
 | **MTX** | Matriz de Trazabilidad | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye RF-170 (BaseLegal), RF-171 (Soft delete), RF-172 (Versionamiento API), RF-173 (SLA T-2). |
 
 ## Documentos SIN Version v1.9 (vigente es historica)

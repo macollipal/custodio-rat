@@ -1,5 +1,35 @@
 # Changelog — Custodio RAT Manager
 
+## [Unreleased] - 2026-08-22
+
+### QA — Corrección total de suite de tests (78 → 0 fallidos)
+
+Dos sesiones de trabajo (commits `79b1f5c` y `5978abc`) llevaron la suite de 78 fallos a 0.
+
+#### Backend — Fixes de compliance y comportamiento
+
+- **`POST /auth/users` → 201**: agregado `status_code=201` al endpoint (antes retornaba 200)
+- **PATCH ticket → resuelto con `metodo_verificacion_identidad` en body**: el handler en
+  `tkt_solicitud_derecho.py` verificaba el campo en BD antes de aplicar el body, causando
+  422 silencioso. Condición corregida a `not ticket.metodo_verificacion_identidad and not data.metodo_verificacion_identidad`
+- **`encrypt_existing_bytea._check_prerequisites()`**: eliminado fallback a `settings.ENCRYPTION_KEY`
+  cuando `ENCRYPTION_KEY=""` en entorno — el script de migración debe validar explícitamente la env var
+- **`/rats` EIPD validator**: validación de `datos_sensibles=True` requiere `evaluacion_impacto + estado_eipd`
+- **`POST /rats` con `decisiones_automatizadas=True`**: requiere `logica_automatizada` (Art. 8)
+- **`POST /rats` con `responsable_tratamiento_email`**: valida formato email (Art. 16)
+- **`/auditoria/verify-chain` vs `/{company_id}`**: reordenamiento de rutas FastAPI (static antes de parameterizado)
+
+#### Tests — Correcciones de payloads y expectativas
+
+- `test_encrypt_migration.py`: `make_rat()` sin `categoria_titulares` (NOT NULL) → agregado; mojibake CP1252 corregido
+- `test_dashboard.py`: `datos_sensibles=True` bloqueado por EIPD validator → payload con `evaluacion_impacto + estado_eipd`
+- `test_rat_gaps_21719.py`: 2 tests actualizados para esperar 422 (el backend ahora valida `logica_automatizada` y `email_responsable`)
+- `test_rbac_deep.py`: RUT fijo `77.777.777-7` causaba 409 en parallel test runs → UUID-based RUT
+- `test_e2e.py`, `test_e2e_workflow_rat.py`: múltiples fixes (mojibake, UUID RUT, EIPD campos, estado consentimiento)
+- `test_arco_sprint1.py`, `test_arco_sprint3.py`, `test_qw10_formulario.py`: migrados a endpoints canónicos actuales
+
+---
+
 ## [Unreleased] - 2026-08-09
 
 ### Sprint UX — Mejoras de interfaz

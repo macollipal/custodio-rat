@@ -18,7 +18,8 @@
 | 2026-06-14 | Auditoría v1.5 | ✅ Documentación | 8.3/10 |
 | 2026-07-07 | Auditoria RAT Detalle | ✅ Documentación | 9.0/10 (RAT) |
 | 2026-07-07 | Auditoria ARCO Arquitectura | ✅ Documentación | 8.6/10 |
-| 2026-07-18 | **Auditoría de Drift Documental** | 📋 Pendiente regeneración | — |
+| 2026-07-18 | **Auditoría de Drift Documental** | ✅ Regenerado v1.10 | — |
+| 2026-08-22 | **Auditoría QA Total (78 → 0 fallos)** | ✅ Documentación v1.11 | Suite verde |
 
 ### 2026-06-24 — Cierre sesión v1.7
 - **Estado:** ✅ Documentación generada
@@ -137,7 +138,16 @@
 
 ---
 
-*Última actualización: 2026-07-05*
+*Última actualización: 2026-08-22*
+
+### 2026-08-22 — Auditoría QA Total
+
+- **Estado:** ✅ Suite completa verde
+- **Score QA:** 0 fallos de ~732 tests (antes: 78 fallos)
+- **Tema:** Corrección total de la suite de tests del backend. Fixes en auth.py, tkt_solicitud_derecho.py, encrypt_existing_bytea.py, y múltiples archivos de test.
+- **Commits:** `79b1f5c` (primera sesión) + `5978abc` (segunda sesión)
+- **Docs generados:** 08 API REST v1.11, 10 Plan QA v1.11, 12 Manual Técnico v1.11
+- **Carpeta:** `2026-08-22_auditoria_qa_tests/`
 
 ### 2026-07-07 — Auditoria Modulo ARCO v1.0 (Arquitecto)
 - **Estado:** ✅ Documentacion local generada
