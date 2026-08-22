@@ -214,12 +214,14 @@ class TestAdminEmpresaRBAC:
         db.commit()
         db.refresh(user)
 
+        import uuid
+        sfx = uuid.uuid4().hex[:8]
         resp_emp = client.post("/companies/", json={
-            "nombre": "Empresa Ajena Get",
-            "rut": "77.777.777-7",
+            "nombre": f"Empresa Ajena Get {sfx}",
+            "rut": f"77.{sfx[:3]}.{sfx[3:6]}-{sfx[7]}",
             "rubro": "Test",
             "contacto_dpo": "DPO Test",
-            "email_dpo": "dpo@empresaajena.cl",
+            "email_dpo": f"dpo{sfx}@empresaajena.cl",
         }, headers=auth_headers)
         assert resp_emp.status_code == 201, f"Error creando empresa: {resp_emp.text}"
         empresa_ajena_id = resp_emp.json()["id"]

@@ -36,6 +36,6 @@ class TestEmailValidation:
             "email": "valido@test.cl",
             "full_name": "Usuario Email Valido",
             "password": "Test1234!",
-            "rol_global": "usuario",
+            "rol_global": "superadmin",
         }, headers=auth_headers)
         assert resp.status_code == 201, f"Esperado 201, obtuvo {resp.status_code}: {resp.text}"

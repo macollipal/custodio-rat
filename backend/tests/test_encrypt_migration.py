@@ -22,10 +22,11 @@ def make_rat(company_id: int, nombre_proceso: str, archivo_datos=None, **kwargs)
         company_id=company_id,
         nombre_proceso=nombre_proceso,
         categoria_datos="Nombre, email",
-        finalidad="GestiÃ³n comercial",
+        categoria_titulares="Clientes y usuarios",
+        finalidad="Gestión comercial",
         base_legal="Consentimiento",
         fuente_datos="Titular web",
-        plazo_retencion="5 aÃ±os",
+        plazo_retencion="5 años",
         estado=EstadoRAT.BORRADOR,
         archivo_base_legal_datos=archivo_datos,
         **kwargs

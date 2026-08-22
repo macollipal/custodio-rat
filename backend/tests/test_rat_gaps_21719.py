@@ -123,13 +123,12 @@ class TestRATLogicaAutomatizada:
         assert len(response.json()["logica_automatizada"]) == 2000
 
     def test_crear_rat_sin_logica_automatizada(self, client: TestClient, auth_headers, empresa):
-        """Caso negativo: RAT con decisiones_automatizadas=True pero sin logica_automatizada."""
+        """Caso negativo: RAT con decisiones_automatizadas=True pero sin logica_automatizada → 422 (Art. 8 Ley 21.719)."""
         payload = _rat_payload(empresa)
         payload["decisiones_automatizadas"] = True
         payload.pop("logica_automatizada", None)
         response = client.post("/rats", json=payload, headers=auth_headers)
-        assert response.status_code == 201
-        assert response.json().get("logica_automatizada") is None
+        assert response.status_code == 422
 
 
 class TestRATResponsableTratamientoEmail:
@@ -144,11 +143,11 @@ class TestRATResponsableTratamientoEmail:
         assert response.json()["responsable_tratamiento_email"] == "responsable@empresa.cl"
 
     def test_crear_rat_email_formato_invalido(self, client: TestClient, auth_headers, empresa):
-        """Caso negativo: RAT con email en formato invÃ¡lido (backend lo acepta, validaciÃ³n estricta en frontend)."""
+        """Caso negativo: RAT con email en formato inválido → 422 (validación backend Art. 16)."""
         payload = _rat_payload(empresa)
         payload["responsable_tratamiento_email"] = "no-es-un-email"
         response = client.post("/rats", json=payload, headers=auth_headers)
-        assert response.status_code == 201
+        assert response.status_code == 422
 
     def test_crear_rat_sin_email_responsable(self, client: TestClient, auth_headers, empresa):
         """Caso borde: RAT sin responsable_tratamiento_email (NULL)."""

@@ -314,7 +314,7 @@ def actualizar_ticket(
 
     # S1.3: Validación de identidad (Art. 12 Ley 21.719).
     # Si el ticket pasa a estado 'resuelto', debe existir método de verificación de identidad registrado.
-    if data.estado == "resuelto" and not ticket.metodo_verificacion_identidad:
+    if data.estado == "resuelto" and not ticket.metodo_verificacion_identidad and not data.metodo_verificacion_identidad:
         raise HTTPException(
             status_code=422,
             detail=(

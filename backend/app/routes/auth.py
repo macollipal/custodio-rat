@@ -126,7 +126,7 @@ async def me(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.post("/users", response_model=UserOut, summary="Crear nuevo usuario (solo admin)")
+@router.post("/users", response_model=UserOut, status_code=201, summary="Crear nuevo usuario (solo admin)")
 async def crear_usuario(
     data: UserCreate,
     db: Session = Depends(get_db),

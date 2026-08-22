@@ -73,7 +73,7 @@ def _check_prerequisites() -> tuple[str, Fernet]:
         logger.critical("DATABASE_URL no configurada. Abortando.")
         sys.exit(1)
 
-    key = os.getenv("ENCRYPTION_KEY") or settings.ENCRYPTION_KEY
+    key = os.getenv("ENCRYPTION_KEY")
     if not key:
         logger.critical(
             "ENCRYPTION_KEY no configurada. "
