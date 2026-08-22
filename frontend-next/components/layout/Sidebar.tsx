@@ -23,7 +23,7 @@ type Page =
   | 'asesor'
   ;
 
-type NavItem = { key: Page; label: string; icon: string; roles: string[] };
+type NavItem = { key: Page; label: string; icon: string; roles: string[]; moduleKey?: string };
 type NavGroup = { title: string; items: NavItem[] };
 
 const NAV_GROUPS: NavGroup[] = [
@@ -31,25 +31,25 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Operaciones',
     items: [
       { key: 'dashboard', label: 'Dashboard', icon: '▣', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'tkt_solicitud_derecho', label: 'Tickets ARCOP+', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'rat', label: 'Procesos RAT', icon: '≡', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'RAT' },
+      { key: 'tkt_solicitud_derecho', label: 'Tickets ARCOP+', icon: '📋', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'ARCO' },
+      { key: 'breaches', label: 'Brechas', icon: '🛡', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'BRECHAS' },
     ],
   },
   {
     title: 'Cumplimiento',
     items: [
-      { key: 'transparencia', label: 'Transparencia', icon: '📄', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'encargados-contrato', label: 'Enc. Contrato', icon: '📝', roles: ['superadmin', 'admin_empresa'] },
-      { key: 'consentimientos', label: 'Consentimientos', icon: '✅', roles: ['superadmin', 'admin_empresa'] },
-      { key: 'eipd', label: 'EIPD', icon: '📑', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'transparencia', label: 'Transparencia', icon: '📄', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'TRANSPARENCIA' },
+      { key: 'encargados-contrato', label: 'Enc. Contrato', icon: '📝', roles: ['superadmin', 'admin_empresa'], moduleKey: 'ENCARGADOS' },
+      { key: 'consentimientos', label: 'Consentimientos', icon: '✅', roles: ['superadmin', 'admin_empresa'], moduleKey: 'CONSENTIMIENTOS' },
+      { key: 'eipd', label: 'EIPD', icon: '📑', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'EIPD' },
     ],
   },
   {
     title: 'Análisis',
     items: [
-      { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'] },
-      { key: 'asesor', label: 'Asesor', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'] },
+      { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'REPORTES' },
+      { key: 'asesor', label: 'Asesor IA', icon: '🤖', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'ASESOR' },
     ],
   },
   {
@@ -104,7 +104,8 @@ const SIDEBAR_PALETTE = {
 };
 
 export default function Sidebar({ currentPage, onNavigate, companies, onClose }: SidebarProps) {
-  const { user, company, setCompany, logout, theme } = useApp();
+  const { user, company, setCompany, logout, theme, activeModules } = useApp();
+  const isSuperadmin = user?.rol_global === 'superadmin';
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const p = SIDEBAR_PALETTE[theme];
@@ -112,8 +113,6 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
   const inicial = user?.full_name?.[0]?.toUpperCase() ?? 'U';
   const nombre = user?.full_name ?? 'Usuario';
   const rolLabel = user?.rol_global === 'superadmin' ? 'Superadmin' : user?.rol_global === 'admin_empresa' ? 'Admin empresa' : 'Usuario';
-
-  const allNavItems: { key: Page; label: string; icon: string; roles: string[] }[] = NAV_GROUPS.flatMap(g => g.items);
 
   return (
     <aside
@@ -173,7 +172,8 @@ export default function Sidebar({ currentPage, onNavigate, companies, onClose }:
         <nav className="space-y-3">
           {NAV_GROUPS.map((group) => {
             const visibleItems = group.items.filter(item =>
-              item.roles.includes(user?.rol_global ?? '')
+              item.roles.includes(user?.rol_global ?? '') &&
+              (isSuperadmin || !item.moduleKey || activeModules.includes(item.moduleKey))
             );
             if (visibleItems.length === 0) return null;
             return (

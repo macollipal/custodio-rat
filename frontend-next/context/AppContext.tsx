@@ -5,7 +5,7 @@ import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '
 
 export type Theme = 'light' | 'dark' | 'mac';
 import { STORAGE_KEYS, API_BASE, DRAFT_KEY_PREFIX } from '@/lib/constants';
-import { listarBaseLegalOptions } from '@/lib/api';
+import { listarBaseLegalOptions, getActiveCompanyModules } from '@/lib/api';
 
 interface AppState {
   token: string | null;
@@ -21,6 +21,7 @@ interface AppState {
   darkMode: boolean;
   baseLegalOptions: string[];
   baseLegalDescripciones: Record<string, string>;
+  activeModules: string[];
   setToken: (token: string) => void;
   setUser: (user: User) => void;
   setCompany: (company: Company) => void;
@@ -50,6 +51,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [baseLegalOptions, setBaseLegalOptions] = useState<string[]>([]);
   const [baseLegalDescripciones, setBaseLegalDescripciones] = useState<Record<string, string>>({});
+  const [activeModules, setActiveModules] = useState<string[]>([
+    'RAT', 'ARCO', 'BRECHAS', 'EIPD', 'CONSENTIMIENTOS', 'ENCARGADOS', 'TRANSPARENCIA', 'REPORTES', 'ASESOR',
+  ]);
 
   useEffect(() => {
     const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -76,6 +80,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
   }, []);
+
+  const ALL_MODULES = ['RAT', 'ARCO', 'BRECHAS', 'EIPD', 'CONSENTIMIENTOS', 'ENCARGADOS', 'TRANSPARENCIA', 'REPORTES', 'ASESOR'];
+
+  useEffect(() => {
+    if (!token || !company?.id) return;
+    if (user?.rol_global === 'superadmin') {
+      setActiveModules(ALL_MODULES);
+      return;
+    }
+    getActiveCompanyModules(company.id)
+      .then(res => setActiveModules(res.active_modules))
+      .catch(() => setActiveModules(ALL_MODULES));
+  }, [token, company?.id, user?.rol_global]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!token) return;
@@ -201,6 +218,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     darkMode: theme === 'dark',
     baseLegalOptions,
     baseLegalDescripciones,
+    activeModules,
     cycleTheme,
     toggleDarkMode,
     setToken,
@@ -217,7 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     actualizarStatsEnCache,
   }), [
     token, user, company, companies, rats, dashboardStats, theme,
-    baseLegalOptions, baseLegalDescripciones,
+    baseLegalOptions, baseLegalDescripciones, activeModules,
     cycleTheme, toggleDarkMode, setToken, setUser, setCompany, setCompanies,
     setRats, setDashboardStats, logout,
     actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,
