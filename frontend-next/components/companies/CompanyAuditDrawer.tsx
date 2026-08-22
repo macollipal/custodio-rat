@@ -76,16 +76,18 @@ export default function CompanyAuditDrawer({
 }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [filterAccion, setFilterAccion] = useState<string>('todas');
 
   useEffect(() => {
     if (!open || !company) return;
     setLoading(true);
+    setError(false);
     setFilterAccion('todas');
     api
       .getAuditoriaGlobal(company.id)
-      .then(setEntries)
-      .catch(() => toast.error('No se pudo cargar la auditoría.'))
+      .then((data) => { setEntries(data); setError(false); })
+      .catch(() => { setError(true); setEntries([]); })
       .finally(() => setLoading(false));
   }, [open, company]);
 
@@ -125,6 +127,16 @@ export default function CompanyAuditDrawer({
             <Skeleton height={48} />
             <Skeleton height={48} />
             <Skeleton height={48} />
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="text-3xl mb-2">⚠️</div>
+            <p className="text-sm font-medium" style={{ color: '#DC2626' }}>
+              No se pudo cargar la auditoría
+            </p>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+              Intenta cerrar y volver a abrir este panel.
+            </p>
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-12">

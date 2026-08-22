@@ -543,9 +543,10 @@ async def auditoria_global(
     from app.models.audit_log import AuditLog
     from app.models.rat import RAT as RATModel
 
-    ids = get_empresas_usuario(db, current_user.id)
-    if company_id not in ids:
-        raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
+    if current_user.rol_global != "superadmin":
+        ids = get_empresas_usuario(db, current_user.id)
+        if company_id not in ids:
+            raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
 
     rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id, RATModel.deleted_at.is_(None)).all()]
     if not rat_ids:
