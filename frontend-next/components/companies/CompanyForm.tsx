@@ -92,10 +92,7 @@ export function CompanyForm({ onDone, onCancel }: CompanyFormProps) {
             />
             {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Rubro / Sector</label>
-            <input type="text" value={form.rubro} onChange={e => set('rubro', e.target.value)} placeholder="Ej: Retail, Salud, Tecnología" className={inputCls} style={inputStyle} />
-          </div>
+          {/* rubro oculto — wizard por sector no implementado aún */}
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Dirección</label>
             <input type="text" value={form.direccion} onChange={e => set('direccion', e.target.value)} placeholder="Ej: Av. Providencia 1234, Santiago" className={inputCls} style={inputStyle} />
