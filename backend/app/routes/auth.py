@@ -2,6 +2,7 @@
 Endpoints de autenticación: login, registro de usuarios (solo admin) y perfil.
 """
 
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
 
@@ -184,7 +185,7 @@ async def cambiar_password(
 async def listar_usuarios(
     skip: int = 0,
     limit: int = 100,
-    company_id: int | None = None,
+    company_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
