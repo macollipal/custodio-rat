@@ -225,17 +225,18 @@ def _run_sla_alert_t2(db: Session) -> int:
     tickets_vencidos = tickets + vencidos
 
     # 2. RATs proximos a vencer revision (T-2 dias de 180)
-    # Buscamos RATs con updated_at entre (ahora + 178d) y (ahora + 180d)
-    # Solo notificados una vez por ventana (no re-notificar el mismo RAT).
-    umbral_rats_t2 = ahora + timedelta(days=DIAS_REVISION - 2)
-    umbral_rats_vencidos = ahora - timedelta(days=2)
+    # Un RAT necesita revisión a los 180 días desde su último updated_at.
+    # T-2: alerta cuando (updated_at + 180d) <= ahora + 2d  →  updated_at <= ahora - 178d
+    # Vencido: updated_at < ahora - 180d
+    umbral_rats_proximos_max = ahora - timedelta(days=DIAS_REVISION - 2)  # ahora - 178d
+    umbral_rats_revision = ahora - timedelta(days=DIAS_REVISION)           # ahora - 180d
     rats_proximos = (
         db.query(RAT)
         .filter(
             RAT.estado.in_(["borrador", "completo", "en_revision"]),
             RAT.deleted_at.is_(None),  # excluir soft-deleted
-            RAT.updated_at <= umbral_rats_t2,
-            RAT.updated_at >= ahora,
+            RAT.updated_at <= umbral_rats_proximos_max,   # actualizado hace 178+ días
+            RAT.updated_at > umbral_rats_revision,        # pero no más de 180 días (esos van a vencidos)
         )
         .all()
     )
@@ -244,8 +245,7 @@ def _run_sla_alert_t2(db: Session) -> int:
         .filter(
             RAT.estado.in_(["borrador", "completo", "en_revision"]),
             RAT.deleted_at.is_(None),
-            RAT.updated_at < ahora,
-            RAT.updated_at >= umbral_rats_vencidos,
+            RAT.updated_at <= umbral_rats_revision,       # actualizado hace 180+ días
         )
         .all()
     )
@@ -285,8 +285,9 @@ def _run_sla_alert_t2(db: Session) -> int:
 
         rats_data = []
         for r in grupos["rats"]:
-            delta = r.updated_at - ahora if r.updated_at else None
-            dias_restantes = delta.days if delta else None
+            # Días hasta la fecha de revisión (updated_at + 180d - ahora); negativo = vencido
+            revision_at = r.updated_at + timedelta(days=DIAS_REVISION) if r.updated_at else None
+            dias_restantes = (revision_at - ahora).days if revision_at else None
             rats_data.append({
                 "id": r.id,
                 "nombre_proceso": r.nombre_proceso,

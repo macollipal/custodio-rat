@@ -27,7 +27,7 @@ class TestTransparenciaPublica:
         assert resp.status_code == 200
         data = resp.json()
         for item in ["item_a_politica", "item_b_responsable", "item_c_domicilio", "item_d_categorias",
-                     "item_e_medidas", "item_f_derechos_arco", "item_g_recurir_APDP", "item_h_transferencias",
+                     "item_e_medidas", "item_f_derechos_arco", "item_g_recurir_apdc", "item_h_transferencias",
                      "item_i_conservacion", "item_j_fuente", "item_k_retirar_consentimiento",
                      "item_l_decisiones_automatizadas"]:
             assert item in data, f"Falta {item} en la polÃ­tica"

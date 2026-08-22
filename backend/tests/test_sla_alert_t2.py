@@ -34,10 +34,6 @@ class TestSLAAlertT2:
         self, db, monkeypatch, empresa, rat_base
     ):
         """ARCO ticket con vencimiento en 1 día debe ser detectado."""
-        # Crear RAT
-        from app.routes.rats import create_rat_logic  # type: ignore
-        from app.schemas.rat import RATCreate
-        rat = RATCreate(**rat_base)
         # Crear ticket con vencimiento en 1 día
         ahora = datetime.now(timezone.utc)
         ticket = TktSolicitudDerecho(
@@ -243,7 +239,9 @@ class TestSLAAlertT2:
         self, db, monkeypatch, empresa
     ):
         """Si empresa no tiene email_dpo, no se intenta enviar (skip silencioso)."""
-        empresa.email_dpo = None  # Sin DPO
+        from app.models.company import Company
+        obj = db.query(Company).filter(Company.id == empresa["id"]).first()
+        obj.email_dpo = None
         db.commit()
 
         ahora = datetime.now(timezone.utc)
