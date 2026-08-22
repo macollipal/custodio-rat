@@ -337,7 +337,7 @@ function CreateConsentimientoModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4">Nuevo consentimiento</h2>
@@ -448,7 +448,7 @@ function DetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4">Detalle del consentimiento</h2>

@@ -95,7 +95,7 @@ export default function Drawer({
         aria-modal="true"
         aria-labelledby={title ? 'drawer-title' : undefined}
         aria-label={title || 'Diálogo'}
-        className={`relative flex flex-col shadow-2xl overflow-hidden ${widthClass}`}
+        className={`relative flex flex-col shadow-2xl overflow-hidden rounded-2xl ${widthClass}`}
         style={{
           maxHeight: '92vh',
           background: 'white',

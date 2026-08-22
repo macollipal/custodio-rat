@@ -87,7 +87,7 @@ export default function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
         style={{ border: '1px solid #E5E7EB' }}
       >
         <h2
