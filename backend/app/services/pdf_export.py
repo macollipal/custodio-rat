@@ -25,12 +25,6 @@ except Exception:
     _ZONA_CHILE = timezone(timedelta(hours=-4))
 
 
-def _truncar(texto: str, largo: int) -> str:
-    if not texto:
-        return ""
-    return texto[:largo] + "..." if len(texto) > largo else texto
-
-
 def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
     """Genera un PDF profesional con el RAT completo de la empresa."""
     buffer = io.BytesIO()
@@ -68,6 +62,12 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
     estilo_seccion = ParagraphStyle(
         "seccion", fontSize=8, textColor=colors.white, fontName="Helvetica-Bold", leading=10,
     )
+    estilo_resumen_txt = ParagraphStyle(
+        "resumen_txt", fontSize=6, textColor=colors.black, fontName="Helvetica", leading=7,
+    )
+    estilo_resumen_hdr = ParagraphStyle(
+        "resumen_hdr", fontSize=6, textColor=colors.white, fontName="Helvetica-Bold", leading=7,
+    )
 
     story = []
 
@@ -84,19 +84,28 @@ def exportar_pdf(rats: list[RAT], company: Company) -> bytes:
     story.append(Paragraph(f"Total de procesos registrados: {len(rats)}", estilo_valor))
     story.append(Spacer(1, 0.5 * cm))
 
-    resumen_data = [["#", "Proceso", "Categoría Datos", "Base Legal", "Estado", "Sensibles", "NNA", "Transf. Int.", "EIPD", "Dec. Auto."]]
+    def _ph(txt):
+        return Paragraph(txt, estilo_resumen_hdr)
+
+    def _pt(txt):
+        return Paragraph(txt, estilo_resumen_txt)
+
+    resumen_data = [[
+        _ph("#"), _ph("Proceso"), _ph("Categoría Datos"), _ph("Base Legal"),
+        _ph("Estado"), _ph("Sens."), _ph("NNA"), _ph("T.Int."), _ph("EIPD"), _ph("Dec.A."),
+    ]]
     for i, rat in enumerate(rats, 1):
         resumen_data.append([
-            str(i),
-            _truncar(sanitize_pii(rat.nombre_proceso or ""), 25),
-            _truncar(sanitize_pii(rat.categoria_datos or ""), 25),
-            _truncar(sanitize_pii(rat.base_legal or ""), 20),
-            rat.estado.value.upper(),
-            "SÍ" if rat.datos_sensibles else "No",
-            "SÍ" if getattr(rat, "datos_nna", None) else "No",
-            "SÍ" if rat.transferencia_internacional else "No",
-            "SÍ" if rat.evaluacion_impacto else "No",
-            "SÍ" if rat.decisiones_automatizadas else "No",
+            _pt(str(i)),
+            _pt(sanitize_pii(rat.nombre_proceso or "")),
+            _pt(sanitize_pii(rat.categoria_datos or "")),
+            _pt(sanitize_pii(rat.base_legal or "")),
+            _pt(rat.estado.value.upper()),
+            _pt("SÍ" if rat.datos_sensibles else "No"),
+            _pt("SÍ" if getattr(rat, "datos_nna", None) else "No"),
+            _pt("SÍ" if rat.transferencia_internacional else "No"),
+            _pt("SÍ" if rat.evaluacion_impacto else "No"),
+            _pt("SÍ" if rat.decisiones_automatizadas else "No"),
         ])
 
     tabla_resumen = Table(
@@ -389,10 +398,10 @@ def exportar_pdf_apdp(rats: list[RAT], company: Company) -> bytes:
         compliance_style = s_ok if not gaps else s_alerta
         filas_indice.append([
             Paragraph(str(i), s_normal),
-            Paragraph(_truncar(r.nombre_proceso or "—", 30), s_normal),
-            Paragraph(_truncar(r.categoria_datos or "—", 25), s_normal),
-            Paragraph(_truncar(r.base_legal or "—", 20), s_normal),
-            Paragraph(_truncar(r.categoria_titulares or "—", 20), s_normal),
+            Paragraph(r.nombre_proceso or "—", s_normal),
+            Paragraph(r.categoria_datos or "—", s_normal),
+            Paragraph(r.base_legal or "—", s_normal),
+            Paragraph(r.categoria_titulares or "—", s_normal),
             Paragraph((r.estado.value if hasattr(r.estado, "value") else str(r.estado)).capitalize(), s_normal),
             Paragraph(compliance_txt, compliance_style),
         ])

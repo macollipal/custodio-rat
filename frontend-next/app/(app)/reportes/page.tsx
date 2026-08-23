@@ -383,8 +383,8 @@ export default function ReportesPage() {
       head: [['ID', 'Proceso', 'Base Legal', 'Estado', 'Compl.', 'Riesgo', 'Sens.', 'EIPD', 'Transf. Int.']],
       body: rats.map(r => [
         String(r.id),
-        (r.nombre_proceso ?? '').slice(0, 30),
-        (r.base_legal ?? '').slice(0, 20),
+        r.nombre_proceso ?? '',
+        r.base_legal ?? '',
         r.estado ?? '',
         `${r.completitud ?? 0}%`,
         r.nivel_riesgo ?? '',
@@ -392,8 +392,12 @@ export default function ReportesPage() {
         r.evaluacion_impacto ? 'Sí' : 'No',
         r.transferencia_internacional ? 'Sí' : 'No',
       ]),
-      styles: { fontSize: 8 },
+      styles: { fontSize: 8, overflow: 'linebreak', cellPadding: 2 },
       headStyles: { fillColor: [37, 99, 235] },
+      columnStyles: {
+        1: { cellWidth: 50 },
+        2: { cellWidth: 35 },
+      },
     });
     doc.save(`reportes_rat_${new Date().toISOString().slice(0, 10)}.pdf`);
     toast.success('PDF exportado');
