@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [
+      { source: "/brechas", destination: "/breaches", permanent: true },
+      { source: "/brechas/:path*", destination: "/breaches/:path*", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

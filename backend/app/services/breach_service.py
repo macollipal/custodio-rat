@@ -197,9 +197,45 @@ def _calcular_reportable(breach: SecurityBreach) -> bool:
     return False
 
 
+def _calcular_nivel_riesgo(breach: SecurityBreach) -> NivelRiesgo:
+    """Calcula el nivel de riesgo razonable (Art. 14 sexies Ley 21.719).
+
+    Score basado en tipo de datos comprometidos y volumen de titulares afectados.
+    - Datos sensibles (Art. 2 g): +3
+    - Datos de NNA: +3
+    - Datos financieros: +2
+    - >= 10.000 titulares: +3 | >= 1.000: +2 | >= 100: +1
+    """
+    score = 0
+
+    if breach.incluye_datos_sensibles:
+        score += 3
+    if breach.incluye_datos_nna:
+        score += 3
+    if breach.incluye_datos_financieros:
+        score += 2
+
+    vol = breach.volumen_titulares_afectados or 0
+    if vol >= 10000:
+        score += 3
+    elif vol >= 1000:
+        score += 2
+    elif vol >= 100:
+        score += 1
+
+    if score >= 6:
+        return NivelRiesgo.CRITICO
+    if score >= 4:
+        return NivelRiesgo.ALTO
+    if score >= 2:
+        return NivelRiesgo.MEDIO
+    return NivelRiesgo.BAJO
+
+
 def evaluar_riesgo_brecha(db: Session, breach_id: int) -> SecurityBreach:
-    """Recalcula el nivel de riesgo y reportabilidad de una brecha existente."""
+    """Recalcula nivel de riesgo y reportabilidad de una brecha existente."""
     breach = get_breach(db, breach_id)
+    breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
     breach.reportable_apdc_calculado = _calcular_reportable(breach)
     db.commit()
     db.refresh(breach)

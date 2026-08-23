@@ -406,6 +406,12 @@ export default function BreachesPage() {
       };
       if (editingBreach) {
         await api.actualizarBrecha(editingBreach.id, payload);
+        await api.evaluarRiesgoBrecha(editingBreach.id, {
+          volumen_titulares_afectados: data.volumen_titulares_afectados,
+          incluye_datos_sensibles: data.incluye_datos_sensibles,
+          incluye_datos_nna: data.incluye_datos_nna,
+          incluye_datos_financieros: data.incluye_datos_financieros,
+        });
         toast.success('Brecha actualizada.');
       } else {
         const nueva = await api.crearBrecha({ ...payload, company_id: company!.id });

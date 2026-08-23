@@ -39,6 +39,14 @@ export default function RatPage() {
 
   useEffect(() => { setInitialLoading(true); loadRats(); }, [company?.id]);
 
+  // Sincronizar selectedRat cuando la lista se refresca tras una edición
+  useEffect(() => {
+    if (selectedRat) {
+      const updated = rats.find(r => r.id === selectedRat.id);
+      if (updated) setSelectedRat(updated);
+    }
+  }, [rats]);
+
   // Abrir drawer del RAT cuando se llega con ?selected=<id> (deep-link desde /eipd).
   useEffect(() => {
     const selectedId = Number(searchParams.get('selected'));

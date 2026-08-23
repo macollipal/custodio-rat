@@ -135,6 +135,12 @@ def calcular_nivel_riesgo(data: Mapping[str, Any]) -> str:
     if data.get("nombre_encargado") and not data.get("tiene_contrato_encargado"):
         score += 1
 
+    vol = data.get("volumen_titulares_estimado") or 0
+    if vol >= 10000:
+        score += 2
+    elif vol >= 1000:
+        score += 1
+
     if score >= UMBRAL_RIESGO_CRITICO:
         return "critico"
     if score >= UMBRAL_RIESGO_ALTO:
