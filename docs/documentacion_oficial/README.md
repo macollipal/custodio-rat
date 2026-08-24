@@ -1,6 +1,6 @@
 # Documentacion Oficial — Custodio RAT Manager
 
-> **Version vigente:** v1.11 (2026-08-22) — regenerada por auditoria QA total (78 fallos → 0)
+> **Version vigente:** v1.12 (2026-08-24) — QW5 titular repetido, ARCO-QW6/7/8, Empresas-QW6, CI pip-audit, APDP nomenclatura
 > **Politica:** los docs vigentes se versionan en git. Las versiones anteriores quedan como historico y NO se usan como fuente operativa.
 
 ## Matriz de Vigencia
@@ -9,18 +9,18 @@
 |---|---|---|---|---|
 | **00** | Indice | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/README.md` raiz hace esta funcion. |
 | **01** | Vision de Producto | _(no regenerado)_ | v1.0 | Sin equivalente v1.9. |
-| **02** | Requisitos | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre RFs v1.9 + nuevos (RF-170 BaseLegal enum, etc.). |
-| **03** | Historias de Usuario | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Cubre HUs v1.9 + SLA T-2, soft delete, etc. |
-| **04** | Casos de Uso | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18 (sobrescribe v1.10 de auditoría RAT). Cubre 25+ CUs con QW5 SLA T-2. |
+| **02** | Requisitos | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. RF-174 a RF-179 (QW5, ARCO-QW6/7/8, Empresas-QW6, pip-audit, APDP). |
+| **03** | Historias de Usuario | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. HU-104 a HU-108 (QW5 titular repetido, acuse recibo, placeholders, SLA banner, ficha empresa). |
+| **04** | Casos de Uso | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. CU-31 a CU-35 (QW5, ARCO-QW6/7/8, Empresas-QW6). |
 | **05** | Diseno Funcional | _(no regenerado)_ | v1.0, v1.1, v1.2, v1.3 | Sin equivalente v1.9 — evaluar si necesario. |
 | **06** | Arquitectura Software | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye versionamiento /api/v1/, soft delete, cifrado Fernet fail-loudly, DR plan. |
 | **07** | Modelo de Datos Detallado | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — evaluar si necesario. |
-| **08** | API REST | **v1.11** ✅ | v1.0–v1.10 (v1.5, v1.6 faltan) | **Regenerado en auditoria 2026-08-22.** POST /auth/users → 201, GET /publico/csrf-token, PUT /transparencia/{id}. |
-| **09** | Backlog de Producto | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye QW5 (SLA T-2 RATs) y QW4 cerrado. |
-| **10** | Plan de QA | **v1.11** ✅ | v1.0–v1.10 (v1.5 falta) | Regenerado 2026-08-22. TC-047 a TC-055 (QA total 78→0 fallos). 732 tests passing. |
+| **08** | API REST | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. GET /publico/verificar-titular (QW5), acuse recibo (ARCO-QW6), APDP fix. |
+| **09** | Backlog de Producto | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. Estado actualizado: QW5 Público cerrado, ARCO-QW6/7/8 cerrados, Empresas-QW6 cerrado. |
+| **10** | Plan de QA | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. TC-056 a TC-063 (QW5 rate limit, acuse email, APDP, ficha empresa). 761+ tests. |
 | **11** | Manual de Despliegue | _(no regenerado)_ | v1.0, v1.1 | Sin equivalente v1.9 — `docs/despliegue/` cumple esta funcion. |
-| **12** | Manual Tecnico | **v1.11** ✅ | v1.0–v1.10 | Regenerado 2026-08-22. Sprint A+B+UX + fixes QA (auth 201, prorroga, encrypt_migration). |
-| **MTX** | Matriz de Trazabilidad | **v1.10** ✅ | v1.0–v1.9 | Regenerado 2026-07-18. Incluye RF-170 (BaseLegal), RF-171 (Soft delete), RF-172 (Versionamiento API), RF-173 (SLA T-2). |
+| **12** | Manual Tecnico | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. QW5 endpoint, ARCO-QW6/7/8, Empresas-QW6, pip-audit CI, APDP fix. |
+| **MTX** | Matriz de Trazabilidad | **v1.12** ✅ | v1.0–v1.11 | Regenerado 2026-08-24. RF-174 a RNF-22 trazados a HU, CU, endpoints y tests. |
 
 ## Documentos SIN Version v1.9 (vigente es historica)
 
@@ -63,11 +63,12 @@ Los siguientes documentos historicos NO tienen equivalente v1.9. Mantenerlos por
 
 ## Scripts de Regeneracion
 
-| Version | Carpeta build |
+| Version | Script |
 |---|---|
-| v1.10 (vigente — RAT API) | `scripts/maintenance/generar_api_doc_v1_10.py` |
-| v1.10 (vigente — CU RAT) | `scripts/maintenance/generar_casos_uso_v1_10.py` |
-| v1.9 (vigente) | `docs/auditorias/2026-07-05_auditoria_v1.9/_scripts/build_*.py` |
+| **v1.12 (vigente)** | `scripts/maintenance/generar_docs_v1_12.py` |
+| v1.10 (RAT API) | `scripts/maintenance/generar_api_doc_v1_10.py` |
+| v1.10 (CU RAT) | `scripts/maintenance/generar_casos_uso_v1_10.py` |
+| v1.9 | `docs/auditorias/2026-07-05_auditoria_v1.9/_scripts/build_*.py` |
 | v1.8 | `docs/auditorias/2026-06-26_auditoria_v1.8/_scripts/build_*.py` |
 | v1.7 | `docs/auditorias/2026-06-24_auditoria_v1.7/_scripts/build_*.py` |
 
@@ -75,4 +76,4 @@ Los siguientes documentos historicos NO tienen equivalente v1.9. Mantenerlos por
 
 ---
 
-*Ultima actualizacion: 2026-07-18 (regeneracion v1.10 por auditoria de drift documental)*
+*Ultima actualizacion: 2026-08-24 (regeneracion v1.12 — QW5, ARCO-QW6/7/8, Empresas-QW6, pip-audit, APDP)*
