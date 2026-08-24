@@ -450,7 +450,7 @@ def notificar_consentimiento_por_vencer(
         f"<strong>{rat_nombre}</strong> (ID #{rat_id}) de la empresa "
         f"<strong>{nombre_empresa}</strong> lleva <strong>{dias_activo} días</strong> activo.</p>"
         f"<p>Se recomienda evaluar si el consentimiento sigue siendo válido y está actualizado. "
-        f"Según el Art. 12 de la Ley 21.719, el consentimiento debe ser的自由撤回ible en cualquier momento. "
+        f"Según el Art. 12 de la Ley 21.719, el consentimiento debe ser revocable en cualquier momento. "
         f"Considere renovar el consentimiento si las circunstancias del tratamiento han cambiado "
         f"o si el período de retención lo requiere.</p>"
     )

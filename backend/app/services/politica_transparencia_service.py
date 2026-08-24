@@ -29,8 +29,9 @@ DERECHOS_ARCO = (
 
 RECURRIR_APDC = (
     "Si el titular considera que sus derechos no han sido atendidos por el responsable del tratamiento, "
-    "puede recurrir gratuitamente ante la Agencia Española de Protección de Datos (AEPD) — equivalente local: "
-    "la Autoridad de Protección de Datos de Chile (APDC) — para进行检查 y eventual sanción."
+    "puede recurrir gratuitamente ante la Agencia de Protección de Datos Personales (APDP) de Chile, "
+    "conforme al Artículo 28 de la Ley 21.719, para solicitar la revisión de su caso y, "
+    "de corresponder, la imposición de las sanciones que procedan."
 )
 
 

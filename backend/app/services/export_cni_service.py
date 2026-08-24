@@ -1,5 +1,5 @@
 """
-Generador de informe RAT en formato CNI para提交APDC (Ley 21.719).
+Generador de informe RAT en formato CNI para envío a la APDP (Ley 21.719).
 """
 
 from datetime import datetime, timezone
