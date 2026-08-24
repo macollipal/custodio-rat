@@ -61,59 +61,74 @@ def decrypt_password(password_enc: str) -> str:
     return f.decrypt(password_enc.encode()).decode()
 
 
-# ── Construcción de connection strings ────────────────────────────────────────
-
-def _build_connection_url(source: DataSource) -> str:
-    password = decrypt_password(source.password_enc)
-    # Escapar caracteres especiales en password
-    from urllib.parse import quote_plus
-    pwd_encoded = quote_plus(password)
-    user_encoded = quote_plus(source.username)
-
-    if source.tipo == "postgresql":
-        return (
-            f"postgresql+psycopg2://{user_encoded}:{pwd_encoded}"
-            f"@{source.host}:{source.port}/{source.database_name}"
-            f"?connect_timeout=10&options=-csearch_path%3D{source.schema_name or 'public'}"
-        )
-    elif source.tipo == "sqlserver":
-        return (
-            f"mssql+pymssql://{user_encoded}:{pwd_encoded}"
-            f"@{source.host}:{source.port}/{source.database_name}"
-        )
-    raise ValueError(f"Tipo de conector no soportado: {source.tipo}")
-
-
-# ── Query de metadatos (information_schema) ───────────────────────────────────
+# ── Conexión directa con drivers nativos ─────────────────────────────────────
+# Usamos psycopg2 / pymssql directamente (sin SQLAlchemy engine) para evitar
+# diferencias de dialecto y opciones de ejecución incompatibles entre motores.
 
 QUERY_COLUMNS_PG = """
 SELECT table_name, column_name, data_type
 FROM information_schema.columns
-WHERE table_schema = :schema
-  AND table_name NOT IN (
-      'alembic_version','django_migrations','spatial_ref_sys'
-  )
+WHERE table_schema = %s
+  AND table_name NOT IN ('alembic_version','django_migrations','spatial_ref_sys')
 ORDER BY table_name, ordinal_position
 """
 
 QUERY_COLUMNS_MSSQL = """
-SELECT TABLE_NAME as table_name, COLUMN_NAME as column_name, DATA_TYPE as data_type
+SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_SCHEMA = :schema
+WHERE TABLE_SCHEMA = %s
 ORDER BY TABLE_NAME, ORDINAL_POSITION
 """
 
 
-def _fetch_columns(engine, schema: str, tipo: str) -> list[dict]:
-    from sqlalchemy import text
-    query = QUERY_COLUMNS_PG if tipo == "postgresql" else QUERY_COLUMNS_MSSQL
-    with engine.connect() as conn:
-        conn.execution_options(statement_timeout=20000)  # 20s
-        result = conn.execute(text(query), {"schema": schema})
-        return [
-            {"table_name": row[0], "column_name": row[1], "data_type": row[2]}
-            for row in result
-        ]
+def _fetch_columns(source: DataSource, schema: str) -> list[dict]:
+    """Conecta al motor externo y retorna los metadatos de columnas."""
+    password = decrypt_password(source.password_enc)
+
+    if source.tipo == "postgresql":
+        import psycopg2
+        conn = psycopg2.connect(
+            host=source.host,
+            port=source.port,
+            dbname=source.database_name,
+            user=source.username,
+            password=password,
+            connect_timeout=10,
+            options=f"-c search_path={schema}",
+        )
+        try:
+            conn.set_session(readonly=True)
+            cur = conn.cursor()
+            cur.execute(QUERY_COLUMNS_PG, (schema,))
+            rows = cur.fetchall()
+        finally:
+            conn.close()
+
+    elif source.tipo == "sqlserver":
+        import pymssql
+        conn = pymssql.connect(
+            server=source.host,
+            port=str(source.port),
+            database=source.database_name,
+            user=source.username,
+            password=password,
+            timeout=10,
+            login_timeout=10,
+        )
+        try:
+            cur = conn.cursor()
+            cur.execute(QUERY_COLUMNS_MSSQL, (schema,))
+            rows = cur.fetchall()
+        finally:
+            conn.close()
+
+    else:
+        raise ValueError(f"Tipo de conector no soportado: {source.tipo}")
+
+    return [
+        {"table_name": row[0], "column_name": row[1], "data_type": row[2]}
+        for row in rows
+    ]
 
 
 # ── Gap Analysis ──────────────────────────────────────────────────────────────
@@ -150,10 +165,8 @@ def _es_gap(categoria: str, rats: list[RAT]) -> bool:
 def ejecutar_escaneo(db: Session, source: DataSource, ejecutado_por: str) -> DiscoveryRun:
     """
     Escanea information_schema de la fuente y guarda hallazgos.
-    Sincrónico, timeout 30s total. Levanta ValueError o RuntimeError si falla.
+    Sincrónico. Soporta PostgreSQL (psycopg2) y SQL Server (pymssql).
     """
-    from sqlalchemy import create_engine
-
     run = DiscoveryRun(
         source_id=source.id,
         company_id=source.company_id,
@@ -165,18 +178,7 @@ def ejecutar_escaneo(db: Session, source: DataSource, ejecutado_por: str) -> Dis
 
     try:
         schema = source.schema_name or ("public" if source.tipo == "postgresql" else "dbo")
-        conn_url = _build_connection_url(source)
-
-        engine = create_engine(
-            conn_url,
-            connect_args={"connect_timeout": 10} if source.tipo == "postgresql" else {},
-            pool_pre_ping=True,
-            pool_size=1,
-            max_overflow=0,
-        )
-
-        columns = _fetch_columns(engine, schema, source.tipo)
-        engine.dispose()
+        columns = _fetch_columns(source, schema)
 
         # RATs existentes de la empresa para gap analysis
         rats = db.query(RAT).filter(
