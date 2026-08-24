@@ -20,6 +20,23 @@ import { Button } from '@/components/ui/Button';
 
 type View = 'list' | 'create';
 
+// Empresas-QW3: Score de cumplimiento v1 (Ley 21.719)
+function calcularScore(emp: Company): { score: number; label: string; color: string; bg: string } {
+  let pts = 0;
+  if (emp.has_politica_transparencia) pts += 25;      // Art. 14 ter
+  if (emp.email_dpo) pts += 20;                        // DPO designado
+  if (emp.canal_ejercicio_derechos) pts += 20;         // Art. 12
+  const completitud = emp.completitud_promedio ?? 0;
+  if (completitud >= 80) pts += 25;
+  else if (completitud >= 50) pts += 15;
+  else if (completitud > 0) pts += 5;
+  if (!emp.solicitudes_vencidas_sla) pts += 10;        // SLA ARCO
+
+  if (pts >= 80) return { score: pts, label: 'Conforme', color: '#059669', bg: '#DCFCE7' };
+  if (pts >= 55) return { score: pts, label: 'Parcial', color: '#D97706', bg: '#FEF3C7' };
+  return { score: pts, label: 'Bajo', color: '#DC2626', bg: '#FEE2E2' };
+}
+
 export default function CompaniesPage() {
   const { company: activeCompany, setCompany, companies, setCompanies, user } = useApp();
   const router = useRouter();
@@ -145,8 +162,13 @@ export default function CompaniesPage() {
                     >
                         <div className="flex items-start justify-between mb-4">
                         <div>
-                          <div className="flex items-center gap-2.5 mb-1">
+                          <div className="flex items-center gap-2.5 mb-1 flex-wrap">
                             <span className="font-bold text-base" style={{ color: '#111827' }}>{emp.nombre}</span>
+                            {(() => { const s = calcularScore(emp); return (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }} title={`Score cumplimiento Ley 21.719: ${s.score}/100`}>
+                                {s.label} {s.score}%
+                              </span>
+                            ); })()}
                             {esActiva && (
                               <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>
                                 ACTIVA
