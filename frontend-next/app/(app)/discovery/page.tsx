@@ -238,6 +238,7 @@ export default function DiscoveryPage() {
   const [runDetail, setRunDetail] = useState<DiscoveryRunDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'hallazgos' | 'gaps' | 'sugerencias'>('hallazgos');
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!companyId) return;
@@ -294,10 +295,10 @@ export default function DiscoveryPage() {
 
   async function handleEliminar(source: DataSource) {
     if (!companyId) return;
-    if (!confirm(`¿Eliminar la fuente "${source.nombre}"?`)) return;
     try {
       await api.eliminarDiscoverySource(source.id, companyId);
       toast.success('Fuente eliminada');
+      setConfirmDeleteId(null);
       if (runDetail?.run.source_id === source.id) setRunDetail(null);
       load();
     } catch {
@@ -364,7 +365,7 @@ export default function DiscoveryPage() {
                     {s.ultimo_run_estado ?? 'Sin escaneo'}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     size="sm"
                     onClick={() => handleScan(s)}
@@ -381,9 +382,21 @@ export default function DiscoveryPage() {
                       Ver último resultado
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => handleEliminar(s)} className="ml-auto text-red-500">
-                    Eliminar
-                  </Button>
+                  {confirmDeleteId === s.id ? (
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">¿Eliminar?</span>
+                      <Button size="sm" variant="ghost" onClick={() => handleEliminar(s)} className="text-red-600 font-semibold">
+                        Sí
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)}>
+                        No
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(s.id)} className="ml-auto text-red-500">
+                      Eliminar
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -422,39 +435,51 @@ export default function DiscoveryPage() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-gray-100 dark:border-gray-800 px-5">
-            {([
-              { key: 'hallazgos', label: `Todos los hallazgos (${runDetail.findings.filter(f => !f.descartado).length})` },
-              { key: 'gaps', label: `Gaps sin RAT (${runDetail.run.total_gaps ?? 0})` },
-              { key: 'sugerencias', label: `RATs sugeridos (${runDetail.sugerencias_rat.length})` },
-            ] as const).map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`py-3 px-4 text-sm border-b-2 transition-colors ${
-                  activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600 font-medium'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Panel de error */}
+          {runDetail.run.estado === 'error' && (
+            <div className="px-5 py-6">
+              <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Error en el escaneo</p>
+                <p className="text-xs text-red-600 dark:text-red-300 font-mono break-all">
+                  {runDetail.run.error_msg ?? 'Error desconocido al conectar con la fuente de datos.'}
+                </p>
+              </div>
+            </div>
+          )}
 
-          {/* Contenido de tab */}
-          <div className="p-5">
-            {activeTab === 'hallazgos' && (
-              <FindingsTable findings={runDetail.findings} filtroGaps={false} />
-            )}
-            {activeTab === 'gaps' && (
-              <FindingsTable findings={runDetail.findings} filtroGaps={true} />
-            )}
-            {activeTab === 'sugerencias' && (
-              <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} />
-            )}
-          </div>
+          {/* Tabs y contenido (solo cuando no hay error) */}
+          {runDetail.run.estado !== 'error' && (<>
+            <div className="flex border-b border-gray-100 dark:border-gray-800 px-5">
+              {([
+                { key: 'hallazgos', label: `Todos los hallazgos (${runDetail.findings.filter(f => !f.descartado).length})` },
+                { key: 'gaps', label: `Gaps sin RAT (${runDetail.run.total_gaps ?? 0})` },
+                { key: 'sugerencias', label: `RATs sugeridos (${runDetail.sugerencias_rat.length})` },
+              ] as const).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`py-3 px-4 text-sm border-b-2 transition-colors ${
+                    activeTab === tab.key
+                      ? 'border-blue-500 text-blue-600 font-medium'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="p-5">
+              {activeTab === 'hallazgos' && (
+                <FindingsTable findings={runDetail.findings} filtroGaps={false} />
+              )}
+              {activeTab === 'gaps' && (
+                <FindingsTable findings={runDetail.findings} filtroGaps={true} />
+              )}
+              {activeTab === 'sugerencias' && (
+                <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} />
+              )}
+            </div>
+          </>)}
         </div>
       )}
     </div>

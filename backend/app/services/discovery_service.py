@@ -5,6 +5,7 @@ Escanea bases de datos externas buscando columnas con datos personales (Ley 21.7
 
 import logging
 import re
+import socket
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -87,15 +88,20 @@ def _fetch_columns(source: DataSource, schema: str) -> list[dict]:
 
     if source.tipo == "postgresql":
         import psycopg2
-        conn = psycopg2.connect(
-            host=source.host,
-            port=source.port,
-            dbname=source.database_name,
-            user=source.username,
-            password=password,
-            connect_timeout=10,
-            options=f"-c search_path={schema}",
-        )
+        _prev = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(15)
+        try:
+            conn = psycopg2.connect(
+                host=source.host,
+                port=source.port,
+                dbname=source.database_name,
+                user=source.username,
+                password=password,
+                connect_timeout=10,
+                options=f"-c search_path={schema}",
+            )
+        finally:
+            socket.setdefaulttimeout(_prev)
         try:
             conn.set_session(readonly=True)
             cur = conn.cursor()

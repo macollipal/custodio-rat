@@ -73,6 +73,7 @@ def _preflight_headers(origin: str, path: str, allowed_origins: set[str]) -> lis
         headers.append((b"access-control-allow-methods", _PRIVATE_METHODS))
         headers.append((b"access-control-allow-headers", _PRIVATE_HEADERS))
         headers.append((b"access-control-expose-headers", _EXPOSE_HEADERS))
+        headers.append((b"access-control-allow-private-network", b"true"))
 
     if headers:
         headers.append((b"access-control-max-age", _MAX_AGE))
