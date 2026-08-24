@@ -15,10 +15,12 @@ import {
   CompanyUsersModal,
   CompanyAlertsBanner,
   CompanyAuditDrawer,
+  CompanyFichaPanel,
 } from '@/components/companies';
 import { Button } from '@/components/ui/Button';
 
 type View = 'list' | 'create';
+
 
 // Empresas-QW3: Score de cumplimiento v1 (Ley 21.719)
 function calcularScore(emp: Company): { score: number; label: string; color: string; bg: string } {
@@ -48,6 +50,7 @@ export default function CompaniesPage() {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState<number | null>(null);
   const [auditCompany, setAuditCompany] = useState<Company | null>(null);
+  const [fichaId, setFichaId] = useState<number | null>(null);
 
   async function loadCompanies() {
     setLoading(true);
@@ -252,6 +255,17 @@ export default function CompaniesPage() {
                         <Button
                           variant="secondary"
                           size="sm"
+                          onClick={() => {
+                            setFichaId(fichaId === emp.id ? null : emp.id);
+                            if (editingId === emp.id) setEditingId(null);
+                          }}
+                          style={fichaId === emp.id ? { borderColor: '#2563EB', color: '#2563EB', background: '#EFF6FF' } : {}}
+                        >
+                          Ficha
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setEditingId(editingId === emp.id ? null : emp.id)}
                         >
                           Editar
@@ -328,6 +342,15 @@ export default function CompaniesPage() {
                       {panelAbierto && <UserAccessPanel companyId={emp.id} />}
                     </div>
 
+                    {fichaId === emp.id && (
+                      <CompanyFichaPanel
+                        empresa={emp}
+                        onUpdated={updated => {
+                          setCompanies(companies.map(c => c.id === updated.id ? updated : c));
+                          if (activeCompany?.id === updated.id) setCompany(updated);
+                        }}
+                      />
+                    )}
                     {editingId === emp.id && (
                       <CompanyEditForm
                         empresa={emp}

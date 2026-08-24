@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import Drawer from '@/components/ui/Drawer';
 import { FlujoModal } from '@/components/arco/FlujoModal';
@@ -110,6 +110,21 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
   const [rutTitularEdit, setRutTitularEdit] = useState('');
   const [rutReprEdit, setRutReprEdit] = useState('');
   const [guardandoRut, setGuardandoRut] = useState(false);
+  const respuestaRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertarPlaceholder(ph: string) {
+    const el = respuestaRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    const newVal = el.value.slice(0, start) + ph + el.value.slice(end);
+    setRespuesta(newVal);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + ph.length;
+      el.setSelectionRange(pos, pos);
+    });
+  }
 
   useEffect(() => {
     if (open && ticket) {
@@ -616,6 +631,7 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 </select>
               )}
               <textarea
+                ref={respuestaRef}
                 value={respuesta}
                 onChange={e => setRespuesta(e.target.value)}
                 rows={3}
@@ -623,6 +639,32 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
                 className={inputCls}
                 style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }}
               />
+              <div className="space-y-1">
+                <p className="text-xs" style={{ color: '#9CA3AF' }}>Insertar variable:</p>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { label: 'Nombre titular', ph: '{{nombre_titular}}' },
+                    { label: 'Empresa', ph: '{{empresa}}' },
+                    { label: 'Fecha', ph: '{{fecha}}' },
+                    { label: 'N° solicitud', ph: '{{numero_solicitud}}' },
+                    { label: 'Días bloqueo', ph: '{{dias_bloqueo}}' },
+                    { label: 'Vencimiento', ph: '{{fecha_vencimiento}}' },
+                  ].map(({ label, ph }) => (
+                    <button
+                      key={ph}
+                      type="button"
+                      onClick={() => insertarPlaceholder(ph)}
+                      className="px-2 py-0.5 rounded text-xs font-mono border transition-colors"
+                      style={{ borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', color: '#374151' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#EFF6FF'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#93C5FD'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#F9FAFB'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#D1D5DB'; }}
+                      title={ph}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {nuevoEstado === 'rechazado' && (
                 <p className="text-xs mt-1" style={{ color: '#92400E' }}>
                   La causal debe estar justificada conforme a la Ley 21.719 para ser válida ante la APDP.
