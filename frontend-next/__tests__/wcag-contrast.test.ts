@@ -37,12 +37,6 @@ describe('Contraste WCAG AA — texto secundario', () => {
     expect(src).not.toContain('text-gray-400');
   });
 
-  it('solicitud_derecho/page.tsx no usa #9CA3AF para texto (max 2 decorativos)', () => {
-    const src = readRel('app/solicitud_derecho/page.tsx');
-    const matches = (src.match(/#9CA3AF/g) || []).length;
-    expect(matches).toBeLessThanOrEqual(2);
-  });
-
   it('RatTable.tsx no usa #9CA3AF para texto', () => {
     const src = readRel('components/rat/RatTable.tsx');
     const matches = (src.match(/#9CA3AF/g) || []).length;

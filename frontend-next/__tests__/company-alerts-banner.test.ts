@@ -45,7 +45,7 @@ describe('CompanyAlertsBanner — computeCompanyAlerts', () => {
     const companies: Company[] = [{ ...baseCompany, solicitudes_vencidas_sla: 2 }];
     const alerts = computeCompanyAlerts(companies);
     expect(alerts.length).toBe(1);
-    expect(alerts[0].titulo).toContain('2 solicitudes ARCO vencidas');
+    expect(alerts[0].titulo).toContain('2 solicitudes ARCOP+ vencidas');
     expect(alerts[0].icon).toBe('📋');
   });
 

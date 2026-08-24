@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 /**
- * Test de regresion para QW2: boton Reporte APDC.
+ * Test de regresion para QW2: boton Reporte APDP.
  *
  * Verifica que el boton esta presente en companies/page.tsx,
  * que usa el endpoint correcto (/rats/export/cni), y que
@@ -14,7 +14,7 @@ const ROOT = join(__dirname, '..');
 const readFile = (rel: string): string =>
   readFileSync(join(ROOT, rel), 'utf-8');
 
-describe('QW2: Boton Reporte APDC en companies/page.tsx', () => {
+describe('QW2: Boton Reporte APDP en companies/page.tsx', () => {
   const src = readFile('app/(app)/companies/page.tsx');
 
   it('existe el handler handleExportarApdc', () => {
@@ -39,16 +39,16 @@ describe('QW2: Boton Reporte APDC en companies/page.tsx', () => {
     expect(src).toContain('revokeObjectURL');
   });
 
-  it('el handler nombra el archivo con prefijo RAT_APDC_', () => {
-    expect(src).toContain('RAT_APDC_');
+  it('el handler nombra el archivo con prefijo RAT_APDP_', () => {
+    expect(src).toContain('RAT_APDP_');
   });
 
   it('el handler muestra toast de exito al completar', () => {
-    expect(src).toMatch(/toast\.success\(`Reporte APDC/);
+    expect(src).toMatch(/toast\.success\(`Reporte APDP/);
   });
 
-  it('existe un boton visible con el label "Reporte APDC"', () => {
-    expect(src).toContain('Reporte APDC');
+  it('existe un boton visible con el label "Reporte APDP"', () => {
+    expect(src).toContain('Reporte APDP');
   });
 
   it('el boton usa color violeta distintivo (#7C3AED)', () => {
@@ -56,7 +56,7 @@ describe('QW2: Boton Reporte APDC en companies/page.tsx', () => {
   });
 
   it('el boton tiene title explicativo sobre el formato legal', () => {
-    expect(src).toMatch(/title=.*APDC.*Ley 21\.719/);
+    expect(src).toMatch(/title=.*APDP.*Ley 21\.719/);
   });
 });
 

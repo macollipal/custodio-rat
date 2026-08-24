@@ -303,7 +303,7 @@ export default function CompaniesPage() {
                           size="sm"
                           onClick={() => handleExportarApdc(emp)}
                           style={{ background: '#7C3AED', color: '#FFFFFF' }}
-                          title="Descargar reporte en formato APDC (Ley 21.719) — JSON estructurado para presentar ante la autoridad"
+                          title="Descargar reporte en formato APDP (Ley 21.719) — JSON estructurado para presentar ante la autoridad"
                         >
                           📄 Reporte APDP
                         </Button>

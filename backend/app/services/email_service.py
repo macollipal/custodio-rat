@@ -357,7 +357,7 @@ def notificar_sla_alert_t2(
     # Seccion RATs
     if total_rats > 0:
         cuerpo.append(
-            f"<p style='margin-top:16px;'><strong>RATs próximos a vencer revisión (180 días):</strong></p>"
+            "<p style='margin-top:16px;'><strong>RATs próximos a vencer revisión (180 días):</strong></p>"
             "<table style='width:100%;border-collapse:collapse;font-size:13px;'>"
             "<tr style='background:#7C3AED;color:white;'>"
             "<th style='padding:8px;text-align:left;'>ID</th>"

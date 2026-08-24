@@ -10,9 +10,7 @@ Comportamiento:
 
 import logging
 
-from typing import Optional
-
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet, InvalidToken  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

@@ -24,7 +24,6 @@ class PoliticaTransparenciaUpdate(BaseModel):
     def model_post_init(self, __context) -> None:
         invalid = [k for k in self.overrides if k not in ITEM_KEYS]
         if invalid:
-            from pydantic import ValidationError
             raise ValueError(f"Claves de override inválidas: {invalid}. Permitidas: {ITEM_KEYS}")
 
 

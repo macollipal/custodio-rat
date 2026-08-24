@@ -165,7 +165,7 @@ export default function DashboardPage() {
 
   const sinProcesos = total_procesos === 0;
   const kpiColor = sinProcesos
-    ? '#9CA3AF'
+    ? '#6B7280'
     : completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
 
   return (

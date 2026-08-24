@@ -174,7 +174,7 @@ app.add_middleware(CORSByPathMiddleware, allowed_origins=ALLOWED_ORIGINS)
 # F3.1: Versionamiento API /api/v1/
 # Mantenemos compatibilidad con los endpoints legacy (sin prefijo v1)
 # durante un periodo de deprecacion. Los nuevos clientes deben usar /api/v1/.
-from fastapi import APIRouter
+from fastapi import APIRouter  # noqa: E402
 
 v1_router = APIRouter(prefix="/api/v1")
 v1_router.include_router(auth.router)
