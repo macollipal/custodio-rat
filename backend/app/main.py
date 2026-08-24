@@ -16,7 +16,7 @@ from app.core.logging_config import setup_logging
 from app.database.database import init_db, SessionLocal
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.csrf import CSRFMiddleware
-from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions, publico_arco
+from app.routes import auth, companies, rats, user_companies, breaches, ai, rubros, tkt_solicitud_derecho, tkt_plantillas, tkt_reglas_asignacion, encargados_contrato, politica_transparencia, consentimientos, eipd, admin_tasks, feriados, asesor, admin_asesor, admin_companies, seguimiento, export_tkt, module_permissions, publico_arco, discovery
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 setup_logging()
@@ -201,6 +201,7 @@ v1_router.include_router(admin_asesor.router)
 v1_router.include_router(admin_companies.router)
 v1_router.include_router(export_tkt.router)
 v1_router.include_router(module_permissions.router)
+v1_router.include_router(discovery.router)
 
 # Endpoints legacy (deprecated, mantener hasta migracion completa)
 app.include_router(auth.router)
@@ -227,6 +228,7 @@ app.include_router(admin_asesor.router)
 app.include_router(admin_companies.router)
 app.include_router(export_tkt.router)
 app.include_router(module_permissions.router)
+app.include_router(discovery.router)
 
 # v1_router debe ir DESPUES de los routers legacy para que tome precedencia
 # en el orden de matching (FastAPI matchea por orden de inclusion).

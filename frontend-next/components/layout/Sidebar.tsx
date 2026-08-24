@@ -21,6 +21,7 @@ type Page =
   | 'consentimientos'
   | 'eipd'
   | 'asesor'
+  | 'discovery'
   ;
 
 type NavItem = { key: Page; label: string; icon: string; roles: string[]; moduleKey?: string };
@@ -49,6 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Análisis',
     items: [
       { key: 'reportes', label: 'Reportes', icon: '📊', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'REPORTES' },
+      { key: 'discovery', label: 'Descubrimiento', icon: '🔍', roles: ['superadmin', 'admin_empresa'] },
       { key: 'asesor', label: 'Asesor IA', icon: '⚖️', roles: ['superadmin', 'admin_empresa', 'usuario'], moduleKey: 'ASESOR' },
     ],
   },

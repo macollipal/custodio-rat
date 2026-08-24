@@ -16,6 +16,7 @@ from app.models.tkt_regla_asignacion import TktReglaAsignacion
 from app.models.feriado import Feriado
 from app.models.task import TaskQueue, TaskStatus, TaskType
 from app.models.module_permission import ModulePermission, ModuloEnum
+from app.models.discovery import DataSource, DiscoveryRun, DiscoveryFinding
 
 __all__ = [
     "User", "Company", "RAT", "AuditLog", "EIPD", "Consentimiento", "Rubro", "RATSugerido",
@@ -25,4 +26,5 @@ __all__ = [
     "Feriado",
     "TaskQueue", "TaskStatus", "TaskType",
     "ModulePermission", "ModuloEnum",
+    "DataSource", "DiscoveryRun", "DiscoveryFinding",
 ]

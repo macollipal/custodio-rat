@@ -23,6 +23,7 @@ type Page =
   | 'consentimientos'
   | 'eipd'
   | 'asesor'
+  | 'discovery'
   ;
 
 function pathToPage(pathname: string): Page {
@@ -39,6 +40,7 @@ function pathToPage(pathname: string): Page {
   if (pathname.startsWith('/consentimientos')) return 'consentimientos';
   if (pathname.startsWith('/eipd')) return 'eipd';
   if (pathname.startsWith('/asesor')) return 'asesor';
+  if (pathname.startsWith('/discovery')) return 'discovery';
 
   return 'dashboard';
 }

@@ -1286,3 +1286,127 @@ export async function descargarTktPdf(companyId: number, filters?: {
   const blob = await exportarTktPdf(companyId, filters);
   downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.pdf`);
 }
+
+// ── Discovery & Mapping ────────────────────────────────────────────────────────
+
+export interface DataSource {
+  id: number;
+  company_id: number;
+  nombre: string;
+  tipo: 'postgresql' | 'sqlserver';
+  host: string;
+  port: number;
+  database_name: string;
+  username: string;
+  schema_name?: string;
+  activo: boolean;
+  ultimo_run_id?: number;
+  ultimo_run_estado?: string;
+}
+
+export interface DataSourceCreate {
+  nombre: string;
+  tipo: 'postgresql' | 'sqlserver';
+  host: string;
+  port: number;
+  database_name: string;
+  username: string;
+  password: string;
+  schema_name?: string;
+}
+
+export interface DiscoveryFinding {
+  id: number;
+  table_name: string;
+  column_name: string;
+  data_type_sql?: string;
+  categoria: string;
+  descripcion?: string;
+  confianza: number;
+  rat_id?: number;
+  descartado: boolean;
+  es_gap: boolean;
+}
+
+export interface DiscoveryRun {
+  id: number;
+  source_id: number;
+  company_id: number;
+  estado: string;
+  started_at: string;
+  finished_at?: string;
+  error_msg?: string;
+  total_tablas?: number;
+  total_columnas?: number;
+  total_hallazgos?: number;
+  total_gaps?: number;
+  ejecutado_por?: string;
+}
+
+export interface DiscoveryRunDetail {
+  run: DiscoveryRun;
+  findings: DiscoveryFinding[];
+  sugerencias_rat: Array<{
+    categoria: string;
+    template_rat: Record<string, string>;
+    tablas_involucradas: string[];
+    columnas_ejemplo: string[];
+    cantidad_hallazgos: number;
+  }>;
+}
+
+export async function listarDiscoverySources(companyId: number): Promise<DataSource[]> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources?company_id=${companyId}`);
+  return res.json();
+}
+
+export async function crearDiscoverySource(companyId: number, data: DataSourceCreate): Promise<DataSource> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources?company_id=${companyId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function actualizarDiscoverySource(
+  sourceId: number, companyId: number, data: Partial<DataSourceCreate & { activo: boolean }>
+): Promise<DataSource> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}?company_id=${companyId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function eliminarDiscoverySource(sourceId: number, companyId: number): Promise<void> {
+  await apiFetch(`${API_BASE}/discovery/sources/${sourceId}?company_id=${companyId}`, { method: 'DELETE' });
+}
+
+export async function ejecutarScan(sourceId: number, companyId: number): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan?company_id=${companyId}`, {
+    method: 'POST',
+  });
+  return res.json();
+}
+
+export async function obtenerDiscoveryRun(runId: number, companyId: number): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/runs/${runId}?company_id=${companyId}`);
+  return res.json();
+}
+
+export async function listarRunsDeSource(sourceId: number, companyId: number): Promise<DiscoveryRun[]> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/runs?company_id=${companyId}`);
+  return res.json();
+}
+
+export async function vincularFindingARat(
+  findingId: number, companyId: number, ratId?: number, descartado?: boolean
+): Promise<DiscoveryFinding> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (ratId !== undefined) params.set('rat_id', String(ratId));
+  if (descartado !== undefined) params.set('descartado', String(descartado));
+  const res = await apiFetch(`${API_BASE}/discovery/findings/${findingId}/vincular-rat?${params}`, {
+    method: 'PATCH',
+  });
+  return res.json();
+}
