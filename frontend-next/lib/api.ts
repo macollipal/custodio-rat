@@ -59,6 +59,19 @@ async function tryRefreshToken(): Promise<string | null> {
   }
 }
 
+// Fetch sin credenciales para rutas públicas (/publico/*).
+// El CORSByPathMiddleware devuelve Access-Control-Allow-Origin: * para esas rutas,
+// y el browser rechaza * cuando hay credentials: 'include'.
+export async function publicFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const init: RequestInit = { ...options, credentials: 'omit' };
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    const msg = await res.json().then((d: { detail?: string }) => d.detail).catch(() => res.statusText);
+    throw new Error(msg || `Error ${res.status}`);
+  }
+  return res;
+}
+
 export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = { ...(options.headers || {}), ...authHeaders() };
   const init: RequestInit = { ...options, headers, credentials: 'include' };
@@ -984,8 +997,8 @@ export interface PoliticaTransparencia {
 }
 
 export async function getPoliticaTransparencia(companyId: number): Promise<PoliticaTransparencia> {
-  const res = await apiFetch(`${API_BASE}/publico/transparencia/${companyId}`);
-  return handle<PoliticaTransparencia>(res);
+  const res = await publicFetch(`${API_BASE}/publico/transparencia/${companyId}`);
+  return res.json();
 }
 
 export async function updatePoliticaTransparencia(
