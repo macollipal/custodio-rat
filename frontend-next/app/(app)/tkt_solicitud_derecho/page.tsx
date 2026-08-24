@@ -74,6 +74,7 @@ function sanitize(text: string | null | undefined): string {
 export default function TktSolicitudDerechoPage() {
   const { user, company } = useApp();
   const [tab, setTab] = useState<TabType>('abierto');
+  const [soloBandeja, setSoloBandeja] = useState(false);
   const [tickets, setTickets] = useState<TktTicket[]>([]);
   const [dashboard, setDashboard] = useState<TktDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -160,12 +161,14 @@ export default function TktSolicitudDerechoPage() {
   const filteredTickets = [...tickets]
     .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime())
     .filter(t => {
+      if (soloBandeja && t.responsable_id !== user?.id) return false;
       if (tab === 'todos') return true;
       if (tab === 'vencido') {
         return t.estado !== 'resuelto' && (t.dias_restantes ?? 0) < 0;
       }
       return t.estado === tab;
     });
+  const bandejaCount = tickets.filter(t => t.responsable_id === user?.id && t.estado !== 'resuelto' && t.estado !== 'rechazado').length;
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -304,6 +307,30 @@ export default function TktSolicitudDerechoPage() {
                     {dashboard.vencidos} vencida{dashboard.vencidos !== 1 ? 's' : ''}
                   </span>
                 </button>
+              )}
+            </div>
+            {/* ARCO-QW5: Bandeja del DPO */}
+            <div className="flex items-center gap-3 mb-2">
+              <button
+                onClick={() => setSoloBandeja(b => !b)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: soloBandeja ? '#EFF6FF' : '#F3F4F6',
+                  color: soloBandeja ? '#1E40AF' : '#6B7280',
+                  border: `1px solid ${soloBandeja ? '#BFDBFE' : '#E5E7EB'}`,
+                }}
+              >
+                <span>📥 Mi bandeja</span>
+                {bandejaCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-xs font-bold" style={{ background: '#1E40AF', color: 'white' }}>
+                    {bandejaCount}
+                  </span>
+                )}
+              </button>
+              {soloBandeja && (
+                <span className="text-xs" style={{ color: '#6B7280' }}>
+                  Mostrando solo tickets asignados a ti
+                </span>
               )}
             </div>
             {/* Tira de estados — clickeable para filtrar */}
