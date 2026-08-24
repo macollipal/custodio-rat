@@ -8,18 +8,18 @@
 | Campo | Valor |
 |---|---|
 | **Version** | v1.9 (docs) / v1.10 (docs API + CU) |
-| **Fecha** | 2026-08-07 |
+| **Fecha** | 2026-08-24 |
 | **Score Arquitectonico** | **7.8/10** (RAT: 9.0/10) |
 | **Delta vs v1.8** | +1.0 (gracias a auditoria RAT 2026-07-07) |
 | **RAT** | **9.0/10** ✅ (auditoria detallada 2026-07-07) |
-| **ARCO** | 7.5/10 (QW4 dashboard por_tipo + tests E2E workflow) |
-| **Brechas** | 7.0/10 (QW13 notificacion titulares) |
-| **Compliance** | **Art. 11, 12, 13, 14 bis, 14 ter, 15 bis, 16, 19, 28** cubiertos |
+| **ARCO** | 8.0/10 (QW6/7/8 + formulario público completo + acuse recibo) |
+| **Brechas** | 7.5/10 (auto-cálculo nivel_riesgo, recalculo en update) |
+| **Compliance** | **Art. 11, 12, 13, 14 bis, 14 ter, 14 quater, 15 bis, 16, 19, 28** cubiertos |
 | **Madurez** | Produccion Inicial → candidato a **Produccion Empresarial** |
 | **Branch** | `qa` |
-| **Ultima auditoria formal** | [2026-07-07_auditoria_rat_detalle](auditorias/2026-07-07_auditoria_rat_detalle/AUDITORIA_RAT_DETALLE.md) |
-| **Ultimo trabajo** | [LEVANTAMIENTO_2026-07-18.md](../LEVANTAMIENTO_2026-07-18.md) (4 auditorias) |
-| **Ultima sesion** | 2026-08-22 — QA total: 78 tests fallando → 0; fixes auth (201), prorroga, encrypt_migration, EIPD validator, route ordering |
+| **Ultima auditoria formal** | [2026-08-22_auditoria_qa_tests](auditorias/2026-08-22_auditoria_qa_tests/AUDITORIA_QA_TESTS.md) |
+| **Ultimo trabajo** | 2026-08-24 — QW5 formulario público (titular repetido), docs sync |
+| **Ultima sesion** | 2026-08-24 — QW5 titular repetido; CI fixes (APDP, vitest E2E, WCAG, ruff, pip-audit); ARCO-QW6/7/8; Empresas-QW6 |
 | **Administrador IA** | Claude Code (claude-sonnet-4-6) desde 2026-08-07 |
 
 ## Documentacion Vigente
@@ -144,10 +144,10 @@ Ver detalle en [AUDITORIA_V1.9.md](auditorias/2026-07-05_auditoria_v1.9/AUDITORI
 
 ### Corto Plazo (Sprint actual)
 
-1. Crear carpeta `manual/` para clientes no-técnicos (ver conversación 2026-07-13)
-2. Implementar QWs del backlog (QW1-QW10 Empresas y ARCO) — ver `docs/backlog_seguimiento.md`
-3. Cerrar **Z-02** (CORS restrictivo) y **Z-06** (audit_log table)
-4. Actualizar `MANUAL_USUARIO.md` (wizard 4→5 pasos, roles, versión) — drift detectado
+1. ✅ Crear carpeta `manual/` para clientes no-técnicos
+2. ✅ Implementar QWs del backlog (Empresas-QW6, ARCO-QW6/7/8, Público-QW1/3/4/5/9) — 9/13 pendientes cerrados
+3. ✅ Cerrar **Z-02** (CORS restrictivo) — `CORSByPathMiddleware` activo
+4. Actualizar documentos oficiales (.docx) a v1.10 — ver `docs/documentacion_oficial/README.md`
 5. Continuar remediacion RAT — ver [PLAN_REMEDIACION.md](auditorias/2026-07-07_auditoria_rat_detalle/PLAN_REMEDIACION.md)
 
 ### Mediano Plazo

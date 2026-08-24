@@ -1,5 +1,32 @@
 # Changelog — Custodio RAT Manager
 
+## [Unreleased] - 2026-08-24
+
+### Quick Wins ARCO + Formulario Público
+
+#### Público-QW5 — Detección de titular repetido
+- Nuevo endpoint `GET /publico/verificar-titular?company_id=X&email=Y` (sin auth, rate 20/min)
+- Al hacer blur en el campo email del formulario público, consulta si el titular ya tiene tickets abiertos en esa empresa
+- Banner amarillo de advertencia (no bloquea el envío) con contador de tickets y enlace a seguimiento
+
+#### CI/CD — Correcciones de pipeline
+- **Ruff lint** (5 errores): `crypto.py` (F401), `politica_transparencia.py` (F401), `email_service.py` (F541), `main.py` (E402)
+- **Vitest**: excluir `e2e/` del runner para que Playwright no corra en vitest
+- **WCAG**: `#9CA3AF` → `#6B7280` en `dashboard/page.tsx` (Tailwind gray-500, ratio 4.5:1)
+- **Nomenclatura**: `APDC` → `APDP` en tests, títulos y documentación (nomenclatura oficial chilena)
+- **`wcag-contrast.test.ts`**: removido test de `solicitud_derecho/page.tsx` (archivo eliminado)
+- **`company-alerts-banner.test.ts`**: actualizado `"ARCO vencidas"` → `"ARCOP+ vencidas"`
+- **pip-audit**: escaneo de vulnerabilidades CVE en dependencias Python (bloquea solo CRITICAL, HIGH como warning)
+- **`backend-tests` env vars**: `ALLOWED_ORIGINS` y `ENVIRONMENT` hardcodeados para CI; step de verificación si `TEST_DATABASE_URL` no está configurado
+
+#### Documentación
+- README.md: 95+ → 761+ tests; APDC → APDP; ficha empresa; formulario ARCOP+; sin "próximas funcionalidades" ya implementadas
+- `docs/STATUS.md`: versión, fecha, scores y próximos pasos actualizados a 2026-08-24
+- `docs/backlog_seguimiento.md`: 9 QWs adicionales marcados como cerrados (v1.4 → v1.5)
+- CHANGELOG.md: sincronizado con trabajo real
+
+---
+
 ## [Unreleased] - 2026-08-22
 
 ### QA — Corrección total de suite de tests (78 → 0 fallidos)

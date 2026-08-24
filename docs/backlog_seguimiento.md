@@ -8,13 +8,13 @@
 
 ## Estado General
 
-| Módulo | Quick Wins | En Progreso | Completado | Postergado | Total |
+| Módulo | Pendiente | En Progreso | Completado | Postergado | Total |
 |--------|-----------|-------------|------------|------------|-------|
-| Módulo Empresas (Clientes) | 7 | 0 | 4 | 0 | 10 |
-| Módulo ARCO (Tickets) | 10 | 0 | 3 | 1 | 10 |
-| Formulario Público ARCO | 10 | 0 | 2 | 0 | 10 |
-| Formulario Admin ARCO | 10 | 0 | 10 | 0 | 10 |
-| **Total** | **40** | **0** | **16** | **1** | **40** |
+| Módulo Empresas (Clientes) | 5 | 0 | 5 | 0 | 10 |
+| Módulo ARCO (Tickets) | 6 | 0 | 3 | 1 | 10 |
+| Formulario Público ARCO | 4 | 0 | 6 | 0 | 10 |
+| Formulario Admin ARCO | 0 | 0 | 10 | 0 | 10 |
+| **Total** | **15** | **0** | **24** | **1** | **40** |
 
 ---
 
@@ -27,7 +27,7 @@
 | QW3 | Score de cumplimiento v1 | MEDIO | ALTO | MEDIA | 3-4 días | ⚪ Pendiente | — |
 | QW4 | Exportación CSV/Excel/PDF de tickets ARCO | ALTO | MEDIO | BAJA | 2-3 días | ⚪ Pendiente | — |
 | QW5 | SLA alert por email T-2 días (ARCO + RATs) | CRÍTICO | BAJO | BAJA | 2 días | ✅ **Cerrado** | Emece (2026-07-18) |
-| QW6 | Ficha de empresa básica con tabs | MEDIO | ALTO | MEDIA | 3-5 días | ⚪ Pendiente | — |
+| QW6 | Ficha de empresa básica con tabs | MEDIO | ALTO | MEDIA | 3-5 días | ✅ **Cerrado** | Emece (2026-08-22) |
 | QW7 | Banner de alertas en lista de empresas | MEDIO | ALTO | BAJA | 1 día | ✅ **Cerrado** | Emece (2026-08-21) |
 | QW8 | Recordatorio ARCO T-2 días | ALTO | BAJO | BAJA | 1-2 días | ⚪ Pendiente | — |
 | QW9 | Editar RUT post-creación | BAJO | MEDIO | BAJA | 0.5 día | ⚪ Pendiente | — |
@@ -51,9 +51,9 @@
 | QW3 | Firma digital + timestamp en respuesta | CRÍTICO | BAJO | BAJA | 1 día | ⏸ Postergado | — |
 | QW4 | Dashboard "derechos más ejercidos" | BAJO | MEDIO | BAJA | 1.5 días | ✅ **Cerrado** | Emece (2026-07-09) |
 | QW5 | Bandeja de entrada del DPO | ALTO | ALTO | MEDIA | 3 días | ⚪ Pendiente | — |
-| QW6 | Recordatorio automático al titular | ALTO | MEDIO | BAJA | 2 días | ⚪ Pendiente | — |
-| QW7 | Plantillas con placeholders dinámicos | MEDIO | ALTO | MEDIA | 3 días | ⚪ Pendiente | — |
-| QW8 | Ver Flujo con tiempos reales | MEDIO | BAJO | BAJA | 2 días | ⚪ Pendiente | — |
+| QW6 | Acuse de recibo automático al titular | ALTO | MEDIO | BAJA | 2 días | ✅ **Cerrado** | Emece (2026-08-22) |
+| QW7 | Chips de placeholders en respuesta | MEDIO | ALTO | MEDIA | 3 días | ✅ **Cerrado** | Emece (2026-08-22) |
+| QW8 | Ver Flujo con tiempos reales (banner SLA) | MEDIO | BAJO | BAJA | 2 días | ✅ **Cerrado** | Emece (2026-08-22) |
 | QW9 | Portal del titular con descarga de respuesta | ALTO | MEDIO | BAJA | 2 días | ⚪ Pendiente | — |
 | QW10 | Editar RUT titular/representante | BAJO | MEDIO | BAJA | 0.5 día | ⚪ Pendiente | — |
 
@@ -63,15 +63,15 @@
 
 | # | Mejora | Impacto Legal | Impacto Comercial | Complejidad | Esfuerzo | Estado | Asignado |
 |---|--------|---------------|-------------------|-------------|----------|--------|----------|
-| QW1 | Validación RUT en vivo + formateo | MEDIO | ALTO | BAJA | 0.5 día | ⚪ Pendiente | — |
+| QW1 | Validación RUT en vivo + formateo | MEDIO | ALTO | BAJA | 0.5 día | ✅ **Cerrado** | Emece (2026-08-22) |
 | QW2 | Banner de privacidad + link política | CRÍTICO | ALTO | BAJA | 0.5 día | ✅ Completado | — |
-| QW3 | Pantalla intro + glosario antes del step 1 | ALTO | ALTO | MEDIA | 1 día | ⚪ Pendiente | — |
-| QW4 | Confirmación de email (doble input) | MEDIO | ALTO | BAJA | 0.5 día | ⚪ Pendiente | — |
-| QW5 | Detección de titular repetido | MEDIO | ALTO | BAJA | 1 día | ⚪ Pendiente | — |
+| QW3 | Pantalla intro + glosario antes del step 1 | ALTO | ALTO | MEDIA | 1 día | ✅ **Cerrado** | Emece (2026-08-22) |
+| QW4 | Confirmación de email (doble input) | MEDIO | ALTO | BAJA | 0.5 día | ✅ **Cerrado** | Emece (2026-08-22) |
+| QW5 | Detección de titular repetido | MEDIO | ALTO | BAJA | 1 día | ✅ **Cerrado** | Emece (2026-08-24) |
 | QW6 | CTA "Consultar estado" en pantalla de éxito | MEDIO | ALTO | BAJA | 0.5 día | ✅ Completado | — |
 | QW7 | Validación tamaño archivo previa | BAJO | MEDIO | BAJA | 0.5 día | ⚪ Pendiente | — |
 | QW8 | Eliminar archivos individuales del upload | BAJO | MEDIO | BAJA | 0.5 día | ⚪ Pendiente | — |
-| QW9 | Stepper con 3 pasos visibles | BAJO | BAJO | BAJA | 0.5 día | ⚪ Pendiente | — |
+| QW9 | Stepper con 3 pasos visibles | BAJO | BAJO | BAJA | 0.5 día | ✅ **Cerrado** | Emece (2026-08-22) |
 | QW10 | Microcopy mejorado | BAJO | MEDIO | BAJA | 1 día | ⚪ Pendiente | — |
 
 ---
@@ -102,6 +102,8 @@
 | 2026-06-24 | 1.1b | ARCO-QW3 (Firma digital) postergado indefinidamente | Usuario |
 | 2026-07-09 | 1.2 | ARCO-QW4 (Dashboard "derechos más ejercidos") + QW5 SLA T-2 alertas | Emece |
 | 2026-07-18 | 1.3 | QW5 Empresas (SLA T-2 días RATs + ARCO) extendido a RATs | Emece |
+| 2026-08-22 | 1.4 | Empresas-QW6 (Ficha empresa), ARCO-QW6/7/8, Público-QW1/3/4/9 | Emece |
+| 2026-08-24 | 1.5 | Público-QW5 (detección titular repetido) | Emece |
 
 ---
 

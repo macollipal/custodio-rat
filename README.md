@@ -43,7 +43,7 @@ RAT_opencode/
 │   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro,
 │   │                      ticket, email (SMTP), scheduler (enqueue), task_service (cola),
 │   │                      audit (transversal), policy, eipd
-│   ├── tests/             95+ tests (pytest + httpx)
+│   ├── tests/             761+ tests (pytest + httpx)
 
 │   └── venv/             Entorno virtual Python
 │
@@ -351,7 +351,7 @@ Gestión de responsables del tratamiento de datos personales.
 - VIEWER solo puede consultar; no puede editar ni desactivar.
 - Solo superadmin puede realizar hard-delete.
 
-**Frontend:** `/companies` — cards con badges de alertas (RATs vencidos, ARCO pendientes/SLA), botón "Ver RATs →", drawer de auditoría, gestión de accesos, exportación APDP.
+**Frontend:** `/companies` — cards con badges de alertas (RATs vencidos, ARCO pendientes/SLA), botón "Ver RATs →", **Ficha de empresa** (tabs Datos/RATs/ARCO/Brechas con carga lazy), drawer de auditoría, gestión de accesos, exportación APDP.
 
 ### Módulo de Consentimientos (Art. 12 Ley 21.719) — NUEVO
 - Página `/consentimientos` con tabla y KPIs (Total / Activos / Revocados)
@@ -376,7 +376,7 @@ Gestión de responsables del tratamiento de datos personales.
 - Endpoint `POST /admin/tasks/run` para que un cron externo procese la cola
 - Dashboard de admin: `/admin/tasks/stats` y `/admin/tasks/` para listar
 - Reintentos automáticos con backoff (max 3 intentos)
-- Monitor brechas 72h (C-03): cada 12h detecta brechas sin notificar APDC y alerta al DPO
+- Monitor brechas 72h (C-03): cada 12h detecta brechas sin notificar APDP y alerta al DPO
 - Alerta plazo retención (C-02): cada 24h notifica RATs con plazo de retención vencido
 
 ### Gestión RAT
@@ -410,7 +410,7 @@ Gestión de responsables del tratamiento de datos personales.
 
 ### Módulo de Brechas de Seguridad (Art. 14 bis Ley 21.719)
 - Gestión de brechas con plazos legales obligatorios
-- Plazo APDC (72h) vencido + cálculo de horas desde detección
+- Plazo APDP (72h) vencido + cálculo de horas desde detección
 - Notificación automática al DPO por email (si SMTP configurado)
 
 ### Módulo Encargados de Tratamiento (Art. 14 quater Ley 21.719)
@@ -434,15 +434,19 @@ Gestión de responsables del tratamiento de datos personales.
   - Prórroga de plazo (+10 días hábiles, Art. 12 bis) — 1 vez por ticket
   - Causal de rechazo (enum), verificación de identidad obligatoria para resolver
   - Hash de integridad SHA-256 al resolver (Art. 12.5)
+- **Formulario público ARCOP+** (`/ejercer-derechos`): formulario de 3 pasos para que el titular ejerza sus derechos sin login — validación RUT, confirmación email, stepper, glosario intro, detección de titular repetido (aviso si ya tiene ticket abierto en esa empresa)
+- **Acuse de recibo automático** (ARCO-QW6): email al titular al crear su solicitud, con tracking token
+- **Chips de placeholders** (ARCO-QW7): al redactar respuesta, chips insertan `{{nombre_titular}}`, `{{empresa}}`, `{{fecha}}`, etc.
+- **Banner SLA con tiempos reales** (ARCO-QW8): FlujoModal muestra días hábiles consumidos y días restantes con semáforo de color
 - **Consulta pública** (`/seguimiento/{tracking_token}`): titular consulta estado sin autenticación
-- **Monitor SLA** (C-03): job cada 12h alerta DPO por brechas sin notificar APDC >72h
+- **Monitor SLA** (C-03): job cada 12h alerta DPO por brechas sin notificar APDP >72h
 - Tabla canónica: `tkt_solicitud_derecho` (tabla legacy `solicitudes_derecho` eliminada jul-2026)
 
 ### Exportación
 - CSV por empresa
 - PDF por empresa
 - PDF individual de RAT (`/rats/{id}/export/pdf`)
-- Formato CNI para presentación a la APDC (Ley 21.719)
+- Formato CNI para presentación a la APDP (Ley 21.719)
 
 ### Tema oscuro
 - Switch en Topbar (🌙/☀️)
@@ -450,17 +454,6 @@ Gestión de responsables del tratamiento de datos personales.
 - Clase `.dark` aplicada al `<html>`
 
 ---
-
-## Próximas funcionalidades
-
-### Rubros + Sugerencias de RAT por Rubro (V1-04)
-- Tabla `rubros`: id, nombre, orden (BD, ordenable por superadmin)
-- Tabla `rats_sugeridos`: id, rubro_id, campos pre-llenados de RAT
-- 13 rubros adicionales con plantillas pre-seedeadas
-- Wizard de RAT con Paso 0: muestra tarjetas de sugerencias según el rubro de la empresa
-- "Usar sugerencia" → wizard pre-llenado; "Crear personalizado" → wizard en blanco
-- Permisos: superadmin CRUD todos, admin_empresa CRUD solo de su rubro
-- Página de gestión de rubros (drag-to-reorder) y sugerencias
 
 ---
 
