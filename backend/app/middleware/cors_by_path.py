@@ -45,6 +45,7 @@ def _cors_response_headers(origin: str, path: str, allowed_origins: set[str]) ->
 
     if _is_public(path):
         headers.append((b"access-control-allow-origin", b"*"))
+        headers.append((b"access-control-expose-headers", _EXPOSE_HEADERS))
     elif origin in allowed_origins:
         headers.append((b"access-control-allow-origin", origin.encode()))
         headers.append((b"access-control-allow-credentials", b"true"))

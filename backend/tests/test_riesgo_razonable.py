@@ -119,7 +119,8 @@ class TestBreachCrud:
             "company_id": empresa["id"],
             "descripcion": "Brecha con riesgo",
             "fecha_deteccion": datetime.now(timezone.utc).isoformat(),
-            "nivel_riesgo": "critico",
+            "incluye_datos_sensibles": True,    # +3
+            "incluye_datos_nna": True,          # +3  → score 6 = CRITICO
             "incluye_datos_financieros": True,
         }
         resp = client.post("/brechas/", json=payload, headers=auth_headers)
