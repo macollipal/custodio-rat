@@ -47,10 +47,10 @@ Ver [`auditorias/2026-07-18_auditoria_doc_drift.md`](auditorias/2026-07-18_audit
 | ID | Descripcion | Prioridad | Estado | Notas |
 |---|---|---|---|---|
 | **Z-01** | Security headers (CSP, X-Frame-Options) | Media | **Cerrado** ✅ | `backend/app/main.py:145-167` — CSP, X-Frame-Options, HSTS, etc. Tests 6/6 |
-| **Z-02** | CORS restrictivo por ruta | Baja | Pendiente | Hoy se permite todo *.vercel.app |
+| **Z-02** | CORS restrictivo por ruta | Baja | **Cerrado** ✅ | `CORSByPathMiddleware` — rutas `/publico/*` aceptan `*`, privadas solo `ALLOWED_ORIGINS`. 16 tests. Commit 2026-08-23 |
 | **Z-03** | File upload validation tipo MIME | Media | **Cerrado** ✅ | Magic bytes en `rat_file._validate_magic_bytes()`. Commit `fe127b5` |
 | **Z-04** | `categoria_titulares NOT NULL` | Alta | **Cerrado v1.9** ✅ | Commit `b776cb9` + migration `2026_07_05_001` |
-| **Z-06** | Logs estructurados JSON / audit_log table | Media | Pendiente | Migrar logging a tabla en BD |
+| **Z-06** | Logs estructurados JSON / audit_log table | Media | **Cerrado** ✅ | `JSONFormatter` activo en ENVIRONMENT=production/qa/staging. `audit_logs` en BD con hash chain. Commit previo. |
 
 ## Otros Pendientes (no Z-)
 

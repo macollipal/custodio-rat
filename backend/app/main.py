@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import os
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.cors_by_path import CORSByPathMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
@@ -166,21 +166,10 @@ class SecurityHeadersMiddleware:
 
 app.add_middleware(SecurityHeadersMiddleware)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "X-Requested-With",
-        "X-Request-ID",
-        "Accept",
-        "Origin",
-    ],
-    expose_headers=["X-Request-ID"],
-)
+# Z-02: CORS restrictivo por ruta.
+# Rutas públicas (/publico/*, /health, /): allow_origins=* sin credentials.
+# Rutas privadas: solo ALLOWED_ORIGINS con credentials.
+app.add_middleware(CORSByPathMiddleware, allowed_origins=ALLOWED_ORIGINS)
 
 # F3.1: Versionamiento API /api/v1/
 # Mantenemos compatibilidad con los endpoints legacy (sin prefijo v1)

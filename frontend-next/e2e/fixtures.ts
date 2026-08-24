@@ -4,7 +4,7 @@ import { test as base, Page } from '@playwright/test';
 
 export const TEST_USER = {
   username: process.env.E2E_USERNAME || 'admin',
-  password: process.env.E2E_PASSWORD || 'Admin1234!',
+  password: process.env.E2E_PASSWORD || 'admin1234',
 };
 
 export const test = base.extend<{
