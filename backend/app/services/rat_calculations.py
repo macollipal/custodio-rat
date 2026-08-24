@@ -136,9 +136,11 @@ def calcular_nivel_riesgo(data: Mapping[str, Any]) -> str:
         score += 1
 
     vol = data.get("volumen_titulares_estimado") or 0
-    if vol >= 10000:
+    if vol >= 100_000:
+        score += 3   # Art. 15 bis: volumen masivo dispara EIPD
+    elif vol >= 10_000:
         score += 2
-    elif vol >= 1000:
+    elif vol >= 1_000:
         score += 1
 
     if score >= UMBRAL_RIESGO_CRITICO:

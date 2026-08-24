@@ -985,6 +985,10 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
             </div>
           )}
         </div>
+
+        <p className="text-xs text-center" style={{ color: '#9CA3AF' }}>
+          Los tickets ARCOP+ no pueden eliminarse: la Ley 21.719 (Art. 12) exige conservar evidencia de todas las solicitudes de derechos como respaldo ante la APDP.
+        </p>
       </div>
 
       <FlujoModal

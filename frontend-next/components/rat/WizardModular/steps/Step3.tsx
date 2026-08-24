@@ -172,62 +172,64 @@ export function Step3({
       </div>
 
       {data.base_legal === 'Interés legítimo' && (
-        <details className="rounded-lg" style={{ border: '1px solid #F59E0B' }}>
-          <summary className="px-4 py-3 text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: '#374151' }}>
-            📋 Test de interés legítimo (3 pasos)
-            <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: '#FEF3C7', color: '#92400E' }}>
-              Obligatorio
-            </span>
-          </summary>
-          <div className="px-4 pt-2 pb-4 space-y-3">
-            <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDP." type="warning" />
-            <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
-                Paso 1 — ¿Existe un interés legítimo real?
-              </label>
-              <textarea
-                rows={2}
-                value={data._testIL?.paso1 ?? ''}
-                onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL!, paso1: e.target.value } }))}
-                placeholder="Describa el interés legítimo: marketing directo, seguridad, prevención de fraude..."
-                className={inputCls}
-                style={inputStyle}
-              />
+        <>
+          <details open className="rounded-lg" style={{ border: '1px solid #F59E0B' }}>
+            <summary className="px-4 py-3 text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: '#374151' }}>
+              📋 Test de interés legítimo (3 pasos)
+              <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: '#FEF3C7', color: '#92400E' }}>
+                Obligatorio
+              </span>
+            </summary>
+            <div className="px-4 pt-2 pb-4 space-y-3">
+              <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Sin este análisis documentado en los 3 pasos, la base legal no será válida como defensa ante la APDP." type="warning" />
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
+                  Paso 1 — ¿Existe un interés legítimo real?
+                </label>
+                <textarea
+                  rows={2}
+                  value={data._testIL?.paso1 ?? ''}
+                  onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL!, paso1: e.target.value } }))}
+                  placeholder="Describa el interés legítimo: marketing directo, seguridad, prevención de fraude..."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
+                  Paso 2 — ¿El tratamiento es necesario para ese interés?
+                </label>
+                <textarea
+                  rows={2}
+                  value={data._testIL?.paso2 ?? ''}
+                  onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL, paso2: e.target.value } }))}
+                  placeholder="Justifique por qué el tratamiento es necesario y no hay alternativa menos invasiva."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
+                  Paso 3 — ¿Prevalece sobre los derechos del titular?
+                </label>
+                <textarea
+                  rows={3}
+                  value={data._testIL?.paso3 ?? ''}
+                  onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL, paso3: e.target.value } }))}
+                  placeholder="Considere expectativas razonables del titular, impacto en su privacidad, medidas mitigadoras..."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
-                Paso 2 — ¿El tratamiento es necesario para ese interés?
-              </label>
-              <textarea
-                rows={2}
-                value={data._testIL?.paso2 ?? ''}
-                onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL, paso2: e.target.value } }))}
-                placeholder="Justifique por qué el tratamiento es necesario y no hay alternativa menos invasiva."
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>
-                Paso 3 — ¿Prevalece sobre los derechos del titular?
-              </label>
-              <textarea
-                rows={3}
-                value={data._testIL?.paso3 ?? ''}
-                onChange={e => setData(d => ({ ...d, _testIL: { ...d._testIL, paso3: e.target.value } }))}
-                placeholder="Considere expectativas razonables del titular, impacto en su privacidad, medidas mitigadoras..."
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-          </div>
+          </details>
           {fieldErrors._testIL && (
-            <p role="alert" className="text-xs flex items-center gap-1 mt-2" style={{ color: '#DC2626' }}>
+            <p role="alert" className="text-xs flex items-center gap-1" style={{ color: '#DC2626' }}>
               <span aria-hidden="true">⚠</span>
               {fieldErrors._testIL}
             </p>
           )}
-        </details>
+        </>
       )}
 
       <div className="flex flex-col sm:flex-row gap-2 pt-2">

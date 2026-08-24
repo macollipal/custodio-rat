@@ -48,6 +48,9 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
     breach = SecurityBreach(**data.model_dump(), creado_por=usuario)
+    # BUG-01: Auto-calcular nivel de riesgo con los flags reales (Art. 14 bis)
+    breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
+    breach.reportable_apdc_calculado = _calcular_reportable(breach)
     db.add(breach)
     db.flush()
     log_audit(
@@ -104,6 +107,12 @@ def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: 
 
     for field, value in cambios.items():
         setattr(breach, field, value)
+
+    # Recalcular riesgo si cambió algún factor determinante
+    _risk_factors = {"incluye_datos_sensibles", "incluye_datos_nna", "incluye_datos_financieros", "volumen_titulares_afectados"}
+    if cambios.keys() & _risk_factors:
+        breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
+        breach.reportable_apdc_calculado = _calcular_reportable(breach)
 
     if data.notificado_apdc and not _notificado_apdc_prev and empresa and empresa.email_dpo:
         from app.services.email_service import notificar_nueva_brecha, EmailError

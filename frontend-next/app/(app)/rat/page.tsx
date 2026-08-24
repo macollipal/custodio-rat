@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
@@ -20,6 +20,9 @@ export default function RatPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   const hasCache = rats.length > 0;
 
@@ -136,6 +139,39 @@ export default function RatPage() {
     }
   }
 
+  async function handleExport(tipo: 'csv' | 'pdf' | 'apdp') {
+    if (!company || exporting) return;
+    setExportMenuOpen(false);
+    setExporting(true);
+    try {
+      const fecha = new Date().toISOString().split('T')[0];
+      if (tipo === 'csv') {
+        const blob = await api.exportarCsv(company.id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `rat_${fecha}.csv`; a.click();
+        URL.revokeObjectURL(url);
+      } else if (tipo === 'pdf') {
+        const blob = await api.exportarPdf(company.id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `rat_${fecha}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const blob = await api.exportarPdfApdp(company.id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `rat_apdp_${fecha}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      }
+      toast.success('Exportación descargada correctamente.');
+    } catch {
+      toast.error('Error al exportar. Intenta nuevamente.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (!company) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -169,17 +205,49 @@ export default function RatPage() {
               {refreshing && <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>actualizando...</span>}
             </p>
           </div>
-          {puedeEditar && (
-            <button
-              onClick={() => setWizardOpen(true)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-              style={{ background: '#2563EB' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
-            >
-              + Nuevo proceso
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                onClick={() => setExportMenuOpen(v => !v)}
+                disabled={exporting}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                style={{ background: '#F3F4F6', color: '#374151', border: '1px solid #E5E7EB' }}
+                title="Exportar RATs"
+              >
+                {exporting ? '⏳ Exportando…' : '⬇ Exportar'}
+              </button>
+              {exportMenuOpen && (
+                <div
+                  className="absolute right-0 mt-1 w-44 rounded-lg shadow-lg z-50 overflow-hidden"
+                  style={{ background: 'white', border: '1px solid #E5E7EB' }}
+                >
+                  {(['csv', 'pdf', 'apdp'] as const).map((tipo) => (
+                    <button
+                      key={tipo}
+                      onClick={() => handleExport(tipo)}
+                      className="w-full text-left px-4 py-2.5 text-sm transition"
+                      style={{ color: '#374151' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#F9FAFB')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {tipo === 'csv' ? '📄 CSV' : tipo === 'pdf' ? '📑 PDF completo' : '🏛 Reporte APDP'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {puedeEditar && (
+              <button
+                onClick={() => setWizardOpen(true)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
+                style={{ background: '#2563EB' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
+              >
+                + Nuevo proceso
+              </button>
+            )}
+          </div>
         </div>
       )}
 
