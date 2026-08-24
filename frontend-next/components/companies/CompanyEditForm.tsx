@@ -14,9 +14,32 @@ interface CompanyEditFormProps {
   onCancel: () => void;
 }
 
+function formatRutEmpresa(raw: string): string {
+  const v = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (v.length <= 1) return v;
+  const dv = v.slice(-1);
+  const num = v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${num}-${dv}`;
+}
+
+function validarRutEmpresa(rut: string): boolean {
+  if (!rut.trim()) return true;
+  const clean = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length < 2) return false;
+  const dv = clean.slice(-1);
+  const num = parseInt(clean.slice(0, -1), 10);
+  if (isNaN(num)) return false;
+  let sum = 0, factor = 2, n = num;
+  while (n > 0) { sum += (n % 10) * factor; n = Math.floor(n / 10); factor = factor === 7 ? 2 : factor + 1; }
+  const rem = 11 - (sum % 11);
+  const expected = rem === 11 ? '0' : rem === 10 ? 'K' : String(rem);
+  return dv === expected;
+}
+
 export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormProps) {
   const [form, setFormState] = useState({
     nombre: empresa.nombre ?? '',
+    rut: empresa.rut ?? '',
     rubro_id: empresa.rubro_id?.toString() ?? '',
     direccion: empresa.direccion ?? '',
     contacto_dpo: empresa.contacto_dpo ?? '',
@@ -24,6 +47,7 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
     descripcion: empresa.descripcion ?? '',
     canal_ejercicio_derechos: empresa.canal_ejercicio_derechos ?? '',
   });
+  const [rutError, setRutError] = useState('');
   const [saving, setSaving] = useState(false);
   const [rubros, setRubros] = useState<Rubro[]>([]);
 
@@ -32,6 +56,10 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
   function set(k: string, v: string) { setFormState(f => ({ ...f, [k]: v })); }
 
   async function handleSave() {
+    if (form.rut && !validarRutEmpresa(form.rut)) {
+      setRutError('RUT de empresa inválido — verifica el dígito verificador');
+      return;
+    }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {};
@@ -56,6 +84,20 @@ export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormPr
         <div>
           <label className={labelCls} style={labelStyle}>Razón social</label>
           <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>RUT de empresa</label>
+          <input
+            type="text"
+            value={form.rut}
+            onChange={e => { setRutError(''); set('rut', formatRutEmpresa(e.target.value)); }}
+            onBlur={() => { if (form.rut && !validarRutEmpresa(form.rut)) setRutError('RUT inválido — verifica el dígito verificador'); }}
+            placeholder="12.345.678-9"
+            maxLength={12}
+            className={inputCls}
+            style={{ ...inputStyle, borderColor: rutError ? '#FCA5A5' : undefined }}
+          />
+          {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
         </div>
         <div>
           <label className={labelCls} style={labelStyle}>Rubro</label>

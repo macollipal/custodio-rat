@@ -419,6 +419,12 @@ def actualizar_ticket(
     if data.medio_respuesta is not None:
         ticket.medio_respuesta = data.medio_respuesta
 
+    # ARCO-QW10: editar RUT titular/representante post-creación
+    if data.titular_rut is not None:
+        ticket.titular_rut = data.titular_rut or None
+    if data.representante_rut is not None:
+        ticket.representante_rut = data.representante_rut or None
+
     db.commit()
     db.refresh(ticket)
     log_audit(

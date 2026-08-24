@@ -106,6 +106,10 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
   const [prorrogaDias, setProrrogaDias] = useState(10);
   const [prorrogaMotivo, setProrrogaMotivo] = useState('');
   const [flujoModalOpen, setFlujoModalOpen] = useState(false);
+  const [editingRut, setEditingRut] = useState(false);
+  const [rutTitularEdit, setRutTitularEdit] = useState('');
+  const [rutReprEdit, setRutReprEdit] = useState('');
+  const [guardandoRut, setGuardandoRut] = useState(false);
 
   useEffect(() => {
     if (open && ticket) {
@@ -160,6 +164,29 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
       fetchHistorial();
     }
   }, [open, ticket, fetchNotas, fetchHistorial]);
+
+  function formatRutInline(raw: string): string {
+    const v = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (v.length <= 1) return v;
+    return v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + v.slice(-1);
+  }
+
+  async function handleGuardarRut() {
+    if (!ticket?.id) return;
+    setGuardandoRut(true);
+    try {
+      await actualizarTktTicket(ticket.id, {
+        titular_rut: rutTitularEdit || null,
+        ...(ticket.representante_nombre && { representante_rut: rutReprEdit || null }),
+      });
+      toast.success('RUT actualizado correctamente.');
+      setEditingRut(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al guardar RUT.');
+    } finally {
+      setGuardandoRut(false);
+    }
+  }
 
   async function handleGuardarRespuesta() {
     if (!ticket?.id) return;
@@ -388,11 +415,42 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
 
           <div className="pl-11">
             <p className="font-bold text-sm mb-0.5" style={{ color: '#111827' }}>{sanitize(ticket.titular_nombre)}</p>
-            <p className="text-xs" style={{ color: '#6B7280' }}>
-              {sanitize(ticket.titular_rut) || 'Sin RUT'}
-              {ticket.titular_email && ` · ${sanitize(ticket.titular_email)}`}
-            </p>
-            {ticket.representante_nombre && (
+            {!editingRut ? (
+              <div className="flex items-center gap-2">
+                <p className="text-xs" style={{ color: '#6B7280' }}>
+                  {sanitize(ticket.titular_rut) || 'Sin RUT'}
+                  {ticket.titular_email && ` · ${sanitize(ticket.titular_email)}`}
+                </p>
+                {isAdmin && (
+                  <button
+                    onClick={() => { setRutTitularEdit(ticket.titular_rut ?? ''); setRutReprEdit(ticket.representante_rut ?? ''); setEditingRut(true); }}
+                    className="text-xs px-1.5 py-0.5 rounded"
+                    style={{ background: '#F3F4F6', color: '#6B7280', border: '1px solid #E5E7EB', cursor: 'pointer' }}
+                    title="Editar RUT"
+                  >✏️ RUT</button>
+                )}
+              </div>
+            ) : (
+              <div className="mt-1 p-2 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <label className="text-xs font-medium" style={{ color: '#6B7280' }}>RUN titular</label>
+                    <input value={rutTitularEdit} onChange={e => setRutTitularEdit(formatRutInline(e.target.value))} placeholder="12.345.678-9" maxLength={12} className={inputCls} style={{ fontSize: 13 }} />
+                  </div>
+                  {ticket.representante_nombre && (
+                    <div>
+                      <label className="text-xs font-medium" style={{ color: '#6B7280' }}>RUN representante</label>
+                      <input value={rutReprEdit} onChange={e => setRutReprEdit(formatRutInline(e.target.value))} placeholder="12.345.678-9" maxLength={12} className={inputCls} style={{ fontSize: 13 }} />
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => setEditingRut(false)}>Cancelar</Button>
+                    <Button variant="primary" size="sm" loading={guardandoRut} onClick={handleGuardarRut}>Guardar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!editingRut && ticket.representante_nombre && (
               <p className="text-xs mt-0.5" style={{ color: '#7C3AED' }}>
                 Representado por: {sanitize(ticket.representante_nombre)}
                 {ticket.representante_rut && ` (${sanitize(ticket.representante_rut)})`}

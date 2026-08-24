@@ -762,7 +762,7 @@ export async function getTktTicket(id: number): Promise<TktTicket> {
   return handle<TktTicket>(res);
 }
 
-export async function actualizarTktTicket(id: number, data: { estado?: string; prioridad?: string; responsable_id?: number; respuesta_texto?: string }): Promise<TktTicket> {
+export async function actualizarTktTicket(id: number, data: { estado?: string; prioridad?: string; responsable_id?: number; respuesta_texto?: string; titular_rut?: string | null; representante_rut?: string | null }): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${id}`, {
     method: 'PATCH',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },

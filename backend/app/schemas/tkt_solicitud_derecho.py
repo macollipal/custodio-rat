@@ -64,6 +64,9 @@ class TktTicketUpdate(BaseModel):
     respuesta_texto: Optional[str] = None
     plantilla_id: Optional[int] = None
     subsanacion_detalle: Optional[str] = None
+    # ARCO-QW10: editar RUT titular y representante post-creación
+    titular_rut: Optional[str] = Field(default=None, max_length=20)
+    representante_rut: Optional[str] = Field(default=None, max_length=20)
     # Campos nuevos gaps Ley 21.719 (Iter 10)
     metodo_verificacion_identidad: Optional[str] = None
     evidencia_identidad: Optional[str] = None
