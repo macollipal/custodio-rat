@@ -993,6 +993,11 @@ export function TicketDrawer({ ticket, open, onClose, isAdmin, companyId }: Tick
         tipo={ticket.tipo as any}  // eslint-disable-line @typescript-eslint/no-explicit-any
         estadoActual={ticket.estado as any}  // eslint-disable-line @typescript-eslint/no-explicit-any
         trackingToken={ticket.tracking_token}
+        fechaRecepcion={ticket.fecha_recepcion}
+        fechaVencimiento={ticket.fecha_vencimiento}
+        diasRestantes={ticket.dias_restantes}
+        prioridad={ticket.prioridad}
+        priorrogaDias={ticket.prorroga_dias}
       />
     </Drawer>
   );

@@ -21,6 +21,11 @@ interface FlujoModalProps {
   tipo: TipoArco;
   estadoActual: EstadoTicket;
   trackingToken?: string;
+  fechaRecepcion?: string | null;
+  fechaVencimiento?: string | null;
+  diasRestantes?: number | null;
+  prioridad?: string | null;
+  priorrogaDias?: number | null;
 }
 
 const ESTADO_ICON: Record<EstadoTicket, React.ReactNode> = {
@@ -124,7 +129,10 @@ function SubPasoPanel({
   );
 }
 
-export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProps) {
+export function FlujoModal({
+  open, onClose, tipo, estadoActual,
+  fechaRecepcion, fechaVencimiento, diasRestantes, prioridad, priorrogaDias,
+}: FlujoModalProps) {
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const mermaidRef      = useRef<any>(null);
   const [loading, setLoading]           = useState(false);
@@ -233,6 +241,56 @@ export function FlujoModal({ open, onClose, tipo, estadoActual }: FlujoModalProp
 
         {/* Paso actual */}
         {subPaso && <SubPasoPanel subPaso={subPaso} tipo={tipo} estadoActual={estadoActual} />}
+
+        {/* Tiempos reales */}
+        {(fechaRecepcion || fechaVencimiento || diasRestantes != null) && (
+          <div className="px-5 py-2.5 border-b shrink-0 flex flex-wrap gap-4"
+            style={{ background: '#FFFBEB', borderColor: '#FDE68A' }}>
+            {fechaRecepcion && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#92400E' }}>Recibido:</span>
+                <span className="text-xs font-mono" style={{ color: '#111827' }}>
+                  {new Date(fechaRecepcion).toLocaleDateString('es-CL', { dateStyle: 'short' })}
+                </span>
+              </div>
+            )}
+            {fechaVencimiento && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#92400E' }}>Vence:</span>
+                <span className="text-xs font-mono" style={{ color: '#111827' }}>
+                  {new Date(fechaVencimiento).toLocaleDateString('es-CL', { dateStyle: 'short' })}
+                </span>
+              </div>
+            )}
+            {diasRestantes != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#92400E' }}>Días hábiles:</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded"
+                  style={{
+                    background: diasRestantes <= 0 ? '#FEE2E2' : diasRestantes <= 3 ? '#FEF3C7' : '#DCFCE7',
+                    color: diasRestantes <= 0 ? '#991B1B' : diasRestantes <= 3 ? '#92400E' : '#166534',
+                  }}>
+                  {diasRestantes <= 0 ? `${Math.abs(diasRestantes)}d vencido` : `${diasRestantes}d restantes`}
+                </span>
+              </div>
+            )}
+            {priorrogaDias && priorrogaDias > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#92400E' }}>Prórroga:</span>
+                <span className="text-xs font-mono" style={{ color: '#7C3AED' }}>+{priorrogaDias}d</span>
+              </div>
+            )}
+            {prioridad && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#92400E' }}>Prioridad:</span>
+                <span className="text-xs capitalize font-medium"
+                  style={{ color: prioridad === 'urgente' ? '#DC2626' : prioridad === 'alta' ? '#D97706' : '#374151' }}>
+                  {prioridad}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Diagrama */}
         <div className="flex-1 overflow-auto relative" style={{ background: '#FAFAFA', minHeight: 220 }}>
