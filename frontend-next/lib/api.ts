@@ -1238,6 +1238,12 @@ export async function getEmpresasPublicas(): Promise<EmpresaPublica[]> {
   return res.json();
 }
 
+export async function verificarTitularPublico(companyId: number, email: string): Promise<{ tiene_tickets_abiertos: boolean; cantidad: number }> {
+  const params = new URLSearchParams({ company_id: String(companyId), email });
+  const res = await publicFetch(`${API_BASE}/publico/verificar-titular?${params}`);
+  return res.json();
+}
+
 export async function ejercerDerechoPublico(data: EjercerDerechosPayload): Promise<EjercerDerechosResponse> {
   const res = await fetch(`${API_BASE}/publico/ejercer-derechos`, {
     method: 'POST',

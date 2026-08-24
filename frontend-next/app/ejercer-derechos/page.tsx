@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import {
   getEmpresasPublicas,
   ejercerDerechoPublico,
+  verificarTitularPublico,
   type EmpresaPublica,
   type EjercerDerechosPayload,
 } from '@/lib/api';
@@ -248,6 +249,7 @@ function EjercerDerechosInner() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ token: string; mensaje: string } | null>(null);
   const [globalError, setGlobalError] = useState('');
+  const [ticketsAbiertos, setTicketsAbiertos] = useState<number | null>(null);
 
   useEffect(() => {
     getEmpresasPublicas()
@@ -265,6 +267,18 @@ function EjercerDerechosInner() {
   function handleRutChange(field: 'titular_rut' | 'representante_rut', raw: string) {
     const formatted = formatRut(raw);
     set(field, formatted);
+  }
+
+  async function handleEmailBlur() {
+    const email = form.titular_email.trim();
+    const companyId = Number(form.company_id);
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) || !companyId) return;
+    try {
+      const res = await verificarTitularPublico(companyId, email);
+      setTicketsAbiertos(res.tiene_tickets_abiertos ? res.cantidad : null);
+    } catch {
+      // silencioso — no bloquear el flujo por un check informativo
+    }
   }
 
   function handleRutBlur(field: 'titular_rut' | 'representante_rut') {
@@ -493,7 +507,8 @@ function EjercerDerechosInner() {
                   <input
                     type="email"
                     value={form.titular_email}
-                    onChange={e => set('titular_email', e.target.value)}
+                    onChange={e => { set('titular_email', e.target.value); setTicketsAbiertos(null); }}
+                    onBlur={handleEmailBlur}
                     placeholder="tu@email.com"
                     style={inputStyle(!!errors.titular_email)}
                     autoComplete="email"
@@ -586,6 +601,18 @@ function EjercerDerechosInner() {
                 </div>
               )}
             </Section>
+
+            {ticketsAbiertos !== null && (
+              <div style={{ padding: '12px 16px', borderRadius: 8, background: '#FFFBEB', border: '1px solid #FCD34D', color: '#92400E', fontSize: 14, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>⚠️</span>
+                <div>
+                  <strong>Ya tienes {ticketsAbiertos === 1 ? 'una solicitud abierta' : `${ticketsAbiertos} solicitudes abiertas`} para esta empresa.</strong>
+                  <p style={{ margin: '4px 0 0', fontSize: 13 }}>
+                    Puedes continuar de todos modos si tu nueva solicitud es diferente. Revisa el estado de tu solicitud anterior usando el código de seguimiento que recibiste.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {globalError && <ErrorBanner msg={globalError} />}
 

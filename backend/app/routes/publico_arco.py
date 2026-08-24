@@ -102,6 +102,35 @@ def listar_empresas_publicas(db: Session = Depends(get_db)):
     return [EmpresaPublicaOut(id=e.id, nombre=e.nombre) for e in empresas]
 
 
+class VerificarTitularResponse(BaseModel):
+    tiene_tickets_abiertos: bool
+    cantidad: int
+
+
+@router.get("/verificar-titular", response_model=VerificarTitularResponse)
+@limiter.limit("20/minute")
+def verificar_titular(
+    request: Request,
+    company_id: int,
+    email: str,
+    db: Session = Depends(get_db),
+):
+    """Verifica si un email ya tiene solicitudes ARCO abiertas para una empresa.
+    No requiere autenticación. Rate limited para evitar enumeración."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    ESTADOS_ABIERTOS = {"abierto", "en_proceso", "pendiente_subsanacion", "pendiente"}
+    count = (
+        db.query(TktSolicitudDerecho)
+        .filter(
+            TktSolicitudDerecho.company_id == company_id,
+            TktSolicitudDerecho.titular_email == email,
+            TktSolicitudDerecho.estado.in_(ESTADOS_ABIERTOS),
+        )
+        .count()
+    )
+    return VerificarTitularResponse(tiene_tickets_abiertos=count > 0, cantidad=count)
+
+
 @router.post(
     "/ejercer-derechos",
     response_model=EjercerDerechosResponse,
