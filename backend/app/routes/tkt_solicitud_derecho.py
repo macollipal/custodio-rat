@@ -29,6 +29,7 @@ from app.services.ticket_service import (
     prorrogar_ticket,
 )
 from app.services.audit_service import log_audit
+from app.services.email_service import notificar_acuse_solicitud
 from app.schemas.tkt_solicitud_derecho import (
     TktTicketCreate,
     TktTicketUpdate,
@@ -203,6 +204,20 @@ def crear_ticket_endpoint(
         usuario=current_user.username,
         detalle={"tipo": data.tipo, "titular": data.titular_nombre, "origen": data.origen},
     )
+    if data.titular_email:
+        try:
+            notificar_acuse_solicitud(
+                email_titular=data.titular_email,
+                nombre_titular=data.titular_nombre,
+                tipo_derecho=data.tipo,
+                empresa_nombre=company.nombre,
+                ticket_id=ticket.id,
+                tracking_token=ticket.tracking_token or "",
+            )
+            ticket.acuse_enviado_at = datetime.now(timezone.utc)
+            db.commit()
+        except Exception:
+            logger.warning("No se pudo enviar acuse de recibo para ticket %s", ticket.id)
     return _ticket_to_response(ticket)
 
 
