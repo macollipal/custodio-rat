@@ -192,9 +192,37 @@ function FindingsTable({
 // ── Panel de sugerencias RAT ──────────────────────────────────────────────────
 function SugerenciasPanel({
   sugerencias,
+  companyId,
 }: {
   sugerencias: DiscoveryRunDetail['sugerencias_rat'];
+  companyId: number;
 }) {
+  const [creatingIdx, setCreatingIdx] = useState<number | null>(null);
+  const [createdIds, setCreatedIds] = useState<Record<number, number>>({});
+
+  async function handleCrearRat(s: typeof sugerencias[number], idx: number) {
+    setCreatingIdx(idx);
+    try {
+      const rat = await api.crearRat({
+        company_id: companyId,
+        nombre_proceso: s.template_rat.nombre_proceso,
+        categoria_datos: s.template_rat.categoria_datos,
+        categoria_titulares: s.template_rat.categoria_titulares,
+        finalidad: s.template_rat.finalidad,
+        base_legal: s.template_rat.base_legal,
+        fuente_datos: s.template_rat.fuente_datos,
+        plazo_retencion: s.template_rat.plazo_retencion,
+        estado: 'borrador',
+      });
+      setCreatedIds(prev => ({ ...prev, [idx]: rat.id }));
+      toast.success(`RAT "${rat.nombre_proceso}" creado como borrador`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al crear el RAT');
+    } finally {
+      setCreatingIdx(null);
+    }
+  }
+
   if (sugerencias.length === 0) {
     return (
       <div className="py-6 text-center text-sm text-green-600 dark:text-green-400">
@@ -210,6 +238,21 @@ function SugerenciasPanel({
           <div className="flex items-center gap-2 mb-2">
             <CategoriaBadge categoria={s.categoria} />
             <span className="text-xs text-gray-500">{s.cantidad_hallazgos} columna(s) detectada(s)</span>
+            <div className="ml-auto">
+              {createdIds[i] ? (
+                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                  ✓ RAT #{createdIds[i]} creado
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => handleCrearRat(s, i)}
+                  disabled={creatingIdx === i}
+                >
+                  {creatingIdx === i ? 'Creando…' : '+ Crear RAT'}
+                </Button>
+              )}
+            </div>
           </div>
           <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
             RAT sugerido: <span className="font-bold">{s.template_rat.nombre_proceso}</span>
@@ -679,7 +722,7 @@ export default function DiscoveryPage() {
                 <FindingsTable findings={runDetail.findings} filtroGaps={true} />
               )}
               {activeTab === 'sugerencias' && (
-                <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} />
+                <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} companyId={companyId} />
               )}
             </div>
           </>)}
