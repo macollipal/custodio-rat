@@ -229,6 +229,149 @@ function SugerenciasPanel({
   );
 }
 
+// ── Queries SQL para modo manual ──────────────────────────────────────────────
+const QUERY_PG = `SELECT table_name, column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name NOT IN ('alembic_version','django_migrations','spatial_ref_sys')
+ORDER BY table_name, ordinal_position;`;
+
+const QUERY_MSSQL = `SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'dbo'
+ORDER BY TABLE_NAME, ORDINAL_POSITION;`;
+
+// ── Panel de modo manual ──────────────────────────────────────────────────────
+function ModoManualPanel({
+  source,
+  companyId,
+  onResult,
+  onClose,
+}: {
+  source: DataSource;
+  companyId: number;
+  onResult: (detail: DiscoveryRunDetail) => void;
+  onClose: () => void;
+}) {
+  const [rawInput, setRawInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const query = source.tipo === 'postgresql' ? QUERY_PG : QUERY_MSSQL;
+
+  function copiarQuery() {
+    navigator.clipboard.writeText(query);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function parseInput(raw: string): { table_name: string; column_name: string; data_type: string }[] | null {
+    const text = raw.trim();
+    if (!text) return null;
+
+    // Intentar JSON array
+    if (text.startsWith('[')) {
+      try {
+        const arr = JSON.parse(text);
+        if (Array.isArray(arr) && arr[0]?.column_name) return arr;
+      } catch {}
+    }
+
+    // CSV/TSV: primera línea = headers, resto = datos
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return null;
+
+    const sep = lines[0].includes('\t') ? '\t' : ',';
+    const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+
+    const idxTable = headers.findIndex(h => h.includes('table'));
+    const idxCol   = headers.findIndex(h => h.includes('column'));
+    const idxType  = headers.findIndex(h => h.includes('type') || h.includes('data'));
+
+    if (idxTable === -1 || idxCol === -1) return null;
+
+    return lines.slice(1).map(line => {
+      const cells = line.split(sep).map(c => c.trim().replace(/^['"]|['"]$/g, ''));
+      return {
+        table_name:  cells[idxTable] ?? '',
+        column_name: cells[idxCol]   ?? '',
+        data_type:   idxType >= 0 ? (cells[idxType] ?? '') : '',
+      };
+    }).filter(r => r.table_name && r.column_name);
+  }
+
+  async function handleProcesar() {
+    const columns = parseInput(rawInput);
+    if (!columns || columns.length === 0) {
+      toast.error('No se pudo parsear el resultado. Pega el CSV/TSV con encabezados o un JSON array.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const detail = await api.ejecutarScanManual(source.id, companyId, columns);
+      toast.success(`Escaneo manual completado: ${detail.run.total_hallazgos} hallazgos, ${detail.run.total_gaps} gaps`);
+      onResult(detail);
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al procesar');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const preClass = 'block w-full text-xs font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 overflow-x-auto whitespace-pre select-all';
+
+  return (
+    <div className="border border-amber-200 dark:border-amber-700 rounded-xl p-5 bg-white dark:bg-gray-900 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Modo manual — {source.nombre}</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Ejecuta la query en tu BD y pega el resultado aquí. Custodio clasifica las columnas sin necesidad de conexión directa.
+          </p>
+        </div>
+        <Button size="sm" variant="ghost" onClick={onClose}>✕</Button>
+      </div>
+
+      {/* Query a copiar */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            1. Copia y ejecuta esta query en tu {source.tipo === 'postgresql' ? 'PostgreSQL' : 'SQL Server'}:
+          </p>
+          <Button size="sm" variant="ghost" onClick={copiarQuery}>
+            {copied ? '✓ Copiado' : 'Copiar query'}
+          </Button>
+        </div>
+        <pre className={preClass}>{query}</pre>
+      </div>
+
+      {/* Textarea para pegar resultado */}
+      <div>
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          2. Pega el resultado aquí (CSV, TSV con encabezados, o JSON array):
+        </p>
+        <textarea
+          className="w-full h-40 px-3 py-2 text-xs font-mono border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 resize-y"
+          placeholder={'table_name\tcolumn_name\tdata_type\nclientes\tnombre\tvarchar\nclientes\temail\tvarchar\n...'}
+          value={rawInput}
+          onChange={e => setRawInput(e.target.value)}
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          Formatos aceptados: CSV (comas), TSV (tabs), o JSON <code>[{`{table_name, column_name, data_type}`}]</code>. La primera fila debe ser el encabezado.
+        </p>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button onClick={handleProcesar} disabled={loading || !rawInput.trim()}>
+          {loading ? 'Procesando…' : 'Analizar columnas'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function DiscoveryPage() {
   const { company } = useApp();
@@ -237,6 +380,7 @@ export default function DiscoveryPage() {
   const [sources, setSources] = useState<DataSource[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editSource, setEditSource] = useState<DataSource | null>(null);
+  const [manualSource, setManualSource] = useState<DataSource | null>(null);
   const [scanning, setScanningId] = useState<number | null>(null);
   const [runDetail, setRunDetail] = useState<DiscoveryRunDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'hallazgos' | 'gaps' | 'sugerencias'>('hallazgos');
@@ -369,6 +513,16 @@ export default function DiscoveryPage() {
         </div>
       )}
 
+      {/* Panel de modo manual */}
+      {manualSource && (
+        <ModoManualPanel
+          source={manualSource}
+          companyId={companyId}
+          onResult={(detail) => { setRunDetail(detail); setActiveTab('hallazgos'); load(); }}
+          onClose={() => setManualSource(null)}
+        />
+      )}
+
       {/* Lista de fuentes */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
@@ -419,9 +573,17 @@ export default function DiscoveryPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => { setEditSource(s); setShowForm(false); }}
+                    onClick={() => { setEditSource(s); setShowForm(false); setManualSource(null); }}
                   >
                     ✏ Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { setManualSource(s); setShowForm(false); setEditSource(null); }}
+                    className="text-amber-600 dark:text-amber-400"
+                  >
+                    Modo manual
                   </Button>
                   {confirmDeleteId === s.id ? (
                     <div className="ml-auto flex items-center gap-2">

@@ -331,6 +331,84 @@ def listar_runs_de_source(
     return [_run_to_out(r) for r in runs]
 
 
+class ManualColumnRow(BaseModel):
+    table_name: str
+    column_name: str
+    data_type: str = ""
+
+
+class ManualScanPayload(BaseModel):
+    columns: list[ManualColumnRow] = Field(..., min_length=1)
+
+
+@router.post("/sources/{source_id}/scan/manual", response_model=DiscoveryRunDetail)
+def ejecutar_scan_manual(
+    source_id: int,
+    company_id: int,
+    payload: ManualScanPayload,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Escaneo manual: el usuario provee las columnas (resultado de la query SQL)."""
+    company_ids = _get_company_ids(current_user, db)
+    if company_id not in company_ids:
+        raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    source = _get_source_or_404(source_id, company_id, db)
+
+    from app.services.discovery_service import _clasificar_columna, _es_gap
+    from app.models.rat import RAT
+    from datetime import datetime, timezone
+
+    run = DiscoveryRun(
+        source_id=source.id,
+        company_id=source.company_id,
+        estado="completado",
+        ejecutado_por=f"{current_user.username} (manual)",
+        finished_at=datetime.now(timezone.utc),
+    )
+    db.add(run)
+    db.flush()
+
+    rats = db.query(RAT).filter(RAT.company_id == source.company_id).all()
+    tablas_vistas: set[str] = set()
+    hallazgos = []
+
+    for col in payload.columns:
+        tablas_vistas.add(col.table_name)
+        clasificacion = _clasificar_columna(col.column_name)
+        if not clasificacion:
+            continue
+        categoria, descripcion, confianza = clasificacion
+        es_gap = _es_gap(categoria, rats)
+        hallazgos.append(DiscoveryFinding(
+            run_id=run.id,
+            table_name=col.table_name,
+            column_name=col.column_name,
+            data_type_sql=col.data_type or None,
+            categoria=categoria,
+            descripcion=descripcion,
+            confianza=confianza,
+            es_gap=es_gap,
+        ))
+
+    db.bulk_save_objects(hallazgos)
+    run.total_tablas = len(tablas_vistas)
+    run.total_columnas = len(payload.columns)
+    run.total_hallazgos = len(hallazgos)
+    run.total_gaps = sum(1 for f in hallazgos if f.es_gap)
+    db.commit()
+    db.refresh(run)
+
+    saved_findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).all()
+    sugerencias = generar_sugerencias_rat(saved_findings)
+
+    return DiscoveryRunDetail(
+        run=_run_to_out(run),
+        findings=[_finding_to_out(f) for f in saved_findings],
+        sugerencias_rat=sugerencias,
+    )
+
+
 @router.patch("/findings/{finding_id}/vincular-rat")
 def vincular_rat(
     finding_id: int,

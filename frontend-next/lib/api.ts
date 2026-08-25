@@ -1382,6 +1382,18 @@ export async function eliminarDiscoverySource(sourceId: number, companyId: numbe
   await apiFetch(`${API_BASE}/discovery/sources/${sourceId}?company_id=${companyId}`, { method: 'DELETE' });
 }
 
+export async function ejecutarScanManual(
+  sourceId: number,
+  companyId: number,
+  columns: { table_name: string; column_name: string; data_type: string }[]
+): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan/manual?company_id=${companyId}`, {
+    method: 'POST',
+    body: JSON.stringify({ columns }),
+  });
+  return handle<DiscoveryRunDetail>(res);
+}
+
 export async function ejecutarScan(sourceId: number, companyId: number): Promise<DiscoveryRunDetail> {
   const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan?company_id=${companyId}`, {
     method: 'POST',
