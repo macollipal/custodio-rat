@@ -120,6 +120,8 @@ def _fetch_columns(source: DataSource, schema: str) -> list[dict]:
             password=password,
             timeout=10,
             login_timeout=10,
+            tds_version="7.3",
+            conn_properties="SET ANSI_WARNINGS ON;",
         )
         try:
             cur = conn.cursor()

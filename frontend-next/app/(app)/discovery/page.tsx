@@ -39,10 +39,12 @@ function DataSourceForm({
   onSave,
   onCancel,
   initial,
+  isEdit,
 }: {
   onSave: (data: DataSourceCreate) => Promise<void>;
   onCancel: () => void;
   initial?: Partial<DataSourceCreate>;
+  isEdit?: boolean;
 }) {
   const [form, setForm] = useState<DataSourceCreate>({
     nombre: initial?.nombre ?? '',
@@ -61,7 +63,7 @@ function DataSourceForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.nombre || !form.host || !form.database_name || !form.username || !form.password) {
+    if (!form.nombre || !form.host || !form.database_name || !form.username || (!isEdit && !form.password)) {
       toast.error('Completa todos los campos obligatorios');
       return;
     }
@@ -115,7 +117,7 @@ function DataSourceForm({
             onChange={e => setForm(f => ({ ...f, username: e.target.value }))} />
         </div>
         <div>
-          <label className={labelClass}>Contraseña * <span className="text-xs text-gray-400">(cifrada con Fernet)</span></label>
+          <label className={labelClass}>Contraseña {isEdit ? <span className="font-normal text-gray-400">(vacío = sin cambios)</span> : '*'} <span className="text-xs text-gray-400">(cifrada con Fernet)</span></label>
           <input className={inputClass} type="password" value={form.password}
             onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
         </div>
@@ -234,6 +236,7 @@ export default function DiscoveryPage() {
 
   const [sources, setSources] = useState<DataSource[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editSource, setEditSource] = useState<DataSource | null>(null);
   const [scanning, setScanningId] = useState<number | null>(null);
   const [runDetail, setRunDetail] = useState<DiscoveryRunDetail | null>(null);
   const [activeTab, setActiveTab] = useState<'hallazgos' | 'gaps' | 'sugerencias'>('hallazgos');
@@ -273,6 +276,21 @@ export default function DiscoveryPage() {
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error al guardar');
+    }
+  }
+
+  async function handleActualizarSource(data: DataSourceCreate) {
+    if (!companyId || !editSource) return;
+    // Si password está vacío, no incluirla en el payload (PATCH parcial)
+    const payload: Partial<DataSourceCreate> = { ...data };
+    if (!payload.password) delete payload.password;
+    try {
+      await api.actualizarDiscoverySource(editSource.id, companyId, payload);
+      toast.success('Fuente de datos actualizada');
+      setEditSource(null);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al actualizar');
     }
   }
 
@@ -335,6 +353,22 @@ export default function DiscoveryPage() {
         </div>
       )}
 
+      {/* Formulario de edición */}
+      {editSource && (
+        <div className="border border-blue-200 dark:border-blue-700 rounded-xl p-5 bg-white dark:bg-gray-900">
+          <h2 className="text-base font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            Editar fuente: <span className="text-blue-600">{editSource.nombre}</span>
+          </h2>
+          <p className="text-xs text-gray-500 mb-3">Deja la contraseña vacía para no modificarla.</p>
+          <DataSourceForm
+            onSave={handleActualizarSource}
+            onCancel={() => setEditSource(null)}
+            initial={editSource}
+            isEdit
+          />
+        </div>
+      )}
+
       {/* Lista de fuentes */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
@@ -382,6 +416,13 @@ export default function DiscoveryPage() {
                       Ver último resultado
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { setEditSource(s); setShowForm(false); }}
+                  >
+                    ✏ Editar
+                  </Button>
                   {confirmDeleteId === s.id ? (
                     <div className="ml-auto flex items-center gap-2">
                       <span className="text-xs text-gray-600 dark:text-gray-400">¿Eliminar?</span>

@@ -1386,12 +1386,12 @@ export async function ejecutarScan(sourceId: number, companyId: number): Promise
   const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan?company_id=${companyId}`, {
     method: 'POST',
   });
-  return res.json();
+  return handle<DiscoveryRunDetail>(res);
 }
 
 export async function obtenerDiscoveryRun(runId: number, companyId: number): Promise<DiscoveryRunDetail> {
   const res = await apiFetch(`${API_BASE}/discovery/runs/${runId}?company_id=${companyId}`);
-  return res.json();
+  return handle<DiscoveryRunDetail>(res);
 }
 
 export async function listarRunsDeSource(sourceId: number, companyId: number): Promise<DiscoveryRun[]> {

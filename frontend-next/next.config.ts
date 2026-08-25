@@ -9,7 +9,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https://custodio-qa.vercel.app https://custodio-api-qa.vercel.app https://custodio-api-prod.vercel.app",
+      "connect-src 'self' https://custodio-qa.vercel.app https://custodio-api-qa.vercel.app https://custodio-api-prod.vercel.app http://localhost:8002 ws://localhost:8002",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
