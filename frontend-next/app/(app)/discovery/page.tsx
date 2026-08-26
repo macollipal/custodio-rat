@@ -203,7 +203,7 @@ function SugerenciasPanel({
   async function handleCrearRat(s: typeof sugerencias[number], idx: number) {
     setCreatingIdx(idx);
     try {
-      const rat = await api.crearRat({
+      const payload: Record<string, unknown> = {
         company_id: companyId,
         nombre_proceso: s.template_rat.nombre_proceso,
         categoria_datos: s.template_rat.categoria_datos,
@@ -212,7 +212,11 @@ function SugerenciasPanel({
         base_legal: s.template_rat.base_legal,
         fuente_datos: s.template_rat.fuente_datos,
         plazo_retencion: s.template_rat.plazo_retencion,
-      });
+      };
+      if (s.template_rat.test_interes_legitimo) {
+        payload.test_interes_legitimo = s.template_rat.test_interes_legitimo;
+      }
+      const rat = await api.crearRat(payload as Parameters<typeof api.crearRat>[0]);
       setCreatedIds(prev => ({ ...prev, [idx]: rat.id }));
       toast.success(`RAT "${rat.nombre_proceso}" creado como borrador`);
     } catch (e) {

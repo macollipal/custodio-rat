@@ -309,6 +309,7 @@ _RAT_TEMPLATES = {
         "base_legal": "Interés legítimo",
         "fuente_datos": "Proporcionados por el titular o inferidos del perfil",
         "plazo_retencion": "Mientras dure la relación contractual",
+        "test_interes_legitimo": '{"paso1":"Existe interés legítimo real en analizar datos demográficos para mejorar los servicios ofrecidos a los titulares.","paso2":"El tratamiento es necesario para segmentar y personalizar adecuadamente los servicios, no existe alternativa menos invasiva.","paso3":"El tratamiento no perjudica los derechos de los titulares ya que los datos se usan en forma agregada y anonimizada."}',
     },
     "TECNICO": {
         "nombre_proceso": "Tratamiento de identificadores técnicos",
@@ -318,6 +319,7 @@ _RAT_TEMPLATES = {
         "base_legal": "Interés legítimo",
         "fuente_datos": "Recopilados automáticamente al usar el servicio",
         "plazo_retencion": "13 meses (normativa cookies EU — referencia)",
+        "test_interes_legitimo": '{"paso1":"Existe interés legítimo real en recopilar identificadores técnicos para garantizar la seguridad y el correcto funcionamiento del servicio.","paso2":"El tratamiento es necesario para autenticar usuarios y prevenir fraudes, sin alternativa técnica menos intrusiva.","paso3":"El impacto en los titulares es mínimo y proporcional, ya que los datos técnicos no revelan contenido personal sensible."}',
     },
     "SENSIBLE_RELIGIOSO": {
         "nombre_proceso": "Tratamiento de datos de creencias religiosas",
