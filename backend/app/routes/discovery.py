@@ -273,7 +273,7 @@ def ejecutar_scan(
         )
 
     findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).all()
-    sugerencias = generar_sugerencias_rat(findings)
+    sugerencias = generar_sugerencias_rat(findings, database_name=source.database_name)
 
     return DiscoveryRunDetail(
         run=_run_to_out(run),
@@ -300,8 +300,11 @@ def obtener_run(
     if not run:
         raise HTTPException(status_code=404, detail="Escaneo no encontrado")
 
+    source = db.query(DataSource).filter(DataSource.id == run.source_id).first()
+    db_name = source.database_name if source else ""
+
     findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run_id).all()
-    sugerencias = generar_sugerencias_rat(findings)
+    sugerencias = generar_sugerencias_rat(findings, database_name=db_name)
 
     return DiscoveryRunDetail(
         run=_run_to_out(run),
@@ -370,6 +373,11 @@ def ejecutar_scan_manual(
     db.flush()
 
     rats = db.query(RAT).filter(RAT.company_id == source.company_id).all()
+    known_db_names = {
+        row.database_name for row in
+        db.query(DataSource.database_name).filter(DataSource.company_id == source.company_id).all()
+        if row.database_name
+    }
     tablas_vistas: set[str] = set()
     hallazgos = []
 
@@ -379,7 +387,7 @@ def ejecutar_scan_manual(
         if not clasificacion:
             continue
         categoria, descripcion, confianza = clasificacion
-        es_gap = _es_gap(categoria, rats)
+        es_gap = _es_gap(categoria, rats, source.database_name, known_db_names)
         hallazgos.append(DiscoveryFinding(
             run_id=run.id,
             table_name=col.table_name,
@@ -400,7 +408,7 @@ def ejecutar_scan_manual(
     db.refresh(run)
 
     saved_findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).all()
-    sugerencias = generar_sugerencias_rat(saved_findings)
+    sugerencias = generar_sugerencias_rat(saved_findings, database_name=source.database_name)
 
     return DiscoveryRunDetail(
         run=_run_to_out(run),
