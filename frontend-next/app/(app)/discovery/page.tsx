@@ -193,12 +193,25 @@ function FindingsTable({
 function SugerenciasPanel({
   sugerencias,
   companyId,
+  runId,
 }: {
   sugerencias: DiscoveryRunDetail['sugerencias_rat'];
   companyId: number;
+  runId: number;
 }) {
   const [creatingIdx, setCreatingIdx] = useState<number | null>(null);
-  const [createdIds, setCreatedIds] = useState<Record<number, number>>({});
+  const [createdIds, setCreatedIds] = useState<Record<number, number>>(() => {
+    try {
+      const raw = localStorage.getItem(`disc_rats_${runId}`);
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+
+  function persistCreated(idx: number, ratId: number) {
+    const next = { ...createdIds, [idx]: ratId };
+    setCreatedIds(next);
+    try { localStorage.setItem(`disc_rats_${runId}`, JSON.stringify(next)); } catch {}
+  }
 
   async function handleCrearRat(s: typeof sugerencias[number], idx: number) {
     if (createdIds[idx]) return;
@@ -218,7 +231,7 @@ function SugerenciasPanel({
         payload.test_interes_legitimo = s.template_rat.test_interes_legitimo;
       }
       const rat = await api.crearRat(payload as Parameters<typeof api.crearRat>[0]);
-      setCreatedIds(prev => ({ ...prev, [idx]: rat.id }));
+      persistCreated(idx, rat.id);
       toast.success(`RAT "${rat.nombre_proceso}" creado como borrador`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error al crear el RAT');
@@ -726,7 +739,7 @@ export default function DiscoveryPage() {
                 <FindingsTable findings={runDetail.findings} filtroGaps={true} />
               )}
               {activeTab === 'sugerencias' && (
-                <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} companyId={companyId} />
+                <SugerenciasPanel sugerencias={runDetail.sugerencias_rat} companyId={companyId} runId={runDetail.run.id} />
               )}
             </div>
           </>)}
