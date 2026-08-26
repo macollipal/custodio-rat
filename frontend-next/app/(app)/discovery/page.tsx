@@ -212,7 +212,6 @@ function SugerenciasPanel({
         base_legal: s.template_rat.base_legal,
         fuente_datos: s.template_rat.fuente_datos,
         plazo_retencion: s.template_rat.plazo_retencion,
-        estado: 'borrador',
       });
       setCreatedIds(prev => ({ ...prev, [idx]: rat.id }));
       toast.success(`RAT "${rat.nombre_proceso}" creado como borrador`);
