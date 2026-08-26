@@ -156,31 +156,14 @@ _CATEGORIA_KEYWORDS = {
 }
 
 
-def _es_gap(categoria: str, rats: list[RAT], database_name: str = "", known_db_names: set[str] | None = None) -> bool:
-    """
-    True si ningún RAT cubre esta categoría para esta fuente de datos.
-
-    Lógica de cobertura (por RAT con la categoría correcta):
-    - Si su fuente_datos menciona esta BD → cubierto (específico)
-    - Si su fuente_datos NO menciona ninguna BD conocida de la empresa → cubierto (genérico, backward compat.)
-    - Si menciona otras BDs pero no esta → no cubre esta BD
-    """
+def _es_gap(categoria: str, rats: list[RAT]) -> bool:
+    """True si ningún RAT de la empresa cubre esta categoría de datos."""
     if not rats:
         return True
     keywords = _CATEGORIA_KEYWORDS.get(categoria, [])
-    db_lower = database_name.lower()
-    known = {d.lower() for d in (known_db_names or set())}
-
     for rat in rats:
         cat_lower = (rat.categoria_datos or "").lower()
-        if not any(kw in cat_lower for kw in keywords):
-            continue
-        fuente_lower = (rat.fuente_datos or "").lower()
-        # Cobertura específica para esta BD
-        if db_lower and db_lower in fuente_lower:
-            return False
-        # Cobertura genérica: la fuente no menciona ninguna BD conocida → cubre todo
-        if not any(k in fuente_lower for k in known if k):
+        if any(kw in cat_lower for kw in keywords):
             return False
     return True
 
@@ -211,14 +194,6 @@ def ejecutar_escaneo(db: Session, source: DataSource, ejecutado_por: str) -> Dis
             RAT.deleted_at.is_(None) if hasattr(RAT, "deleted_at") else True,
         ).all()
 
-        # BDs conocidas de la empresa para detectar fuentes genéricas vs. específicas
-        from app.models.discovery import DataSource as DS
-        known_db_names = {
-            row.database_name for row in
-            db.query(DS.database_name).filter(DS.company_id == source.company_id).all()
-            if row.database_name
-        }
-
         tablas_vistas = set()
         hallazgos = []
 
@@ -228,7 +203,7 @@ def ejecutar_escaneo(db: Session, source: DataSource, ejecutado_por: str) -> Dis
             if not clasificacion:
                 continue
             categoria, descripcion, confianza = clasificacion
-            es_gap = _es_gap(categoria, rats, source.database_name, known_db_names)
+            es_gap = _es_gap(categoria, rats)
 
             finding = DiscoveryFinding(
                 run_id=run.id,
@@ -367,11 +342,10 @@ _RAT_TEMPLATES = {
 }
 
 
-def generar_sugerencias_rat(findings: list[DiscoveryFinding], database_name: str = "") -> list[dict]:
+def generar_sugerencias_rat(findings: list[DiscoveryFinding]) -> list[dict]:
     """
     Genera sugerencias de RAT para los hallazgos marcados como gap.
-    Agrupa por categoría. El fuente_datos del template incluye el nombre de la BD
-    para que el RAT creado sea específico y el gap analysis posterior lo reconozca.
+    Agrupa por categoría — un RAT por categoría cubre esa categoría en toda la empresa.
     """
     from collections import defaultdict
 
@@ -392,13 +366,10 @@ def generar_sugerencias_rat(findings: list[DiscoveryFinding], database_name: str
         )
         columnas_ejemplo = [f"{f.table_name}.{f.column_name}" for f in gap_findings[:5]]
 
-        fuente = f"Base de datos {database_name}" if database_name else template["fuente_datos"]
-
         sugerencias.append({
             "categoria": categoria,
             "template_rat": {
                 **template,
-                "fuente_datos": fuente,
                 "sistema_almacenamiento": ", ".join(tablas[:3]),
             },
             "tablas_involucradas": tablas,
