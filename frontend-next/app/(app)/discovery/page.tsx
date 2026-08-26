@@ -250,6 +250,15 @@ function SugerenciasPanel({
 
   return (
     <div className="space-y-3">
+      <div className="flex justify-end">
+        <a
+          href={api.urlExportarGapsCSV(runId, companyId)}
+          download
+          className="text-xs px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          ↓ Exportar gaps CSV
+        </a>
+      </div>
       {sugerencias.map((s, i) => (
         <div key={i} className={`border rounded-lg p-4 ${createdIds[i] ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">

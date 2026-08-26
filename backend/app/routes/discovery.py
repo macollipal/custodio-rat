@@ -3,10 +3,13 @@ Rutas del módulo Data Discovery & Mapping.
 Permite registrar fuentes de datos y escanear sus esquemas en busca de datos personales.
 """
 
+import csv
+import io
 import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -307,6 +310,64 @@ def obtener_run(
         run=_run_to_out(run),
         findings=[_finding_to_out(f) for f in findings],
         sugerencias_rat=sugerencias,
+    )
+
+
+@router.get("/runs/{run_id}/gaps/export")
+def exportar_gaps_csv(
+    run_id: int,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Exporta los gaps sin RAT de un escaneo como CSV con las sugerencias de documentación."""
+    company_ids = _get_company_ids(current_user, db)
+    if company_id not in company_ids:
+        raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+
+    run = db.query(DiscoveryRun).filter(
+        DiscoveryRun.id == run_id,
+        DiscoveryRun.company_id == company_id,
+    ).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Escaneo no encontrado")
+
+    findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run_id).all()
+    sugerencias = generar_sugerencias_rat(findings)
+
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+
+    writer.writerow([
+        "Categoría detectada",
+        "RAT sugerido",
+        "Base legal",
+        "Finalidad",
+        "Plazo retención",
+        "Tablas involucradas",
+        "Columnas ejemplo",
+        "N° hallazgos",
+    ])
+
+    for s in sugerencias:
+        t = s["template_rat"]
+        writer.writerow([
+            s["categoria"],
+            t.get("nombre_proceso", ""),
+            t.get("base_legal", ""),
+            t.get("finalidad", ""),
+            t.get("plazo_retencion", ""),
+            "; ".join(s["tablas_involucradas"][:10]),
+            "; ".join(s.get("columnas_ejemplo", [])[:5]),
+            s["cantidad_hallazgos"],
+        ])
+
+    output.seek(0)
+    filename = f"gaps_discovery_run_{run_id}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
