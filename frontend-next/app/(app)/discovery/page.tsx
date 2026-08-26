@@ -201,6 +201,7 @@ function SugerenciasPanel({
   const [createdIds, setCreatedIds] = useState<Record<number, number>>({});
 
   async function handleCrearRat(s: typeof sugerencias[number], idx: number) {
+    if (createdIds[idx]) return;
     setCreatingIdx(idx);
     try {
       const payload: Record<string, unknown> = {
@@ -237,13 +238,13 @@ function SugerenciasPanel({
   return (
     <div className="space-y-3">
       {sugerencias.map((s, i) => (
-        <div key={i} className="border border-orange-200 dark:border-orange-800 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
+        <div key={i} className={`border rounded-lg p-4 ${createdIds[i] ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20'}`}>
           <div className="flex items-center gap-2 mb-2">
             <CategoriaBadge categoria={s.categoria} />
             <span className="text-xs text-gray-500">{s.cantidad_hallazgos} columna(s) detectada(s)</span>
             <div className="ml-auto">
               {createdIds[i] ? (
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 rounded-full font-medium">
                   ✓ RAT #{createdIds[i]} creado
                 </span>
               ) : (
