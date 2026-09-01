@@ -21,8 +21,9 @@ def _out(b) -> BreachOut:
     out = BreachOut.model_validate(b)
     extra = _enriquecer(b)
     out.horas_desde_deteccion = extra["horas_desde_deteccion"]
-    out.plazo_apdc_vencido = extra["plazo_apdc_vencido"]
-    out.reportable_apdc_calculado = extra["reportable_apdc_calculado"]
+    out.horas_desde_conocimiento = extra["horas_desde_conocimiento"]
+    out.plazo_apdp_vencido = extra["plazo_apdp_vencido"]
+    out.reportable_apdp_calculado = extra["reportable_apdp_calculado"]
     return out
 
 

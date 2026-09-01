@@ -86,6 +86,9 @@ class RAT(Base):
     datos_anonimizados: Mapped[bool] = mapped_column(Boolean, default=False)
     datos_seudonimizados: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Origen de los datos (Art. 14 ter lit. e) — obligación de informar cuando no viene del titular)
+    origen_datos: Mapped[str] = mapped_column(String(50), nullable=True)
+
     # Campos Tier 2 - Operativos (Iter 11 - analisis ProBest)
     ciclo_procesamiento: Mapped[str] = mapped_column(String(100), nullable=True)
     automatizacion: Mapped[str] = mapped_column(String(100), nullable=True)

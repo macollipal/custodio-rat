@@ -18,6 +18,7 @@ class ConsentimientoCreate(BaseModel):
     texto_consentimiento: str
     fecha_obtencion: datetime
     ip_origen: Optional[str] = None
+    version_politica: Optional[str] = None
 
 
 class ConsentimientoOut(BaseModel):
@@ -32,6 +33,7 @@ class ConsentimientoOut(BaseModel):
     fecha_revocacion: Optional[datetime] = None
     activo: bool
     ip_origen: Optional[str] = None  # siempre será IP enmascarada
+    version_politica: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -58,6 +60,7 @@ class ConsentimientoOut(BaseModel):
             fecha_revocacion=obj.fecha_revocacion,
             activo=obj.activo,
             ip_origen=obj.ip_origen_masked,
+            version_politica=obj.version_politica,
             created_at=obj.created_at,
         )
 

@@ -212,6 +212,14 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     archivo_fields = procesar_archivo_base_legal(cambios)
     cambios.update(archivo_fields)
 
+    # Capturar estado anterior para diff granular en audit log
+    _campos_binarios = {"archivo_base_legal_datos"}
+    _antes = {
+        k: getattr(rat, k, None)
+        for k in cambios
+        if k not in _campos_binarios and hasattr(rat, k)
+    }
+
     for field, value in cambios.items():
         setattr(rat, field, value)
 
@@ -239,7 +247,14 @@ def update_rat(db: Session, rat_id: int, data: RATUpdate, usuario: str, ip_orige
     validar_test_interes_legitimo(rat_dict_validacion)
     validar_datos_nna_base_legal(rat_dict_validacion)
 
-    log_audit(db, "rat", rat_id, "editar", usuario, cambios, ip_origen)
+    _campos_omitir_log = {"archivo_base_legal_base64", "archivo_base_legal_datos"}
+    _despues = {k: v for k, v in cambios.items() if k not in _campos_omitir_log}
+    _diff = {
+        k: {"antes": _antes.get(k), "despues": _despues[k]}
+        for k in _despues
+        if _antes.get(k) != _despues[k]
+    }
+    log_audit(db, "rat", rat_id, "editar", usuario, {"diff": _diff}, ip_origen)
     db.commit()
     db.refresh(rat)
     return rat

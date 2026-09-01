@@ -127,7 +127,7 @@ def notificar_nueva_brecha(
         f"<p>Recuerde que la Ley 21.719 exige notificar a la APDP en un plazo "
         f"máximo de 72 horas desde la detección.</p>"
     )
-    footer = "Plazo APDC: 72 horas desde la detección."
+    footer = "Plazo APDP: 72 horas desde el conocimiento formal (Art. 14 bis Ley 21.719)."
     text, html = _render_template(
         "Nueva brecha de seguridad detectada", saludo, cuerpo, footer
     )
@@ -524,7 +524,7 @@ def notificar_brecha_sin_notificar_apdc(
         f"(Art. 14 bis Ley 21.719):</p>"
         f"<ul>{items}</ul>"
         f"<p><strong>Acción requerida:</strong> Realice la notificación a la APDP de forma inmediata "
-        f"y actualice el campo 'notificado_apdc' en el sistema.</p>"
+        f"y actualice el campo 'notificado_apdp' en el sistema.</p>"
     )
     footer = "Alerta crítica de compliance — Art. 14 bis Ley 21.719"
     text, html = _render_template("ALERTA: Brechas sin notificar a APDP (>72h)", saludo, cuerpo, footer)

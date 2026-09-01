@@ -1,6 +1,6 @@
 """
 Modelo de Brechas de Seguridad (Art. 14 bis Ley 21.719).
-Plazos: notificación APDC en 72 horas; titulares sin dilación si son datos sensibles/menores/financieros.
+Plazos: notificación APDP en 72 horas desde el conocimiento; titulares sin dilación si son datos sensibles/menores/financieros.
 """
 
 from datetime import datetime, timezone
@@ -39,9 +39,13 @@ class SecurityBreach(Base):
     datos_comprometidos: Mapped[str] = mapped_column(Text, nullable=True)
     medidas_adoptadas: Mapped[str] = mapped_column(Text, nullable=True)
 
-    # Notificación APDC (72 horas desde detección)
-    notificado_apdc: Mapped[bool] = mapped_column(Boolean, default=False)
-    fecha_notificacion_apdc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Fecha en que el responsable tuvo CONOCIMIENTO de la brecha (Art. 14 bis — contador de 72h)
+    # Distinto de fecha_deteccion: la detección técnica puede ocurrir antes del conocimiento formal.
+    fecha_conocimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Notificación APDP (72 horas desde el conocimiento — Art. 14 bis)
+    notificado_apdp: Mapped[bool] = mapped_column(Boolean, default=False)
+    fecha_notificacion_apdp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Notificación a titulares (sin dilación cuando hay datos sensibles/menores/financieros)
     notificado_titulares: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -53,7 +57,7 @@ class SecurityBreach(Base):
     incluye_datos_sensibles: Mapped[bool] = mapped_column(Boolean, default=False)
     incluye_datos_nna: Mapped[bool] = mapped_column(Boolean, default=False)
     incluye_datos_financieros: Mapped[bool] = mapped_column(Boolean, default=False)
-    reportable_apdc_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
+    reportable_apdp_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Naturaleza de la brecha (Art. 14 bis) — requerida para notificacion APDP completa
     naturaleza: Mapped[NaturalezaBreach] = mapped_column(
@@ -64,7 +68,7 @@ class SecurityBreach(Base):
     fecha_ocurrencia_estimada: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     efectos_probables: Mapped[str] = mapped_column(Text, nullable=True)
     causa_raiz: Mapped[str] = mapped_column(String(50), nullable=True)
-    evidencia_notificacion_apdc_folio: Mapped[str] = mapped_column(String(100), nullable=True)
+    evidencia_notificacion_apdp_folio: Mapped[str] = mapped_column(String(100), nullable=True)
     estado_cierre: Mapped[str] = mapped_column(String(20), nullable=True)
     fecha_cierre: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 

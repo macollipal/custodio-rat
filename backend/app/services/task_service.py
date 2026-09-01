@@ -426,7 +426,7 @@ def _run_sla_alert_brecha_72h(db: Session) -> int:
     brechas = (
         db.query(SecurityBreach)
         .filter(
-            SecurityBreach.notificado_apdc == False,  # noqa: E712
+            SecurityBreach.notificado_apdp == False,  # noqa: E712
             SecurityBreach.fecha_deteccion <= umbral_72h,
         )
         .all()

@@ -48,6 +48,9 @@ class Consentimiento(Base):
     texto_consentimiento: Mapped[str] = mapped_column(Text, nullable=True)
     ip_origen: Mapped[str] = mapped_column(String(50), nullable=True)
 
+    # Versión del aviso de privacidad aceptado — permite probar qué texto aceptó el titular (Art. 12)
+    version_politica: Mapped[str] = mapped_column(String(100), nullable=True)
+
     canal: Mapped[CanalConsentimiento] = mapped_column(Enum(CanalConsentimiento), nullable=False)
     fecha_obtencion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     fecha_revocacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

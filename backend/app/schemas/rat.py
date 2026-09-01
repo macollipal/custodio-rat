@@ -7,6 +7,23 @@ import json
 from app.models.rat import EstadoRAT
 
 
+# Categorías especiales de datos sensibles taxativas (Art. 4 Ley 21.719)
+CATEGORIAS_SENSIBLES_ART4: list[str] = [
+    "Origen étnico o racial",
+    "Opiniones políticas",
+    "Convicciones religiosas o filosóficas",
+    "Afiliación sindical",
+    "Datos genéticos",
+    "Datos biométricos",
+    "Datos relativos a la salud",
+    "Vida u orientación sexual",
+    "Condenas penales o delitos",
+]
+
+# Origen de los datos (Art. 14 ter lit. e): cuando no vienen del titular, hay obligación de informar
+ORIGEN_DATOS_OPCIONES: list[str] = ["titular", "tercero", "fuente_publica", "mixto"]
+
+
 class BaseLegal(str, Enum):
     """Base legal taxativa del Art. 13 Ley 21.719.
 
@@ -102,6 +119,9 @@ class RATBase(BaseModel):
     estructura_dato: Optional[str] = None
     datos_anonimizados: bool = False
     datos_seudonimizados: bool = False
+    # Origen de los datos (Art. 14 ter lit. e) — enum: titular/tercero/fuente_publica/mixto
+    origen_datos: Optional[str] = None
+
     # Campos Tier 2 - Operativos (Iter 11)
     ciclo_procesamiento: Optional[str] = None
     automatizacion: Optional[str] = None
@@ -191,8 +211,19 @@ class RATCreate(RATBase):
                 raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
         if self.datos_sensibles and not self.tipo_dato_sensible:
             raise ValueError("tipo_dato_sensible es requerido cuando datos_sensibles=True")
+        # Validar que tipo_dato_sensible use categorías taxativas del Art. 4 Ley 21.719
+        if self.tipo_dato_sensible:
+            cats = [c.strip() for c in self.tipo_dato_sensible.split(",") if c.strip()]
+            invalidas = [c for c in cats if c not in CATEGORIAS_SENSIBLES_ART4]
+            if invalidas:
+                raise ValueError(
+                    f"Las siguientes categorías no corresponden a categorías especiales del Art. 4 Ley 21.719: {invalidas}. "
+                    f"Use las categorías oficiales: {CATEGORIAS_SENSIBLES_ART4}"
+                )
         if self.decisiones_automatizadas and not self.logica_automatizada:
             raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True (Art. 8 Ley 21.719)")
+        if self.origen_datos and self.origen_datos not in ORIGEN_DATOS_OPCIONES:
+            raise ValueError(f"origen_datos debe ser uno de: {ORIGEN_DATOS_OPCIONES}")
         return self
 
 
@@ -250,6 +281,23 @@ class RATUpdate(RATBase):
                     raise ValueError("pais_destino es requerido cuando transferencia_internacional=True")
                 if not garantias or not str(garantias).strip():
                     raise ValueError("garantias_transferencia_int es requerido cuando transferencia_internacional=True")
+            # Validar categorías sensibles si se envían explícitamente en el update
+            tipo_sensible = data.get('tipo_dato_sensible')
+            if tipo_sensible and isinstance(tipo_sensible, str):
+                cats = [c.strip() for c in tipo_sensible.split(",") if c.strip()]
+                invalidas = [c for c in cats if c not in CATEGORIAS_SENSIBLES_ART4]
+                if invalidas:
+                    raise ValueError(
+                        f"Categorías no reconocidas por Art. 4 Ley 21.719: {invalidas}. "
+                        f"Opciones válidas: {CATEGORIAS_SENSIBLES_ART4}"
+                    )
+            # Validar logica_automatizada cuando decisiones_automatizadas=True
+            if data.get('decisiones_automatizadas') is True and not data.get('logica_automatizada'):
+                raise ValueError("logica_automatizada es requerido cuando decisiones_automatizadas=True (Art. 8 Ley 21.719)")
+            # Validar origen_datos si se envía
+            origen = data.get('origen_datos')
+            if origen and origen not in ORIGEN_DATOS_OPCIONES:
+                raise ValueError(f"origen_datos debe ser uno de: {ORIGEN_DATOS_OPCIONES}")
         return data
 
 

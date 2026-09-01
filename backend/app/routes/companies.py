@@ -112,7 +112,7 @@ async def listar(
         out.total_rats = rat_counts.get(c.id, 0)
         rats = rats_by_company.get(c.id, [])
 
-        out.completitud_promedio, out.rats_vencidos = calcular_metricas_empresa(rats, now)
+        out.completitud_promedio, out.rats_vencidos, out.requiere_dpo = calcular_metricas_empresa(rats, now)
         out.solicitudes_pendientes = pending_by_company.get(c.id, 0)
         out.solicitudes_vencidas_sla = vencidas_by_company.get(c.id, 0)
         out.has_politica_transparencia = c.id in politicas_exists

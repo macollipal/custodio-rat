@@ -71,6 +71,8 @@ class CompanyOut(CompanyBase):
     desactivada_at: Optional[datetime] = None
     desactivada_por: Optional[str] = None
     has_politica_transparencia: Optional[bool] = False
+    # True si algún RAT activa el umbral de DPO obligatorio (Art. 14 Ley 21.719)
+    requiere_dpo: Optional[bool] = False
 
     model_config = {"from_attributes": True}
 

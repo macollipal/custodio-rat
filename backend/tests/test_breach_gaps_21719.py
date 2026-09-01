@@ -1,7 +1,7 @@
 ﻿"""
 Tests para los 5 campos nuevos del modelo SecurityBreach (Iter 10 - Gaps Ley 21.719).
 ValidaciÃ³n: fecha_ocurrencia_estimada, efectos_probables, causa_raiz,
-evidencia_notificacion_apdc_folio, estado_cierre, fecha_cierre.
+evidencia_notificacion_apdp_folio, estado_cierre, fecha_cierre.
 
 NOTA: Tests ejecutados contra PostgreSQL (Neon QA).
 """
@@ -138,20 +138,20 @@ class TestBreachCausaRaiz:
 
 
 class TestBreachEvidenciaNotificacionAPDP:
-    """Tests para campo evidencia_notificacion_apdc_folio."""
+    """Tests para campo evidencia_notificacion_apdp_folio."""
 
     def test_crear_brecha_con_folio_APDP(self, client, auth_headers, empresa, clean_task_queue):
-        """Caso afirmativo: Brecha con evidencia_notificacion_apdc_folio."""
+        """Caso afirmativo: Brecha con evidencia_notificacion_apdp_folio."""
         payload = {
             "company_id": empresa["id"],
             "descripcion": "Brecha notificada a APDP",
             "fecha_deteccion": datetime.now(timezone.utc).isoformat(),
-            "evidencia_notificacion_apdc_folio": "APDP-2026-001234",
+            "evidencia_notificacion_apdp_folio": "APDP-2026-001234",
             "nivel_riesgo": "alto",
         }
         resp = client.post("/brechas/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
-        assert resp.json()["evidencia_notificacion_apdc_folio"] == "APDP-2026-001234"
+        assert resp.json()["evidencia_notificacion_apdp_folio"] == "APDP-2026-001234"
 
     def test_crear_brecha_folio_largo(self, client, auth_headers, empresa, clean_task_queue):
         """Caso borde: folio con 100 caracteres exactos."""
@@ -159,15 +159,15 @@ class TestBreachEvidenciaNotificacionAPDP:
             "company_id": empresa["id"],
             "descripcion": "Brecha con folio largo",
             "fecha_deteccion": datetime.now(timezone.utc).isoformat(),
-            "evidencia_notificacion_apdc_folio": "A" * 100,
+            "evidencia_notificacion_apdp_folio": "A" * 100,
             "nivel_riesgo": "medio",
         }
         resp = client.post("/brechas/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
-        assert len(resp.json()["evidencia_notificacion_apdc_folio"]) == 100
+        assert len(resp.json()["evidencia_notificacion_apdp_folio"]) == 100
 
     def test_crear_brecha_sin_folio_APDP(self, client, auth_headers, empresa, clean_task_queue):
-        """Caso negativo: Brecha sin evidencia_notificacion_apdc_folio (NULL)."""
+        """Caso negativo: Brecha sin evidencia_notificacion_apdp_folio (NULL)."""
         payload = {
             "company_id": empresa["id"],
             "descripcion": "Brecha sin folio APDP",
@@ -176,7 +176,7 @@ class TestBreachEvidenciaNotificacionAPDP:
         }
         resp = client.post("/brechas/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
-        assert resp.json().get("evidencia_notificacion_apdc_folio") is None
+        assert resp.json().get("evidencia_notificacion_apdp_folio") is None
 
 
 class TestBreachEstadoCierre:
@@ -240,7 +240,7 @@ class TestBreachTodosLosCamposJuntos:
             "fecha_ocurrencia_estimada": (ahora - timedelta(hours=5)).isoformat(),
             "efectos_probables": "Robo de datos personales de clientes",
             "causa_raiz": "error_humano",
-            "evidencia_notificacion_apdc_folio": "APDP-2026-005678",
+            "evidencia_notificacion_apdp_folio": "APDP-2026-005678",
             "estado_cierre": "notificada",
             "nivel_riesgo": "alto",
         }
@@ -250,5 +250,5 @@ class TestBreachTodosLosCamposJuntos:
         assert data["fecha_ocurrencia_estimada"] is not None
         assert "Robo de datos" in data["efectos_probables"]
         assert data["causa_raiz"] == "error_humano"
-        assert data["evidencia_notificacion_apdc_folio"] == "APDP-2026-005678"
+        assert data["evidencia_notificacion_apdp_folio"] == "APDP-2026-005678"
         assert data["estado_cierre"] == "notificada"

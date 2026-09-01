@@ -26,6 +26,32 @@ from app.services.rat_calculations import calcular_completitud, calcular_nivel_r
 
 logger = logging.getLogger(__name__)
 
+
+def _rat_ids_con_contrato_activo(db: Session, rat_ids: list[int]) -> set[int]:
+    """Retorna el conjunto de rat_ids que tienen al menos un contrato de encargado activo."""
+    if not rat_ids:
+        return set()
+    from app.models.encargado_contrato import EncargadoContrato
+    rows = (
+        db.query(EncargadoContrato.rat_id)
+        .filter(
+            EncargadoContrato.rat_id.in_(rat_ids),
+            EncargadoContrato.activo.is_(True),
+        )
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows}
+
+
+def _enrich_rat_out(out: "RATOut", r, con_contrato: bool = False) -> "RATOut":
+    """Aplica campos calculados a un RATOut: completitud, riesgo, flags binarios y contrato."""
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+    out.tiene_contrato_encargado = con_contrato
+    return out
+
 router = APIRouter(prefix="/rats", tags=["Registro RAT"])
 
 
@@ -132,12 +158,10 @@ async def reportes(
 
     rats_list = query.offset(skip).limit(limit).all()
 
+    _contratos_ids = _rat_ids_con_contrato_activo(db, [r.id for r in rats_list])
     result = []
     for r in rats_list:
-        out = RATOut.model_validate(r)
-        out.completitud = calcular_completitud(rat_to_dict(r))
-        out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
-        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+        out = _enrich_rat_out(RATOut.model_validate(r), r, r.id in _contratos_ids)
         result.append(out)
 
     return {
@@ -188,12 +212,10 @@ async def listar(
             check_company_access(current_user, company_id, db)
         rats_list = get_rats(db, company_id, skip, limit)
 
+    _contratos_ids = _rat_ids_con_contrato_activo(db, [r.id for r in rats_list])
     result = []
     for r in rats_list:
-        out = RATOut.model_validate(r)
-        out.completitud = calcular_completitud(rat_to_dict(r))
-        out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
-        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+        out = _enrich_rat_out(RATOut.model_validate(r), r, r.id in _contratos_ids)
         result.append(out)
     return result
 
@@ -266,11 +288,8 @@ async def obtener(
     current_user=Depends(get_current_user),
 ):
     r = get_rat_for_user(db, rat_id, current_user)
-    out = RATOut.model_validate(r)
-    out.completitud = calcular_completitud(rat_to_dict(r))
-    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
-    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
-    return out
+    con_contrato = r.id in _rat_ids_con_contrato_activo(db, [r.id])
+    return _enrich_rat_out(RATOut.model_validate(r), r, con_contrato)
 
 
 @router.post("/", response_model=RATOut, status_code=201, summary="Crear registro RAT")
@@ -288,11 +307,7 @@ async def crear(
     else:
         require_editor_or_admin_empresa(data.company_id, db, current_user)
     r = create_rat(db, data, current_user.username, get_client_ip(request))
-    out = RATOut.model_validate(r)
-    out.completitud = calcular_completitud(rat_to_dict(r))
-    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
-    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
-    return out
+    return _enrich_rat_out(RATOut.model_validate(r), r, False)
 
 @router.post("/{rat_id}/consentimientos", response_model=ConsentimientoOut, status_code=201, summary="Registrar consentimiento expreso para datos sensibles (REC-06)")
 async def crear_consentimiento(
@@ -337,11 +352,8 @@ async def actualizar(
     rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
-    out = RATOut.model_validate(r)
-    out.completitud = calcular_completitud(rat_to_dict(r))
-    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
-    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
-    return out
+    con_contrato = r.id in _rat_ids_con_contrato_activo(db, [r.id])
+    return _enrich_rat_out(RATOut.model_validate(r), r, con_contrato)
 
 
 @router.patch("/{rat_id}/archivar", response_model=RATOut, summary="Archivar un RAT")

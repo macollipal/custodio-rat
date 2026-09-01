@@ -1,6 +1,6 @@
 """
 Lógica de negocio para Brechas de Seguridad (Art. 14 bis Ley 21.719).
-Plazos legales: notificación APDC en 72 horas; titulares sin dilación en datos sensibles/menores/financieros.
+Plazos legales: notificación APDP en 72 horas desde el conocimiento formal; titulares sin dilación en datos sensibles/menores/financieros.
 Filtro de riesgo razonable (Art. 14 sexies — REC-05).
 """
 
@@ -50,7 +50,7 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
     breach = SecurityBreach(**data.model_dump(), creado_por=usuario)
     # BUG-01: Auto-calcular nivel de riesgo con los flags reales (Art. 14 bis)
     breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
-    breach.reportable_apdc_calculado = _calcular_reportable(breach)
+    breach.reportable_apdp_calculado = _calcular_reportable(breach)
     db.add(breach)
     db.flush()
     log_audit(
@@ -62,10 +62,11 @@ def crear_brecha(db: Session, data: BreachCreate, usuario: str) -> SecurityBreac
         detalle={"company_id": data.company_id, "nivel_riesgo": str(getattr(breach, "nivel_riesgo", ""))},
     )
 
-    fecha_det = breach.fecha_deteccion
-    if fecha_det.tzinfo is None:
-        fecha_det = fecha_det.replace(tzinfo=timezone.utc)
-    scheduled_for = fecha_det + timedelta(hours=72)
+    # Las 72h corren desde el conocimiento formal (Art. 14 bis); fallback a detección si no informado.
+    _base_72h = breach.fecha_conocimiento or breach.fecha_deteccion
+    if _base_72h.tzinfo is None:
+        _base_72h = _base_72h.replace(tzinfo=timezone.utc)
+    scheduled_for = _base_72h + timedelta(hours=72)
     try:
         enqueue_task(
             db=db,
@@ -102,7 +103,7 @@ def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: 
     empresa = db.query(Company).filter(Company.id == breach.company_id).first()
     cambios = data.model_dump(exclude_none=True)
 
-    _notificado_apdc_prev = breach.notificado_apdc
+    _notificado_apdp_prev = breach.notificado_apdp
     _notificado_titulares_prev = breach.notificado_titulares
 
     for field, value in cambios.items():
@@ -112,9 +113,9 @@ def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: 
     _risk_factors = {"incluye_datos_sensibles", "incluye_datos_nna", "incluye_datos_financieros", "volumen_titulares_afectados"}
     if cambios.keys() & _risk_factors:
         breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
-        breach.reportable_apdc_calculado = _calcular_reportable(breach)
+        breach.reportable_apdp_calculado = _calcular_reportable(breach)
 
-    if data.notificado_apdc and not _notificado_apdc_prev and empresa and empresa.email_dpo:
+    if data.notificado_apdp and not _notificado_apdp_prev and empresa and empresa.email_dpo:
         from app.services.email_service import notificar_nueva_brecha, EmailError
         try:
             notificar_nueva_brecha(
@@ -125,7 +126,7 @@ def actualizar_brecha(db: Session, breach_id: int, data: BreachUpdate, usuario: 
                 fecha_deteccion=breach.fecha_deteccion.strftime("%d-%m-%Y %H:%M"),
             )
         except EmailError as e:
-            logger.error(f"Brecha {breach_id}: fallo enviando notificación APDC: {e}")
+            logger.error(f"Brecha {breach_id}: fallo enviando notificación APDP: {e}")
 
     # QW13 (Art. 14 bis): notificar a titulares afectados sin dilación indebida.
     if data.notificado_titulares and not _notificado_titulares_prev and empresa:
@@ -177,21 +178,29 @@ def eliminar_brecha(db: Session, breach_id: int, usuario: Optional[str] = None) 
 
 
 def _enriquecer(breach: SecurityBreach) -> dict:
-    """Calcula campos derivados: horas desde detección y si el plazo APDC (72h) está vencido."""
+    """Calcula campos derivados: horas desde detección/conocimiento y si el plazo APDP (72h) está vencido."""
     ahora = datetime.now(timezone.utc)
     det = breach.fecha_deteccion
     if det.tzinfo is None:
         det = det.replace(tzinfo=timezone.utc)
-    horas = (ahora - det).total_seconds() / 3600
+    horas_det = (ahora - det).total_seconds() / 3600
+
+    # Las 72h para APDP corren desde el conocimiento formal (Art. 14 bis).
+    base_conocimiento = breach.fecha_conocimiento or breach.fecha_deteccion
+    if base_conocimiento.tzinfo is None:
+        base_conocimiento = base_conocimiento.replace(tzinfo=timezone.utc)
+    horas_con = (ahora - base_conocimiento).total_seconds() / 3600
+
     return {
-        "horas_desde_deteccion": round(horas, 1),
-        "plazo_apdc_vencido": horas > 72 and not breach.notificado_apdc,
-        "reportable_apdc_calculado": _calcular_reportable(breach),
+        "horas_desde_deteccion": round(horas_det, 1),
+        "horas_desde_conocimiento": round(horas_con, 1),
+        "plazo_apdp_vencido": horas_con > 72 and not breach.notificado_apdp,
+        "reportable_apdp_calculado": _calcular_reportable(breach),
     }
 
 
 def _calcular_reportable(breach: SecurityBreach) -> bool:
-    """Calcula si la brecha debe ser notificada a APDC según Art. 14 sexies (REC-05).
+    """Calcula si la brecha debe ser notificada a APDP según Art. 14 sexies (REC-05).
 
     Es reportable si:
     - nivel_riesgo es ALTO o CRÍTICO, O
@@ -245,7 +254,7 @@ def evaluar_riesgo_brecha(db: Session, breach_id: int) -> SecurityBreach:
     """Recalcula nivel de riesgo y reportabilidad de una brecha existente."""
     breach = get_breach(db, breach_id)
     breach.nivel_riesgo = _calcular_nivel_riesgo(breach)
-    breach.reportable_apdc_calculado = _calcular_reportable(breach)
+    breach.reportable_apdp_calculado = _calcular_reportable(breach)
     db.commit()
     db.refresh(breach)
     return breach

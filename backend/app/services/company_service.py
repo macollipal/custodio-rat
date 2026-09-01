@@ -12,13 +12,19 @@ from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.services.audit_service import log_audit
 
 
-def calcular_metricas_empresa(rats: list, now: datetime) -> tuple[int, int]:
-    """Retorna (completitud_promedio, rats_vencidos) para una lista de RATs de una empresa."""
+def calcular_metricas_empresa(rats: list, now: datetime) -> tuple[int, int, bool]:
+    """Retorna (completitud_promedio, rats_vencidos, requiere_dpo) para una lista de RATs de una empresa.
+
+    requiere_dpo=True cuando algún RAT trata datos sensibles a gran escala (>= 5.000 titulares
+    estimados) o hace monitoreo sistemático — indicadores de DPO obligatorio (Art. 14 Ley 21.719).
+    """
     from app.services.rat_calculations import calcular_completitud, rat_to_dict
     if not rats:
-        return 0, 0
+        return 0, 0, False
     completitud_promedio = round(sum(calcular_completitud(rat_to_dict(r)) for r in rats) / len(rats))
     vencidos = 0
+    requiere_dpo = False
+    _UMBRAL_VOLUMEN_DPO = 5_000
     for r in rats:
         plazo = r.plazo_retencion or ""
         match = re.search(r"(\d+)\s*(?:año|años)", plazo, re.IGNORECASE)
@@ -37,7 +43,13 @@ def calcular_metricas_empresa(rats: list, now: datetime) -> tuple[int, int]:
             created = created.replace(tzinfo=timezone.utc)
         if created + timedelta(days=years * 365) < now:
             vencidos += 1
-    return completitud_promedio, vencidos
+        # Detección de DPO obligatorio: datos sensibles a gran escala (Art. 14 Ley 21.719)
+        if r.datos_sensibles and (r.volumen_titulares_estimado or 0) >= _UMBRAL_VOLUMEN_DPO:
+            requiere_dpo = True
+        # Monitoreo sistemático también activa DPO
+        if r.decisiones_automatizadas and (r.volumen_titulares_estimado or 0) >= _UMBRAL_VOLUMEN_DPO:
+            requiere_dpo = True
+    return completitud_promedio, vencidos, requiere_dpo
 
 
 def _delete_company_orphans(db: Session, company_id: int) -> None:
