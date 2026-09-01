@@ -35,7 +35,7 @@ class TestCrearRAT:
         assert resp.status_code in (404, 400)
 
     def test_crear_rat_con_datos_sensibles(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "Salud (física o mental)", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
+        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "Datos relativos a la salud", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         resp = client.post("/rats/", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         data = resp.json()

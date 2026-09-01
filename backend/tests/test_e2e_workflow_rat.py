@@ -57,7 +57,7 @@ class TestWorkflowDatosSensibles:
         rat_con_sensibles = {
             **rat_base,
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Datos de salud (Art. 2 letra g Ley 21.719)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": True,
             "estado_eipd": "pendiente",
         }
@@ -74,7 +74,7 @@ class TestWorkflowDatosSensibles:
         rat_con_sensibles = {
             **rat_base,
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Datos de salud (Art. 2 letra g Ley 21.719)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": True,
             "estado_eipd": "pendiente",
         }
@@ -217,7 +217,7 @@ class TestWorkflowEIPDNoRequeridaJustificada:
         rat = {
             **rat_base,
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Datos socioeconomicos (Art. 2 letra g)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": True,
             "estado_eipd": "no_requerida_justificada",
             "justificacion_no_aplica": "Los datos socioeconomicos son publicos y no requieren EIPD formal",
@@ -230,7 +230,7 @@ class TestWorkflowEIPDNoRequeridaJustificada:
         rat = {
             **rat_base,
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Datos socioeconomicos (Art. 2 letra g)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": True,
             "estado_eipd": "no_requerida_justificada",
             "justificacion_no_aplica": "corto",  # <20 chars

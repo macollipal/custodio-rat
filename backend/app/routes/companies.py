@@ -136,7 +136,7 @@ async def obtener(
     out.total_rats = len(rats)
 
     now = datetime.now(timezone.utc)
-    out.completitud_promedio, out.rats_vencidos = calcular_metricas_empresa(rats, now)
+    out.completitud_promedio, out.rats_vencidos, out.requiere_dpo = calcular_metricas_empresa(rats, now)
     estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
     out.solicitudes_pendientes = db.query(func.count(TktSolicitudDerecho.id)).filter(
         TktSolicitudDerecho.company_id == company_id,

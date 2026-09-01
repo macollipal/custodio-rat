@@ -62,7 +62,7 @@ class TestReportesPaginacion:
                 **rat_base,
                 "nombre_proceso": f"RAT Sensible {i}",
                 "datos_sensibles": True,
-                "tipo_dato_sensible": "Salud",
+                "tipo_dato_sensible": "Datos relativos a la salud",
                 "evaluacion_impacto": True,
                 "estado_eipd": "pendiente",
             }, headers=auth_headers)

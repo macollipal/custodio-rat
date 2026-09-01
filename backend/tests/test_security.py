@@ -722,7 +722,7 @@ class TestRATValidators:
             "fuente_datos": "Web",
             "plazo_retencion": "1 año",
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Salud (física o mental)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": False,
         }, headers={"Authorization": f"Bearer {token}"})
         # Schema validation passes (200/201), route validation may reject for EIPD (422)
@@ -748,7 +748,7 @@ class TestRATValidators:
             "decisiones_automatizadas": True,
             "logica_automatizada": " scoring crediticio con threshold 0.7, revisión humana para casos >0.9",
             "datos_sensibles": True,
-            "tipo_dato_sensible": "Salud (física o mental)",
+            "tipo_dato_sensible": "Datos relativos a la salud",
             "evaluacion_impacto": True,
             "responsable_tratamiento_email": "dpo@test.cl",
         }

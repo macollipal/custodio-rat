@@ -38,7 +38,7 @@ class TestDashboard:
         assert resp.json()["total_procesos"] == 1
 
     def test_dashboard_detecta_datos_sensibles(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "salud", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
+        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "Datos relativos a la salud", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         client.post("/rats/", json=payload, headers=auth_headers)
         resp = client.get(f"/rats/dashboard/{rat_base['company_id']}", headers=auth_headers)
         assert resp.json()["procesos_con_datos_sensibles"] >= 1
