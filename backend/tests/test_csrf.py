@@ -100,8 +100,8 @@ class TestCSRFMiddleware:
         # CSRF no bloquea GET (método seguro). 401 = auth fallida (no CSRF), 403 = CSRF bloqueado.
         assert resp.status_code != 403, f"CSRF should not block GET: got {resp.status_code}"
 
-    def test_public_endpoint_no_csrf_required(self, client):
-        """/auth/login (pÃºblico) no debe requerir validaciÃ³n CSRF."""
+    def test_public_endpoint_no_csrf_required(self, client, admin_user):
+        """/auth/login (público) no debe requerir validación CSRF."""
         resp = client.post(
             "/auth/login",
             json={"username": "admin", "password": "admin1234"},
