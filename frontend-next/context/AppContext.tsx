@@ -56,24 +56,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ]);
 
   useEffect(() => {
-    const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
-    const u = localStorage.getItem(STORAGE_KEYS.USER);
-    const c = localStorage.getItem(STORAGE_KEYS.COMPANY);
-    const cs = localStorage.getItem(STORAGE_KEYS.COMPANIES);
-    if (t) setTokenState(t);
-    if (u) try { setUserState(JSON.parse(u)); } catch {}
-    if (c) try { setCompanyState(JSON.parse(c)); } catch {}
-    if (cs) try { setCompaniesState(JSON.parse(cs)); } catch {}
+    try {
+      const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      const u = localStorage.getItem(STORAGE_KEYS.USER);
+      const c = localStorage.getItem(STORAGE_KEYS.COMPANY);
+      const cs = localStorage.getItem(STORAGE_KEYS.COMPANIES);
+      if (t) setTokenState(t);
+      if (u) try { setUserState(JSON.parse(u)); } catch {}
+      if (c) try { setCompanyState(JSON.parse(c)); } catch {}
+      if (cs) try { setCompaniesState(JSON.parse(cs)); } catch {}
+    } catch {}
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('custodio_theme') as Theme | null;
+    const stored = (() => { try { return localStorage.getItem('custodio_theme') as Theme | null; } catch { return null; } })();
     if (stored === 'dark' || stored === 'mac') {
       setTheme(stored);
       document.documentElement.classList.add(stored);
     } else if (!stored) {
       // migración: leer clave legacy
-      const legacy = localStorage.getItem('custodio_dark_mode');
+      const legacy = (() => { try { return localStorage.getItem('custodio_dark_mode'); } catch { return null; } })();
       if (legacy === 'true') {
         setTheme('dark');
         document.documentElement.classList.add('dark');
