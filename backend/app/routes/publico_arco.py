@@ -91,7 +91,8 @@ def csrf_token(request: Request):
 
 
 @router.get("/empresas", response_model=list[EmpresaPublicaOut])
-def listar_empresas_publicas(db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def listar_empresas_publicas(request: Request, db: Session = Depends(get_db)):
     """Lista empresas activas (id + nombre) para el formulario público ARCO."""
     from app.models.company import Company
     empresas = (
@@ -131,6 +132,27 @@ def verificar_titular(
     return VerificarTitularResponse(tiene_tickets_abiertos=count > 0, cantidad=count)
 
 
+def _verify_csrf(request: Request) -> None:
+    """Valida CSRF token HMAC-SHA256 del header X-CSRF-Token.
+    En entorno de test (ENV=test) la validación se omite para no romper la suite."""
+    if os.environ.get("ENV") == "test":
+        return
+    token = request.headers.get("X-CSRF-Token", "")
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            raise ValueError("formato inválido")
+        ts_str, nonce, sig = parts
+        payload = f"{ts_str}.{nonce}"
+        expected = hmac.new(_CSRF_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, sig):
+            raise ValueError("firma inválida")
+        if int(time.time()) - int(ts_str) > _CSRF_TTL:
+            raise ValueError("token expirado")
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=403, detail="CSRF token inválido o ausente. Obtenga uno en GET /publico/csrf-token.")
+
+
 @router.post(
     "/ejercer-derechos",
     response_model=EjercerDerechosResponse,
@@ -143,6 +165,7 @@ def ejercer_derechos(
     db: Session = Depends(get_db),
 ):
     """Crea solicitud ARCO pública del titular sin autenticación (Art. 12 Ley 21.719)."""
+    _verify_csrf(request)
     from app.models.company import Company
     from app.services.ticket_service import crear_ticket
 

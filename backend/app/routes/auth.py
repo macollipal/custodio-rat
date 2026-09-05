@@ -208,20 +208,31 @@ async def listar_usuarios(
         users, total = get_users(db, skip=skip, limit=limit)
         empresa_nombre_fija = None
 
+    # Precargar empresa principal de cada usuario en un solo JOIN para evitar N+1
+    if empresa_nombre_fija is None:
+        user_ids_list = [u.id for u in users]
+        uc_rows = (
+            db.query(UserCompany.user_id, UserCompany.company_id, Company.nombre)
+            .join(Company, Company.id == UserCompany.company_id)
+            .filter(UserCompany.user_id.in_(user_ids_list))
+            .all()
+        )
+        primera_empresa_por_user: dict = {}
+        for uid, cid, cnombre in uc_rows:
+            if uid not in primera_empresa_por_user:
+                primera_empresa_por_user[uid] = (cid, cnombre)
+    else:
+        primera_empresa_por_user = {}
+
     result = []
     for u in users:
         if empresa_nombre_fija is not None:
             emp_nombre = empresa_nombre_fija
             emp_id = company_id
         else:
-            empresas = get_empresas_usuario(db, u.id)
-            emp_nombre = None
-            emp_id = None
-            if empresas:
-                c = db.query(Company).filter(Company.id == empresas[0]).first()
-                if c:
-                    emp_nombre = c.nombre
-                    emp_id = empresas[0]
+            pair = primera_empresa_por_user.get(u.id)
+            emp_id = pair[0] if pair else None
+            emp_nombre = pair[1] if pair else None
         result.append({
             "id": u.id,
             "username": u.username,

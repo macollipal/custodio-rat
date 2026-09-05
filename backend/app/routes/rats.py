@@ -100,12 +100,15 @@ async def reportes(
 
     sort_col = sort_by if sort_by in SORTABLE_FIELDS else "created_at"
     sort_dir = "desc" if sort_order == "desc" else "asc"
+    limit = min(limit, 500)
 
     query = db.query(RATModel).filter(RATModel.deleted_at.is_(None))
 
     if company_id is not None:
+        if current_user.rol_global != "superadmin":
+            check_company_access(current_user, company_id, db)
         query = query.filter(RATModel.company_id == company_id)
-    elif not current_user.rol_global == "superadmin":
+    elif current_user.rol_global != "superadmin":
         ids = get_empresas_usuario(db, current_user.id)
         query = query.filter(RATModel.company_id.in_(ids))
 

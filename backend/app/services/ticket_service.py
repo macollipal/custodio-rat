@@ -20,7 +20,7 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int]
     fecha_actual = fecha_inicio.replace(hour=23, minute=59, second=59)
 
     # Feriados fijos Chile (mes, día) - sin año
-    feriados_fijos = [
+    feriados_fijos = {
         (1, 1),   # Año Nuevo
         (5, 1),   # Día del Trabajo
         (5, 21),  # Glorias Navales
@@ -34,7 +34,7 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int]
         (11, 1),  # Día de Todos los Santos
         (12, 8),  # Inmaculada Concepción
         (12, 25), # Navidad
-    ]
+    }
 
     # Semana Santa 2025-2040 (algoritmo de Gauss simplificado)
     # 2025: Abril 17-18 | 2026: Abril 3-4 | 2027: Marzo 26-27 | 2028: Abril 14-15
@@ -42,31 +42,32 @@ def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int]
     # 2033: Abril 15-16 | 2034: Abril 7-8 | 2035: Marzo 23-24 | 2036: Abril 12-13
     # 2037: Abril 3-4 | 2038: Abril 16-17 | 2039: Abril 8-9 | 2040: Marzo 30-31
     feriados_semana_santa = {
-        2025: [(4, 17), (4, 18)],
-        2026: [(4, 3), (4, 4)],
-        2027: [(3, 26), (3, 27)],
-        2028: [(4, 14), (4, 15)],
-        2029: [(3, 30), (3, 31)],
-        2030: [(4, 18), (4, 19)],
-        2031: [(4, 10), (4, 11)],
-        2032: [(3, 26), (3, 27)],
-        2033: [(4, 15), (4, 16)],
-        2034: [(4, 7), (4, 8)],
-        2035: [(3, 23), (3, 24)],
-        2036: [(4, 12), (4, 13)],
-        2037: [(4, 3), (4, 4)],
-        2038: [(4, 16), (4, 17)],
-        2039: [(4, 8), (4, 9)],
-        2040: [(3, 30), (3, 31)],
+        2025: {(4, 17), (4, 18)},
+        2026: {(4, 3), (4, 4)},
+        2027: {(3, 26), (3, 27)},
+        2028: {(4, 14), (4, 15)},
+        2029: {(3, 30), (3, 31)},
+        2030: {(4, 18), (4, 19)},
+        2031: {(4, 10), (4, 11)},
+        2032: {(3, 26), (3, 27)},
+        2033: {(4, 15), (4, 16)},
+        2034: {(4, 7), (4, 8)},
+        2035: {(3, 23), (3, 24)},
+        2036: {(4, 12), (4, 13)},
+        2037: {(4, 3), (4, 4)},
+        2038: {(4, 16), (4, 17)},
+        2039: {(4, 8), (4, 9)},
+        2040: {(3, 30), (3, 31)},
     }
 
-    feriados = feriados_fijos.copy()
-    if anio in feriados_semana_santa:
-        feriados.extend(feriados_semana_santa[anio])
-
     def es_feriado(dt: datetime) -> bool:
-        for mes, dia in feriados:
-            if dt.month == mes and dt.day == dia:
+        # Verificar feriados fijos (aplican en cualquier año)
+        if (dt.month, dt.day) in feriados_fijos:
+            return True
+        # Verificar Semana Santa del año específico del día siendo evaluado
+        year = dt.year
+        if year in feriados_semana_santa:
+            if (dt.month, dt.day) in feriados_semana_santa[year]:
                 return True
         return False
 
