@@ -32,6 +32,7 @@ async def listar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    _require_company_admin(db, current_user, company_id)
     return listar_accesos(db, company_id)
 
 

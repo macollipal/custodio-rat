@@ -2,7 +2,7 @@
 Endpoints de exportación ARCO-QW1: CSV, Excel, PDF.
 Ruta: /export/tkt/
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -29,9 +29,9 @@ async def exportar_csv(
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
         if not empresas:
-            raise PermissionError("Sin acceso a ninguna empresa")
+            raise HTTPException(status_code=403, detail="Sin acceso a ninguna empresa")
         if company_id and company_id not in empresas:
-            raise PermissionError("Acceso denegado a esta empresa")
+            raise HTTPException(status_code=403, detail="Acceso denegado a esta empresa")
         if not company_id:
             company_id = empresas[0]
 
@@ -57,9 +57,9 @@ async def exportar_excel(
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
         if not empresas:
-            raise PermissionError("Sin acceso a ninguna empresa")
+            raise HTTPException(status_code=403, detail="Sin acceso a ninguna empresa")
         if company_id and company_id not in empresas:
-            raise PermissionError("Acceso denegado a esta empresa")
+            raise HTTPException(status_code=403, detail="Acceso denegado a esta empresa")
         if not company_id:
             company_id = empresas[0]
 
@@ -85,9 +85,9 @@ async def exportar_pdf(
     if current_user.rol_global != "superadmin":
         empresas = get_empresas_usuario(db, current_user.id)
         if not empresas:
-            raise PermissionError("Sin acceso a ninguna empresa")
+            raise HTTPException(status_code=403, detail="Sin acceso a ninguna empresa")
         if company_id and company_id not in empresas:
-            raise PermissionError("Acceso denegado a esta empresa")
+            raise HTTPException(status_code=403, detail="Acceso denegado a esta empresa")
         if not company_id:
             company_id = empresas[0]
 
