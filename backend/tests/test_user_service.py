@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests unitarios para user_service.py.
 Usa el fixture db con transaction rollback (aislamiento de tests).
 """

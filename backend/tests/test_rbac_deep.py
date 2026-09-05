@@ -1,14 +1,14 @@
-"""
-Tests P0: RBAC Profundo — Control de acceso basado en roles.
-Custodio RAT Manager — Ley 21.719.
+﻿"""
+Tests P0: RBAC Profundo â€” Control de acceso basado en roles.
+Custodio RAT Manager â€” Ley 21.719.
 
 Covers:
 - admin_empresa: CRUD en su empresa, no en otras
 - usuario: solo lectura en su empresa
 - superadmin: acceso total
-- Límites de permisos entre roles
+- LÃ­mites de permisos entre roles
 - IDOR: aislamiento entre empresas
-- Permisos de edición vs solo lectura
+- Permisos de ediciÃ³n vs solo lectura
 """
 
 import pytest
@@ -84,10 +84,10 @@ class TestAdminEmpresaRBAC:
         assert resp.status_code == 201
 
     def test_admin_empresa_no_puede_crear_rat_en_empresa_ajena(self, client, db, auth_headers, empresa, rat_base):
-        """admin_empresa NO puede crear RAT en empresa que no está en su UserCompany.
+        """admin_empresa NO puede crear RAT en empresa que no estÃ¡ en su UserCompany.
 
         NOTA: El test espera 403, pero actualmente retorna 201.
-        Esto indica que la validación de company_access en el endpoint /rats/
+        Esto indica que la validaciÃ³n de company_access en el endpoint /rats/
         solo verifica que el usuario tenga acceso a la empresa (UserCompany),
         no que tenga rol admin_empresa o superadmin.
         """
@@ -127,7 +127,7 @@ class TestAdminEmpresaRBAC:
 
         resp = client.post("/rats/", json=rat_base_ajena, headers={"Authorization": f"Bearer {token}"})
         if resp.status_code == 201:
-            pytest.skip("Gap de seguridad: /rats permite creación con admin_empresa sin verificar rol global (solo verifica UserCompany)")
+            pytest.skip("Gap de seguridad: /rats permite creaciÃ³n con admin_empresa sin verificar rol global (solo verifica UserCompany)")
 
     def test_admin_empresa_puede_editar_rat_de_su_empresa(self, client, db, empresa, rat_base):
         """admin_empresa puede editar RAT de su empresa."""
@@ -214,11 +214,16 @@ class TestAdminEmpresaRBAC:
         db.commit()
         db.refresh(user)
 
+        import uuid
+        sfx = uuid.uuid4().hex[:8]
         resp_emp = client.post("/companies/", json={
-            "nombre": "Empresa Ajena Get",
-            "rut": "77.777.777-7",
+            "nombre": f"Empresa Ajena Get {sfx}",
+            "rut": f"77.{sfx[:3]}.{sfx[3:6]}-{sfx[7]}",
             "rubro": "Test",
+            "contacto_dpo": "DPO Test",
+            "email_dpo": f"dpo{sfx}@empresaajena.cl",
         }, headers=auth_headers)
+        assert resp_emp.status_code == 201, f"Error creando empresa: {resp_emp.text}"
         empresa_ajena_id = resp_emp.json()["id"]
 
         uc = UserCompany(user_id=user.id, company_id=empresa_ajena_id, rol=RolEmpresa.ADMIN)
@@ -458,7 +463,7 @@ class TestPermisosBrechas:
             "descripcion": "Brecha de prueba",
             "fecha_deteccion": "2026-01-15",
             "nivel_riesgo": "medio",
-            "medidas_adoptadas": "Contención inmediata",
+            "medidas_adoptadas": "ContenciÃ³n inmediata",
         }, headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 201
 
@@ -467,7 +472,7 @@ class TestPermisosBrechas:
 
         NOTA: Actualmente el endpoint /brechas solo verifica company_access,
         no el rol global. Este test documenta el gap de seguridad hasta que
-        se implemente la validación de rol en el endpoint.
+        se implemente la validaciÃ³n de rol en el endpoint.
         """
         from app.models.user import User
         from app.models.user_company import UserCompany, RolEmpresa
@@ -501,4 +506,4 @@ class TestPermisosBrechas:
             "medidas_adoptadas": "Test",
         }, headers={"Authorization": f"Bearer {token}"})
         if resp.status_code == 201:
-            pytest.skip("Gap de seguridad: /brechas permite creación con rol usuario (solo verifica company_access, no rol)")
+            pytest.skip("Gap de seguridad: /brechas permite creaciÃ³n con rol usuario (solo verifica company_access, no rol)")

@@ -5,10 +5,10 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { SecurityBreach } from '@/types';
-
-const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2 } from '@/lib/styles';
 
 const PLAZO_APDC_HORAS = 72;
 
@@ -29,12 +29,20 @@ interface BreachFormData {
   rats_afectados: string;
   datos_comprometidos: string;
   medidas_adoptadas: string;
+  naturaleza: 'confidencialidad' | 'integridad' | 'disponibilidad' | undefined;
   notificado_apdc: boolean;
   notificado_titulares: boolean;
   volumen_titulares_afectados: number;
   incluye_datos_sensibles: boolean;
   incluye_datos_nna: boolean;
   incluye_datos_financieros: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  fecha_ocurrencia_estimada?: string;
+  efectos_probables?: string;
+  causa_raiz?: string;
+  evidencia_notificacion_apdc_folio?: string;
+  estado_cierre?: string;
+  fecha_cierre?: string;
 }
 
 function BreachForm({
@@ -54,15 +62,23 @@ function BreachForm({
     rats_afectados: initial?.rats_afectados ?? '',
     datos_comprometidos: initial?.datos_comprometidos ?? '',
     medidas_adoptadas: initial?.medidas_adoptadas ?? '',
+    naturaleza: initial?.naturaleza ?? undefined,
     notificado_apdc: initial?.notificado_apdc ?? false,
     notificado_titulares: initial?.notificado_titulares ?? false,
     volumen_titulares_afectados: initial?.volumen_titulares_afectados ?? 0,
     incluye_datos_sensibles: initial?.incluye_datos_sensibles ?? false,
     incluye_datos_nna: initial?.incluye_datos_nna ?? false,
     incluye_datos_financieros: initial?.incluye_datos_financieros ?? false,
+    // Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: initial?.fecha_ocurrencia_estimada ?? '',
+    efectos_probables: initial?.efectos_probables ?? '',
+    causa_raiz: initial?.causa_raiz ?? '',
+    evidencia_notificacion_apdc_folio: initial?.evidencia_notificacion_apdc_folio ?? '',
+    estado_cierre: initial?.estado_cierre ?? '',
+    fecha_cierre: initial?.fecha_cierre ?? '',
   });
 
-  function set(k: keyof BreachFormData, v: string | number | boolean) {
+  function set(k: keyof BreachFormData, v: string | number | boolean | undefined) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
@@ -72,12 +88,12 @@ function BreachForm({
         <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>
           {initial?.descripcion ? 'Editar brecha' : 'Registrar nueva brecha de seguridad'}
         </h3>
-        <p className="text-sm" style={{ color: '#6B7280' }}>Art. 14 bis Ley 21.719 — Notificación obligatoria a la APDC en 72 horas.</p>
+        <p className="text-sm" style={{ color: '#6B7280' }}>Art. 14 sexies Ley 21.719 — Notificación obligatoria a la APDP en 72 horas.</p>
       </div>
 
       <div className="rounded-lg p-4" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
         <AlertBanner
-          message="Las brechas de seguridad que afecten datos personales deben ser reportadas a la Agencia de Protección de Datos Personales (APDC) dentro de las <strong>72 horas</strong> desde su detección. Si la brecha afecta datos sensibles, menores o información financiera, también debe notificarse a los titulares afectados sin dilación."
+          message={<>Las brechas de seguridad que afecten datos personales deben ser reportadas a la Agencia de Protección de Datos Personales (APDP) dentro de las <strong>72 horas</strong> desde su detección. Si la brecha afecta datos sensibles, menores o información financiera, también debe notificarse a los titulares afectados sin dilación.</>}
           type="danger"
         />
       </div>
@@ -142,6 +158,26 @@ function BreachForm({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Naturaleza de la brecha (Art. 14 sexies) *</label>
+        <select
+          value={form.naturaleza ?? ''}
+          onChange={e => {
+            const v = e.target.value;
+            set('naturaleza', (v === '' ? undefined : v) as BreachFormData['naturaleza']);
+          }}
+          className={inputCls}
+          style={inputStyle}
+          aria-label="Naturaleza de la brecha"
+        >
+          <option value="">— Seleccione la naturaleza —</option>
+          <option value="confidencialidad">Confidencialidad — acceso no autorizado a datos</option>
+          <option value="integridad">Integridad — modificación no autorizada de datos</option>
+          <option value="disponibilidad">Disponibilidad — indisponibilidad de datos/sistemas</option>
+        </select>
+        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Requerido por Art. 14 sexies para notificación APDP.</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-3 rounded-lg p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -152,7 +188,7 @@ function BreachForm({
               className="mt-0.5 rounded"
             />
             <div>
-              <span className="text-sm font-semibold" style={{ color: '#111827' }}>Notificado a la APDC</span>
+              <span className="text-sm font-semibold" style={{ color: '#111827' }}>Notificado a la APDP</span>
               <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Marcar cuando ya se envió la notificación dentro de las 72 horas.</p>
             </div>
           </label>
@@ -177,13 +213,13 @@ function BreachForm({
       <div className="rounded-lg p-4 space-y-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
         <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>Evaluación de Riesgo (Art. 14 sexies)</p>
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Volumen de titulares afectados</label>
+          <label className={labelCls} style={labelStyle}>Volumen de titulares afectados</label>
           <input
             type="number"
             min={0}
             value={form.volumen_titulares_afectados}
             onChange={e => set('volumen_titulares_afectados', Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg text-sm border"
+            className={inputCls}
             style={{ borderColor: '#E5E7EB' }}
             placeholder="Ej: 150"
           />
@@ -204,26 +240,109 @@ function BreachForm({
         </div>
       </div>
 
+      {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+      <div className="rounded-lg p-4 space-y-3" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+        <p className="text-sm font-semibold" style={{ color: '#0369A1' }}>📋 Compliance · Ley 21.719</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls} style={labelStyle}>Fecha ocurrencia estimada</label>
+            <input
+              type="datetime-local"
+              value={form.fecha_ocurrencia_estimada ?? ''}
+              onChange={e => set('fecha_ocurrencia_estimada', e.target.value || undefined)}
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Causa raíz</label>
+            <select
+              value={form.causa_raiz ?? ''}
+              onChange={e => set('causa_raiz', e.target.value || undefined)}
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="">— No especificada —</option>
+              <option value="error_humano">Error humano</option>
+              <option value="malware">Malware</option>
+              <option value="acceso_no_autorizado">Acceso no autorizado</option>
+              <option value="proveedor">Proveedor</option>
+              <option value="perdida_equipo">Pérdida de equipo</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>Efectos probables para los titulares</label>
+          <textarea
+            value={form.efectos_probables ?? ''}
+            onChange={e => set('efectos_probables', e.target.value || undefined)}
+            rows={2}
+            placeholder="Ej: Robo de identidad, fraude financiero, daño reputacional..."
+            className={inputCls}
+            style={{ borderColor: '#E5E7EB' }}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls} style={labelStyle}>Folio notificación APDC</label>
+            <input
+              type="text"
+              value={form.evidencia_notificacion_apdc_folio ?? ''}
+              onChange={e => set('evidencia_notificacion_apdc_folio', e.target.value || undefined)}
+              placeholder="Ej: APDC-2026-001234"
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Estado de cierre</label>
+            <select
+              value={form.estado_cierre ?? ''}
+              onChange={e => set('estado_cierre', e.target.value || undefined)}
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            >
+              <option value="">— No especificado —</option>
+              <option value="abierta">Abierta</option>
+              <option value="investigando">Investigando</option>
+              <option value="contenida">Contenida</option>
+              <option value="notificada">Notificada</option>
+              <option value="cerrada">Cerrada</option>
+            </select>
+          </div>
+        </div>
+        {form.estado_cierre === 'cerrada' && (
+          <div>
+            <label className={labelCls} style={labelStyle}>Fecha de cierre</label>
+            <input
+              type="datetime-local"
+              value={form.fecha_cierre ?? ''}
+              onChange={e => set('fecha_cierre', e.target.value || undefined)}
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            />
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-between pt-2">
-        <button
-          onClick={onCancel}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50"
-          style={{ color: '#374151', borderColor: '#E5E7EB' }}
-        >
+        <Button variant="secondary" size="lg" onClick={onCancel}>
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="danger"
+          size="lg"
           onClick={() => {
             if (!form.descripcion.trim()) { toast.error('La descripción es obligatoria.'); return; }
             if (!form.fecha_deteccion) { toast.error('La fecha de detección es obligatoria.'); return; }
+            if (!form.naturaleza) { toast.error('Debe seleccionar la naturaleza de la brecha.'); return; }
             onSave(form);
           }}
-          disabled={saving}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
-          style={{ background: '#DC2626' }}
+          loading={saving}
         >
-          {saving ? 'Guardando...' : '✓ Guardar brecha'}
-        </button>
+          ✓ Guardar brecha
+        </Button>
       </div>
     </div>
   );
@@ -236,12 +355,20 @@ export default function BreachesPage() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [editingBreach, setEditingBreach] = useState<SecurityBreach | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [breachToDelete, setBreachToDelete] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   async function load() {
     if (!company) return;
     setLoading(true);
     try {
-      setBrechas(await api.listarBrechas(company.id));
+      const data = await api.listarBrechas(company.id);
+      setBrechas(
+        Array.isArray(data)
+          ? [...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          : []
+      );
     } catch {
       toast.error('No se pudieron cargar las brechas.');
     } finally {
@@ -262,15 +389,29 @@ export default function BreachesPage() {
         rats_afectados: data.rats_afectados || undefined,
         datos_comprometidos: data.datos_comprometidos || undefined,
         medidas_adoptadas: data.medidas_adoptadas || undefined,
+        naturaleza: data.naturaleza,
         notificado_apdc: data.notificado_apdc,
         notificado_titulares: data.notificado_titulares,
         volumen_titulares_afectados: data.volumen_titulares_afectados,
         incluye_datos_sensibles: data.incluye_datos_sensibles,
         incluye_datos_nna: data.incluye_datos_nna,
         incluye_datos_financieros: data.incluye_datos_financieros,
+        // Campos nuevos gaps Ley 21.719 (Iter 10)
+        fecha_ocurrencia_estimada: data.fecha_ocurrencia_estimada ? new Date(data.fecha_ocurrencia_estimada).toISOString() : undefined,
+        efectos_probables: data.efectos_probables || undefined,
+        causa_raiz: data.causa_raiz || undefined,
+        evidencia_notificacion_apdc_folio: data.evidencia_notificacion_apdc_folio || undefined,
+        estado_cierre: data.estado_cierre || undefined,
+        fecha_cierre: data.fecha_cierre ? new Date(data.fecha_cierre).toISOString() : undefined,
       };
       if (editingBreach) {
         await api.actualizarBrecha(editingBreach.id, payload);
+        await api.evaluarRiesgoBrecha(editingBreach.id, {
+          volumen_titulares_afectados: data.volumen_titulares_afectados,
+          incluye_datos_sensibles: data.incluye_datos_sensibles,
+          incluye_datos_nna: data.incluye_datos_nna,
+          incluye_datos_financieros: data.incluye_datos_financieros,
+        });
         toast.success('Brecha actualizada.');
       } else {
         const nueva = await api.crearBrecha({ ...payload, company_id: company!.id });
@@ -314,24 +455,21 @@ export default function BreachesPage() {
     <div className="p-8">
       {view === 'list' && (
         <>
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Brechas de Seguridad</h1>
               <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
-                Registro de incidentes · Art. 14 bis Ley 21.719
+                Registro de incidentes · Art. 14 sexies Ley 21.719
                 {loading && <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>cargando...</span>}
               </p>
             </div>
             {puedeEditar && (
-              <button
+              <Button
+                variant="danger"
                 onClick={() => { setEditingBreach(null); setView('create'); }}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#DC2626' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#B91C1C')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#DC2626')}
               >
                 + Registrar brecha
-              </button>
+              </Button>
             )}
           </div>
 
@@ -342,7 +480,7 @@ export default function BreachesPage() {
               <div className="text-3xl mb-2">🛡️</div>
               <p className="text-sm font-medium" style={{ color: '#374151' }}>Sin brechas registradas</p>
               <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-                Si ocurre un incidente de seguridad, regístralo aquí para gestionar la notificación a la APDC.
+                Si ocurre un incidente de seguridad, regístralo aquí para gestionar la notificación a la APDP.
               </p>
             </div>
           ) : (
@@ -399,15 +537,16 @@ export default function BreachesPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-3 mb-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-3 h-3 rounded-full ${b.notificado_apdc ? '' : ''}`} style={{ background: b.notificado_apdc ? '#059669' : '#D97706' }} />
+                    {/* Indicadores de notificación */}
+                    <div className="flex gap-3 mb-3 flex-wrap">
+                      <div className="flex items-center gap-1.5" aria-label={`APDP ${b.notificado_apdc ? 'notificada' : 'pendiente'}`}>
+                        <div className="w-3 h-3 rounded-full" style={{ background: b.notificado_apdc ? '#059669' : '#D97706' }} />
                         <span className="text-xs" style={{ color: '#6B7280' }}>
-                          APDC {b.notificado_apdc ? 'notificada' : 'pendiente'}
+                          APDP {b.notificado_apdc ? 'notificada' : 'pendiente'}
                           {b.fecha_notificacion_apdc && ` (${new Date(b.fecha_notificacion_apdc).toLocaleDateString('es-CL')})`}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5" aria-label={`Titulares ${b.notificado_titulares ? 'notificados' : 'pendiente'}`}>
                         <div className="w-3 h-3 rounded-full" style={{ background: b.notificado_titulares ? '#059669' : '#D97706' }} />
                         <span className="text-xs" style={{ color: '#6B7280' }}>
                           Titulares {b.notificado_titulares ? 'notificados' : 'pendiente'}
@@ -415,25 +554,66 @@ export default function BreachesPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 flex-wrap">
+                    {/* Panel expandible — detalle legal Art. 14 sexies */}
+                    <button
+                      className="text-xs font-semibold mb-2 flex items-center gap-1 transition hover:underline"
+                      style={{ color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
+                      aria-expanded={expandedId === b.id}
+                    >
+                      {expandedId === b.id ? '▾ Ocultar detalle legal' : '▸ Ver detalle legal (Art. 14 sexies)'}
+                    </button>
+
+                    {expandedId === b.id && (
+                      <div className="mt-2 rounded-xl overflow-hidden text-xs" style={{ border: '1px solid #DBEAFE', background: '#EFF6FF' }}>
+                        <div className="px-4 py-2 font-bold" style={{ background: '#2563EB', color: 'white' }}>
+                          Campos requeridos para notificación APDP — Art. 14 sexies Ley 21.719
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y divide-blue-200 sm:divide-y-0 sm:divide-x sm:divide-blue-200">
+                          {[
+                            { label: 'Naturaleza de la brecha', value: b.naturaleza ? { confidencialidad: 'Confidencialidad (acceso no autorizado)', integridad: 'Integridad (modificación no autorizada)', disponibilidad: 'Disponibilidad (datos inaccesibles)' }[b.naturaleza] ?? b.naturaleza : null },
+                            { label: 'Fecha detección', value: new Date(b.fecha_deteccion).toLocaleString('es-CL') },
+                            { label: 'Fecha ocurrencia estimada', value: b.fecha_ocurrencia_estimada ? new Date(b.fecha_ocurrencia_estimada).toLocaleString('es-CL') : null },
+                            { label: 'Titulares afectados (estimado)', value: b.volumen_titulares_afectados != null ? b.volumen_titulares_afectados.toLocaleString('es-CL') : null },
+                            { label: 'Datos comprometidos', value: b.datos_comprometidos },
+                            { label: 'Tratamientos (RATs) afectados', value: b.rats_afectados },
+                            { label: 'Incluye datos sensibles', value: b.incluye_datos_sensibles != null ? (b.incluye_datos_sensibles ? 'Sí' : 'No') : null },
+                            { label: 'Incluye datos NNA', value: b.incluye_datos_nna != null ? (b.incluye_datos_nna ? 'Sí' : 'No') : null },
+                            { label: 'Incluye datos financieros', value: b.incluye_datos_financieros != null ? (b.incluye_datos_financieros ? 'Sí' : 'No') : null },
+                            { label: 'Efectos y consecuencias probables', value: b.efectos_probables },
+                            { label: 'Medidas adoptadas', value: b.medidas_adoptadas },
+                            { label: 'Causa raíz', value: b.causa_raiz },
+                            { label: 'Notificación APDP', value: b.notificado_apdc ? `Notificada${b.fecha_notificacion_apdc ? ` el ${new Date(b.fecha_notificacion_apdc).toLocaleDateString('es-CL')}` : ''}${b.evidencia_notificacion_apdc_folio ? ` · Folio: ${b.evidencia_notificacion_apdc_folio}` : ''}` : 'Pendiente' },
+                            { label: 'Notificación titulares', value: b.notificado_titulares ? `Notificados${b.fecha_notificacion_titulares ? ` el ${new Date(b.fecha_notificacion_titulares).toLocaleDateString('es-CL')}` : ''}` : 'Pendiente' },
+                            { label: 'Estado de cierre', value: b.estado_cierre ?? null },
+                          ].map(({ label, value }) => (
+                            <div key={label} className="px-4 py-2.5" style={{ borderBottom: '1px solid #DBEAFE' }}>
+                              <p className="font-semibold mb-0.5" style={{ color: '#1D4ED8' }}>{label}</p>
+                              <p style={{ color: value ? '#111827' : '#9CA3AF' }}>{value ?? '— no registrado —'}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 flex-wrap mt-3">
                       {puedeEditar && (
                         <>
-                          <button
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => { setEditingBreach(b); setView('edit'); }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-gray-50"
-                            style={{ color: '#374151', borderColor: '#E5E7EB' }}
                           >
                             ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm('¿Eliminar esta brecha?')) handleDelete(b.id);
-                            }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition hover:bg-red-50"
-                            style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setBreachToDelete(b.id); setConfirmDeleteOpen(true); }}
+                            style={{ color: '#DC2626' }}
                           >
                             🗑 Eliminar
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -468,6 +648,13 @@ export default function BreachesPage() {
               medidas_adoptadas: editingBreach.medidas_adoptadas ?? '',
               notificado_apdc: editingBreach.notificado_apdc,
               notificado_titulares: editingBreach.notificado_titulares,
+              // Campos nuevos gaps Ley 21.719 (Iter 10)
+              fecha_ocurrencia_estimada: editingBreach.fecha_ocurrencia_estimada ? new Date(editingBreach.fecha_ocurrencia_estimada).toISOString().slice(0, 16) : '',
+              efectos_probables: editingBreach.efectos_probables ?? '',
+              causa_raiz: editingBreach.causa_raiz ?? '',
+              evidencia_notificacion_apdc_folio: editingBreach.evidencia_notificacion_apdc_folio ?? '',
+              estado_cierre: editingBreach.estado_cierre ?? '',
+              fecha_cierre: editingBreach.fecha_cierre ? new Date(editingBreach.fecha_cierre).toISOString().slice(0, 16) : '',
             } : undefined}
             onSave={handleSave}
             onCancel={() => { setView('list'); setEditingBreach(null); }}
@@ -475,6 +662,17 @@ export default function BreachesPage() {
           />
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onClose={() => { setConfirmDeleteOpen(false); setBreachToDelete(null); }}
+        onConfirm={() => { if (breachToDelete) handleDelete(breachToDelete); setConfirmDeleteOpen(false); setBreachToDelete(null); }}
+        title="Eliminar brecha"
+        message="¿Estás seguro que quieres eliminar esta brecha de seguridad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        variant="danger"
+      />
     </div>
   );
 }
+

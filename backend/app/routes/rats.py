@@ -6,24 +6,51 @@ import logging
 import unicodedata
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
-
-logger = logging.getLogger(__name__)
-from app.routes.deps import get_client_ip
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.routes.deps import get_current_user, require_editor_or_admin_empresa
-from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse
+from app.routes.deps import get_client_ip, get_current_user, require_editor_or_admin_empresa, check_company_access
+from app.schemas.rat import RATCreate, RATOut, RATSugerencia, RATSugerenciaOut, RATUpdate, ReportesResponse, SugerenciasTiposOut, BaseLegalOptionsOut, BASE_LEGAL_OPTIONS
 from app.schemas.audit_log import AuditLogOut
 from app.schemas.consentimiento import ConsentimientoCreate, ConsentimientoOut
 from app.services.rat_service import (
-    create_rat, delete_rat, get_audit_logs, get_dashboard_stats,
-    get_rat, get_rats, update_rat, marcar_revisado, aprobar_rat,
+    create_rat, delete_rat, download_rat_file, get_audit_logs, get_dashboard_stats,
+    get_rat_for_user, get_rats, update_rat, marcar_revisado, aprobar_rat,
 )
-from app.services.export_service import exportar_csv, exportar_pdf
+from app.services.rat_crud import clone_rat
+from app.services.export_service import exportar_csv, exportar_pdf, exportar_pdf_apdp
 from app.services.suggestion_service import sugerir_rat, listar_tipos_proceso
 from app.services.company_service import get_company
 from app.services.user_company_service import get_empresas_usuario
+from app.services.rat_calculations import calcular_completitud, calcular_nivel_riesgo, rat_to_dict
+
+logger = logging.getLogger(__name__)
+
+
+def _rat_ids_con_contrato_activo(db: Session, rat_ids: list[int]) -> set[int]:
+    """Retorna el conjunto de rat_ids que tienen al menos un contrato de encargado activo."""
+    if not rat_ids:
+        return set()
+    from app.models.encargado_contrato import EncargadoContrato
+    rows = (
+        db.query(EncargadoContrato.rat_id)
+        .filter(
+            EncargadoContrato.rat_id.in_(rat_ids),
+            EncargadoContrato.activo.is_(True),
+        )
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows}
+
+
+def _enrich_rat_out(out: "RATOut", r, con_contrato: bool = False) -> "RATOut":
+    """Aplica campos calculados a un RATOut: completitud, riesgo, flags binarios y contrato."""
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
+    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+    out.tiene_contrato_encargado = con_contrato
+    return out
 
 router = APIRouter(prefix="/rats", tags=["Registro RAT"])
 
@@ -34,23 +61,28 @@ async def reportes(
     search: Optional[str] = Query(None, description="Buscar por nombre de proceso"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
     base_legal: Optional[str] = Query(None, description="Filtrar por base legal"),
-    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categoría de titulares"),
+    categoria_titulares: Optional[str] = Query(None, description="Filtrar por categor�a de titulares"),
     datos_sensibles: Optional[bool] = Query(None, description="Solo procesos con datos sensibles"),
     evaluacion_impacto: Optional[bool] = Query(None, description="Solo procesos que requieren EIPD"),
     transferencia_internacional: Optional[bool] = Query(None, description="Solo con transferencia internacional"),
     created_by: Optional[str] = Query(None, description="Filtrar por creador (username)"),
+    categoria_datos: Optional[str] = Query(None, description="Filtrar por categor�a de datos"),
+    datos_nna: Optional[str] = Query(None, description="Filtrar por datos NNA"),
+    transferencia_nacional: Optional[bool] = Query(None, description="Solo con transferencia nacional"),
+    nivel_confidencialidad: Optional[str] = Query(None, description="Filtrar por nivel de confidencialidad"),
+    decisiones_automatizadas: Optional[bool] = Query(None, description="Solo con decisiones automatizadas"),
     sort_by: Optional[str] = Query("created_at", description="Campo de ordenamiento"),
-    sort_order: Optional[str] = Query("desc", description="Dirección: asc o desc"),
+    sort_order: Optional[str] = Query("desc", description="Direccion: asc o desc"),
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """
-    Endpoint de reportes con filtros avanzados para múltiples RATs.
-    Soporta: búsqueda por texto, estado, base legal, categoría de titulares,
+    Endpoint de reportes con filtros avanzados para m+�ltiples RATs.
+    Soporta: b+�squeda por texto, estado, base legal, categor+�a de titulares,
     flags de datos sensibles, EIPD, transferencia internacional, creador,
-    ordenamiento y paginación.
+    ordenamiento y paginaci+�n.
     """
     from app.models.rat import RAT as RATModel
 
@@ -58,6 +90,9 @@ async def reportes(
         "created_at", "updated_at", "nombre_proceso", "estado",
         "completitud", "nivel_riesgo", "base_legal", "datos_sensibles",
         "evaluacion_impacto", "transferencia_internacional",
+        "categoria_datos", "categoria_titulares", "plazo_retencion",
+        "datos_nna", "transferencia_nacional", "nivel_confidencialidad",
+        "decisiones_automatizadas", "evaluacion_impacto",
     }
 
     def escape_like(s: str) -> str:
@@ -66,7 +101,7 @@ async def reportes(
     sort_col = sort_by if sort_by in SORTABLE_FIELDS else "created_at"
     sort_dir = "desc" if sort_order == "desc" else "asc"
 
-    query = db.query(RATModel)
+    query = db.query(RATModel).filter(RATModel.deleted_at.is_(None))
 
     if company_id is not None:
         query = query.filter(RATModel.company_id == company_id)
@@ -98,6 +133,21 @@ async def reportes(
     if created_by:
         query = query.filter(RATModel.created_by == created_by)
 
+    if categoria_datos:
+        query = query.filter(RATModel.categoria_datos.ilike(f"%{escape_like(categoria_datos)}%"))
+
+    if datos_nna:
+        query = query.filter(RATModel.datos_nna.ilike(f"%{escape_like(datos_nna)}%"))
+
+    if transferencia_nacional is not None:
+        query = query.filter(RATModel.transferencia_nacional == transferencia_nacional)
+
+    if nivel_confidencialidad:
+        query = query.filter(RATModel.nivel_confidencialidad.ilike(f"%{escape_like(nivel_confidencialidad)}%"))
+
+    if decisiones_automatizadas is not None:
+        query = query.filter(RATModel.decisiones_automatizadas == decisiones_automatizadas)
+
     total_filtered = query.count()
 
     sort_column = getattr(RATModel, sort_col, RATModel.created_at)
@@ -108,12 +158,10 @@ async def reportes(
 
     rats_list = query.offset(skip).limit(limit).all()
 
+    _contratos_ids = _rat_ids_con_contrato_activo(db, [r.id for r in rats_list])
     result = []
     for r in rats_list:
-        out = RATOut.model_validate(r)
-        out.completitud = r.calcular_completitud()
-        out.nivel_riesgo = r.calcular_nivel_riesgo()
-        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+        out = _enrich_rat_out(RATOut.model_validate(r), r, r.id in _contratos_ids)
         result.append(out)
 
     return {
@@ -132,6 +180,11 @@ async def reportes(
             "evaluacion_impacto": evaluacion_impacto,
             "transferencia_internacional": transferencia_internacional,
             "created_by": created_by,
+            "categoria_datos": categoria_datos,
+            "datos_nna": datos_nna,
+            "transferencia_nacional": transferencia_nacional,
+            "nivel_confidencialidad": nivel_confidencialidad,
+            "decisiones_automatizadas": decisiones_automatizadas,
         },
         "rats": result,
     }
@@ -145,30 +198,38 @@ async def listar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # Feature gate N-02: modulo RAT debe estar habilitado
+    if company_id is not None:
+        from app.services.module_permission_service import require_module_enabled
+        require_module_enabled(db, company_id, "RAT")
     # No-admin: solo puede ver RATs de sus empresas
     if not current_user.rol_global == "superadmin" and company_id is None:
         ids = get_empresas_usuario(db, current_user.id)
         from app.models.rat import RAT as RATModel
-        rats_list = db.query(RATModel).filter(RATModel.company_id.in_(ids)).offset(skip).limit(limit).all()
+        rats_list = db.query(RATModel).filter(RATModel.company_id.in_(ids), RATModel.deleted_at.is_(None)).offset(skip).limit(limit).all()
     else:
+        if company_id is not None and current_user.rol_global != "superadmin":
+            check_company_access(current_user, company_id, db)
         rats_list = get_rats(db, company_id, skip, limit)
 
+    _contratos_ids = _rat_ids_con_contrato_activo(db, [r.id for r in rats_list])
     result = []
     for r in rats_list:
-        out = RATOut.model_validate(r)
-        out.completitud = r.calcular_completitud()
-        out.nivel_riesgo = r.calcular_nivel_riesgo()
-        out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
+        out = _enrich_rat_out(RATOut.model_validate(r), r, r.id in _contratos_ids)
         result.append(out)
     return result
 
 
-@router.get("/dashboard/{company_id}", summary="Estadísticas del dashboard")
+@router.get("/dashboard/{company_id}", summary="Estad+�sticas del dashboard")
 async def dashboard(
     company_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # H2.4 — feature gate N-02: modulo RAT debe estar habilitado
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, company_id, "RAT")
+
     if not current_user.rol_global == "superadmin":
         ids = get_empresas_usuario(db, current_user.id)
         if company_id not in ids:
@@ -177,12 +238,41 @@ async def dashboard(
     return get_dashboard_stats(db, company_id)
 
 
-@router.get("/sugerencias/tipos", summary="Listar tipos de proceso disponibles para sugerencias")
+@router.get("/sugerencias/base-legal", summary="Sugerencia de base legal según rubro")
+async def sugerencia_base_legal(
+    rubro_id: int = Query(..., description="ID del rubro de la empresa"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Dado un rubro_id, retorna la base legal más frecuente en RATs de empresas del mismo rubro."""
+    from app.services.rat_crud import get_base_legal_sugerida
+    base_legal = get_base_legal_sugerida(db, rubro_id)
+    return {"base_legal": base_legal}
+
+
+@router.get("/sugerencias/tipos", response_model=SugerenciasTiposOut, summary="Listar tipos de proceso disponibles para sugerencias")
 async def tipos_proceso(current_user=Depends(get_current_user)):
-    return {"tipos": listar_tipos_proceso()}
+    return SugerenciasTiposOut(tipos=listar_tipos_proceso())
 
 
-@router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias automáticas para un proceso")
+BASE_LEGAL_DESCRIPCIONES: dict[str, str] = {
+    "Consentimiento del titular": "Art. 12 - Debe ser libre, previo, expreso, informado, específico, revocable y sin condición negocial. Para datos sensibles, el consentimiento debe ser EXPRESO.",
+    "Ejecución de contrato": "Art. 13 b) - El tratamiento es necesario para ejecutar un contrato en que el titular es parte.",
+    "Obligación legal": "Art. 13 a) - El tratamiento es requerido por una norma legal vigente.",
+    "Interés legítimo": "Art. 16 - Requiere test de 3 pasos documentado: (1) ¿Existe interés legítimo real? (2) ¿El tratamiento es necesario? (3) ¿Prevalece sobre los derechos del titular?",
+    "Interés vital del titular": "Art. 13 c) - El tratamiento es necesario para proteger la vida o integridad física del titular o de otra persona.",
+    "Misión de interés público": "Art. 13 d) - El tratamiento se encuentra previstos en una norma legal para el cumplimiento de una misión realizada en interés público.",
+    "Datos biométricos de identificación (Art. 16 BIS)": "Art. 16 BIS - Datos biométricos para identificación inequívoca. Requiere EIPD obligatoria.",
+    "Otra": "Base legal distinta a las anteriores. Documentar específicamente en el campo correspondiente.",
+}
+
+
+@router.get("/base-legal-opciones", response_model=BaseLegalOptionsOut, summary="Lista de bases legales válidas (Art. 13 Ley 21.719)")
+async def base_legal_opciones(current_user=Depends(get_current_user)):
+    return BaseLegalOptionsOut(opciones=BASE_LEGAL_OPTIONS, descripciones=BASE_LEGAL_DESCRIPCIONES)
+
+
+@router.post("/sugerencias", response_model=RATSugerenciaOut, summary="Obtener sugerencias autom+�ticas para un proceso")
 async def sugerencias(data: RATSugerencia, current_user=Depends(get_current_user)):
     """
     Dado un tipo de proceso (ej: 'clientes web', 'empleados'),
@@ -197,12 +287,9 @@ async def obtener(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    r = get_rat(db, rat_id)
-    out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
-    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
-    return out
+    r = get_rat_for_user(db, rat_id, current_user)
+    con_contrato = r.id in _rat_ids_con_contrato_activo(db, [r.id])
+    return _enrich_rat_out(RATOut.model_validate(r), r, con_contrato)
 
 
 @router.post("/", response_model=RATOut, status_code=201, summary="Crear registro RAT")
@@ -220,12 +307,7 @@ async def crear(
     else:
         require_editor_or_admin_empresa(data.company_id, db, current_user)
     r = create_rat(db, data, current_user.username, get_client_ip(request))
-    out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
-    out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
-    return out
-
+    return _enrich_rat_out(RATOut.model_validate(r), r, False)
 
 @router.post("/{rat_id}/consentimientos", response_model=ConsentimientoOut, status_code=201, summary="Registrar consentimiento expreso para datos sensibles (REC-06)")
 async def crear_consentimiento(
@@ -235,43 +317,28 @@ async def crear_consentimiento(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Registra un consentimiento expreso del titular para un RAT que trata datos sensibles (Art. 16 Ley 21.719)."""
-    from app.models.rat import RAT as RATModel
-    from app.models.consentimiento import Consentimiento
+    """Registra un consentimiento expreso del titular para un RAT que trata datos sensibles (Art. 16 Ley 21.719).
 
+    Delega en consentimiento_service.crear_consentimiento() para aplicar el cifrado
+    PII (Fernet) y hash SHA-256 de texto_consentimiento (Arts. 11, 12, 19 Ley 21.719).
+    """
+    from app.models.rat import RAT as RATModel
     rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
 
-    if data.rat_id != rat_id:
-        raise HTTPException(status_code=400, detail="El rat_id del consentimiento no coincide con la URL.")
+    from app.services.consentimiento_service import crear_consentimiento as crear_consentimiento_service
+    from app.services.consentimiento_service import RATNotFoundError
 
-    consentimiento = Consentimiento(
-        company_id=rat.company_id,
-        rat_id=rat_id,
-        nombre_titular=data.nombre_titular,
-        email_titular=data.email_titular,
-        canal=data.canal,
-        texto_consentimiento=data.texto_consentimiento,
-        fecha_obtencion=data.fecha_obtencion,
-        ip_origen=data.ip_origen or get_client_ip(request),
-        activo=True,
-    )
-    db.add(consentimiento)
-    db.flush()
-    from app.services.audit_service import log_audit
-    log_audit(
-        db=db,
-        entidad="consentimiento",
-        entidad_id=consentimiento.id,
-        accion="create",
-        usuario=current_user.username,
-        detalle={"rat_id": rat_id, "titular": data.nombre_titular, "canal": data.canal},
-    )
-    db.commit()
-    db.refresh(consentimiento)
-    return consentimiento
+    if not data.ip_origen:
+        data.ip_origen = get_client_ip(request)
+
+    try:
+        consentimiento = crear_consentimiento_service(db=db, data=data, usuario=current_user.username)
+    except RATNotFoundError:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    return ConsentimientoOut.from_orm_cifrado(consentimiento)
 
 
 @router.put("/{rat_id}", response_model=RATOut, summary="Actualizar registro RAT")
@@ -282,12 +349,57 @@ async def actualizar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = update_rat(db, rat_id, data, current_user.username, get_client_ip(request))
+    con_contrato = r.id in _rat_ids_con_contrato_activo(db, [r.id])
+    return _enrich_rat_out(RATOut.model_validate(r), r, con_contrato)
+
+
+@router.patch("/{rat_id}/archivar", response_model=RATOut, summary="Archivar un RAT")
+async def archivar_rat(
+    request: Request,
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Cambia el estado del RAT a 'archivado'."""
+    from app.models.rat import EstadoRAT as EstadoRATModel
+
+    rat = get_rat_for_user(db, rat_id, current_user)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+    rat.estado = EstadoRATModel.ARCHIVADO
+    rat.updated_by = current_user.username
+    from app.services.audit_service import log_audit
+    log_audit(db, "rat", rat_id, "archivar", current_user.username, {"estado": "archivado"}, get_client_ip(request))
+    db.commit()
+    db.refresh(rat)
+    out = RATOut.model_validate(rat)
+    out.completitud = calcular_completitud(rat_to_dict(rat))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(rat))
+    out.tiene_archivo_base_legal = bool(rat.archivo_base_legal_datos)
+    return out
+
+
+@router.post("/{rat_id}/clone", response_model=RATOut, status_code=201, summary="Clonar un RAT existente")
+async def clonar_rat(
+    request: Request,
+    rat_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Crea una copia del RAT en estado borrador.
+
+    No se clonan: archivo de base legal, estados de aprobación,
+    observaciones de auditoría, ni tracking token.
+    El RAT clonado pertenece a la misma empresa.
+    """
+    rat_original = get_rat_for_user(db, rat_id, current_user)
+    require_editor_or_admin_empresa(rat_original.company_id, db, current_user)
+    r = clone_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -299,20 +411,25 @@ async def eliminar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = get_rat(db, rat_id)
+    from app.models.rat import RAT as RATModel
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    if current_user.rol_global != "superadmin":
+        check_company_access(current_user, rat.company_id, db)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return delete_rat(db, rat_id, current_user.username, get_client_ip(request))
 
 
-@router.post("/{rat_id}/revision", response_model=AuditLogOut, summary="Registrar revisión periódica del RAT")
+@router.post("/{rat_id}/revision", response_model=AuditLogOut, summary="Registrar revisi+�n peri+�dica del RAT")
 async def registrar_revision(
     request: Request,
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Marca el proceso como revisado periódicamente y registra el evento en la auditoría."""
-    rat = get_rat(db, rat_id)
+    """Marca el proceso como revisado peri+�dicamente y registra el evento en la auditor+�a."""
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     return marcar_revisado(db, rat_id, current_user.username, get_client_ip(request))
 
@@ -326,14 +443,14 @@ async def approve_rat(
 ):
     """
     Aprueba un RAT. Solo admin_empresa o superadmin pueden aprobar.
-    Registra quién aprobó y la fecha de aprobación.
+    Registra qui+�n aprob+� y la fecha de aprobaci+�n.
     """
-    rat = get_rat(db, rat_id)
+    rat = get_rat_for_user(db, rat_id, current_user)
     require_editor_or_admin_empresa(rat.company_id, db, current_user)
     r = aprobar_rat(db, rat_id, current_user.username, get_client_ip(request))
     out = RATOut.model_validate(r)
-    out.completitud = r.calcular_completitud()
-    out.nivel_riesgo = r.calcular_nivel_riesgo()
+    out.completitud = calcular_completitud(rat_to_dict(r))
+    out.nivel_riesgo = calcular_nivel_riesgo(rat_to_dict(r))
     out.tiene_archivo_base_legal = bool(r.archivo_base_legal_datos)
     return out
 
@@ -346,48 +463,82 @@ async def descargar_archivo(
 ):
     """
     Retorna el documento que respalda la base legal del RAT.
-    Si existe storage_url (OCI), descarga desde OCI. Sinon, usa BYTEA.
-    Requiere autenticacion. Descarga en nueva pesta\u00f1a del navegador.
+    Si existe storage_url (OCI), genera pre-signed URL (5 min) para descarga directa.
+    Si est� en BYTEA, retorna los bytes directamente.
+    Requiere autenticaci�n. Descarga en nueva pesta�a del navegador.
     """
-    r = get_rat(db, rat_id)
-    if r.archivo_base_legal_storage_url:
-        try:
-            from app.core.storage import get_storage_backend
-            from urllib.parse import unquote
-            backend = get_storage_backend()
-            object_name = unquote(r.archivo_base_legal_storage_url.split("/o/")[-1])
-            datos = backend.download(object_name)
-            return Response(
-                content=datos,
-                media_type=r.archivo_base_legal_tipo or "application/octet-stream",
-                headers={
-                    "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
-                },
-            )
-        except Exception as e:
-            logger.error(f"Error descargando de OCI: {e}")
-            raise HTTPException(status_code=500, detail="Error descargando archivo de OCI.")
-    if not r.archivo_base_legal_datos:
-        raise HTTPException(status_code=404, detail="Este RAT no tiene documento de base legal adjunto.")
-    return Response(
-        content=r.archivo_base_legal_datos,
-        media_type=r.archivo_base_legal_tipo or "application/octet-stream",
-        headers={
-            "Content-Disposition": f'inline; filename="{r.archivo_base_legal_nombre or f"documento_base_legal_{rat_id}"}"',
-        },
-    )
+
+    rat = get_rat_for_user(db, rat_id, current_user)
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
+
+    try:
+        result = download_rat_file(
+            db, rat_id,
+            usuario=current_user.username,
+            ip_origen=None
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error al obtener el archivo")
+
+    if result["type"] == "presigned_url":
+        return {
+            "url": result["url"],
+            "nombre": result["nombre"],
+            "content_type": result["content_type"],
+            "expires_in_seconds": 300,
+        }
+
+    elif result["type"] == "bytes":
+        import base64
+        datos = base64.b64decode(result["content"])
+        return Response(
+            content=datos,
+            media_type=result["content_type"],
+            headers={
+                "Content-Disposition": f'inline; filename="{result["nombre"]}"',
+            },
+        )
+
+    raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
 
-@router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditoría de un RAT")
+@router.get("/{rat_id}/auditoria", response_model=list[AuditLogOut], summary="Ver historial de auditor+�a de un RAT")
 async def auditoria(
     rat_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # Validar acceso multi-tenant antes de retornar audit log
+    get_rat_for_user(db, rat_id, current_user)
     return get_audit_logs(db, rat_id)
 
 
-@router.get("/auditoria/{company_id}", summary="Historial de auditoría global de la empresa")
+@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor+�a")
+async def verificar_cadena_auditoria(
+    limit: int = Query(1000, description="L+�mite de registros a verificar"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Verifica la integridad de la cadena de hashes de auditor+�a.
+    Retorna estado de validaci+�n y el ID del primer registro roto (si hay).
+    Solo SUPERADMIN puede verificar la cadena global (H2.2 — auditor+�a 2026-07-07).
+    """
+    from app.services.audit_service import verify_audit_chain
+
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(
+            status_code=403,
+            detail="Solo SUPERADMIN puede verificar la cadena de auditor+�a global.",
+        )
+
+    result = verify_audit_chain(db, limit=limit)
+    return result
+
+
+@router.get("/auditoria/{company_id}", summary="Historial de auditor+�a global de la empresa")
 async def auditoria_global(
     company_id: int,
     skip: int = 0,
@@ -396,7 +547,7 @@ async def auditoria_global(
     current_user=Depends(get_current_user),
 ):
     """
-    Retorna todos los eventos de auditoría de los RATs de una empresa,
+    Retorna todos los eventos de auditor+�a de los RATs de una empresa,
     ordenados por timestamp descendente, para que el DPO pueda ver
     toda la actividad reciente de un vistazo.
     Solo usuarios con acceso a la empresa pueden consultar.
@@ -404,11 +555,12 @@ async def auditoria_global(
     from app.models.audit_log import AuditLog
     from app.models.rat import RAT as RATModel
 
-    ids = get_empresas_usuario(db, current_user.id)
-    if company_id not in ids:
-        raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
+    if current_user.rol_global != "superadmin":
+        ids = get_empresas_usuario(db, current_user.id)
+        if company_id not in ids:
+            raise HTTPException(status_code=403, detail="No tienes acceso a esta empresa")
 
-    rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id).all()]
+    rat_ids = [r.id for r in db.query(RATModel.id).filter(RATModel.company_id == company_id, RATModel.deleted_at.is_(None)).all()]
     if not rat_ids:
         return []
     logs = (
@@ -422,23 +574,7 @@ async def auditoria_global(
     return [{"id": log.id, "rat_id": log.entidad_id, "accion": log.accion, "usuario": log.usuario, "timestamp": log.timestamp, "detalle": log.detalle} for log in logs]
 
 
-@router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditoría")
-async def verificar_cadena_auditoria(
-    limit: int = Query(1000, description="Límite de registros a verificar"),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """
-    Verifica la integridad de la cadena de hashes de auditoría.
-    Retorna estado de validación y el ID del primer registro roto (si hay).
-    """
-    from app.services.audit_service import verify_audit_chain
-
-    result = verify_audit_chain(db, limit=limit)
-    return result
-
-
-# ── Exportación ─────────────────────────────────────────────────────────────
+# ������ Exportaci+�n ���������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 
 @router.get("/export/csv", summary="Exportar RAT a CSV")
 async def exportar_a_csv(
@@ -446,11 +582,7 @@ async def exportar_a_csv(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     contenido = exportar_csv(rats)
@@ -468,15 +600,30 @@ async def exportar_a_pdf(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     contenido = exportar_pdf(rats, company)
     filename = _safe_filename(f"RAT_{company.nombre}_{company.rut}.pdf")
+    return Response(
+        content=contenido,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export/apdp", summary="Exportar Reporte APDP (Art. 16 Ley 21.719)")
+async def exportar_reporte_apdp(
+    company_id: int = Query(..., description="ID de la empresa"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+) -> Response:
+    """Genera el informe formal para la Agencia de Protección de Datos Personales."""
+    check_company_access(current_user, company_id, db)
+    rats = get_rats(db, company_id)
+    company = get_company(db, company_id)
+    contenido = exportar_pdf_apdp(rats, company)
+    filename = _safe_filename(f"APDP_{company.nombre}_{company.rut}.pdf")
     return Response(
         content=contenido,
         media_type="application/pdf",
@@ -496,10 +643,7 @@ async def exportar_rat_individual_pdf(
     if not rat:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if rat.company_id not in ids:
-            raise HTTPException(status_code=403, detail="No tiene acceso a este RAT.")
+    check_company_access(current_user, rat.company_id, db)
     company = get_company(db, rat.company_id)
     contenido = exportar_pdf([rat], company)
     filename = _safe_filename(f"RAT_{rat.nombre_proceso}_{company.rut}.pdf")
@@ -516,11 +660,7 @@ async def exportar_cni(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Response:
-    if not current_user.rol_global == "superadmin":
-        ids = get_empresas_usuario(db, current_user.id)
-        if company_id not in ids:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail="No tiene acceso a esta empresa.")
+    check_company_access(current_user, company_id, db)
     rats = get_rats(db, company_id)
     company = get_company(db, company_id)
     from app.services.export_cni_service import exportar_rat_cni

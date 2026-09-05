@@ -1,0 +1,163 @@
+{
+  "company": {
+    "id": 18,
+    "nombre": "Claudio Corp SpA",
+    "rut": "76.555.444-3"
+  },
+  "users": {
+    "claudio_admin": {
+      "id": 27,
+      "username": "claudio_admin",
+      "password": "Claudio2026!",
+      "rol": "admin_empresa"
+    },
+    "claudio_user": {
+      "id": 28,
+      "username": "claudio_user",
+      "password": "Claudio2026!",
+      "rol": "usuario"
+    }
+  },
+  "rats": [
+    {
+      "id": 24,
+      "nombre_proceso": "Gestión de Clientes CRM"
+    },
+    {
+      "id": 25,
+      "nombre_proceso": "Procesamiento de Nómina"
+    },
+    {
+      "id": 26,
+      "nombre_proceso": "Onboarding de Empleados"
+    },
+    {
+      "id": 27,
+      "nombre_proceso": "Analítica Web con Cookies"
+    },
+    {
+      "id": 28,
+      "nombre_proceso": "Marketing por Email"
+    },
+    {
+      "id": 29,
+      "nombre_proceso": "Verificación de Identidad Biométrica"
+    },
+    {
+      "id": 30,
+      "nombre_proceso": "Reclutamiento y Selección"
+    },
+    {
+      "id": 31,
+      "nombre_proceso": "Encuestas de Satisfacción (NPS)"
+    },
+    {
+      "id": 32,
+      "nombre_proceso": "Gestión de Proveedores"
+    },
+    {
+      "id": 33,
+      "nombre_proceso": "Logs de Auditoría del Sistema"
+    }
+  ],
+  "brechas": [
+    {
+      "id": 12,
+      "nivel_riesgo": "medio"
+    },
+    {
+      "id": 13,
+      "nivel_riesgo": "critico"
+    },
+    {
+      "id": 14,
+      "nivel_riesgo": "alto"
+    },
+    {
+      "id": 15,
+      "nivel_riesgo": "bajo"
+    },
+    {
+      "id": 16,
+      "nivel_riesgo": "alto"
+    }
+  ],
+  "tickets": [
+    {
+      "id": 11,
+      "tipo": "acceso",
+      "titular": "Juan Pérez González"
+    },
+    {
+      "id": 12,
+      "tipo": "acceso",
+      "titular": "María José Soto"
+    },
+    {
+      "id": 13,
+      "tipo": "acceso",
+      "titular": "Pedro Ramírez Vidal"
+    },
+    {
+      "id": 14,
+      "tipo": "acceso",
+      "titular": "Carolina Espinoza"
+    },
+    {
+      "id": 15,
+      "tipo": "rectificacion",
+      "titular": "Andrés Muñoz Torres"
+    },
+    {
+      "id": 16,
+      "tipo": "rectificacion",
+      "titular": "Valentina Rojas"
+    },
+    {
+      "id": 17,
+      "tipo": "rectificacion",
+      "titular": "Felipe Castro"
+    },
+    {
+      "id": 18,
+      "tipo": "rectificacion",
+      "titular": "Camila Vargas"
+    },
+    {
+      "id": 19,
+      "tipo": "cancelacion",
+      "titular": "Rodrigo Sepúlveda"
+    },
+    {
+      "id": 20,
+      "tipo": "cancelacion",
+      "titular": "Isidora Pérez"
+    },
+    {
+      "id": 21,
+      "tipo": "cancelacion",
+      "titular": "Matías González"
+    },
+    {
+      "id": 22,
+      "tipo": "oposicion",
+      "titular": "Daniela Fuentes"
+    },
+    {
+      "id": 23,
+      "tipo": "oposicion",
+      "titular": "Sebastián Morales"
+    },
+    {
+      "id": 24,
+      "tipo": "oposicion",
+      "titular": "Francisca Silva"
+    }
+  ],
+  "counts": {
+    "rats": 10,
+    "brechas": 5,
+    "tickets": 14
+  },
+  "timestamp": "2026-06-10T15:43:42.712057+00:00"
+}

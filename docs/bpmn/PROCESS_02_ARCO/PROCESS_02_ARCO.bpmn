@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_ARCO"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Custodio Platform"
+                  exporterVersion="2.0">
+
+  <bpmn:collaboration id="Collaboration_ARCO">
+    <bpmn:participant id="Participant_ARCO" name="Gestión Derechos ARCO - Custodio Platform" processRef="Process_ARCO"/>
+    <bpmn:textAnnotation id="TextAnnotation_Leyenda">
+      <bpmn:text>Ley 21.719 - Art. 8, 9, 12, 12 bis, 13, 15</bpmn:text>
+    </bpmn:textAnnotation>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_ARCO" name="Gestión Derechos ARCO" isClosed="false" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Principal">
+      <bpmn:lane id="Lane_Titular" name="Titular">
+        <bpmn:flowNodeRef>StartEvent_Formulario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompletarFormulario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IngresarRepresentante</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompletarSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EsRepresentante</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>Task_DPOAsignaManual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarAcceso</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarRectificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarExcepciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarBaseLegal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarPortabilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SeleccionarPlantilla</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IngresarFundamento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RedactarFundamento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DecisionDPO</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Task_ValidarDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DevolverErrores</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CrearTicket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarHashInicial</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarAcuse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AutoAsignar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EvaluarSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarPlazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InvocarProrroga</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProcesarBloqueo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EstablecerSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotifSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RestablecerEstado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ResetearPlazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EstablecerProrroga</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotifProrroga</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EstablecerResuelto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerarExportacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarFavorable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EstablecerRechazado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarHashchain</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarHistorial</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ArchivarTicket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GuardarObservaciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotifRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DatosValidos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AsignacionExitosa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RequiereSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PlazoProximo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TipoSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PlazoSubsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ProrrogaDisponible</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RechazoFundado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Subsanacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Recordatorio72h</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Cerrado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Correo" name="Sistema de Correo">
+        <bpmn:flowNodeRef>Task_NotificarAcuse</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_Formulario" name="Solicitud recibida vía formulario público">
+      <bpmn:outgoing>Flow_Start_Formulario</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_CompletarFormulario" name="Completar formulario ARCO">
+      <bpmn:documentation>Formulario público en /solicitud_derecho. Campos: nombre, run, email, telefono, empresa, tipo_solicitud (6 opciones), descripcion, archivos_adjuntos (max 5, 5MB)</bpmn:documentation>
+      <bpmn:incoming>Flow_Start_Formulario</bpmn:incoming>
+      <bpmn:outgoing>Flow_Formulario_Validar</bpmn:outgoing>
+      <bpmn:lane>Lane_Titular</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_ValidarDatos" name="Validar datos Eingang">
+      <bpmn:documentation>Valida RUN (módulo 23), email (RFC 5322), archivos (tipo, tamaño)</bpmn:documentation>
+      <bpmn:incoming>Flow_Formulario_Validar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validar_Gateway</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>false</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_DatosValidos" name="¿Datos válidos?">
+      <bpmn:incoming>Flow_Validar_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_DatosNoValidos</bpmn:outgoing>
+      <bpmn:outgoing>Flow_DatosValidos</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_DevolverErrores" name="Devolver con errores">
+      <bpmn:documentation>Mensaje detallado de errores al usuario</bpmn:documentation>
+      <bpmn:incoming>Flow_DatosNoValidos</bpmn:incoming>
+      <bpmn:outgoing>Flow_Errores_End</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>false</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_Error" name="Solicitud con errores">
+      <bpmn:incoming>Flow_Errores_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_Start_Formulario" sourceRef="StartEvent_Formulario" targetRef="Task_CompletarFormulario"/>
+    <bpmn:sequenceFlow id="Flow_Formulario_Validar" sourceRef="Task_CompletarFormulario" targetRef="Task_ValidarDatos"/>
+    <bpmn:sequenceFlow id="Flow_Validar_Gateway" sourceRef="Task_ValidarDatos" targetRef="Gateway_DatosValidos"/>
+    <bpmn:sequenceFlow id="Flow_DatosNoValidos" name="No" sourceRef="Gateway_DatosValidos" targetRef="Task_DevolverErrores">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">datosValidos == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_DatosValidos" name="Sí" sourceRef="Gateway_DatosValidos" targetRef="Gateway_EsRepresentante"/>
+
+    <bpmn:exclusiveGateway id="Gateway_EsRepresentante" name="¿Es solicitud de REPRESENTANTE?">
+      <bpmn:incoming>Flow_DatosValidos</bpmn:incoming>
+      <bpmn:outgoing>Flow_SiRepresentante</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NoRepresentante</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_IngresarRepresentante" name="Ingresar datos representante">
+      <bpmn:documentation>Nombre, RUT representante, poder notarial</bpmn:documentation>
+      <bpmn:incoming>Flow_SiRepresentante</bpmn:incoming>
+      <bpmn:outgoing>Flow_Representante_CrearTicket</bpmn:outgoing>
+      <bpmn:lane>Lane_Titular</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_SiRepresentante" name="Sí" sourceRef="Gateway_EsRepresentante" targetRef="Task_IngresarRepresentante">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">esRepresentante == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NoRepresentante" name="No" sourceRef="Gateway_EsRepresentante" targetRef="Task_CrearTicket"/>
+
+    <bpmn:serviceTask id="Task_CrearTicket" name="Crear TktSolicitudDerecho (estado=ABIERTO)">
+      <bpmn:documentation>Genera tracking_token UUID único, rat_id</bpmn:documentation>
+      <bpmn:incoming>Flow_NoRepresentante</bpmn:incoming>
+      <bpmn:incoming>Flow_Representante_CrearTicket</bpmn:incoming>
+      <bpmn:outgoing>Flow_CrearTicket_Hash</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Representante_CrearTicket" sourceRef="Task_IngresarRepresentante" targetRef="Task_CrearTicket"/>
+
+    <bpmn:serviceTask id="Task_GenerarHashInicial" name="Generar hash inicial bitácora M1">
+      <bpmn:documentation>Hash SHA-256: tracking_token + timestamp + estado</bpmn:documentation>
+      <bpmn:incoming>Flow_CrearTicket_Hash</bpmn:incoming>
+      <bpmn:outgoing>Flow_Hash_Acuse</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_NotificarAcuse" name="Notificar acuse de recibo">
+      <bpmn:documentation>Incluye link /seguimiento/{tracking_token}, Template QW6-001</bpmn:documentation>
+      <bpmn:incoming>Flow_Hash_Acuse</bpmn:incoming>
+      <bpmn:outgoing>Flow_Acuse_Registrar</bpmn:outgoing>
+      <bpmn:lane>Lane_Correo</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RegistrarAcuse" name="Registrar acuse_enviado_at">
+      <bpmn:incoming>Flow_Acuse_Registrar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Registrar_Asignar</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_CrearTicket_Hash" sourceRef="Task_CrearTicket" targetRef="Task_GenerarHashInicial"/>
+    <bpmn:sequenceFlow id="Flow_Hash_Acuse" sourceRef="Task_GenerarHashInicial" targetRef="Task_NotificarAcuse"/>
+    <bpmn:sequenceFlow id="Flow_Acuse_Registrar" sourceRef="Task_NotificarAcuse" targetRef="Task_RegistrarAcuse"/>
+    <bpmn:sequenceFlow id="Flow_Registrar_Asignar" sourceRef="Task_RegistrarAcuse" targetRef="Task_AutoAsignar"/>
+
+    <bpmn:serviceTask id="Task_AutoAsignar" name="Auto-asignar por reglas QW9">
+      <bpmn:documentation>Evalúa TktReglaAsignacion: company=4, tipo=2, prioridad=1</bpmn:documentation>
+      <bpmn:incoming>Flow_Registrar_Asignar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Asignar_Gateway</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_AsignacionExitosa" name="¿Asignación automática exitosa?">
+      <bpmn:incoming>Flow_Asignar_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsignacionNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AsignacionSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_DPOAsignaManual" name="DPO asigna manualmente">
+      <bpmn:documentation>DPO Senior selecciona DPO disponible</bpmn:documentation>
+      <bpmn:incoming>Flow_AsignacionNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Manual_Evaluar</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_AsignacionNo" name="No" sourceRef="Gateway_AsignacionExitosa" targetRef="Task_DPOAsignaManual">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">asignacionExitosa == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AsignacionSi" name="Sí" sourceRef="Gateway_AsignacionExitosa" targetRef="Task_EvaluarSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_AsignacionNo_Manual" sourceRef="Task_DPOAsignaManual" targetRef="Task_EvaluarSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_Manual_Evaluar" sourceRef="Task_DPOAsignaManual" targetRef="Task_EvaluarSubsanacion"/>
+
+    <bpmn:serviceTask id="Task_EvaluarSubsanacion" name="Evaluar necesidad subsanación">
+      <bpmn:incoming>Flow_AsignacionSi</bpmn:incoming>
+      <bpmn:incoming>Flow_Manual_Evaluar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Evaluar_Gateway</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_RequiereSubsanacion" name="¿Requiere subsanación?">
+      <bpmn:incoming>Flow_Evaluar_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_SubsanacionSi</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SubsanacionNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_SubsanacionSi" name="Sí" sourceRef="Gateway_RequiereSubsanacion" targetRef="Task_EstablecerSubsanacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">requiereSubsanacion == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SubsanacionNo" name="No" sourceRef="Gateway_RequiereSubsanacion" targetRef="Task_VerificarPlazo"/>
+
+    <bpmn:serviceTask id="Task_EstablecerSubsanacion" name="Establecer estado=SUBSANACION">
+      <bpmn:incoming>Flow_SubsanacionSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_Subsanacion_Fecha</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_EnviarNotifSubsanacion" name="Enviar notificación subsanación">
+      <bpmn:documentation>Template QW6-002, incluye plazo 10 días</bpmn:documentation>
+      <bpmn:incoming>Flow_Subsanacion_Fecha</bpmn:incoming>
+      <bpmn:outgoing>Flow_Subsanacion_Timer</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:intermediateCatchEvent id="Timer_Subsanacion" name="Plazo subsanación (10 días hábiles)">
+      <bpmn:incoming>Flow_Subsanacion_Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_TimerSubsanacion_Subsanar</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT240H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_CompletarSubsanacion" name="Titular completa documentación">
+      <bpmn:documentation>Formulario en /seguimiento/{tracking_token}</bpmn:documentation>
+      <bpmn:incoming>Flow_TimerSubsanacion_Subsanar</bpmn:incoming>
+      <bpmn:incoming>Flow_Subsanar_Terminado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Subsanacion_Completada</bpmn:outgoing>
+      <bpmn:lane>Lane_Titular</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_TimerSubsanacion_Subsanar" sourceRef="Timer_Subsanacion" targetRef="Task_CompletarSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_Subsanar_Terminado" sourceRef="Timer_Subsanacion" targetRef="Gateway_PlazoSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_Subsanacion_Completada" sourceRef="Task_CompletarSubsanacion" targetRef="Gateway_PlazoSubsanacion"/>
+
+    <bpmn:exclusiveGateway id="Gateway_PlazoSubsanacion" name="¿Plazo subsanación vencido?">
+      <bpmn:incoming>Flow_Subsanar_Terminado</bpmn:incoming>
+      <bpmn:incoming>Flow_Subsanacion_Completada</bpmn:incoming>
+      <bpmn:outgoing>Flow_Vencido_Rechazar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NoVencido</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Subsanacion_Fecha" sourceRef="Task_EstablecerSubsanacion" targetRef="Task_EnviarNotifSubsanacion"/>
+    <bpmn:sequenceFlow id="Flow_Subsanacion_Timer" sourceRef="Task_EnviarNotifSubsanacion" targetRef="Timer_Subsanacion"/>
+    <bpmn:sequenceFlow id="Flow_Subsanar_Terminado" sourceRef="Timer_Subsanacion" targetRef="Gateway_PlazoSubsanacion"/>
+
+    <bpmn:sequenceFlow id="Flow_Vencido_Rechazar" name="Sí (vencido)" sourceRef="Gateway_PlazoSubsanacion" targetRef="Gateway_RechazoFundado">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">plazoVencido == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NoVencido" name="No" sourceRef="Gateway_PlazoSubsanacion" targetRef="Task_RestablecerEstado"/>
+
+    <bpmn:serviceTask id="Task_RestablecerEstado" name="Restablecer estado=EN_PROCESO">
+      <bpmn:incoming>Flow_NoVencido</bpmn:incoming>
+      <bpmn:outgoing>Flow_Restablecer_Plazo</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ResetearPlazo" name="Resetear plazo (+10 días hábiles)">
+      <bpmn:incoming>Flow_Restablecer_Plazo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Plazo_Tipo</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Restablecer_Plazo" sourceRef="Task_RestablecerEstado" targetRef="Task_ResetearPlazo"/>
+    <bpmn:sequenceFlow id="Flow_Plazo_Tipo" sourceRef="Task_ResetearPlazo" targetRef="Task_VerificarPlazo"/>
+
+    <bpmn:serviceTask id="Task_VerificarPlazo" name="Verificar plazo">
+      <bpmn:incoming>Flow_SubsanacionNo</bpmn:incoming>
+      <bpmn:incoming>Flow_Plazo_Tipo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verificar_Gateway</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_PlazoProximo" name="¿Plazo próximo a vencer (>8 días)?">
+      <bpmn:incoming>Flow_Verificar_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_PlazoNoProximo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PlazoProximo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Verificar_Gateway" sourceRef="Task_VerificarPlazo" targetRef="Gateway_PlazoProximo"/>
+    <bpmn:sequenceFlow id="Flow_PlazoNoProximo" name="No" sourceRef="Gateway_PlazoProximo" targetRef="Gateway_TipoSolicitud"/>
+    <bpmn:sequenceFlow id="Flow_PlazoProximo" name="Sí" sourceRef="Gateway_PlazoProximo" targetRef="Gateway_ProrrogaDisponible"/>
+
+    <bpmn:intermediateCatchEvent id="Timer_Recordatorio72h" name="Recordatorio 72h antes vencimiento">
+      <bpmn:incoming>Flow_PlazoNoProximo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Recordatorio_Tipo</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT72H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_Recordatorio_Tipo" sourceRef="Timer_Recordatorio72h" targetRef="Gateway_TipoSolicitud"/>
+
+    <bpmn:exclusiveGateway id="Gateway_ProrrogaDisponible" name="¿Prorroga disponible? (prorroga_fecha IS NULL)">
+      <bpmn:incoming>Flow_PlazoProximo</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProrrogaSi</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ProrrogaNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_InvocarProrroga" name="Invocar Art. 12 bis - Prórroga">
+      <bpmn:incoming>Flow_ProrrogaSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_Prorroga_Establecer</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_ProrrogaSi" name="Sí" sourceRef="Gateway_ProrrogaDisponible" targetRef="Task_InvocarProrroga">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">prorrogaDisponible == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ProrrogaNo" name="No" sourceRef="Gateway_ProrrogaDisponible" targetRef="Gateway_TipoSolicitud"/>
+
+    <bpmn:serviceTask id="Task_EstablecerProrroga" name="Establecer estado=PRORROGA">
+      <bpmn:incoming>Flow_Prorroga_Establecer</bpmn:incoming>
+      <bpmn:outgoing>Flow_Establecer_Notif</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_EnviarNotifProrroga" name="Enviar notificación prorroga">
+      <bpmn:documentation>Template QW6-003</bpmn:documentation>
+      <bpmn:incoming>Flow_Establecer_Notif</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notif_Tipo</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Prorroga_Establecer" sourceRef="Task_InvocarProrroga" targetRef="Task_EstablecerProrroga"/>
+    <bpmn:sequenceFlow id="Flow_Establecer_Notif" sourceRef="Task_EstablecerProrroga" targetRef="Task_EnviarNotifProrroga"/>
+    <bpmn:sequenceFlow id="Flow_Notif_Tipo" sourceRef="Task_EnviarNotifProrroga" targetRef="Gateway_TipoSolicitud"/>
+
+    <bpmn:exclusiveGateway id="Gateway_TipoSolicitud" name="Evaluar tipo de solicitud">
+      <bpmn:incoming>Flow_PlazoNoProximo</bpmn:incoming>
+      <bpmn:incoming>Flow_Recordatorio_Tipo</bpmn:incoming>
+      <bpmn:incoming>Flow_ProrrogaNo</bpmn:incoming>
+      <bpmn:incoming>Flow_Notif_Tipo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Tipo_Acceso</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Tipo_Rectificacion</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Tipo_Cancelacion</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Tipo_Oposicion</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Tipo_Bloqueo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Tipo_Portabilidad</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Tipo_Acceso" name="ACCESO" sourceRef="Gateway_TipoSolicitud" targetRef="Task_RevisarAcceso">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'ACCESO'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Tipo_Rectificacion" name="RECTIFICACION" sourceRef="Gateway_TipoSolicitud" targetRef="Task_RevisarRectificacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'RECTIFICACION'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Tipo_Cancelacion" name="CANCELACION" sourceRef="Gateway_TipoSolicitud" targetRef="Task_EvaluarExcepciones">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'CANCELACION'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Tipo_Oposicion" name="OPOSICION" sourceRef="Gateway_TipoSolicitud" targetRef="Task_EvaluarBaseLegal">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'OPOSICION'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Tipo_Bloqueo" name="BLOQUEO" sourceRef="Gateway_TipoSolicitud" targetRef="Task_ProcesarBloqueo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'BLOQUEO'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Tipo_Portabilidad" name="PORTABILIDAD" sourceRef="Gateway_TipoSolicitud" targetRef="Task_IdentificarPortabilidad">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">tipo == 'PORTABILIDAD'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_RevisarAcceso" name="Revisar solicitud ACCESO">
+      <bpmn:incoming>Flow_Tipo_Acceso</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revisar_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RevisarRectificacion" name="Revisar solicitud RECTIFICACIÓN">
+      <bpmn:incoming>Flow_Tipo_Rectificacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revisar_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EvaluarExcepciones" name="Evaluar excepciones Art. 8 c.ii">
+      <bpmn:incoming>Flow_Tipo_Cancelacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revisar_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EvaluarBaseLegal" name="Evaluar base legal tratamiento">
+      <bpmn:incoming>Flow_Tipo_Oposicion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revisar_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_ProcesarBloqueo" name="Procesar BLOQUEO Art. 8 ter">
+      <bpmn:incoming>Flow_Tipo_Bloqueo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Bloqueo_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_IdentificarPortabilidad" name="Identificar datos para exportación">
+      <bpmn:incoming>Flow_Tipo_Portabilidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revisar_Decision</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_Revisar_Decision" sourceRef="Task_RevisarAcceso" targetRef="Gateway_DecisionDPO"/>
+    <bpmn:sequenceFlow id="Flow_Revisar_Decision_Rect" sourceRef="Task_RevisarRectificacion" targetRef="Gateway_DecisionDPO"/>
+    <bpmn:sequenceFlow id="Flow_Revisar_Decision_Exc" sourceRef="Task_EvaluarExcepciones" targetRef="Gateway_DecisionDPO"/>
+    <bpmn:sequenceFlow id="Flow_Revisar_Decision_Base" sourceRef="Task_EvaluarBaseLegal" targetRef="Gateway_DecisionDPO"/>
+    <bpmn:sequenceFlow id="Flow_Bloqueo_Decision" sourceRef="Task_ProcesarBloqueo" targetRef="Gateway_DecisionDPO"/>
+    <bpmn:sequenceFlow id="Flow_Revisar_Decision_Port" sourceRef="Task_IdentificarPortabilidad" targetRef="Gateway_DecisionDPO"/>
+
+    <bpmn:exclusiveGateway id="Gateway_DecisionDPO" name="Decisión DPO">
+      <bpmn:incoming>Flow_Revisar_Decision</bpmn:incoming>
+      <bpmn:incoming>Flow_Revisar_Decision_Rect</bpmn:incoming>
+      <bpmn:incoming>Flow_Revisar_Decision_Exc</bpmn:incoming>
+      <bpmn:incoming>Flow_Revisar_Decision_Base</bpmn:incoming>
+      <bpmn:incoming>Flow_Bloqueo_Decision</bpmn:incoming>
+      <bpmn:incoming>Flow_Revisar_Decision_Port</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decision_Favorable</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decision_Rechazado</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Decision_Favorable" name="Favorable" sourceRef="Gateway_DecisionDPO" targetRef="Task_SeleccionarPlantilla">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">decision == 'FAVORABLE'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Decision_Rechazado" name="Rechazado" sourceRef="Gateway_DecisionDPO" targetRef="Task_IngresarFundamento">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">decision == 'RECHAZADO'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Task_SeleccionarPlantilla" name="DPO selecciona plantilla respuesta QW6">
+      <bpmn:incoming>Flow_Decision_Favorable</bpmn:incoming>
+      <bpmn:outgoing>Flow_Plantilla_Resuelto</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_EstablecerResuelto" name="Establecer estado=RESUELTO">
+      <bpmn:incoming>Flow_Plantilla_Resuelto</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resuelto_Exportar</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_GenerarExportacion" name="Generar archivos exportación (PDF/CSV/Excel)">
+      <bpmn:incoming>Flow_Resuelto_Exportar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Exportar_Notificar</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_NotificarFavorable" name="Notificar resolución favorable">
+      <bpmn:documentation>Template QW6-004, incluye link descarga 30 días</bpmn:documentation>
+      <bpmn:incoming>Flow_Exportar_Notificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Favorable_Hash</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Plantilla_Resuelto" sourceRef="Task_SeleccionarPlantilla" targetRef="Task_EstablecerResuelto"/>
+    <bpmn:sequenceFlow id="Flow_Resuelto_Exportar" sourceRef="Task_EstablecerResuelto" targetRef="Task_GenerarExportacion"/>
+    <bpmn:sequenceFlow id="Flow_Exportar_Notificar" sourceRef="Task_GenerarExportacion" targetRef="Task_NotificarFavorable"/>
+    <bpmn:sequenceFlow id="Flow_Favorable_Hash" sourceRef="Task_NotificarFavorable" targetRef="Task_ActualizarHashchain"/>
+
+    <bpmn:userTask id="Task_IngresarFundamento" name="DPO ingresa fundamento legal (Art. 15)">
+      <bpmn:incoming>Flow_Decision_Rechazado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fundamento_Rechazado</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_EstablecerRechazado" name="Establecer estado=RECHAZADO">
+      <bpmn:incoming>Flow_Fundamento_Rechazado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rechazado_Notificar</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_NotificarRechazo" name="Notificar rechazo con fundamento">
+      <bpmn:documentation>Template QW6-005</bpmn:documentation>
+      <bpmn:incoming>Flow_Rechazado_Notificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rechazo_Hash</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Fundamento_Rechazado" sourceRef="Task_IngresarFundamento" targetRef="Task_EstablecerRechazado"/>
+    <bpmn:sequenceFlow id="Flow_Rechazado_Notificar" sourceRef="Task_EstablecerRechazado" targetRef="Task_NotificarRechazo"/>
+    <bpmn:sequenceFlow id="Flow_Rechazo_Hash" sourceRef="Task_NotificarRechazo" targetRef="Task_ActualizarHashchain"/>
+
+    <bpmn:serviceTask id="Task_ActualizarHashchain" name="Actualizar hashchain bitácora M1">
+      <bpmn:incoming>Flow_Favorable_Hash</bpmn:incoming>
+      <bpmn:incoming>Flow_Rechazo_Hash</bpmn:incoming>
+      <bpmn:outgoing>Flow_Hash_Historial</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Hash_Historial" sourceRef="Task_ActualizarHashchain" targetRef="Task_ActualizarHistorial"/>
+
+    <bpmn:serviceTask id="Task_ActualizarHistorial" name="Actualizar historial de cambios (hashchain M1)">
+      <bpmn:incoming>Flow_Hash_Historial</bpmn:incoming>
+      <bpmn:outgoing>Flow_Historial_Archivar</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ArchivarTicket" name="Archivar ticket (estado terminal)">
+      <bpmn:incoming>Flow_Historial_Archivar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Archivar_End</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Historial_Archivar" sourceRef="Task_ActualizarHistorial" targetRef="Task_ArchivarTicket"/>
+    <bpmn:sequenceFlow id="Flow_Archivar_End" sourceRef="Task_ArchivarTicket" targetRef="EndEvent_Cerrado"/>
+
+    <bpmn:endEvent id="EndEvent_Cerrado" name="Solicitud ARCO cerrada">
+      <bpmn:incoming>Flow_Archivar_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:exclusiveGateway id="Gateway_RechazoFundado" name="¿Rechazo fundado?">
+      <bpmn:incoming>Flow_Vencido_Rechazar</bpmn:incoming>
+      <bpmn:outgoing>Flow_RechazoNoFundado</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RechazoSiFundado</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_RechazoNoFundado" name="No" sourceRef="Gateway_RechazoFundado" targetRef="Task_RevisarAcceso">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">rechazoFundado == false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_RechazoSiFundado" name="Sí" sourceRef="Gateway_RechazoFundado" targetRef="Task_RedactarFundamento"/>
+
+    <bpmn:userTask id="Task_RedactarFundamento" name="DPO redacta fundamento legal">
+      <bpmn:incoming>Flow_RechazoSiFundado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fundamento_Guardar</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_GuardarObservaciones" name="Guardar en campo observaciones">
+      <bpmn:incoming>Flow_Fundamento_Guardar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Guardar_NotifRechazo</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_EnviarNotifRechazo" name="Enviar notificación rejection">
+      <bpmn:documentation>Template QW6-006</bpmn:documentation>
+      <bpmn:incoming>Flow_Guardar_NotifRechazo</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifRechazo_Hash</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+      <camunda:async>true</camunda:async>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Fundamento_Guardar" sourceRef="Task_RedactarFundamento" targetRef="Task_GuardarObservaciones"/>
+    <bpmn:sequenceFlow id="Flow_Guardar_NotifRechazo" sourceRef="Task_GuardarObservaciones" targetRef="Task_EnviarNotifRechazo"/>
+    <bpmn:sequenceFlow id="Flow_NotifRechazo_Hash" sourceRef="Task_EnviarNotifRechazo" targetRef="Task_ActualizarHashchain"/>
+
+    <bpmn:textAnnotation id="TextAnnotation_DataObjects">
+      <bpmn:text>Data Objects: FormularioSolicitud, TrackingToken, TicketARCO, PlantillaRespuesta, ExportacionPDF, Hashchain</bpmn:text>
+    </bpmn:textAnnotation>
+
+    <bpmn:association id="Association_Formulario" sourceRef="Task_CompletarFormulario" targetRef="DataObject_Formulario"/>
+    <bpmn:association id="Association_Ticket" sourceRef="Task_CrearTicket" targetRef="DataObject_Ticket"/>
+
+    <bpmn:dataObject id="DataObject_Formulario" name="FormularioSolicitud"/>
+    <bpmn:dataObject id="DataObject_Tracking" name="TrackingToken"/>
+    <bpmn:dataObject id="DataObject_Ticket" name="TicketARCO"/>
+    <bpmn:dataObject id="DataObject_Plantilla" name="PlantillaRespuesta"/>
+    <bpmn:dataObject id="DataObject_Export" name="ExportacionPDF"/>
+    <bpmn:dataObject id="DataObject_Hashchain" name="Hashchain"/>
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ARCO">
+    <bpmndi:BPMNPlane id="BPMNPlane_ARCO" bpmnElement="Process_ARCO">
+      <bpmndi:BPMNShape id="StartEvent_Formulario_di" elementRef="StartEvent_Formulario">
+        <dc:Bounds x="100" y="200" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CompletarFormulario_di" elementRef="Task_CompletarFormulario">
+        <dc:Bounds x="180" y="180" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidarDatos_di" elementRef="Task_ValidarDatos">
+        <dc:Bounds x="340" y="180" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DatosValidos_di" elementRef="Gateway_DatosValidos">
+        <dc:Bounds x="495" y="195" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DevolverErrores_di" elementRef="Task_DevolverErrores">
+        <dc:Bounds x="590" y="180" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Error_di" elementRef="EndEvent_Error">
+        <dc:Bounds x="754" y="202" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EsRepresentante_di" elementRef="Gateway_EsRepresentante">
+        <dc:Bounds x="610" y="310" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IngresarRepresentante_di" elementRef="Task_IngresarRepresentante">
+        <dc:Bounds x="700" y="260" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CrearTicket_di" elementRef="Task_CrearTicket">
+        <dc:Bounds x="590" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GenerarHashInicial_di" elementRef="Task_GenerarHashInicial">
+        <dc:Bounds x="750" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarAcuse_di" elementRef="Task_NotificarAcuse">
+        <dc:Bounds x="910" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarAcuse_di" elementRef="Task_RegistrarAcuse">
+        <dc:Bounds x="1070" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AutoAsignar_di" elementRef="Task_AutoAsignar">
+        <dc:Bounds x="1230" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AsignacionExitosa_di" elementRef="Gateway_AsignacionExitosa">
+        <dc:Bounds x="1385" y="410" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DPOAsignaManual_di" elementRef="Task_DPOAsignaManual">
+        <dc:Bounds x="1230" y="510" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EvaluarSubsanacion_di" elementRef="Task_EvaluarSubsanacion">
+        <dc:Bounds x="1475" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RequiereSubsanacion_di" elementRef="Gateway_RequiereSubsanacion">
+        <dc:Bounds x="1630" y="410" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EstablecerSubsanacion_di" elementRef="Task_EstablecerSubsanacion">
+        <dc:Bounds x="1715" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarNotifSubsanacion_di" elementRef="Task_EnviarNotifSubsanacion">
+        <dc:Bounds x="1875" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_Subsanacion_di" elementRef="Timer_Subsanacion">
+        <dc:Bounds x="2035" y="407" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CompletarSubsanacion_di" elementRef="Task_CompletarSubsanacion">
+        <dc:Bounds x="2100" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PlazoSubsanacion_di" elementRef="Gateway_PlazoSubsanacion">
+        <dc:Bounds x="2265" y="410" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RestablecerEstado_di" elementRef="Task_RestablecerEstado">
+        <dc:Bounds x="2350" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ResetearPlazo_di" elementRef="Task_ResetearPlazo">
+        <dc:Bounds x="2510" y="395" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerificarPlazo_di" elementRef="Task_VerificarPlazo">
+        <dc:Bounds x="1475" y="520" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PlazoProximo_di" elementRef="Gateway_PlazoProximo">
+        <dc:Bounds x="1630" y="535" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InvocarProrroga_di" elementRef="Task_InvocarProrroga">
+        <dc:Bounds x="1715" y="520" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ProrrogaDisponible_di" elementRef="Gateway_ProrrogaDisponible">
+        <dc:Bounds x="1870" y="535" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EstablecerProrroga_di" elementRef="Task_EstablecerProrroga">
+        <dc:Bounds x="1955" y="520" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarNotifProrroga_di" elementRef="Task_EnviarNotifProrroga">
+        <dc:Bounds x="2115" y="520" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_Recordatorio72h_di" elementRef="Timer_Recordatorio72h">
+        <dc:Bounds x="1835" y="647" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TipoSolicitud_di" elementRef="Gateway_TipoSolicitud">
+        <dc:Bounds x="1965" y="647" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarAcceso_di" elementRef="Task_RevisarAcceso">
+        <dc:Bounds x="2050" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarRectificacion_di" elementRef="Task_RevisarRectificacion">
+        <dc:Bounds x="2050" y="680" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EvaluarExcepciones_di" elementRef="Task_EvaluarExcepciones">
+        <dc:Bounds x="2050" y="790" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EvaluarBaseLegal_di" elementRef="Task_EvaluarBaseLegal">
+        <dc:Bounds x="2170" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProcesarBloqueo_di" elementRef="Task_ProcesarBloqueo">
+        <dc:Bounds x="2170" y="680" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentificarPortabilidad_di" elementRef="Task_IdentificarPortabilidad">
+        <dc:Bounds x="2170" y="790" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DecisionDPO_di" elementRef="Gateway_DecisionDPO">
+        <dc:Bounds x="2330" y="647" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SeleccionarPlantilla_di" elementRef="Task_SeleccionarPlantilla">
+        <dc:Bounds x="2415" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EstablecerResuelto_di" elementRef="Task_EstablecerResuelto">
+        <dc:Bounds x="2575" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GenerarExportacion_di" elementRef="Task_GenerarExportacion">
+        <dc:Bounds x="2735" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarFavorable_di" elementRef="Task_NotificarFavorable">
+        <dc:Bounds x="2895" y="570" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IngresarFundamento_di" elementRef="Task_IngresarFundamento">
+        <dc:Bounds x="2415" y="730" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EstablecerRechazado_di" elementRef="Task_EstablecerRechazado">
+        <dc:Bounds x="2575" y="730" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarRechazo_di" elementRef="Task_NotificarRechazo">
+        <dc:Bounds x="2735" y="730" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ActualizarHashchain_di" elementRef="Task_ActualizarHashchain">
+        <dc:Bounds x="2895" y="647" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ActualizarHistorial_di" elementRef="Task_ActualizarHistorial">
+        <dc:Bounds x="3055" y="647" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ArchivarTicket_di" elementRef="Task_ArchivarTicket">
+        <dc:Bounds x="3215" y="647" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Cerrado_di" elementRef="EndEvent_Cerrado">
+        <dc:Bounds x="3375" y="667" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RechazoFundado_di" elementRef="Gateway_RechazoFundado">
+        <dc:Bounds x="2350" y="895" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RedactarFundamento_di" elementRef="Task_RedactarFundamento">
+        <dc:Bounds x="2435" y="980" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GuardarObservaciones_di" elementRef="Task_GuardarObservaciones">
+        <dc:Bounds x="2595" y="980" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarNotifRechazo_di" elementRef="Task_EnviarNotifRechazo">
+        <dc:Bounds x="2755" y="980" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Lane_Titular_di" isHorizontal="true">
+        <dc:Bounds x="55" y="120" width="3400" height="120"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_DPO_di" isHorizontal="true">
+        <dc:Bounds x="55" y="240" width="3400" height="120"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sistema_di" isHorizontal="true">
+        <dc:Bounds x="55" y="360" width="3400" height="400"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Correo_di" isHorizontal="true">
+        <dc:Bounds x="55" y="760" width="3400" height="80"/>
+      </bpmndi:BPMNShape>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

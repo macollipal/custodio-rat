@@ -20,6 +20,7 @@ class PoliticaTransparencia(Base):
     fecha_generacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     hash_sha256: Mapped[str] = mapped_column(String(64), nullable=True)
 
+    overrides_json: Mapped[str] = mapped_column(Text, nullable=True)
     generado_por: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

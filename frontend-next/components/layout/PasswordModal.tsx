@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 interface Props {
   onClose: () => void;
 }
@@ -11,10 +13,7 @@ interface Props {
 export default function PasswordModal({ onClose }: Props) {
   const [form, setForm] = useState({ current: '', next: '', confirm: '' });
   const [saving, setSaving] = useState(false);
-  const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-900 placeholder-gray-400';
-  const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
-
-  function set(k: keyof typeof form, v: string) {
+      function set(k: keyof typeof form, v: string) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
@@ -51,7 +50,7 @@ export default function PasswordModal({ onClose }: Props) {
             { k: 'confirm' as const, label: 'Confirmar nueva',   placeholder: '••••••••' },
           ]).map(({ k, label, placeholder }) => (
             <div key={k}>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>{label}</label>
+              <label className={labelCls} style={labelStyle}>{label}</label>
               <input
                 type="password"
                 value={form[k]}
@@ -86,3 +85,4 @@ export default function PasswordModal({ onClose }: Props) {
     </div>
   );
 }
+

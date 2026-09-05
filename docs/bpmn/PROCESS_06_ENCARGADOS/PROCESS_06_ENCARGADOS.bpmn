@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_Process06"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Custodio Platform"
+                  exporterVersion="1.0">
+
+  <bpmn:collaboration id="Collaboration_Encargados">
+    <bpmn:participant id="Participant_Encargados" name="Gestión Encargados - Custodio Platform" processRef="Process_Encargados"/>
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>Start_NuevaRelacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SolicitarAlta_Encargado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Evaluar_Idoneidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Idoneo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_InfoAdicional</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Elaborar_Proyecto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Revisar_Legal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Remitir_Contrato</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Acepta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Negociar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Firmar_Contrato</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Revisar_Cumplimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_Certificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cumple</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Evaluar_Desempeno</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Renovar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Renegociar_Terminos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Firmar_Renovacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Documentar_Terminacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Verificar_EstadoDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DatosOrden</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_Regularizacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_CertificadoEliminacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Evaluar_Subcontratista</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Subcontratacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notificar_Rechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Actualizar_ContratoSub</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Subcontratacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Terminacion</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AreaLegal" name="Área Legal">
+        <bpmn:flowNodeRef>Revisar_Legal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Renegociar_Terminos</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_EncargadoExterno" name="Encargado Externo">
+        <bpmn:flowNodeRef>Firmar_Contrato</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Subcontratacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_Certificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Firmar_Renovacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar_CertificadoEliminacion</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Verificar_Unicidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Registrar_Contrato</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Verificar_MedidasSeguridad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Vincular_RAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Programar_Recordatorio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Renovacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notificar_Vencimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Actualizar_FechasVigencia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Actualizar_FechaRevision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Documentar_Bitacora</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Recibir_CertificacionEliminacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Actualizar_RAT_Terminacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Archivar_Documentacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notificar_Terminacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Registrar_Subencargado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Revision24m</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Activo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Terminado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_SistemaCorreo" name="Sistema de Correo">
+        <bpmn:flowNodeRef>Notificar_Vencimiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notificar_Terminacion</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_Encargados" name="Gestión Encargados de Tratamiento" isExecutable="false">
+
+    <bpmn:startEvent id="Start_NuevaRelacion" name="Nueva relación">
+      <bpmn:outgoing>Flow_SolicitarAlta</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="SolicitarAlta_Encargado" name="Solicitar alta encargado">
+      <bpmn:documentation>Campos: nombre_encargado, rut/nit, pais, actividades_tratamiento, categorias_datos, medidas_seguridad_planificadas</bpmn:documentation>
+      <bpmn:incoming>Flow_SolicitarAlta</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerificarUnicidad</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Verificar_Unicidad" name="Verificar unicidad encargado">
+      <bpmn:incoming>Flow_VerificarUnicidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_EvaluarIdoneidad</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Evaluar_Idoneidad" name="Evaluar idoneidad del encargado">
+      <bpmn:documentation>Criterios: certificaciones (ISO 27001, ISO 27701), historial, referencias, ubicación_geográfica</bpmn:documentation>
+      <bpmn:incoming>Flow_EvaluarIdoneidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewayIdoneo</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Idoneo" name="¿Encargado idóneo?">
+      <bpmn:incoming>Flow_GatewayIdoneo</bpmn:incoming>
+      <bpmn:outgoing>Flow_NoIdoneo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SiIdoneo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Solicitar_InfoAdicional" name="Solicitar información adicional">
+      <bpmn:incoming>Flow_NoIdoneo</bpmn:incoming>
+      <bpmn:outgoing>Flow_InfoAdicional</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_NoIdoneo" sourceRef="Gateway_Idoneo" targetRef="Solicitar_InfoAdicional">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_InfoAdicional" sourceRef="Solicitar_InfoAdicional" targetRef="Evaluar_Idoneidad"/>
+
+    <bpmn:sequenceFlow id="Flow_SolicitarAlta" sourceRef="Start_NuevaRelacion" targetRef="SolicitarAlta_Encargado"/>
+    <bpmn:sequenceFlow id="Flow_VerificarUnicidad" sourceRef="SolicitarAlta_Encargado" targetRef="Verificar_Unicidad"/>
+    <bpmn:sequenceFlow id="Flow_EvaluarIdoneidad" sourceRef="Verificar_Unicidad" targetRef="Evaluar_Idoneidad"/>
+    <bpmn:sequenceFlow id="Flow_GatewayIdoneo" sourceRef="Evaluar_Idoneidad" targetRef="Gateway_Idoneo"/>
+
+    <bpmn:sequenceFlow id="Flow_SiIdoneo" sourceRef="Gateway_Idoneo" targetRef="Elaborar_Proyecto">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Elaborar_Proyecto" name="Elaborar proyecto de encargo">
+      <bpmn:documentation>Cláusulas mínimas Art. 21.3: instrucciones, confidencialidad, medidas_seguridad, subencargados, asistencia_derechos, devolucion_eliminacion, derechos_auditoria</bpmn:documentation>
+      <bpmn:incoming>Flow_SiIdoneo</bpmn:incoming>
+      <bpmn:outgoing>Flow_RevisarLegal</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Revisar_Legal" name="Revisar proyecto con área legal">
+      <bpmn:incoming>Flow_RevisarLegal</bpmn:incoming>
+      <bpmn:outgoing>Flow_RemitirContrato</bpmn:outgoing>
+      <bpmn:lane>Lane_AreaLegal</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Remitir_Contrato" name="Remitir contrato a encargado">
+      <bpmn:documentation>Medio: email o plataforma segura</bpmn:documentation>
+      <bpmn:incoming>Flow_RemitirContrato</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewayAcepta</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Acepta" name="¿Encargado acepta condiciones?">
+      <bpmn:incoming>Flow_GatewayAcepta</bpmn:incoming>
+      <bpmn:outgoing>Flow_NoAcepta</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SiAcepta</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Negociar" name="Negociar términos">
+      <bpmn:incoming>Flow_NoAcepta</bpmn:incoming>
+      <bpmn:outgoing>Flow_Negociacion</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_NoAcepta" sourceRef="Gateway_Acepta" targetRef="Negociar">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_Negociacion" sourceRef="Negociar" targetRef="Remitir_Contrato"/>
+
+    <bpmn:sequenceFlow id="Flow_RevisarLegal" sourceRef="Elaborar_Proyecto" targetRef="Revisar_Legal"/>
+    <bpmn:sequenceFlow id="Flow_RemitirContrato" sourceRef="Revisar_Legal" targetRef="Remitir_Contrato"/>
+    <bpmn:sequenceFlow id="Flow_GatewayAcepta" sourceRef="Remitir_Contrato" targetRef="Gateway_Acepta"/>
+
+    <bpmn:sequenceFlow id="Flow_SiAcepta" sourceRef="Gateway_Acepta" targetRef="Firmar_Contrato">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Firmar_Contrato" name="Firmar contrato">
+      <bpmn:documentation>Método: Firma digital</bpmn:documentation>
+      <bpmn:incoming>Flow_SiAcepta</bpmn:incoming>
+      <bpmn:outgoing>Flow_RegistrarContrato</bpmn:outgoing>
+      <bpmn:lane>Lane_EncargadoExterno</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Registrar_Contrato" name="Registrar contrato">
+      <bpmn:documentation>Estado: VIGENTE, campos: fecha_inicio, fecha_vencimiento</bpmn:documentation>
+      <bpmn:incoming>Flow_RegistrarContrato</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerificarMedidas</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Verificar_MedidasSeguridad" name="Verificar medidas de seguridad">
+      <bpmn:documentation>Checklist: encriptación, control_acceso, backup, incident_management</bpmn:documentation>
+      <bpmn:incoming>Flow_VerificarMedidas</bpmn:incoming>
+      <bpmn:outgoing>Flow_VincularRAT</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Vincular_RAT" name="Vincular a RAT correspondientes">
+      <bpmn:documentation>Acción: Actualizar RAT.encargado_id para actividades relevantes</bpmn:documentation>
+      <bpmn:incoming>Flow_VincularRAT</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProgramarRecordatorio</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Programar_Recordatorio" name="Programar recordatorio renovación">
+      <bpmn:documentation>Timer: 30 días antes del vencimiento</bpmn:documentation>
+      <bpmn:incoming>Flow_ProgramarRecordatorio</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndActivo</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_RegistrarContrato" sourceRef="Firmar_Contrato" targetRef="Registrar_Contrato"/>
+    <bpmn:sequenceFlow id="Flow_VerificarMedidas" sourceRef="Registrar_Contrato" targetRef="Verificar_MedidasSeguridad"/>
+    <bpmn:sequenceFlow id="Flow_VincularRAT" sourceRef="Verificar_MedidasSeguridad" targetRef="Vincular_RAT"/>
+    <bpmn:sequenceFlow id="Flow_ProgramarRecordatorio" sourceRef="Vincular_RAT" targetRef="Programar_Recordatorio"/>
+
+    <bpmn:endEvent id="End_Activo" name="Encargado activo">
+      <bpmn:incoming>Flow_EndActivo</bpmn:incoming>
+      <bpmn:incoming>Flow_ActualizarFechas</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_EndActivo" sourceRef="Programar_Recordatorio" targetRef="End_Activo"/>
+
+    <bpmn:intermediateCatchEvent id="Timer_Renovacion" name="30 días antes vencimiento">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT720H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+      <bpmn:outgoing>Flow_TimerRenovacion</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:serviceTask id="Notificar_Vencimiento" name="Notificar proximidad vencimiento">
+      <bpmn:documentation>Destinatarios: DPO, Encargado</bpmn:documentation>
+      <bpmn:incoming>Flow_TimerRenovacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_EvaluarDesempeno</bpmn:outgoing>
+      <bpmn:lane>Lane_SistemaCorreo</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_TimerRenovacion" sourceRef="Timer_Renovacion" targetRef="Notificar_Vencimiento"/>
+
+    <bpmn:userTask id="Evaluar_Desempeno" name="Evaluar desempeño del encargado">
+      <bpmn:documentation>Criterios: incidentes, resultados_auditoría, tiempo_respuesta, cumplimiento</bpmn:documentation>
+      <bpmn:incoming>Flow_EvaluarDesempeno</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewayRenovar</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_EvaluarDesempeno" sourceRef="Notificar_Vencimiento" targetRef="Evaluar_Desempeno"/>
+
+    <bpmn:exclusiveGateway id="Gateway_Renovar" name="¿Renovar contrato?">
+      <bpmn:incoming>Flow_GatewayRenovar</bpmn:incoming>
+      <bpmn:outgoing>Flow_NoRenovar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SiRenovar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_GatewayRenovar" sourceRef="Evaluar_Desempeno" targetRef="Gateway_Renovar"/>
+
+    <bpmn:sequenceFlow id="Flow_NoRenovar" sourceRef="Gateway_Renovar" targetRef="Documentar_Terminacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Renegociar_Terminos" name="Renegociar términos si necesario">
+      <bpmn:incoming>Flow_SiRenovar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Renegociar</bpmn:outgoing>
+      <bpmn:lane>Lane_AreaLegal</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_SiRenovar" sourceRef="Gateway_Renovar" targetRef="Renegociar_Terminos">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Firmar_Renovacion" name="Firmar renovación">
+      <bpmn:incoming>Flow_Renegociar</bpmn:incoming>
+      <bpmn:outgoing>Flow_ActualizarFechas</bpmn:outgoing>
+      <bpmn:lane>Lane_EncargadoExterno</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_Renegociar" sourceRef="Renegociar_Terminos" targetRef="Firmar_Renovacion"/>
+
+    <bpmn:serviceTask id="Actualizar_FechasVigencia" name="Actualizar fechas vigencia">
+      <bpmn:incoming>Flow_ActualizarFechas</bpmn:incoming>
+      <bpmn:outgoing>Flow_NuevoRecordatorio</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Actualizar_Recordatorio" name="Actualizar recordatorio">
+      <bpmn:documentation>Nuevo recordatorio 30 días</bpmn:documentation>
+      <bpmn:incoming>Flow_NuevoRecordatorio</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndActivo2</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_ActualizarFechas" sourceRef="Firmar_Renovacion" targetRef="Actualizar_FechasVigencia"/>
+    <bpmn:sequenceFlow id="Flow_NuevoRecordatorio" sourceRef="Actualizar_FechasVigencia" targetRef="Actualizar_Recordatorio"/>
+    <bpmn:sequenceFlow id="Flow_EndActivo2" sourceRef="Actualizar_Recordatorio" targetRef="End_Activo"/>
+
+    <bpmn:intermediateCatchEvent id="Timer_Revision24m" name="Revisión contractual: 24 meses">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>P24M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+      <bpmn:outgoing>Flow_TimerRevision</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:sequenceFlow id="Flow_TimerRevision" sourceRef="Timer_Revision24m" targetRef="Revisar_Cumplimiento"/>
+
+    <bpmn:userTask id="Revisar_Cumplimiento" name="Revisar cumplimiento de obligaciones">
+      <bpmn:documentation>Verificaciones: instrucciones seguidas, medidas implementadas, subencargados no autorizados, evidencias preservadas</bpmn:documentation>
+      <bpmn:incoming>Flow_TimerRevision</bpmn:incoming>
+      <bpmn:outgoing>Flow_SolicitarCertificacion</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Solicitar_Certificacion" name="Solicitar certificación cumplimiento">
+      <bpmn:incoming>Flow_SolicitarCertificacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewayCumple</bpmn:outgoing>
+      <bpmn:lane>Lane_EncargadoExterno</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_SolicitarCertificacion" sourceRef="Revisar_Cumplimiento" targetRef="Solicitar_Certificacion"/>
+
+    <bpmn:exclusiveGateway id="Gateway_Cumple" name="¿Encargado cumple?">
+      <bpmn:incoming>Flow_GatewayCumple</bpmn:incoming>
+      <bpmn:outgoing>Flow_NoCumple</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SiCumple</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_GatewayCumple" sourceRef="Solicitar_Certificacion" targetRef="Gateway_Cumple"/>
+
+    <bpmn:sequenceFlow id="Flow_NoCumple" sourceRef="Gateway_Cumple" targetRef="Documentar_Terminacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_SiCumple" sourceRef="Gateway_Cumple" targetRef="Actualizar_FechaRevision">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:serviceTask id="Actualizar_FechaRevision" name="Actualizar fecha_ultima_revision">
+      <bpmn:incoming>Flow_SiCumple</bpmn:incoming>
+      <bpmn:outgoing>Flow_DocumentarBitacora</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Documentar_Bitacora" name="Documentar en bitácora">
+      <bpmn:incoming>Flow_DocumentarBitacora</bpmn:incoming>
+      <bpmn:outgoing>Flow_BitacoraFin</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_DocumentarBitacora" sourceRef="Actualizar_FechaRevision" targetRef="Documentar_Bitacora"/>
+    <bpmn:sequenceFlow id="Flow_BitacoraFin" sourceRef="Documentar_Bitacora" targetRef="End_Activo"/>
+
+    <bpmn:startEvent id="Start_Terminacion" name="Decisión de terminar">
+      <bpmn:outgoing>Flow_DocumentarTerminacion</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Documentar_Terminacion" name="Documentar motivos de terminación">
+      <bpmn:incoming>Flow_NoRenovar</bpmn:incoming>
+      <bpmn:incoming>Flow_NoCumple</bpmn:incoming>
+      <bpmn:incoming>Flow_DocumentarTerminacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerificarEstadoDatos</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_DocumentarTerminacion" sourceRef="Start_Terminacion" targetRef="Documentar_Terminacion"/>
+
+    <bpmn:userTask id="Verificar_EstadoDatos" name="Verificar estado de datos">
+      <bpmn:documentation>Verificación: datos devueltos, datos eliminados</bpmn:documentation>
+      <bpmn:incoming>Flow_VerificarEstadoDatos</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewayDatosOrden</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_VerificarEstadoDatos" sourceRef="Documentar_Terminacion" targetRef="Verificar_EstadoDatos"/>
+
+    <bpmn:exclusiveGateway id="Gateway_DatosOrden" name="¿Datos en orden?">
+      <bpmn:incoming>Flow_GatewayDatosOrden</bpmn:incoming>
+      <bpmn:outgoing>Flow_DatosNoOrden</bpmn:outgoing>
+      <bpmn:outgoing>Flow_DatosSiOrden</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_GatewayDatosOrden" sourceRef="Verificar_EstadoDatos" targetRef="Gateway_DatosOrden"/>
+
+    <bpmn:userTask id="Solicitar_Regularizacion" name="Solicitar regularización">
+      <bpmn:incoming>Flow_DatosNoOrden</bpmn:incoming>
+      <bpmn:outgoing>Flow_Regularizacion</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_DatosNoOrden" sourceRef="Gateway_DatosOrden" targetRef="Solicitar_Regularizacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_Regularizacion" sourceRef="Solicitar_Regularizacion" targetRef="Verificar_EstadoDatos"/>
+
+    <bpmn:userTask id="Solicitar_CertificadoEliminacion" name="Solicitar certificado de eliminación">
+      <bpmn:incoming>Flow_DatosSiOrden</bpmn:incoming>
+      <bpmn:outgoing>Flow_CertificadoEliminacion</bpmn:outgoing>
+      <bpmn:lane>Lane_EncargadoExterno</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_DatosSiOrden" sourceRef="Gateway_DatosOrden" targetRef="Solicitar_CertificadoEliminacion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:serviceTask id="Recibir_CertificacionEliminacion" name="Recibir certificación eliminación">
+      <bpmn:incoming>Flow_CertificadoEliminacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_ActualizarRATTerminacion</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_CertificadoEliminacion" sourceRef="Solicitar_CertificadoEliminacion" targetRef="Recibir_CertificacionEliminacion"/>
+
+    <bpmn:serviceTask id="Actualizar_RAT_Terminacion" name="Actualizar RAT">
+      <bpmn:documentation>Acción: Desvincular encargado, marcar actividades sin encargado</bpmn:documentation>
+      <bpmn:incoming>Flow_ActualizarRATTerminacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_ArchivarDocumentacion</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_ActualizarRATTerminacion" sourceRef="Recibir_CertificacionEliminacion" targetRef="Actualizar_RAT_Terminacion"/>
+
+    <bpmn:serviceTask id="Archivar_Documentacion" name="Archivar documentación">
+      <bpmn:documentation>Estado: TERMINADO</bpmn:documentation>
+      <bpmn:incoming>Flow_ArchivarDocumentacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotificarTerminacion</bpmn:outgoing>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_ArchivarDocumentacion" sourceRef="Actualizar_RAT_Terminacion" targetRef="Archivar_Documentacion"/>
+
+    <bpmn:serviceTask id="Notificar_Terminacion" name="Notificar terminación a sistemas">
+      <bpmn:incoming>Flow_NotificarTerminacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndTerminado</bpmn:outgoing>
+      <bpmn:lane>Lane_SistemaCorreo</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_NotificarTerminacion" sourceRef="Archivar_Documentacion" targetRef="Notificar_Terminacion"/>
+
+    <bpmn:endEvent id="End_Terminado" name="Relación terminada">
+      <bpmn:incoming>Flow_EndTerminado</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_EndTerminado" sourceRef="Notificar_Terminacion" targetRef="End_Terminado"/>
+
+    <bpmn:startEvent id="Start_Subcontratacion" name="Solicitud subcontratación">
+      <bpmn:signalEventDefinition/>
+      <bpmn:outgoing>Flow_EvaluarSubcontratista</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Evaluar_Subcontratista" name="DPO evalúa subcontratista">
+      <bpmn:documentation>Criterios: Mismos que onboarding inicial</bpmn:documentation>
+      <bpmn:incoming>Flow_EvaluarSubcontratista</bpmn:incoming>
+      <bpmn:outgoing>Flow_GatewaySubcontratacion</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_EvaluarSubcontratista" sourceRef="Start_Subcontratacion" targetRef="Evaluar_Subcontratista"/>
+
+    <bpmn:exclusiveGateway id="Gateway_Subcontratacion" name="¿Autoriza subcontratación?">
+      <bpmn:incoming>Flow_GatewaySubcontratacion</bpmn:incoming>
+      <bpmn:outgoing>Flow_NoAutoriza</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SiAutoriza</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_GatewaySubcontratacion" sourceRef="Evaluar_Subcontratista" targetRef="Gateway_Subcontratacion"/>
+
+    <bpmn:userTask id="Notificar_Rechazo" name="Notificar rechazo">
+      <bpmn:incoming>Flow_NoAutoriza</bpmn:incoming>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_NoAutoriza" sourceRef="Gateway_Subcontratacion" targetRef="Notificar_Rechazo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:userTask id="Actualizar_ContratoSub" name="Actualizar contrato con subencargado">
+      <bpmn:incoming>Flow_SiAutoriza</bpmn:incoming>
+      <bpmn:outgoing>Flow_RegistrarSubencargado</bpmn:outgoing>
+      <bpmn:lane>Lane_DPO</bpmn:lane>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_SiAutoriza" sourceRef="Gateway_Subcontratacion" targetRef="Actualizar_ContratoSub">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:serviceTask id="Registrar_Subencargado" name="Registrar subencargado">
+      <bpmn:documentation>Campo: parent_id = encargado_principal</bpmn:documentation>
+      <bpmn:incoming>Flow_RegistrarSubencargado</bpmn:incoming>
+      <bpmn:lane>Lane_Sistema</bpmn:lane>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_RegistrarSubencargado" sourceRef="Actualizar_ContratoSub" targetRef="Registrar_Subencargado"/>
+
+    <bpmn:dataObject id="SolicitudAlta" name="SolicitudAlta"/>
+    <bpmn:dataObject id="ContratoEncargo" name="ContratoEncargo"/>
+    <bpmn:dataObject id="CertificacionCumplimiento" name="CertificacionCumplimiento"/>
+    <bpmn:dataObject id="CertificadoEliminacion" name="CertificadoEliminacion"/>
+
+  </bpmn:process>
+
+  <bpmn:message id="Message_Subcontratacion" name="SolicitudSubcontratacion"/>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="Gestión Encargados de Tratamiento">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Encargados">
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

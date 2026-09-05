@@ -8,6 +8,64 @@ Stack: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Sonne
 
 ---
 
+## LEY DIVINA DE COMMITS Y AUTORÍA ⚠️
+
+**El autor del commit DEBE matchear con la cuenta de Vercel vinculada**, sino el deploy no se dispara (`Vercel user not found`).
+
+### Reglas
+
+```
+1. NUNCA usar `git -c user.email=...` ni `-c user.name=...` al commitear
+2. SIEMPRE usar el `user.email` y `user.name` del git config (global o local)
+3. Verificar ANTES del push con `git log -1 --pretty=format:"%an <%ae>"`
+4. Si el autor está mal: `git commit --amend --reset-author --no-verify`
+5. Después: `git push --force-with-lease origin <rama>`
+```
+
+### Verificación rápida (5 segundos)
+
+```bash
+git log -1 --pretty=format:"%an <%ae>"   # confirmar autor antes de push
+```
+
+### Cómo se vinculó Vercel en este proyecto
+
+- Cuenta Vercel: `marcelocollipal-7370`
+- Email vinculado: `marcelocollipal@gmail.com`
+- GitHub user: `macollipal`
+
+Cualquier commit con autor distinto a `marcelocollipal@gmail.com` **bloqueará el deploy automático de Vercel**.
+
+---
+
+## LEY DIVINA DE SEGURIDAD ⚠️
+
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+```
+1. NUNCA hardcodear credenciales en código TypeScript/JavaScript
+2. TODAS las variables públicas via process.env.NEXT_PUBLIC_*
+3. TODAS las variables privadas via process.env.* (server-side)
+4. .env.local y .env.production en .gitignore
+5. Si una credencial se expone, ROTARLA inmediatamente
+6. Pre-commit hook detecta y BLOQUEA secrets antes de commit
+```
+
+**Si el agente detecta un secret hardcodeado DEBE negarse a proceder y reportar al usuario antes de continuar.**
+
+---
+
+## Skills disponibles para frontend
+
+Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto:
+
+- **security-secret-scan**: para detectar/prevenir exposición de credenciales (OBLIGATORIA antes de commit)
+- **frontend-guardian**: para auditorías de UX, mobile, responsive, a11y, performance pre-producción
+- **commit-helper**: para mensajes de commit con conventional commits
+- **qa-senior**: para revisión de calidad de código y compliance RAT
+
+---
+
 ## Sistema de roles (3 niveles)
 
 | Rol | Alcance |
@@ -81,6 +139,35 @@ Manejo de 401: `window.location.replace()` + `return {} as T`.
 ### Constantes — lib/constants.ts
 Single source of truth para todos los magic strings: `API_BASE`, `STORAGE_KEYS`, `DRAFT_KEY_PREFIX`, `DIAS_REVISION`, `ESTADO_MAP`, `ESTADO_OPTIONS`, `RIEGO_OPTIONS`, `EIPD_OPTIONS`, `BASES_LEGALES`, `TIPOS_DATO_SENSIBLE`.
 
+### Sistema de diseño / homologación UX
+
+**REGLA**: para todo componente nuevo o migración, usar **componentes átomo** de `components/ui/` en vez de HTML crudo con `style={{}}`. Esto garantiza consistencia visual, accesibilidad WCAG, touch targets ≥44px y previene drift de estilos.
+
+**Componentes átomo disponibles** (`components/ui/`):
+
+| Componente | Variantes | Uso |
+|---|---|---|
+| `<Button>` | `variant: primary / secondary / danger / success / warning / ghost` · `size: sm / md / lg` · `loading / fullWidth` | Toda acción clickeable. **Prohibido `<button>` con `style={{ background: '#xxx' }}`**. |
+| `<Input>` | `label / hint / error / iconLeft / iconRight / required` | Inputs de texto. Incluye a11y (`aria-describedby`, `aria-invalid`). |
+| `<Select>` | `label / hint / error / options / placeholder / required` | Dropdowns. |
+| `<Textarea>` | `label / hint / error / showCount / maxLength` | Texto multilínea. |
+| `<Badge>` | `variant: success / warning / danger / info / neutral / purple` · **o** `estado` (RAT) | Etiquetas pequeñas. Mantiene API legacy `estado={rat.estado}`. |
+| `<Card>` + `<CardHeader>` | `variant: default / bordered / elevated` · `padding: none / sm / md / lg` | Contenedor de panel estándar. |
+| `<Alert>` | `variant: info / success / warning / danger` · `title / icon` | Mensajes contextuales (reemplaza `AlertBanner` para mensajes inline). |
+
+**Importación recomendada**:
+```tsx
+import { Button, Input, Select, Textarea, Card, CardHeader, Badge, Alert } from '@/components/ui';
+```
+
+**Touch targets**: todos los botones por defecto cumplen WCAG ≥44px. Si necesitás un botón visualmente más pequeño, agregá `min-h-[44px]` explícito.
+
+**Hover**: **prohibido** usar `onMouseEnter/onMouseLeave` para hover effects. Usar clases Tailwind `hover:` y `active:`.
+
+**Colores hardcodeados**: si necesitás un color específico, primero verificar si existe en `globals.css` (CSS vars) o `lib/styles.ts`. Si no existe, agregarlo como token en `globals.css` y documentar acá.
+
+**Para casos especiales** donde el componente átomo no alcanza (ej. Wizard steps, layout grid complejo), se permite `style={{}}` inline, pero siempre con `className` para Tailwind + clases base.
+
 ### Página de empresas — companies/page.tsx
 - `CompanyForm` — formulario de creación
 - `CompanyEditForm` — edición inline
@@ -93,15 +180,33 @@ Single source of truth para todos los magic strings: `API_BASE`, `STORAGE_KEYS`,
 - Expandir para ver detalle + auditoría
 - Exportar CSV/PDF por empresa
 
-### RatWizard — wizard de creación de RAT (4 pasos)
-1. Identificación (nombre, categoria_titulares, fuente, destinatarios, encargado)
-2. Datos tratados (categoria_datos, datos_sensibles, EIPD, decisiones automatizadas)
-3. Finalidad y ley (finalidad, base_legal, test_interes_legitimo guiado 3 pasos)
-4. Almacenamiento y transferencias (plazo, medidas, transferencia internacional)
+### RatWizard — wizard de creación de RAT (5 pasos + sugerencias previas)
 
-### RatEditForm — edición de RAT (4 pasos)
-Mismos 4 pasos que el wizard, pero pre-llenado con los datos existentes del RAT.
-Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
+> **H4.6 (auditoría 2026-07-07):** El wizard real tiene **5 pasos**, no 4. El doc v1.9 decía 4.
+
+**Paso 0 — Sugerencias por rubro** (opcional, antes del Paso 1):
+- Si la empresa tiene `rubro_id`, el backend ofrece sugerencias pre-completadas.
+- Frontend: `api.sugerenciasPorRubro(company.rubro_id)` → muestra cards.
+- Usuario elige una sugerencia (usa `usarSugerencia`) o salta con "Crear personalizado".
+
+**5 pasos del wizard:**
+1. **Identificación** — nombre_proceso, categoria_titulares (CategoryChips), fuente_datos, destinatarios, nombre_encargado
+2. **Datos tratados** — categoria_datos, datos_sensibles (con tipo_dato_sensible), EIPD, decisiones automatizadas (con logica_automatizada), clasificación NNA/DCONF/estructura_dato
+3. **Finalidad y ley** — finalidad, base_legal (con tooltip legal Art. 12/13/16 BIS), documento base legal (file upload), test_interes_legitimo guiado 3 pasos
+4. **Almacenamiento y transferencias** — plazo_retencion, medidas_seguridad, transferencia_internacional (con pais_destino + garantias), transferencia_nacional
+5. **Compliance operativo (Tier 2)** — sistema_almacenamiento, volumen_titulares, operaciones_tratamiento, ciclo, automatizacion, frecuencia, doc_clausulas, medidas_organizativas, mecanismos_eliminacion, etc.
+
+### Estructura modular (H4.5)
+Desde auditoría 2026-07-07:
+- `components/rat/RatWizard/types.ts` — Constantes (`STEPS`, `DESCRIPCIONES_BASE`, `DRAFT_KEY`) y tipos
+- `components/rat/RatWizard/hooks/useDraftAutosave.ts` — Auto-save localStorage cada 30s
+- `components/rat/RatWizard/hooks/useWizardNavigation.ts` — Navegación entre pasos
+- `components/rat/RatWizard/index.ts` — Re-exports
+- `components/rat/RatWizard.tsx` — Orquestador (pasos UI inline, refactor incremental)
+
+### RatEditForm — edición de RAT (5 pasos)
+Mismos 5 pasos que el wizard, pero pre-llenado con los datos existentes del RAT.
+Incluye: `observaciones_auditoria`, `estado`, `tiene_contrato_encargado`, parseo de `test_interes_legitimo` (3 pasos).
 
 ### Módulo Reportes — reportes/page.tsx
 - KPI cards: total, completitud promedio, datos sensibles, EIPD, transf. internacional, dec. automatizadas
@@ -119,10 +224,14 @@ Incluye: `observaciones_auditoria`, `estado` y `tiene_contrato_encargado`.
   - **Campos vacíos se marcan con `**` en rojo itálico** (para saber qué falta)
   - Historial de cambios (auditoría)
 - **Botón Exportar PDF** en drawer → descarga PDF del RAT individual (endpoint `/rats/{id}/export/pdf`)
-- Chat IA flotante (botón 🤚 esquina inferior derecha)
-  - Requiere `MINIMAX_API_KEY` o `OPENAI_API_KEY` en `backend/.env`
+- **AsesorCustodio (Chat IA)** — flotante (botón 🤚 esquina inferior derecha)
+  - Requiere `GROQ_API_KEY` (LLM) y `COHERE_API_KEY` (embeddings) en `backend/.env`
   - System prompt sobre Ley 21.719 Chile
   - Pasa contexto de empresa + RATs activos
+  - Endpoint backend: `POST /ai/ask`
+  - Componente: `components/dashboard/AIChat.tsx`
+  - Documentado en skill `custodio-auditoria` (sección AI Provider Rules)
+  - **H6.4 (auditoría 2026-07-07):** renombrado de "Chat IA" a **AsesorCustodio** según nomenclatura canónica de la skill `doc-governance/SKILL.md`.
 
 ### OnboardingChecklist — components/dashboard/OnboardingChecklist.tsx
 Checklist de primeros pasos que aparece en el dashboard para empresas nuevas:

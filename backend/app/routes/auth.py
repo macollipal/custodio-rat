@@ -2,12 +2,16 @@
 Endpoints de autenticación: login, registro de usuarios (solo admin) y perfil.
 """
 
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from app.database.database import get_db
-from app.schemas.user import LoginRequest, PasswordChange, PasswordChangeOther, Token, UserCreate, UserOut, UserUpdate
+from app.schemas.user import (
+    LoginRequest, PasswordChange, PasswordChangeOther, Token, UserCreate,
+    UserOut, UserUpdate, UserListResponse,
+)
+from app.schemas.common import MessageResponse
 from app.services.user_service import (
     authenticate_user, change_password, create_user, get_users,
     update_user, delete_user, change_password_other,
@@ -15,7 +19,7 @@ from app.services.user_service import (
 from app.services.user_company_service import get_empresas_usuario
 from app.routes.deps import get_current_user, require_admin
 from app.core.security import (
-    revoke_token, create_refresh_token, decode_refresh_token,
+    revoke_token, decode_refresh_token,
 )
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -33,7 +37,7 @@ def _cookie_options(max_age: int = None) -> dict:
         "max_age": max_age or COOKIE_MAX_AGE,
         "httponly": True,
         "secure": True,
-        "samesite": "none" if settings.ENVIRONMENT == "production" else "lax",
+        "samesite": "lax",
         "path": "/",
     }
 
@@ -96,7 +100,7 @@ async def refresh_token(request: Request, db: Session = Depends(get_db), respons
     return result
 
 
-@router.post("/logout", summary="Cerrar sesión")
+@router.post("/logout", response_model=MessageResponse, summary="Cerrar sesión")
 @limiter.limit("10/minute")
 async def logout(request: Request, response: Response = None, db: Session = Depends(get_db)):
     """Revoca ambos tokens (access + refresh) y elimina las cookies de sesion."""
@@ -115,7 +119,7 @@ async def logout(request: Request, response: Response = None, db: Session = Depe
     if response is not None:
         response.delete_cookie(COOKIE_NAME, path="/")
         response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
-    return {"message": "Sesion cerrada correctamente."}
+    return MessageResponse(message="Sesion cerrada correctamente.")
 
 
 @router.get("/me", response_model=UserOut, summary="Perfil del usuario actual")
@@ -123,7 +127,7 @@ async def me(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.post("/users", response_model=UserOut, summary="Crear nuevo usuario (solo admin)")
+@router.post("/users", response_model=UserOut, status_code=201, summary="Crear nuevo usuario (solo admin)")
 async def crear_usuario(
     data: UserCreate,
     db: Session = Depends(get_db),
@@ -143,17 +147,17 @@ async def actualizar_usuario(
     return update_user(db, user_id, data.model_dump(exclude_none=True))
 
 
-@router.delete("/users/{user_id}", summary="Eliminar usuario (solo admin)")
+@router.delete("/users/{user_id}", response_model=MessageResponse, summary="Eliminar usuario (solo admin)")
 async def eliminar_usuario(
     user_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
     delete_user(db, user_id)
-    return {"message": "Usuario eliminado correctamente."}
+    return MessageResponse(message="Usuario eliminado correctamente.")
 
 
-@router.put("/users/{user_id}/password", summary="Cambiar contraseña de otro usuario (solo admin)")
+@router.put("/users/{user_id}/password", response_model=MessageResponse, summary="Cambiar contraseña de otro usuario (solo admin)")
 async def cambiar_password_otro(
     user_id: int,
     data: PasswordChangeOther,
@@ -163,7 +167,7 @@ async def cambiar_password_otro(
     if len(data.new_password) < 6:
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres.")
     change_password_other(db, user_id, data.new_password)
-    return {"message": "Contraseña actualizada correctamente."}
+    return MessageResponse(message="Contraseña actualizada correctamente.")
 
 
 @router.put("/me/password", response_model=UserOut, summary="Cambiar contraseña del usuario actual")
@@ -177,25 +181,47 @@ async def cambiar_password(
     return change_password(db, current_user, data.current_password, data.new_password)
 
 
-@router.get("/users", summary="Listar usuarios (solo admin)")
+@router.get("/users", response_model=UserListResponse, summary="Listar usuarios (solo admin)")
 async def listar_usuarios(
     skip: int = 0,
     limit: int = 100,
+    company_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
-    users, total = get_users(db, skip=skip, limit=limit)
+    from app.models.company import Company
+    from app.models.user_company import UserCompany
+
+    if company_id is not None:
+        # Filtrar solo usuarios que pertenecen a la empresa solicitada
+        user_ids = [
+            row.user_id
+            for row in db.query(UserCompany.user_id).filter(UserCompany.company_id == company_id).all()
+        ]
+        from app.models.user import User as UserModel
+        query = db.query(UserModel).filter(UserModel.id.in_(user_ids))
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+        company_obj = db.query(Company).filter(Company.id == company_id).first()
+        empresa_nombre_fija = company_obj.nombre if company_obj else None
+    else:
+        users, total = get_users(db, skip=skip, limit=limit)
+        empresa_nombre_fija = None
+
     result = []
     for u in users:
-        empresas = get_empresas_usuario(db, u.id)
-        empresa_nombre = None
-        empresa_id = None
-        if empresas:
-            from app.models.company import Company
-            company = db.query(Company).filter(Company.id == empresas[0]).first()
-            if company:
-                empresa_nombre = company.nombre
-                empresa_id = empresas[0]
+        if empresa_nombre_fija is not None:
+            emp_nombre = empresa_nombre_fija
+            emp_id = company_id
+        else:
+            empresas = get_empresas_usuario(db, u.id)
+            emp_nombre = None
+            emp_id = None
+            if empresas:
+                c = db.query(Company).filter(Company.id == empresas[0]).first()
+                if c:
+                    emp_nombre = c.nombre
+                    emp_id = empresas[0]
         result.append({
             "id": u.id,
             "username": u.username,
@@ -204,7 +230,7 @@ async def listar_usuarios(
             "is_active": u.is_active,
             "rol_global": u.rol_global,
             "created_at": u.created_at,
-            "empresa_id": empresa_id,
-            "empresa_nombre": empresa_nombre,
+            "empresa_id": emp_id,
+            "empresa_nombre": emp_nombre,
         })
-    return {"usuarios": result, "total": total, "skip": skip, "limit": limit}
+    return UserListResponse(usuarios=result, total=total, skip=skip, limit=limit)

@@ -1,9 +1,11 @@
 """
-Generador de informe RAT en formato CNI para提交APDC (Ley 21.719).
+Generador de informe RAT en formato CNI para envío a la APDP (Ley 21.719).
 """
 
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
+
+from app.services.rat_calculations import calcular_completitud, calcular_nivel_riesgo, rat_to_dict
 
 if TYPE_CHECKING:
     from app.models.rat import RAT
@@ -64,8 +66,8 @@ def exportar_rat_cni(rats: list["RAT"], company: "Company") -> str:
         lines.append(f"  Nombre encargado:        {rat.nombre_encargado or 'No aplicable'}")
         lines.append(f"  Tiene contrato encargado: {'Sí' if rat.tiene_contrato_encargado else ('No' if rat.nombre_encargado else 'N/A')}")
         lines.append(f"  Estado RAT:              {rat.estado.value if hasattr(rat.estado, 'value') else rat.estado}")
-        lines.append(f"  Completitud:             {rat.calcular_completitud() if hasattr(rat, 'calcular_completitud') else 'N/A'}%")
-        lines.append(f"  Nivel riesgo:            {rat.calcular_nivel_riesgo() if hasattr(rat, 'calcular_nivel_riesgo') else 'N/A'}")
+        lines.append(f"  Completitud:             {calcular_completitud(rat_to_dict(rat))}%")
+        lines.append(f"  Nivel riesgo:            {calcular_nivel_riesgo(rat_to_dict(rat))}")
         lines.append(f"  Creado por:              {rat.created_by or 'Desconocido'}")
         lines.append(f"  Fecha creación:          {rat.created_at}")
         lines.append(f"  Última actualización:    {rat.updated_at}")
@@ -84,7 +86,7 @@ def exportar_rat_cni(rats: list["RAT"], company: "Company") -> str:
     lines.append(f"  Procesos con datos sensibles:      {sensibles_count}")
     lines.append(f"  Requieren Evaluación de Impacto:   {eipd_count}")
     lines.append(f"  Con transferencia internacional:   {transfer_count}")
-    lines.append(f"  Estados: ")
+    lines.append("  Estados: ")
     estados = {}
     for r in rats:
         e = r.estado.value if hasattr(r.estado, 'value') else r.estado

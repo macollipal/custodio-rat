@@ -2,16 +2,33 @@
 
 import { useEffect, useRef } from 'react';
 
+export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+const SIZE_CLASSES: Record<DrawerSize, string> = {
+  sm:    'w-[95vw] max-w-[400px] sm:w-[40vw]',
+  md:    'w-[95vw] max-w-[540px] sm:w-[50vw] lg:w-[45vw]',
+  lg:    'w-[95vw] sm:w-[65vw] md:w-[60vw] lg:w-[55vw] xl:w-[50vw] 2xl:w-[45vw]',
+  xl:    'w-[95vw] sm:w-[80vw] md:w-[75vw] lg:w-[70vw] xl:w-[60vw]',
+  full:  'w-[100vw] rounded-none',
+};
+
 interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  width?: string;
   extraAction?: React.ReactNode;
+  size?: DrawerSize;
 }
 
-export default function Drawer({ open, onClose, title, children, width = '640px', extraAction }: DrawerProps) {
+export default function Drawer({
+  open,
+  onClose,
+  title,
+  children,
+  extraAction,
+  size = 'md',
+}: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,7 +36,9 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
-      const firstFocusable = drawerRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
       firstFocusable?.focus();
     } else {
       document.body.style.overflow = '';
@@ -37,7 +56,9 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
         onClose();
       }
       if (open && e.key === 'Tab') {
-        const focusable = drawerRef.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const focusable = drawerRef.current?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
         if (!focusable || focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -56,8 +77,14 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
 
   if (!open) return null;
 
+  const hasHeader = !!(title || extraAction);
+  const widthClass = SIZE_CLASSES[size];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-6" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 lg:p-6"
+      onClick={onClose}
+    >
       <div
         className="absolute inset-0 bg-black/40 sm:backdrop-blur-sm"
         style={{ animation: 'fadeIn 0.2s ease' }}
@@ -67,32 +94,41 @@ export default function Drawer({ open, onClose, title, children, width = '640px'
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'drawer-title' : undefined}
-        aria-label={title ? undefined : 'Diálogo'}
-        className="relative flex flex-col shadow-2xl overflow-hidden rounded-2xl w-[95vw] max-w-[640px] sm:w-[60vw]"
+        aria-label={title || 'Diálogo'}
+        className={`relative flex flex-col shadow-2xl overflow-hidden rounded-2xl ${widthClass}`}
         style={{
-          maxHeight: '90vh',
+          maxHeight: '92vh',
           background: 'white',
           animation: 'scaleIn 0.2s ease',
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div
-          className="flex items-center justify-between px-6 py-4 flex-shrink-0 rounded-t-2xl"
-          style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}
-        >
-          <div className="flex items-center gap-3">
-            {title ? <h2 id="drawer-title" className="text-base font-semibold" style={{ color: '#111827' }}>{title}</h2> : <div id="drawer-title" />}
-            {extraAction}
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-gray-200 text-sm font-bold"
-            style={{ color: '#6B7280' }}
+        {hasHeader && (
+          <div
+            className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0"
+            style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}
           >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+            <div className="flex items-center gap-3 min-w-0">
+              {title ? (
+                <h2 id="drawer-title" className="text-sm sm:text-base font-semibold truncate" style={{ color: '#111827' }}>
+                  {title}
+                </h2>
+              ) : (
+                <div id="drawer-title" />
+              )}
+              {extraAction}
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-gray-200 text-sm font-bold flex-shrink-0"
+              style={{ color: '#6B7280' }}
+              aria-label="Cerrar"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <div className={`flex-1 overflow-y-auto ${hasHeader ? 'p-3 sm:p-5 lg:p-6' : 'p-4 sm:p-5 lg:p-6'}`}>
           {children}
         </div>
       </div>

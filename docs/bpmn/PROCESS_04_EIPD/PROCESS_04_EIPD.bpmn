@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_EIPD"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:collaboration id="Collaboration_EIPD">
+    <bpmn:participant id="Participant_EIPD" name="EIPD - Custodio Platform" processRef="Process_EIPD"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_EIPD" name="EIPD - Evaluacion de Impacto Proteccion de Datos" isExecutable="true">
+
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_DPO" name="DPO">
+        <bpmn:flowNodeRef>Task_Describir_Tratamiento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Evaluar_Necesidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Identificar_Riesgos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Documentar_Controles_Existentes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Identificar_Controles_Propuestos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Implementar_Controles_Adicionales</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Revisar_EIPD_Completo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Aprobar_EIPD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Autorizacion_DPO_Senior</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Rechazar_EIPD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Evaluar_Cambios</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_DPO_Senior" name="DPO Senior">
+        <bpmn:flowNodeRef>Task_Autorizacion_DPO_Senior</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Aprobar_EIPD</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Start_EIPD_Required</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Crear_EIPD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Registrar_Fecha_Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calcular_Probabilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calcular_Impacto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calcular_Riesgo_Inherente</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Evaluar_Eficacia_Controles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calcular_Riesgo_Residual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Vincular_EIPD_RAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Actualizar_Estado_RAT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Programar_Revision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Notificar_Rechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Devolver_DPO</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Monitorear_Controles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Generar_Informe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Revision_24</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Nivel_Riesgo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Riesgo_Residual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Riesgo_MUY_ALTO</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EIPD_Corregido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cambios_Significativos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_EIPD_Aprobado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_EIPD_Rechazado</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- DATA OBJECTS -->
+    <bpmn:dataObject id="DataObject_RATReferencia" name="RAT Referencia" dataObjectType="RATReferencia"/>
+    <bpmn:dataObject id="DataObject_MatrizRiesgos" name="Matriz de Riesgos" dataObjectType="MatrizRiesgos"/>
+    <bpmn:dataObject id="DataObject_ControlesExistentes" name="Controles Existentes" dataObjectType="ControlesExistentes"/>
+    <bpmn:dataObject id="DataObject_ControlesPropuestos" name="Controles Propuestos" dataObjectType="ControlesPropuestos"/>
+    <bpmn:dataObject id="DataObject_InformeEIPD" name="Informe EIPD" dataObjectType="InformeEIPD"/>
+
+    <!-- START EVENT -->
+    <bpmn:startEvent id="Start_EIPD_Required" name="EIPD requerida desde RAT">
+      <bpmn:outgoing>Flow_Start_CrearEIPD</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- TRIGGER: CREAR EIPD -->
+    <bpmn:task id="Task_Crear_EIPD" name="Crear EIPD-XXX desde RAT-XXX">
+      <bpmn:documentation>Hereda datos del RAT padre: rat_id, categorias_datos, finalidad, operaciones, responsable</bpmn:documentation>
+      <bpmn:incoming>Flow_Start_CrearEIPD</bpmn:incoming>
+      <bpmn:outgoing>Flow_CrearEIPD_FechaInicio</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Registrar_Fecha_Inicio" name="Registrar fecha_inicio EIPD">
+      <bpmn:incoming>Flow_CrearEIPD_FechaInicio</bpmn:incoming>
+      <bpmn:outgoing>Flow_FechaInicio_Describir</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <!-- EVALUACION INICIAL DPO -->
+    <bpmn:task id="Task_Describir_Tratamiento" name="Describir tratamiento objeto EIPD">
+      <bpmn:documentation>Referencia: RAT padre, finalidad tratamiento, categorias datos, operaciones especificas</bpmn:documentation>
+      <bpmn:incoming>Flow_FechaInicio_Describir</bpmn:incoming>
+      <bpmn:outgoing>Flow_Describir_Necesidad</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Evaluar_Necesidad" name="Evaluar necesidad y proporcionalidad">
+      <bpmn:documentation>Preguntas: ?tratamiento necesario? ?minimos datos adecuados?</bpmn:documentation>
+      <bpmn:incoming>Flow_Describir_Necesidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_Necesidad_Riesgos</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Identificar_Riesgos" name="Identificar riesgos inherentes">
+      <bpmn:documentation>Formato: R01, R02... con: descripcion, activo afectado, amenaza, vulnerabilidad</bpmn:documentation>
+      <bpmn:incoming>Flow_Necesidad_Riesgos</bpmn:incoming>
+      <bpmn:outgoing>Flow_Riesgos_Probabilidad</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <!-- CALCULO DE RIESGOS - SISTEMA -->
+    <bpmn:task id="Task_Calcular_Probabilidad" name="Calcular probabilidad inherente">
+      <bpmn:documentation>Escala: MUY_BAJA(1), BAJA(2), MEDIA(3), ALTA(4), MUY_ALTA(5)</bpmn:documentation>
+      <bpmn:incoming>Flow_Riesgos_Probabilidad</bpmn:incoming>
+      <bpmn:outgoing>Flow_Probabilidad_Impacto</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Calcular_Impacto" name="Calcular impacto inherente">
+      <bpmn:documentation>Escala: NINGUNO(0), MINIMO(1), MODERADO(2), SIGNIFICATIVO(3), CRITICO(4)</bpmn:documentation>
+      <bpmn:incoming>Flow_Probabilidad_Impacto</bpmn:incoming>
+      <bpmn:outgoing>Flow_Impacto_RiesgoInherente</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Calcular_Riesgo_Inherente" name="Calcular nivel riesgo inherente">
+      <bpmn:documentation>Formula: probabilidad x impacto</bpmn:documentation>
+      <bpmn:incoming>Flow_Impacto_RiesgoInherente</bpmn:incoming>
+      <bpmn:outgoing>Flow_RiesgoInherente_Gateway</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <!-- GATEWAY: NIVEL RIESGO INHERENTE -->
+    <bpmn:exclusiveGateway id="Gateway_Nivel_Riesgo" name="Nivel riesgo inherente">
+      <bpmn:incoming>Flow_RiesgoInherente_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_MuyBajo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_Bajo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_Medio</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_Alto</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_MuyAlto</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:exclusiveGateway>
+
+    <!-- FLUJOS DESDE GATEWAY NIVEL RIESGO - convergencia a Controles Existentes -->
+    <bpmn:sequenceFlow id="Flow_Gateway_MuyBajo" name="MUY_BAJO/BAJO/MEDIO" sourceRef="Gateway_Nivel_Riesgo" targetRef="Task_Documentar_Controles_Existentes">
+      <bpmn:conditionExpression>riesgo_inherente &lt;= 9</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Gateway_Bajo" name="BAJO" sourceRef="Gateway_Nivel_Riesgo" targetRef="Task_Documentar_Controles_Existentes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_Medio" name="MEDIO" sourceRef="Gateway_Nivel_Riesgo" targetRef="Task_Documentar_Controles_Existentes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_Alto" name="ALTO" sourceRef="Gateway_Nivel_Riesgo" targetRef="Task_Documentar_Controles_Existentes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MuyAlto" name="MUY_ALTO" sourceRef="Gateway_Nivel_Riesgo" targetRef="Task_Documentar_Controles_Existentes"/>
+
+    <!-- IDENTIFICACION CONTROLES -->
+    <bpmn:task id="Task_Documentar_Controles_Existentes" name="Documentar controles existentes">
+      <bpmn:documentation>Tipos: tecnicos (encriptacion AES-256, control acceso RBAC), organizativos (politicas, formacion)</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_MuyBajo</bpmn:incoming>
+      <bpmn:outgoing>Flow_ControlesExistentes_Eficacia</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Evaluar_Eficacia_Controles" name="Evaluar eficacia controles existentes">
+      <bpmn:documentation>Rating: EFECTIVO / PARCIAL / INEFECTIVO</bpmn:documentation>
+      <bpmn:incoming>Flow_ControlesExistentes_Eficacia</bpmn:incoming>
+      <bpmn:outgoing>Flow_Eficacia_ControlesPropuestos</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Identificar_Controles_Propuestos" name="Identificar controles propuestos">
+      <bpmn:documentation>Obligatorio para cada riesgo ALTO / MUY_ALTO</bpmn:documentation>
+      <bpmn:incoming>Flow_Eficacia_ControlesPropuestos</bpmn:incoming>
+      <bpmn:outgoing>Flow_ControlesPropuestos_Residual</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Calcular_Riesgo_Residual" name="Calcular riesgo residual">
+      <bpmn:documentation>Formula: riesgo_residual = riesgo_inherente - eficacia_controles</bpmn:documentation>
+      <bpmn:incoming>Flow_ControlesPropuestos_Residual</bpmn:incoming>
+      <bpmn:outgoing>Flow_Residual_Gateway</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <!-- GATEWAY: RIESGO RESIDUAL ACEPTABLE -->
+    <bpmn:exclusiveGateway id="Gateway_Riesgo_Residual" name="¿Riesgo residual acceptable?">
+      <bpmn:incoming>Flow_Residual_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Residual_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Residual_No</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Residual_Si" name="Sí (≤ MEDIO)" sourceRef="Gateway_Riesgo_Residual" targetRef="Gateway_Riesgo_MUY_ALTO">
+      <bpmn:conditionExpression>riesgo_residual &lt;= 9</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Residual_No" name="No (> MEDIO)" sourceRef="Gateway_Riesgo_Residual" targetRef="Task_Implementar_Controles_Adicionales">
+      <bpmn:conditionExpression>riesgo_residual > 9</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:task id="Task_Implementar_Controles_Adicionales" name="Implementar controles adicionales">
+      <bpmn:incoming>Flow_Residual_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Adicionales_Recalcular</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Calcular_Riesgo_Residual_2" name="Recalcular riesgo residual">
+      <bpmn:incoming>Flow_Adicionales_Recalcular</bpmn:incoming>
+      <bpmn:outgoing>Flow_Recalcular_Gateway</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:sequenceFlow id="Flow_Recalcular_Gateway" sourceRef="Task_Calcular_Riesgo_Residual_2" targetRef="Gateway_Riesgo_Residual"/>
+
+    <!-- GATEWAY: ¿RIESGO MUY ALTO? -->
+    <bpmn:exclusiveGateway id="Gateway_Riesgo_MUY_ALTO" name="¿Nivel riesgo residual MUY_ALTO?">
+      <bpmn:incoming>Flow_Residual_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow_MuyAlto_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_MuyAlto_No</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_MuyAlto_Si" name="Sí" sourceRef="Gateway_Riesgo_MUY_ALTO" targetRef="Task_Autorizacion_DPO_Senior">
+      <bpmn:conditionExpression>riesgo_residual == 20</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_MuyAlto_No" name="No" sourceRef="Gateway_Riesgo_MUY_ALTO" targetRef="Task_Revisar_EIPD_Completo"/>
+
+    <!-- AUTORIZACION DPO SENIOR (si MUY_ALTO) -->
+    <bpmn:task id="Task_Autorizacion_DPO_Senior" name="Obtener autorización DPO Senior">
+      <bpmn:documentation>Solo si nivel riesgo residual es MUY_ALTO (16-20)</bpmn:documentation>
+      <bpmn:incoming>Flow_MuyAlto_Si</bpmn:incoming>
+      <bpmn:outgoing>Flow_Autorizacion_Revision</bpmn:outgoing>
+      <bpmn:lane>DPO Senior</bpmn:lane>
+    </bpmn:task>
+
+    <!-- APROBACION -->
+    <bpmn:task id="Task_Revisar_EIPD_Completo" name="Revisar EIPD completo">
+      <bpmn:documentation>Verificar: todos los campos, calculos, controles, firmas previas</bpmn:documentation>
+      <bpmn:incoming>Flow_MuyAlto_No</bpmn:incoming>
+      <bpmn:incoming>Flow_Autorizacion_Revision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revision_Aprobar</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Aprobar_EIPD" name="Aprobar EIPD">
+      <bpmn:documentation>Genera: firma_digital, fecha_aprobacion, hash_documento</bpmn:documentation>
+      <bpmn:incoming>Flow_Revision_Aprobar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Aprobar_Vincular</bpmn:outgoing>
+      <bpmn:lane>DPO Senior</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Vincular_EIPD_RAT" name="Vincular EIPD a RAT padre">
+      <bpmn:documentation>RAT.eipd_id = this.eipd_id</bpmn:documentation>
+      <bpmn:incoming>Flow_Aprobar_Vincular</bpmn:incoming>
+      <bpmn:outgoing>Flow_Vincular_Estado</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Actualizar_Estado_RAT" name="Actualizar estado RAT a CON_EIPD">
+      <bpmn:incoming>Flow_Vincular_Estado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Estado_Programar</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Programar_Revision" name="Programar revisión periódica">
+      <bpmn:documentation>Timer: 24 meses desde aprobacion</bpmn:documentation>
+      <bpmn:incoming>Flow_Estado_Programar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Programar_Monitorear</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <!-- TIMER REVISION 24 MESES -->
+    <bpmn:intermediateCatchEvent id="Timer_Revision_24" name="Revisión 24 meses">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>P24M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+      <bpmn:incoming>Flow_Programar_Monitorear</bpmn:incoming>
+      <bpmn:outgoing>Flow_Timer_Evaluar</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:task id="Task_Evaluar_Cambios" name="Evaluar si tratamiento ha cambiado">
+      <bpmn:documentation>Analisis de cambios desde ultima revision</bpmn:documentation>
+      <bpmn:incoming>Flow_Timer_Evaluar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Evaluar_Gateway</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <!-- GATEWAY: CAMBIOS SIGNIFICATIVOS -->
+    <bpmn:exclusiveGateway id="Gateway_Cambios_Significativos" name="¿Cambios significativos?">
+      <bpmn:incoming>Flow_Evaluar_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cambios_Si</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Cambios_No</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Cambios_Si" name="Sí" sourceRef="Gateway_Cambios_Significativos" targetRef="Start_EIPD_Required">
+      <bpmn:conditionExpression>true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Cambios_No" name="No" sourceRef="Gateway_Cambios_Significativos" targetRef="Task_Programar_Revision">
+      <bpmn:conditionExpression>false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- POST-APROBACION -->
+    <bpmn:task id="Task_Monitorear_Controles" name="Monitorear implementación controles">
+      <bpmn:documentation>Check periodico de cumplimiento</bpmn:documentation>
+      <bpmn:incoming>Flow_Programar_Monitorear</bpmn:incoming>
+      <bpmn:outgoing>Flow_Monitorear_Informe</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Generar_Informe" name="Generar informe EIPD">
+      <bpmn:documentation>Output: PDF oficial con todos los datos</bpmn:documentation>
+      <bpmn:incoming>Flow_Monitorear_Informe</bpmn:incoming>
+      <bpmn:outgoing>Flow_Informe_End</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <!-- END EVENTS -->
+    <bpmn:endEvent id="End_EIPD_Aprobado" name="EIPD aprobado y activo">
+      <bpmn:incoming>Flow_Informe_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- RECHAZO FLUJO -->
+    <bpmn:task id="Task_Rechazar_EIPD" name="Rechazar EIPD con comentarios">
+      <bpmn:documentation>Especificar: que falta, que corregir</bpmn:documentation>
+      <bpmn:incoming>Flow_Rechazar_Corregir</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rechazo_Notificar</bpmn:outgoing>
+      <bpmn:lane>DPO</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Notificar_Rechazo" name="Notificar rechazo">
+      <bpmn:documentation>Canal: Sistema de Correo electronico</bpmn:documentation>
+      <bpmn:incoming>Flow_Rechazo_Notificar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notificar_Devolver</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Devolver_DPO" name="Devolver a DPO para corrección">
+      <bpmn:incoming>Flow_Notificar_Devolver</bpmn:incoming>
+      <bpmn:outgoing>Flow_Devolver_Gateway</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_EIPD_Corregido" name="¿EIPD corregido?">
+      <bpmn:incoming>Flow_Devolver_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Corregido_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Corregido_Si</bpmn:outgoing>
+      <bpmn:lane>Sistema</bpmn:lane>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="Flow_Corregido_No" name="No" sourceRef="Gateway_EIPD_Corregido" targetRef="Task_Describir_Tratamiento">
+      <bpmn:conditionExpression>false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Corregido_Si" name="Sí" sourceRef="Gateway_EIPD_Corregido" targetRef="Task_Revisar_EIPD_Completo">
+      <bpmn:conditionExpression>true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:endEvent id="End_EIPD_Rechazado" name="EIPD rechazado">
+      <bpmn:incoming>Flow_Rechazo_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- SEQUENCE FLOWS -->
+    <bpmn:sequenceFlow id="Flow_Start_CrearEIPD" sourceRef="Start_EIPD_Required" targetRef="Task_Crear_EIPD"/>
+    <bpmn:sequenceFlow id="Flow_CrearEIPD_FechaInicio" sourceRef="Task_Crear_EIPD" targetRef="Task_Registrar_Fecha_Inicio"/>
+    <bpmn:sequenceFlow id="Flow_FechaInicio_Describir" sourceRef="Task_Registrar_Fecha_Inicio" targetRef="Task_Describir_Tratamiento"/>
+    <bpmn:sequenceFlow id="Flow_Describir_Necesidad" sourceRef="Task_Describir_Tratamiento" targetRef="Task_Evaluar_Necesidad"/>
+    <bpmn:sequenceFlow id="Flow_Necesidad_Riesgos" sourceRef="Task_Evaluar_Necesidad" targetRef="Task_Identificar_Riesgos"/>
+    <bpmn:sequenceFlow id="Flow_Riesgos_Probabilidad" sourceRef="Task_Identificar_Riesgos" targetRef="Task_Calcular_Probabilidad"/>
+    <bpmn:sequenceFlow id="Flow_Probabilidad_Impacto" sourceRef="Task_Calcular_Probabilidad" targetRef="Task_Calcular_Impacto"/>
+    <bpmn:sequenceFlow id="Flow_Impacto_RiesgoInherente" sourceRef="Task_Calcular_Impacto" targetRef="Task_Calcular_Riesgo_Inherente"/>
+    <bpmn:sequenceFlow id="Flow_RiesgoInherente_Gateway" sourceRef="Task_Calcular_Riesgo_Inherente" targetRef="Gateway_Nivel_Riesgo"/>
+    <bpmn:sequenceFlow id="Flow_ControlesExistentes_Eficacia" sourceRef="Task_Documentar_Controles_Existentes" targetRef="Task_Evaluar_Eficacia_Controles"/>
+    <bpmn:sequenceFlow id="Flow_Eficacia_ControlesPropuestos" sourceRef="Task_Evaluar_Eficacia_Controles" targetRef="Task_Identificar_Controles_Propuestos"/>
+    <bpmn:sequenceFlow id="Flow_ControlesPropuestos_Residual" sourceRef="Task_Identificar_Controles_Propuestos" targetRef="Task_Calcular_Riesgo_Residual"/>
+    <bpmn:sequenceFlow id="Flow_Residual_Gateway" sourceRef="Task_Calcular_Riesgo_Residual" targetRef="Gateway_Riesgo_Residual"/>
+    <bpmn:sequenceFlow id="Flow_Adicionales_Recalcular" sourceRef="Task_Implementar_Controles_Adicionales" targetRef="Task_Calcular_Riesgo_Residual_2"/>
+    <bpmn:sequenceFlow id="Flow_Autorizacion_Revision" sourceRef="Task_Autorizacion_DPO_Senior" targetRef="Task_Revisar_EIPD_Completo"/>
+    <bpmn:sequenceFlow id="Flow_Revision_Aprobar" sourceRef="Task_Revisar_EIPD_Completo" targetRef="Task_Aprobar_EIPD"/>
+    <bpmn:sequenceFlow id="Flow_Aprobar_Vincular" sourceRef="Task_Aprobar_EIPD" targetRef="Task_Vincular_EIPD_RAT"/>
+    <bpmn:sequenceFlow id="Flow_Vincular_Estado" sourceRef="Task_Vincular_EIPD_RAT" targetRef="Task_Actualizar_Estado_RAT"/>
+    <bpmn:sequenceFlow id="Flow_Estado_Programar" sourceRef="Task_Actualizar_Estado_RAT" targetRef="Task_Programar_Revision"/>
+    <bpmn:sequenceFlow id="Flow_Programar_Monitorear" sourceRef="Task_Programar_Revision" targetRef="Task_Monitorear_Controles"/>
+    <bpmn:sequenceFlow id="Flow_Programar_Timer" sourceRef="Task_Programar_Revision" targetRef="Timer_Revision_24"/>
+    <bpmn:sequenceFlow id="Flow_Timer_Evaluar" sourceRef="Timer_Revision_24" targetRef="Task_Evaluar_Cambios"/>
+    <bpmn:sequenceFlow id="Flow_Evaluar_Gateway" sourceRef="Task_Evaluar_Cambios" targetRef="Gateway_Cambios_Significativos"/>
+    <bpmn:sequenceFlow id="Flow_Monitorear_Informe" sourceRef="Task_Monitorear_Controles" targetRef="Task_Generar_Informe"/>
+    <bpmn:sequenceFlow id="Flow_Informe_End" sourceRef="Task_Generar_Informe" targetRef="End_EIPD_Aprobado"/>
+    <bpmn:sequenceFlow id="Flow_Rechazar_Corregir" name="Rechazar" sourceRef="Task_Revisar_EIPD_Completo" targetRef="Task_Rechazar_EIPD"/>
+    <bpmn:sequenceFlow id="Flow_Rechazo_Notificar" sourceRef="Task_Rechazar_EIPD" targetRef="Task_Notificar_Rechazo"/>
+    <bpmn:sequenceFlow id="Flow_Notificar_Devolver" sourceRef="Task_Notificar_Rechazo" targetRef="Task_Devolver_DPO"/>
+    <bpmn:sequenceFlow id="Flow_Devolver_Gateway" sourceRef="Task_Devolver_DPO" targetRef="Gateway_EIPD_Corregido"/>
+    <bpmn:sequenceFlow id="Flow_Rechazo_End" name="Rechazar definitivo" sourceRef="Gateway_EIPD_Corregido" targetRef="End_EIPD_Rechazado">
+      <bpmn:conditionExpression>false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+  </bpmn:process>
+
+  <bpmn:message id="Message_EIPD_from_RAT" name="EIPD_Required_from_RAT"/>
+
+  <bpmn:signal id="Signal_EIPD_Approved" name="EIPD_Aprobado"/>
+
+</bpmn:definitions>

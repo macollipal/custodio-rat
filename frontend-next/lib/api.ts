@@ -37,10 +37,13 @@ async function tryRefreshToken(): Promise<string | null> {
   }
   isRefreshing = true;
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`${API_BASE}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
     if (!res.ok) return null;
     const data = await res.json();
     if (data.access_token) {
@@ -54,6 +57,19 @@ async function tryRefreshToken(): Promise<string | null> {
   } finally {
     isRefreshing = false;
   }
+}
+
+// Fetch sin credenciales para rutas públicas (/publico/*).
+// El CORSByPathMiddleware devuelve Access-Control-Allow-Origin: * para esas rutas,
+// y el browser rechaza * cuando hay credentials: 'include'.
+export async function publicFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const init: RequestInit = { ...options, credentials: 'omit' };
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    const msg = await res.json().then((d: { detail?: string }) => d.detail).catch(() => res.statusText);
+    throw new Error(msg || `Error ${res.status}`);
+  }
+  return res;
 }
 
 export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
@@ -146,6 +162,25 @@ export async function actualizarEmpresa(id: number, data: Partial<Company>): Pro
 export async function eliminarEmpresa(id: number): Promise<void> {
   const res = await apiFetch(`${API_BASE}/companies/${id}`, { method: 'DELETE', });
   return handle<void>(res);
+}
+
+export async function desactivarEmpresa(id: number): Promise<Company> {
+  const res = await apiFetch(`${API_BASE}/companies/${id}/desactivar`, { method: 'PATCH' });
+  return handle<Company>(res);
+}
+
+export async function reactivarEmpresa(id: number): Promise<Company> {
+  const res = await apiFetch(`${API_BASE}/companies/${id}/reactivar`, { method: 'PATCH' });
+  return handle<Company>(res);
+}
+
+export async function hardDeleteEmpresa(id: number, password: string): Promise<{ message: string }> {
+  const res = await apiFetch(`${API_BASE}/admin/companies/${id}/hard-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  return handle<{ message: string }>(res);
 }
 
 // ── RAT ───────────────────────────────────────────────────────────────────────
@@ -268,10 +303,25 @@ export async function sugerirRat(tipoProceso: string): Promise<Record<string, un
   return handle<Record<string, unknown>>(res);
 }
 
+export async function sugerenciaBaseLegalPorRubro(rubroId: number): Promise<{ rubro_id: number; rubro: string; base_legal: string; descripcion?: string }> {
+  const res = await apiFetch(`${API_BASE}/rats/sugerencias/base-legal?rubro_id=${rubroId}`);
+  return handle<{ rubro_id: number; rubro: string; base_legal: string; descripcion?: string }>(res);
+}
+
 export async function listarTiposProceso(): Promise<string[]> {
   const res = await apiFetch(`${API_BASE}/rats/sugerencias/tipos`);
   const data = await handle<{ tipos: string[] }>(res);
   return data.tipos || [];
+}
+
+export interface BaseLegalOptionsResponse {
+  opciones: string[];
+  descripciones: Record<string, string>;
+}
+
+export async function listarBaseLegalOptions(): Promise<BaseLegalOptionsResponse> {
+  const res = await apiFetch(`${API_BASE}/rats/base-legal-opciones`);
+  return handle<BaseLegalOptionsResponse>(res);
 }
 
 export async function getAuditoria(ratId: number): Promise<AuditLog[]> {
@@ -298,6 +348,49 @@ export async function getAuditoriaGlobal(companyId: number): Promise<Array<{
   }>>(res);
 }
 
+export interface CompanyModules {
+  company_id: number;
+  modules: Record<string, boolean>;
+}
+
+export interface ActiveModules {
+  company_id: number;
+  active_modules: string[];
+}
+
+export async function getCompanyModules(companyId: number): Promise<CompanyModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}`);
+  return handle<CompanyModules>(res);
+}
+
+export async function getActiveCompanyModules(companyId: number): Promise<ActiveModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}/active`);
+  return handle<ActiveModules>(res);
+}
+
+export async function toggleCompanyModule(
+  companyId: number,
+  modulo: string,
+  enabled: boolean,
+): Promise<{ modulo: string; enabled: boolean }> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}/${modulo}`, {
+    method: 'PUT',
+    body: JSON.stringify({ modulo, enabled }),
+  });
+  return handle<{ modulo: string; enabled: boolean }>(res);
+}
+
+export async function bulkUpdateCompanyModules(
+  companyId: number,
+  modules: Record<string, boolean>,
+): Promise<CompanyModules> {
+  const res = await apiFetch(`${API_BASE}/module-permissions/${companyId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ modules }),
+  });
+  return handle<CompanyModules>(res);
+}
+
 export async function exportarCsv(companyId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/export/csv?company_id=${companyId}`);
   if (!res.ok) throw new Error('Error al exportar CSV');
@@ -310,9 +403,27 @@ export async function exportarPdf(companyId: number): Promise<Blob> {
   return res.blob();
 }
 
+export async function exportarPdfApdp(companyId: number): Promise<Blob> {
+  const res = await apiFetch(`${API_BASE}/rats/export/apdp?company_id=${companyId}`);
+  if (!res.ok) throw new Error('Error al exportar Reporte APDP');
+  return res.blob();
+}
+
 export async function exportarRatPdf(ratId: number): Promise<Blob> {
   const res = await apiFetch(`${API_BASE}/rats/${ratId}/export/pdf`);
   if (!res.ok) throw new Error('Error al exportar PDF');
+  return res.blob();
+}
+
+export async function descargarRatPdf(ratId: number, nombreProceso: string): Promise<void> {
+  const blob = await exportarRatPdf(ratId);
+  const slug = nombreProceso.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
+  downloadBlob(blob, `rat_${ratId}_${slug}.pdf`);
+}
+
+export async function descargarArchivoRAT(ratId: number): Promise<Blob> {
+  const res = await apiFetch(`${API_BASE}/rats/${ratId}/archivo`);
+  if (!res.ok) throw new Error('Error al descargar el documento');
   return res.blob();
 }
 
@@ -346,6 +457,29 @@ export async function duplicarRat(rat: RAT): Promise<RAT> {
     estado_eipd:                 rat.evaluacion_impacto ? 'pendiente' : 'no_requerida',
     decisiones_automatizadas:    rat.decisiones_automatizadas,
     test_interes_legitimo:       rat.test_interes_legitimo,
+    // Campos Iter 10 — Compliance Ley 21.719
+    sistema_almacenamiento:       rat.sistema_almacenamiento,
+    volumen_titulares_estimado:   rat.volumen_titulares_estimado,
+    operaciones_tratamiento:      rat.operaciones_tratamiento,
+    logica_automatizada:          rat.logica_automatizada,
+    responsable_tratamiento_email: rat.responsable_tratamiento_email,
+    // Campos Tier 1
+    datos_nna:                    rat.datos_nna,
+    nivel_confidencialidad:       rat.nivel_confidencialidad,
+    estructura_dato:              rat.estructura_dato,
+    datos_anonimizados:           rat.datos_anonimizados,
+    datos_seudonimizados:         rat.datos_seudonimizados,
+    // Campos Tier 2
+    ciclo_procesamiento:          rat.ciclo_procesamiento,
+    automatizacion:               rat.automatizacion,
+    frecuencia:                   rat.frecuencia,
+    transferencia_nacional:       rat.transferencia_nacional,
+    doc_clausulas:                rat.doc_clausulas,
+    medidas_organizativas:        rat.medidas_organizativas,
+    mecanismos_eliminacion:       rat.mecanismos_eliminacion,
+    tecnica_anonimizacion:        rat.tecnica_anonimizacion,
+    origen_dato_portabilidad:     rat.origen_dato_portabilidad,
+    fecha_levantamiento:          rat.fecha_levantamiento,
   };
   return crearRat(payload);
 }
@@ -430,8 +564,11 @@ export async function removerAcceso(companyId: number, userId: number): Promise<
 
 // ── Usuarios (solo admin) ─────────────────────────────────────────────────────
 
-export async function listarUsuarios(): Promise<User[]> {
-  const res = await apiFetch(`${API_BASE}/auth/users`);
+export async function listarUsuarios(companyId?: number): Promise<User[]> {
+  const url = companyId
+    ? `${API_BASE}/auth/users?company_id=${companyId}`
+    : `${API_BASE}/auth/users`;
+  const res = await apiFetch(url);
   const data = await handle<{ usuarios: User[]; total: number; skip: number; limit: number }>(res);
   return data.usuarios;
 }
@@ -489,42 +626,6 @@ export async function sugerenciasPorRubro(rubroId: number): Promise<RATSugerido[
   return handle<RATSugerido[]>(res);
 }
 
-export async function crearSolicitudDerecho(data: {
-  company_id: number;
-  tipo: string;
-  nombre_titular: string;
-  email_titular: string;
-  rut_titular?: string;
-  descripcion?: string;
-}): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return handle<void>(res);
-}
-
-export async function listarSolicitudesDerecho(companyId: number, estado?: string): Promise<unknown[]> {
-  const params = new URLSearchParams({ company_id: String(companyId) });
-  if (estado) params.set('estado', estado);
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/?${params}`);
-  const data = await handle<{ solicitudes: unknown[]; total: number; skip: number; limit: number }>(res);
-  return data.solicitudes;
-}
-
-export async function actualizarSolicitudDerecho(
-  id: number,
-  data: { estado: string; respuesta: string; descripcion_accion?: string; usuario_nombre?: string }
-): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${id}/responder`, {
-    method: 'PATCH',
-    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return handle<void>(res);
-}
-
 export async function actualizarRubro(rubroId: number, data: { nombre?: string; orden?: number }): Promise<void> {
   const res = await apiFetch(`${API_BASE}/rubros/${rubroId}`, {
       method: 'PUT',
@@ -570,6 +671,25 @@ export interface TktTicket {
   dias_restantes?: number;
   sla_color?: string;
   estado_sla?: string;
+  tracking_token?: string;
+  representante_nombre?: string;
+  representante_rut?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  pais?: string;
+  subsanacion_detalle?: string;
+  subsanacion_fecha_pedido?: string;
+  prorroga_fecha?: string;
+  prorroga_dias?: number;
+  rat_id?: number;
+  plazo_bloqueo_vencimiento?: string;
+  estado_original?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad?: string;
+  evidencia_identidad?: string;
+  evidencia_respuesta_hash?: string;
+  causal_rechazo?: string;
+  medio_respuesta?: string;
 }
 
 export interface TktDashboard {
@@ -579,8 +699,13 @@ export interface TktDashboard {
   pendientes: number;
   resueltos: number;
   vencidos: number;
+  bloqueados: number;
+  rechazados: number;
+  subsanacion: number;
+  prorrogas: number;
   cumplimiento_sla: number;
   tiempo_promedio_horas: number;
+  por_tipo?: Record<string, number>;
 }
 
 export interface TktListResponse {
@@ -616,6 +741,16 @@ export async function crearTktTicket(data: {
   titular_email: string;
   titular_rut?: string;
   descripcion?: string;
+  rat_id?: number;
+  representante_nombre?: string;
+  representante_rut?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  pais?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad?: string;
+  evidencia_identidad?: string;
+  medio_respuesta?: string;
 }): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/`, {
     method: 'POST',
@@ -625,12 +760,22 @@ export async function crearTktTicket(data: {
   return handle<TktTicket>(res);
 }
 
+export async function checkDuplicadoTkt(
+  email: string,
+  tipo: string,
+  companyId: number,
+): Promise<{ es_duplicado: boolean; cantidad: number; solicitudes: TktTicket[] }> {
+  const params = new URLSearchParams({ email, tipo, company_id: String(companyId) });
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/check-duplicado?${params}`);
+  return handle<{ es_duplicado: boolean; cantidad: number; solicitudes: TktTicket[] }>(res);
+}
+
 export async function getTktTicket(id: number): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${id}`);
   return handle<TktTicket>(res);
 }
 
-export async function actualizarTktTicket(id: number, data: { estado?: string; prioridad?: string; responsable_id?: number; respuesta_texto?: string }): Promise<TktTicket> {
+export async function actualizarTktTicket(id: number, data: { estado?: string; prioridad?: string; responsable_id?: number; respuesta_texto?: string; titular_rut?: string | null; representante_rut?: string | null }): Promise<TktTicket> {
   const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${id}`, {
     method: 'PATCH',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
@@ -661,16 +806,16 @@ export async function listarTktHistorial(ticketId: number): Promise<{ id: number
 // ── B-01: Bloqueo temporal ─────────────────────────────────────────────────────
 
 export async function bloquearSolicitud(solicitudId: number, ratId: number, plazoDias: number): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/bloquear`, {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/bloquear`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rat_id: ratId, plazo_dias: plazoDias }),
+    body: JSON.stringify({ rat_id: ratId, dias_bloqueo: plazoDias }),
   });
   return handle<void>(res);
 }
 
 export async function desbloquearSolicitud(solicitudId: number): Promise<void> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/desbloquear`, {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/desbloquear`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
   });
@@ -680,9 +825,54 @@ export async function desbloquearSolicitud(solicitudId: number): Promise<void> {
 // ── B-04: Portabilidad ─────────────────────────────────────────────────────────
 
 export async function exportarPortabilidad(solicitudId: number): Promise<Blob> {
-  const res = await apiFetch(`${API_BASE}/solicitudes-derecho/${solicitudId}/portabilidad/export`);
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/portabilidad/export`);
   if (!res.ok) throw new Error('Error al exportar portabilidad');
   return res.blob();
+}
+
+// ── QW3: Subsanación ─────────────────────────────────────────────────────────
+
+export async function solicitarSubsanacion(solicitudId: number, detalle: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/subsanar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ detalle }),
+  });
+  return handle<void>(res);
+}
+
+export async function completarSubsanacion(solicitudId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/completar-subsanacion`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+  });
+  return handle<void>(res);
+}
+
+// ── QW4: Prórroga ────────────────────────────────────────────────────────────
+
+export async function prorrogarTicket(solicitudId: number, dias?: number, motivo?: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/prorrogar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dias: dias ?? 10, motivo }),
+  });
+  return handle<void>(res);
+}
+
+// ── S2.5: Rechazo fundado via endpoint dedicado ───────────────────────────────
+
+export async function rechazarTktTicket(
+  solicitudId: number,
+  causalRechazo: string,
+  motivoDetalle?: string,
+): Promise<TktTicket> {
+  const res = await apiFetch(`${API_BASE}/tkt-solicitud-derecho/${solicitudId}/rechazar`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ causal_rechazo: causalRechazo, motivo_detalle: motivoDetalle }),
+  });
+  return handle<TktTicket>(res);
 }
 
 // ── B-05: Evaluacion de riesgo de brecha ───────────────────────────────────────
@@ -712,7 +902,8 @@ export interface ConsentimientoCreate {
   email_titular: string;
   canal: string;
   texto_consentimiento: string;
-  datos_sensibles: boolean;
+  fecha_obtencion?: string;
+  datos_sensibles?: boolean;
 }
 
 export async function registrarConsentimiento(data: ConsentimientoCreate): Promise<void> {
@@ -731,6 +922,8 @@ export interface EncargadoContrato {
   company_id: number;
   rat_id?: number;
   nombre_encargado: string;
+  pais?: string;
+  direccion?: string;
   objeto: string;
   duracion_inicio: string;
   duracion_fin?: string;
@@ -804,7 +997,19 @@ export interface PoliticaTransparencia {
 }
 
 export async function getPoliticaTransparencia(companyId: number): Promise<PoliticaTransparencia> {
-  const res = await apiFetch(`${API_BASE}/publico/transparencia/${companyId}`);
+  const res = await publicFetch(`${API_BASE}/publico/transparencia/${companyId}`);
+  return res.json();
+}
+
+export async function updatePoliticaTransparencia(
+  companyId: number,
+  overrides: Partial<Record<string, string | null>>,
+): Promise<PoliticaTransparencia> {
+  const res = await apiFetch(`${API_BASE}/transparencia/${companyId}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ overrides }),
+  });
   return handle<PoliticaTransparencia>(res);
 }
 
@@ -874,7 +1079,7 @@ export interface EIPDItem {
   parecer_dpo: string | null;
   fecha_elaboracion: string | null;
   fecha_aprobacion: string | null;
-  resultado: 'completada' | 'no_requerida' | 'en_proceso';
+  resultado: 'completada' | 'no_requerida' | 'no_requerida_justificada' | 'en_proceso';
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -918,4 +1123,306 @@ export async function actualizarEipd(id: number, data: Partial<EIPDItem>): Promi
     body: JSON.stringify(data),
   });
   return handle<EIPDItem>(res);
+}
+
+// ── QW8: Seguimiento público del titular ──────────────────────────────────────
+
+export interface SeguimientoEntry {
+  estado_anterior: string | null;
+  estado_nuevo: string;
+  descripcion: string | null;
+  fecha: string;
+}
+
+export interface SeguimientoResponse {
+  id: number;
+  tipo: string;
+  estado: string;
+  fecha_recepcion: string | null;
+  fecha_vencimiento: string | null;
+  dias_restantes: number | null;
+  company_nombre: string | null;
+  historial: SeguimientoEntry[];
+}
+
+export async function consultarSeguimiento(trackingToken: string): Promise<SeguimientoResponse> {
+  const res = await apiFetch(`${API_BASE}/seguimiento/${trackingToken}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error al consultar seguimiento' }));
+    throw new Error(err.detail || 'Token inválido o no encontrado');
+  }
+  return handle<SeguimientoResponse>(res);
+}
+
+// ── ARCO-QW1: Exportación CSV/Excel/PDF ──────────────────────────────────────
+
+export async function exportarTktCsv(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/csv?${params}`);
+  if (!res.ok) throw new Error('Error al exportar CSV');
+  return res.blob();
+}
+
+export async function exportarTktExcel(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/excel?${params}`);
+  if (!res.ok) throw new Error('Error al exportar Excel');
+  return res.blob();
+}
+
+export async function exportarTktPdf(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}): Promise<Blob> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (filters?.estado) params.set('estado', filters.estado);
+  if (filters?.prioridad) params.set('prioridad', filters.prioridad);
+  if (filters?.fecha_desde) params.set('fecha_desde', filters.fecha_desde);
+  if (filters?.fecha_hasta) params.set('fecha_hasta', filters.fecha_hasta);
+  const res = await apiFetch(`${API_BASE}/export/tkt/pdf?${params}`);
+  if (!res.ok) throw new Error('Error al exportar PDF');
+  return res.blob();
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── C-08: Formulario público ARCO (sin auth) ─────────────────────────────────
+
+export interface EmpresaPublica { id: number; nombre: string; }
+
+export interface EjercerDerechosPayload {
+  company_id: number;
+  tipo: 'acceso' | 'rectificacion' | 'cancelacion' | 'oposicion' | 'bloqueo' | 'portabilidad';
+  titular_nombre: string;
+  titular_email: string;
+  titular_rut?: string;
+  descripcion: string;
+  telefono?: string;
+  representante_nombre?: string;
+  representante_rut?: string;
+  representante_poder_notarial_notas?: string;
+}
+
+export interface EjercerDerechosResponse { tracking_token: string; mensaje: string; }
+
+export async function getEmpresasPublicas(): Promise<EmpresaPublica[]> {
+  const res = await fetch(`${API_BASE}/publico/empresas`);
+  if (!res.ok) throw new Error('No se pudo cargar la lista de empresas');
+  return res.json();
+}
+
+export async function verificarTitularPublico(companyId: number, email: string): Promise<{ tiene_tickets_abiertos: boolean; cantidad: number }> {
+  const params = new URLSearchParams({ company_id: String(companyId), email });
+  const res = await publicFetch(`${API_BASE}/publico/verificar-titular?${params}`);
+  return res.json();
+}
+
+export async function ejercerDerechoPublico(data: EjercerDerechosPayload): Promise<EjercerDerechosResponse> {
+  const res = await fetch(`${API_BASE}/publico/ejercer-derechos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error al enviar solicitud' }));
+    throw new Error(err.detail || 'Error al enviar la solicitud');
+  }
+  return res.json();
+}
+
+export async function descargarTktCsv(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktCsv(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+export async function descargarTktExcel(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktExcel(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+export async function descargarTktPdf(companyId: number, filters?: {
+  estado?: string;
+  prioridad?: string;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+}) {
+  const blob = await exportarTktPdf(companyId, filters);
+  downloadBlob(blob, `custodio_arco_tickets_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+// ── Discovery & Mapping ────────────────────────────────────────────────────────
+
+export interface DataSource {
+  id: number;
+  company_id: number;
+  nombre: string;
+  tipo: 'postgresql' | 'sqlserver';
+  host: string;
+  port: number;
+  database_name: string;
+  username: string;
+  schema_name?: string;
+  activo: boolean;
+  ultimo_run_id?: number;
+  ultimo_run_estado?: string;
+}
+
+export interface DataSourceCreate {
+  nombre: string;
+  tipo: 'postgresql' | 'sqlserver';
+  host: string;
+  port: number;
+  database_name: string;
+  username: string;
+  password: string;
+  schema_name?: string;
+}
+
+export interface DiscoveryFinding {
+  id: number;
+  table_name: string;
+  column_name: string;
+  data_type_sql?: string;
+  categoria: string;
+  descripcion?: string;
+  confianza: number;
+  rat_id?: number;
+  descartado: boolean;
+  es_gap: boolean;
+}
+
+export interface DiscoveryRun {
+  id: number;
+  source_id: number;
+  company_id: number;
+  estado: string;
+  started_at: string;
+  finished_at?: string;
+  error_msg?: string;
+  total_tablas?: number;
+  total_columnas?: number;
+  total_hallazgos?: number;
+  total_gaps?: number;
+  ejecutado_por?: string;
+}
+
+export interface DiscoveryRunDetail {
+  run: DiscoveryRun;
+  findings: DiscoveryFinding[];
+  sugerencias_rat: Array<{
+    categoria: string;
+    template_rat: Record<string, string>;
+    tablas_involucradas: string[];
+    columnas_ejemplo: string[];
+    cantidad_hallazgos: number;
+  }>;
+}
+
+export async function listarDiscoverySources(companyId: number): Promise<DataSource[]> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources?company_id=${companyId}`);
+  return res.json();
+}
+
+export async function crearDiscoverySource(companyId: number, data: DataSourceCreate): Promise<DataSource> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources?company_id=${companyId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function actualizarDiscoverySource(
+  sourceId: number, companyId: number, data: Partial<DataSourceCreate & { activo: boolean }>
+): Promise<DataSource> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}?company_id=${companyId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function eliminarDiscoverySource(sourceId: number, companyId: number): Promise<void> {
+  await apiFetch(`${API_BASE}/discovery/sources/${sourceId}?company_id=${companyId}`, { method: 'DELETE' });
+}
+
+export async function ejecutarScanManual(
+  sourceId: number,
+  companyId: number,
+  columns: { table_name: string; column_name: string; data_type: string }[]
+): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan/manual?company_id=${companyId}`, {
+    method: 'POST',
+    body: JSON.stringify({ columns }),
+  });
+  return handle<DiscoveryRunDetail>(res);
+}
+
+export async function ejecutarScan(sourceId: number, companyId: number): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/scan?company_id=${companyId}`, {
+    method: 'POST',
+  });
+  return handle<DiscoveryRunDetail>(res);
+}
+
+export function urlExportarGapsCSV(runId: number, companyId: number): string {
+  return `${API_BASE}/discovery/runs/${runId}/gaps/export?company_id=${companyId}`;
+}
+
+export async function obtenerDiscoveryRun(runId: number, companyId: number): Promise<DiscoveryRunDetail> {
+  const res = await apiFetch(`${API_BASE}/discovery/runs/${runId}?company_id=${companyId}`);
+  return handle<DiscoveryRunDetail>(res);
+}
+
+export async function listarRunsDeSource(sourceId: number, companyId: number): Promise<DiscoveryRun[]> {
+  const res = await apiFetch(`${API_BASE}/discovery/sources/${sourceId}/runs?company_id=${companyId}`);
+  return res.json();
+}
+
+export async function vincularFindingARat(
+  findingId: number, companyId: number, ratId?: number, descartado?: boolean
+): Promise<DiscoveryFinding> {
+  const params = new URLSearchParams({ company_id: String(companyId) });
+  if (ratId !== undefined) params.set('rat_id', String(ratId));
+  if (descartado !== undefined) params.set('descartado', String(descartado));
+  const res = await apiFetch(`${API_BASE}/discovery/findings/${findingId}/vincular-rat?${params}`, {
+    method: 'PATCH',
+  });
+  return res.json();
 }

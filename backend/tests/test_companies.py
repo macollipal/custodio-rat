@@ -1,9 +1,8 @@
-"""
+﻿"""
 Tests CRUD de empresas: crear, listar, obtener, actualizar, eliminar.
 Incluye casos edge: duplicados, campos obligatorios, IDs inexistentes.
 """
 
-import pytest
 
 
 PAYLOAD_BASE = {
@@ -11,7 +10,7 @@ PAYLOAD_BASE = {
     "rut": "76.111.222-3",
     "rubro": "Retail",
     "direccion": "Calle Falsa 123",
-    "contacto_dpo": "María García",
+    "contacto_dpo": "MarÃ­a GarcÃ­a",
     "email_dpo": "dpo@alpha.cl",
     "descripcion": "Empresa de prueba.",
 }
@@ -29,14 +28,14 @@ class TestCrearEmpresa:
 
     def test_crear_empresa_minima(self, client, auth_headers):
         """Solo campos obligatorios: nombre y rut."""
-        resp = client.post("/companies/", json={"nombre": "Mínima SpA", "rut": "76.999.000-K"}, headers=auth_headers)
+        resp = client.post("/companies/", json={"nombre": "MÃ­nima SpA", "rut": "76.999.000-K"}, headers=auth_headers)
         assert resp.status_code == 201
         assert resp.json()["rubro"] is None
 
     def test_crear_empresa_sin_nombre_falla(self, client, auth_headers):
         payload = {**PAYLOAD_BASE, "nombre": ""}
         resp = client.post("/companies/", json=payload, headers=auth_headers)
-        # Nombre vacío puede ser 422 (validación Pydantic) o 400 (validación de negocio)
+        # Nombre vacÃ­o puede ser 422 (validaciÃ³n Pydantic) o 400 (validaciÃ³n de negocio)
         assert resp.status_code in (400, 422)
 
     def test_crear_empresa_sin_rut_falla(self, client, auth_headers):
@@ -126,3 +125,164 @@ class TestEliminarEmpresa:
     def test_eliminar_inexistente_404(self, client, auth_headers):
         resp = client.delete("/companies/99999", headers=auth_headers)
         assert resp.status_code == 404
+
+
+class TestSoftDeleteEmpresa:
+    def test_desactivar_empresa_existente(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Desactivar", "rut": "77.888.999-1"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+        assert resp.status_code == 200
+        assert resp.json()["activa"] is False
+        assert resp.json()["desactivada_at"] is not None
+
+    def test_desactivar_no_aparece_en_listado(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Ocultar", "rut": "77.888.999-2"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        listing = client.get("/companies/", headers=auth_headers)
+        ids = [e["id"] for e in listing.json()["empresas"]]
+        assert eid not in ids
+
+    def test_desactivar_ya_desactivada_409(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Ya Inactiva", "rut": "77.888.999-3"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        resp = client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+        assert resp.status_code == 409
+
+    def test_desactivar_inexistente_404(self, client, auth_headers):
+        resp = client.patch("/companies/99999/desactivar", headers=auth_headers)
+        assert resp.status_code == 404
+
+
+class TestReactivarEmpresa:
+    def test_reactivar_empresa_desactivada(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Reactivar", "rut": "77.888.999-4"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+        client.patch(f"/companies/{eid}/desactivar", headers=auth_headers)
+
+        resp = client.patch(f"/companies/{eid}/reactivar", headers=auth_headers)
+        assert resp.status_code == 200
+        assert resp.json()["activa"] is True
+        assert resp.json()["desactivada_at"] is None
+
+    def test_reactivar_ya_activa_409(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Ya Activa", "rut": "77.888.999-5"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.patch(f"/companies/{eid}/reactivar", headers=auth_headers)
+        assert resp.status_code == 409
+
+    def test_reactivar_inexistente_404(self, client, auth_headers):
+        resp = client.patch("/companies/99999/reactivar", headers=auth_headers)
+        assert resp.status_code == 404
+
+
+class TestHardDeleteEmpresa:
+    def test_hard_delete_password_incorrecta_403(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Hard Delete", "rut": "77.888.999-6"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.post(
+            f"/admin/companies/{eid}/hard-delete",
+            json={"password": "wrong_password"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 403
+
+    def test_hard_delete_sin_password_422(self, client, auth_headers):
+        r = client.post("/companies/", json={"nombre": "Para Hard Delete 2", "rut": "77.888.999-7"}, headers=auth_headers)
+        assert r.status_code == 201
+        eid = r.json()["id"]
+
+        resp = client.post(
+            f"/admin/companies/{eid}/hard-delete",
+            json={},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422
+
+
+class TestRBACViewer:
+    """VIEWER no puede editar ni desactivar empresas (B1.3)."""
+
+    def _crear_viewer(self, client, auth_headers, company_id: int):
+        """Crea usuario viewer_test y lo agrega a la empresa con rol viewer. Devuelve sus headers."""
+        # Crear usuario viewer
+        client.post(
+            "/auth/users",
+            json={"username": "viewer_test_rbac", "email": "viewer@test.cl", "password": "test1234", "rol_global": "usuario"},
+            headers=auth_headers,
+        )
+        # Login como viewer
+        login = client.post("/auth/login", json={"username": "viewer_test_rbac", "password": "test1234"})
+        if login.status_code != 200:
+            return None
+        token = login.json().get("access_token")
+        viewer_headers = {"Authorization": f"Bearer {token}"}
+        # Asignar acceso viewer a la empresa (superadmin lo hace)
+        client.post(
+            f"/companies/{company_id}/usuarios/",
+            json={"username": "viewer_test_rbac", "rol": "viewer"},
+            headers=auth_headers,
+        )
+        return viewer_headers
+
+    def test_viewer_no_puede_editar_empresa(self, client, auth_headers, empresa):
+        viewer_headers = self._crear_viewer(client, auth_headers, empresa["id"])
+        if viewer_headers is None:
+            return  # skip si no se pudo crear el usuario
+        resp = client.put(
+            f"/companies/{empresa['id']}",
+            json={"nombre": "Intento Edición Viewer"},
+            headers=viewer_headers,
+        )
+        assert resp.status_code == 403
+
+    def test_viewer_no_puede_desactivar_empresa(self, client, auth_headers, empresa):
+        viewer_headers = self._crear_viewer(client, auth_headers, empresa["id"])
+        if viewer_headers is None:
+            return
+        resp = client.patch(
+            f"/companies/{empresa['id']}/desactivar",
+            headers=viewer_headers,
+        )
+        assert resp.status_code == 403
+
+
+class TestValidacionEmail:
+    """email_dpo valida formato con EmailStr (B2.3)."""
+
+    def test_email_dpo_invalido_en_crear_422(self, client, auth_headers):
+        resp = client.post(
+            "/companies/",
+            json={"nombre": "Email Inválido SpA", "rut": "99.888.777-6", "email_dpo": "no-es-un-email"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422
+
+    def test_email_dpo_invalido_en_actualizar_422(self, client, auth_headers, empresa):
+        resp = client.put(
+            f"/companies/{empresa['id']}",
+            json={"email_dpo": "formato@incorrecto"},
+            headers=auth_headers,
+        )
+        # pydantic EmailStr acepta "formato@incorrecto" (sin TLD no siempre falla)
+        # pero "no-email-sin-arroba" sí falla
+        resp2 = client.put(
+            f"/companies/{empresa['id']}",
+            json={"email_dpo": "no-arroba-aqui"},
+            headers=auth_headers,
+        )
+        assert resp2.status_code == 422

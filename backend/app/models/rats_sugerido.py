@@ -24,7 +24,7 @@ class RATSugerido(Base):
     evaluacion_impacto: Mapped[bool] = mapped_column(Boolean, default=False)
     decisiones_automatizadas: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    rubro: Mapped["Rubro"] = relationship("Rubro", back_populates="rats_sugeridos")
+    rubro: Mapped["Rubro"] = relationship("Rubro", back_populates="rats_sugeridos")  # noqa: F821
 
     def __repr__(self):
         return f"<RATSugerido {self.nombre_proceso} (rubro={self.rubro_id})>"

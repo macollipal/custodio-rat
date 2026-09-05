@@ -2,9 +2,13 @@
 Servicio de negocio para módulos TKT (ticketing).
 Maneja lógica de SLA, estados, y estadísticas.
 """
-from datetime import datetime, date, timezone, timedelta
+import json
+import uuid
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
+
+from app.services.audit_service import log_audit
 
 
 def calcular_dias_habiles(fecha_inicio: datetime, dias: int, anio: Optional[int] = None) -> datetime:
@@ -115,13 +119,18 @@ def crear_ticket_desde_solicitud(
     descripcion: Optional[str] = None,
     titular_rut: Optional[str] = None,
     origen: str = "web",
-) -> "TktSolicitudDerecho":
-    """Crea un ticket TKT desde el formulario público de solicitudes."""
+    rat_id: Optional[int] = None,
+    company_nombre: str = "la empresa",
+    representante_nombre: Optional[str] = None,
+    representante_rut: Optional[str] = None,
+) -> "TktSolicitudDerecho":  # noqa: F821
+    """Crea un ticket TKT desde el formulario público de solicitudes y envía acuse al titular."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from app.models.tkt_historial import TktHistorial
 
     ahora = datetime.now(timezone.utc)
     fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+    tracking_token = str(uuid.uuid4())
 
     ticket = TktSolicitudDerecho(
         company_id=company_id,
@@ -135,9 +144,19 @@ def crear_ticket_desde_solicitud(
         descripcion=descripcion,
         fecha_recepcion=ahora,
         fecha_vencimiento=fecha_vencimiento,
+        rat_id=rat_id,
+        tracking_token=tracking_token,
+        acuse_enviado_at=ahora,
+        representante_nombre=representante_nombre,
+        representante_rut=representante_rut,
     )
     db.add(ticket)
     db.flush()
+
+    from app.services.asignacion_service import evaluar_reglas_asignacion
+    responsable_id = evaluar_reglas_asignacion(db, company_id, tipo, "normal")
+    if responsable_id:
+        ticket.responsable_id = responsable_id
 
     historial = TktHistorial(
         ticket_id=ticket.id,
@@ -146,8 +165,41 @@ def crear_ticket_desde_solicitud(
         descripcion="Ticket creado desde formulario público",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="crear",
+        usuario=titular_email,
+        detalle={
+            "tipo": tipo,
+            "estado": "abierto",
+            "titular_nombre": titular_nombre,
+            "titular_email": titular_email,
+            "origen": origen,
+            "representante_nombre": representante_nombre,
+            "representante_rut": representante_rut,
+            "tracking_token": tracking_token,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
+
+    try:
+        from app.services.email_service import notificar_acuse_solicitud
+        notificar_acuse_solicitud(
+            email_titular=titular_email,
+            nombre_titular=titular_nombre,
+            tipo_derecho=tipo,
+            empresa_nombre=company_nombre,
+            ticket_id=ticket.id,
+            tracking_token=tracking_token,
+        )
+    except Exception:
+        pass
+
     return ticket
 
 
@@ -162,7 +214,20 @@ def crear_ticket(
     titular_rut: Optional[str] = None,
     descripcion: Optional[str] = None,
     created_by: Optional[str] = None,
-) -> "TktSolicitudDerecho":
+    rat_id: Optional[int] = None,
+    representante_nombre: Optional[str] = None,
+    representante_rut: Optional[str] = None,
+    representante_poder_notarial_notas: Optional[str] = None,
+    telefono: Optional[str] = None,
+    fecha_nacimiento: Optional[str] = None,
+    pais: Optional[str] = None,
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Optional[str] = None,
+    evidencia_identidad: Optional[str] = None,
+    evidencia_respuesta_hash: Optional[str] = None,
+    causal_rechazo: Optional[str] = None,
+    medio_respuesta: Optional[str] = None,
+) -> "TktSolicitudDerecho":  # noqa: F821
     """Crea un ticket TKT (para uso interno/admin)."""
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from app.models.tkt_historial import TktHistorial
@@ -183,9 +248,33 @@ def crear_ticket(
         fecha_recepcion=ahora,
         fecha_vencimiento=fecha_vencimiento,
         created_by=created_by,
+        rat_id=rat_id,
+        tracking_token=str(uuid.uuid4()),
+        representante_nombre=representante_nombre,
+        representante_rut=representante_rut,
+        representante_poder_notarial_notas=representante_poder_notarial_notas,
+        telefono=telefono,
+        pais=pais,
+        # Campos nuevos gaps Ley 21.719 (Iter 10)
+        metodo_verificacion_identidad=metodo_verificacion_identidad,
+        evidencia_identidad=evidencia_identidad,
+        evidencia_respuesta_hash=evidencia_respuesta_hash,
+        causal_rechazo=causal_rechazo,
+        medio_respuesta=medio_respuesta,
     )
+    if fecha_nacimiento:
+        from datetime import date
+        try:
+            ticket.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
+        except ValueError:
+            pass
     db.add(ticket)
     db.flush()
+
+    from app.services.asignacion_service import evaluar_reglas_asignacion
+    responsable_id = evaluar_reglas_asignacion(db, company_id, tipo, prioridad)
+    if responsable_id:
+        ticket.responsable_id = responsable_id
 
     historial = TktHistorial(
         ticket_id=ticket.id,
@@ -194,6 +283,23 @@ def crear_ticket(
         descripcion="Ticket creado",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="crear",
+        usuario=created_by or "system",
+        detalle={
+            "tipo": tipo,
+            "estado": "abierto",
+            "prioridad": prioridad,
+            "titular_nombre": titular_nombre,
+            "titular_email": titular_email,
+            "origen": origen,
+        },
+    )
+
     db.commit()
     db.refresh(ticket)
     return ticket
@@ -226,6 +332,20 @@ def cambiar_estado_ticket(
         descripcion=descripcion or f"Estado cambiado a {nuevo_estado}",
     )
     db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="cambiar_estado",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "estado_anterior": estado_anterior,
+            "estado_nuevo": nuevo_estado,
+            "descripcion": descripcion,
+        },
+    )
+
     if auto_commit:
         db.commit()
     else:
@@ -235,48 +355,88 @@ def cambiar_estado_ticket(
 
 
 def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
-    """Calcula estadísticas de tickets para dashboard."""
+    """Calcula estadísticas de tickets para dashboard.
+
+    Optimizado: 1 GROUP BY + 1 vencidos + 1 avg en vez de 9 COUNT queries.
+    """
     from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
     from sqlalchemy import func
 
-    query = db.query(TktSolicitudDerecho)
+    base_filter = []
     if company_id:
-        query = query.filter(TktSolicitudDerecho.company_id == company_id)
+        base_filter.append(TktSolicitudDerecho.company_id == company_id)
 
-    total = query.count()
-    abiertos = query.filter(TktSolicitudDerecho.estado == "abierto").count()
-    en_proceso = query.filter(TktSolicitudDerecho.estado == "en_proceso").count()
-    pendientes = query.filter(TktSolicitudDerecho.estado == "pendiente").count()
-    resueltos = query.filter(TktSolicitudDerecho.estado == "resuelto").count()
+    # 1 COUNT total
+    total = db.query(func.count(TktSolicitudDerecho.id)).filter(*base_filter).scalar() or 0
 
+    # 1 GROUP BY para todos los estados
+    estado_counts = (
+        db.query(
+            TktSolicitudDerecho.estado,
+            func.count(TktSolicitudDerecho.id).label("count"),
+        )
+        .filter(*base_filter)
+        .group_by(TktSolicitudDerecho.estado)
+        .all()
+    )
+    counts = {row.estado: row.count for row in estado_counts}
+    abiertos = counts.get("abierto", 0)
+    en_proceso = counts.get("en_proceso", 0)
+    pendientes = counts.get("pendiente", 0)
+    resueltos = counts.get("resuelto", 0)
+    bloqueados = counts.get("bloqueado", 0)
+    rechazados = counts.get("rechazado", 0)
+    subsanacion = counts.get("subsanacion", 0)
+    prorrogas = counts.get("prorroga", 0)
+
+    # 1 COUNT vencidos
     ahora = datetime.now(timezone.utc)
-    vencidos = query.filter(
-        TktSolicitudDerecho.estado.in_(["abierto", "en_proceso", "pendiente"]),
+    vencidos_filter = base_filter + [
+        TktSolicitudDerecho.estado.in_(["abierto", "en_proceso", "pendiente", "bloqueado", "subsanacion", "prorroga"]),
         TktSolicitudDerecho.fecha_vencimiento < ahora,
-    ).count()
+    ]
+    vencidos = db.query(func.count(TktSolicitudDerecho.id)).filter(*vencidos_filter).scalar() or 0
 
     # Cumplimiento SLA
-    total_con_sla = query.filter(TktSolicitudDerecho.estado == "resuelto").count()
-    resueltos_en_tiempo = query.filter(
-        TktSolicitudDerecho.estado == "resuelto",
-        TktSolicitudDerecho.respuesta_fecha <= TktSolicitudDerecho.fecha_vencimiento,
-    ).count()
-    cumplimiento = round((resueltos_en_tiempo / total_con_sla) * 100, 1) if total_con_sla > 0 else 100.0
-
-    # Tiempo promedio primera respuesta
-    avg_query = db.query(
-        func.avg(
-            func.extract('epoch', TktSolicitudDerecho.respuesta_fecha) -
-            func.extract('epoch', TktSolicitudDerecho.fecha_recepcion)
+    resueltos_en_tiempo = (
+        db.query(func.count(TktSolicitudDerecho.id))
+        .filter(
+            *base_filter,
+            TktSolicitudDerecho.estado == "resuelto",
+            TktSolicitudDerecho.respuesta_fecha <= TktSolicitudDerecho.fecha_vencimiento,
         )
-    ).filter(
-        TktSolicitudDerecho.estado == "resuelto",
-        TktSolicitudDerecho.respuesta_fecha.isnot(None),
+        .scalar()
+    ) or 0
+    cumplimiento = round((resueltos_en_tiempo / resueltos) * 100, 1) if resueltos > 0 else 100.0
+
+    # 1 AVG query para tiempo promedio
+    avg_seconds = (
+        db.query(
+            func.avg(
+                func.extract("epoch", TktSolicitudDerecho.respuesta_fecha) -
+                func.extract("epoch", TktSolicitudDerecho.fecha_recepcion)
+            )
+        )
+        .filter(
+            *base_filter,
+            TktSolicitudDerecho.estado == "resuelto",
+            TktSolicitudDerecho.respuesta_fecha.isnot(None),
+        )
+        .scalar()
     )
-    if company_id:
-        avg_query = avg_query.filter(TktSolicitudDerecho.company_id == company_id)
-    avg_seconds = avg_query.scalar()
     tiempo_promedio = round(avg_seconds / 3600, 1) if avg_seconds else 0
+
+    # QW4 ARCO: derechos más ejercidos (1 GROUP BY extra por tipo)
+    tipo_counts = (
+        db.query(
+            TktSolicitudDerecho.tipo,
+            func.count(TktSolicitudDerecho.id).label("count"),
+        )
+        .filter(*base_filter)
+        .group_by(TktSolicitudDerecho.tipo)
+        .all()
+    )
+    por_tipo = {row.tipo: row.count for row in tipo_counts}
 
     return {
         "total": total,
@@ -284,7 +444,463 @@ def get_dashboard_stats(db: Session, company_id: Optional[int] = None) -> dict:
         "en_proceso": en_proceso,
         "pendientes": pendientes,
         "resueltos": resueltos,
+        "bloqueados": bloqueados,
+        "rechazados": rechazados,
+        "subsanacion": subsanacion,
+        "prorrogas": prorrogas,
         "vencidos": vencidos,
         "cumplimiento_sla": cumplimiento,
         "tiempo_promedio_horas": tiempo_promedio,
+        "por_tipo": por_tipo,
     }
+
+
+def bloquear_ticket(
+    db: Session,
+    ticket_id: int,
+    rat_id: int,
+    dias_bloqueo: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Bloquea un RAT y marca el ticket como bloqueado (Art. 8 ter)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.rat import RAT as RATModel
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if not rat:
+        return None, "RAT no encontrado"
+
+    if rat.company_id != ticket.company_id:
+        return None, "El RAT no pertenece a la empresa del ticket"
+
+    estado_anterior = ticket.estado
+    fecha_vencimiento = calcular_dias_habiles(datetime.now(timezone.utc), dias_bloqueo)
+
+    ticket.estado = "bloqueado"
+    ticket.rat_id = rat_id
+    ticket.plazo_bloqueo_vencimiento = fecha_vencimiento
+
+    rat.bloqueado = True
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="bloqueado",
+        user_id=user_id,
+        descripcion=f"RAT id={rat_id} bloqueado por {dias_bloqueo} días hábiles",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="bloquear",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "rat_id": rat_id,
+            "dias_bloqueo": dias_bloqueo,
+            "fecha_vencimiento_bloqueo": ticket.plazo_bloqueo_vencimiento.isoformat() if ticket.plazo_bloqueo_vencimiento else None,
+        },
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def desbloquear_ticket(
+    db: Session,
+    ticket_id: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Desbloquea un RAT antes del vencimiento y marca ticket como resuelto."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.rat import RAT as RATModel
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado != "bloqueado":
+        return None, "El ticket no está en estado bloqueado"
+
+    estado_anterior = ticket.estado
+
+    if ticket.rat_id:
+        rat = db.query(RATModel).filter(RATModel.id == ticket.rat_id).first()
+        if rat:
+            rat.bloqueado = False
+
+    ticket.estado = "resuelto"
+    ticket.plazo_bloqueo_vencimiento = None
+    ticket.respuesta_texto = "RAT desbloqueado antes del vencimiento"
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="resuelto",
+        user_id=user_id,
+        descripcion="Desbloqueo anticipado del RAT",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="desbloquear",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"rat_id": ticket.rat_id},
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def rechazar_ticket(
+    db: Session,
+    ticket_id: int,
+    motivo: str,
+    user_id: Optional[int] = None,
+    motivo_detalle: Optional[str] = None,
+) -> tuple:
+    """Rechaza una solicitud ARCO con motivo fundado (Art. 12.5).
+
+    Args:
+        motivo: Causal de rechazo (debe estar en ``CausalRechazo``).
+        motivo_detalle: Texto libre que amplía la justificación.
+    """
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, CausalRechazo
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if motivo not in [e.value for e in CausalRechazo]:
+        return None, f"causal_rechazo inválida (esperado: {[e.value for e in CausalRechazo]})"
+
+    ESTADOS_TERMINALES = {"resuelto", "rechazado"}
+    if ticket.estado in ESTADOS_TERMINALES:
+        return None, f"No se puede rechazar un ticket en estado '{ticket.estado}' (estado terminal)"
+
+    estado_anterior = ticket.estado
+
+    ticket.estado = "rechazado"
+    ticket.causal_rechazo = motivo
+    ticket.respuesta_texto = (motivo_detalle or "").strip() or motivo
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="rechazado",
+        user_id=user_id,
+        descripcion=f"Rechazo fundado ({motivo})" + (f": {motivo_detalle}" if motivo_detalle else ""),
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="rechazar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"causal_rechazo": motivo, "motivo_detalle": motivo_detalle},
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def responder_ticket_service(
+    db: Session,
+    ticket_id: int,
+    estado: str,
+    respuesta: Optional[str],
+    user_id: int,
+    username: str,
+    descripcion_accion: Optional[str] = None,
+    medio_respuesta: Optional[str] = None,
+) -> tuple:
+    """Wrapper centralizado para responder/solucionar un ticket ARCO.
+
+    Centraliza:
+    - Validación de identidad si estado == 'resuelto' (Art. 12).
+    - Cómputo de evidencia_respuesta_hash SHA-256 (Art. 12.5).
+
+    Returns ``(ticket, None)`` o ``(None, error_message)``.
+    """
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if estado == "resuelto" and not ticket.metodo_verificacion_identidad:
+        return None, (
+            "Antes de marcar como resuelta debe registrar el método de verificación de identidad "
+            "(Art. 12 Ley 21.719). Editá el ticket y agregá 'metodo_verificacion_identidad'."
+        )
+
+    if estado == "resuelto" and not (respuesta and respuesta.strip()):
+        return None, (
+            "La respuesta_texto es obligatoria para resolver una solicitud ARCO. "
+            "El responsable del tratamiento debe informar su decisión al titular (Art. 12 Ley 21.719). "
+            "Incluye la decisión y los motivos en el campo 'respuesta'."
+        )
+
+    ahora = datetime.now(timezone.utc)
+
+    ticket, err = cambiar_estado_ticket(
+        db=db,
+        ticket_id=ticket_id,
+        nuevo_estado=estado,
+        user_id=user_id,
+        descripcion=descripcion_accion or f"Respuesta: {estado}",
+        auto_commit=False,
+    )
+    if err:
+        return None, err
+
+    if respuesta is not None:
+        ticket.respuesta_texto = respuesta
+    ticket.respuesta_fecha = ahora
+    if medio_respuesta is not None:
+        ticket.medio_respuesta = medio_respuesta
+
+    if estado == "resuelto" and not ticket.evidencia_respuesta_hash:
+        import hashlib
+        hash_input = f"{(ticket.respuesta_texto or '').strip()}|{username}|{ahora.isoformat()}"
+        ticket.evidencia_respuesta_hash = hashlib.sha256(
+            hash_input.encode("utf-8")
+        ).hexdigest()
+
+    db.commit()
+    db.refresh(ticket)
+
+    return ticket, None
+
+
+def guardar_portability_data(
+    db: Session,
+    ticket_id: int,
+    portability_data: str,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Guarda datos de portabilidad en el ticket y lo marca como resuelto."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.tipo != "portabilidad":
+        return None, "El ticket no es de portabilidad"
+
+    try:
+        parsed = json.loads(portability_data)
+    except (ValueError, TypeError):
+        return None, "portability_data debe ser un JSON válido (Art. 9 portabilidad)"
+    if not isinstance(parsed, (dict, list)):
+        return None, "portability_data debe ser un objeto o array JSON"
+    if not parsed:
+        return None, "portability_data no puede estar vacío"
+
+    estado_anterior = ticket.estado
+
+    ticket.portability_data = portability_data
+    ticket.estado = "resuelto"
+    ticket.respuesta_texto = "Datos de portabilidad exportados"
+    ticket.respuesta_fecha = datetime.now(timezone.utc)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="resuelto",
+        user_id=user_id,
+        descripcion="Exportación de portabilidad completada",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="portabilidad",
+        usuario=str(user_id) if user_id else "system",
+        detalle={"portability_data_length": len(portability_data)},
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def solicitar_subsanacion(
+    db: Session,
+    ticket_id: int,
+    detalle: str,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Solicita subsanación al titular (Art. 12 — solicitud incompleta). Pausa y extiende el plazo."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado not in ("abierto", "en_proceso", "pendiente"):
+        return None, f"No se puede solicitar subsanación desde estado '{ticket.estado}'"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    ticket.estado = "subsanacion"
+    ticket.subsanacion_detalle = detalle
+    ticket.subsanacion_fecha_pedido = ahora
+    ticket.fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="subsanacion",
+        user_id=user_id,
+        descripcion=f"Subsanación solicitada: {detalle}",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="subsanacion_solicitar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "detalle": detalle,
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def completar_subsanacion(
+    db: Session,
+    ticket_id: int,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Completa la subsanación y vuelve a poner el ticket en proceso (plazo resumes)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado != "subsanacion":
+        return None, f"El ticket no está en estado subsanacion (estado actual: '{ticket.estado}')"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    ticket.estado = "en_proceso"
+    ticket.subsanacion_detalle = None
+    ticket.subsanacion_fecha_pedido = None
+    ticket.fecha_vencimiento = calcular_dias_habiles(ahora, 10)
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="en_proceso",
+        user_id=user_id,
+        descripcion="Subsanación completada, titular entregó información faltante",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="subsanacion_completar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None
+
+
+def prorrogar_ticket(
+    db: Session,
+    ticket_id: int,
+    dias: int = 10,
+    motivo: Optional[str] = None,
+    user_id: Optional[int] = None,
+) -> tuple:
+    """Extiende el plazo de respuesta (Art. 12 bis — máximo 10 días hábiles adicionales)."""
+    from app.models.tkt_solicitud_derecho import TktSolicitudDerecho
+    from app.models.tkt_historial import TktHistorial
+
+    ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
+    if not ticket:
+        return None, "Ticket no encontrado"
+
+    if ticket.estado in ("resuelto", "rechazado", "bloqueado", "subsanacion"):
+        return None, f"No se puede prorrogar desde estado '{ticket.estado}'"
+
+    if ticket.prorroga_fecha is not None:
+        return None, "El ticket ya fue prorrogado anteriormente"
+
+    estado_anterior = ticket.estado
+    ahora = datetime.now(timezone.utc)
+
+    nueva_vencimiento = calcular_dias_habiles(ahora, dias)
+
+    ticket.estado = "prorroga"
+    ticket.prorroga_fecha = ahora
+    ticket.prorroga_dias = dias
+    ticket.fecha_vencimiento = nueva_vencimiento
+
+    historial = TktHistorial(
+        ticket_id=ticket.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo="prorroga",
+        user_id=user_id,
+        descripcion=f"Prórroga de {dias} días: {motivo or 'Sin motivo'}",
+    )
+    db.add(historial)
+
+    log_audit(
+        db=db,
+        entidad="tkt_solicitud_derecho",
+        entidad_id=ticket.id,
+        accion="prorrogar",
+        usuario=str(user_id) if user_id else "system",
+        detalle={
+            "dias": dias,
+            "motivo": motivo,
+            "nuevo_plazo": ticket.fecha_vencimiento.isoformat() if ticket.fecha_vencimiento else None,
+        },
+    )
+
+    db.commit()
+    db.refresh(ticket)
+    return ticket, None

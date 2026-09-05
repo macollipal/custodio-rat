@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EIPDOut(BaseModel):
@@ -13,6 +13,9 @@ class EIPDOut(BaseModel):
     riesgos_identificados: Optional[str] = None
     medidas_propuestas: Optional[str] = None
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_aprobacion: Optional[date] = None
     resultado: str
@@ -25,24 +28,37 @@ class EIPDOut(BaseModel):
 
 class EIPDCreate(BaseModel):
     rat_id: int
-    metodologia: Optional[str] = None
+    metodologia: Optional[str] = Field(None, min_length=50)
     objetivos: Optional[str] = None
     necesidad_proporcionalidad: Optional[str] = None
-    riesgos_identificados: Optional[str] = None
-    medidas_propuestas: Optional[str] = None
+    riesgos_identificados: Optional[str] = Field(None, min_length=50)
+    medidas_propuestas: Optional[str] = Field(None, min_length=50)
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_aprobacion: Optional[date] = None
     resultado: str = "en_proceso"
 
 
 class EIPDUpdate(BaseModel):
-    metodologia: Optional[str] = None
+    metodologia: Optional[str] = Field(None, min_length=50)
     objetivos: Optional[str] = None
     necesidad_proporcionalidad: Optional[str] = None
-    riesgos_identificados: Optional[str] = None
-    medidas_propuestas: Optional[str] = None
+    riesgos_identificados: Optional[str] = Field(None, min_length=50)
+    medidas_propuestas: Optional[str] = Field(None, min_length=50)
     parecer_dpo: Optional[str] = None
+    parecer_dpo_autor: Optional[str] = None
+    parecer_dpo_fecha: Optional[datetime] = None
+    justificacion_no_aplica: Optional[str] = None
     fecha_elaboracion: Optional[date] = None
     fecha_aprobacion: Optional[date] = None
     resultado: Optional[str] = None
+
+
+class EIPDListResponse(BaseModel):
+    eipds: list[EIPDOut]
+    total: int
+    skip: int
+    limit: int

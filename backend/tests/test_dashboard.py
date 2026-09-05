@@ -1,9 +1,8 @@
-"""
-Tests del endpoint de estadísticas del dashboard.
-Valida: estructura de respuesta, contadores, cálculo de completitud, flags de riesgo.
+﻿"""
+Tests del endpoint de estadÃ­sticas del dashboard.
+Valida: estructura de respuesta, contadores, cÃ¡lculo de completitud, flags de riesgo.
 """
 
-import pytest
 
 
 class TestDashboard:
@@ -39,7 +38,7 @@ class TestDashboard:
         assert resp.json()["total_procesos"] == 1
 
     def test_dashboard_detecta_datos_sensibles(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "datos_sensibles": True}
+        payload = {**rat_base, "datos_sensibles": True, "tipo_dato_sensible": "Datos relativos a la salud", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         client.post("/rats/", json=payload, headers=auth_headers)
         resp = client.get(f"/rats/dashboard/{rat_base['company_id']}", headers=auth_headers)
         assert resp.json()["procesos_con_datos_sensibles"] >= 1
@@ -51,7 +50,7 @@ class TestDashboard:
         assert resp.json()["requieren_eipd"] >= 1
 
     def test_dashboard_detecta_transferencia_internacional(self, client, auth_headers, rat_base):
-        payload = {**rat_base, "transferencia_internacional": True, "pais_destino": "Brasil"}
+        payload = {**rat_base, "transferencia_internacional": True, "pais_destino": "Brasil", "garantias_transferencia_int": "Cláusulas contractuales tipo", "evaluacion_impacto": True, "estado_eipd": "pendiente"}
         client.post("/rats/", json=payload, headers=auth_headers)
         resp = client.get(f"/rats/dashboard/{rat_base['company_id']}", headers=auth_headers)
         assert resp.json()["transferencias_internacionales"] >= 1
@@ -63,7 +62,7 @@ class TestDashboard:
         assert 0 <= pct <= 100
 
     def test_dashboard_por_estado_refleja_rat_creado(self, client, auth_headers, rat_base):
-        """El dashboard refleja el estado del RAT (borrador o completo según campos)."""
+        """El dashboard refleja el estado del RAT (borrador o completo segÃºn campos)."""
         client.post("/rats/", json=rat_base, headers=auth_headers)
         resp = client.get(f"/rats/dashboard/{rat_base['company_id']}", headers=auth_headers)
         por_estado = resp.json()["por_estado"]

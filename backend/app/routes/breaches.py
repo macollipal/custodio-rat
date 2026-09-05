@@ -2,11 +2,12 @@
 Endpoints para Brechas de Seguridad (Art. 14 bis Ley 21.719).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.schemas.breach import BreachCreate, BreachOut, BreachUpdate
+from app.schemas.breach import BreachCreate, BreachOut, BreachUpdate, BreachListResponse
+from app.schemas.common import MessageResponse
 from app.services.breach_service import (
     listar_brechas, get_breach, crear_brecha, actualizar_brecha, eliminar_brecha, _enriquecer,
     evaluar_riesgo_brecha,
@@ -20,12 +21,13 @@ def _out(b) -> BreachOut:
     out = BreachOut.model_validate(b)
     extra = _enriquecer(b)
     out.horas_desde_deteccion = extra["horas_desde_deteccion"]
-    out.plazo_apdc_vencido = extra["plazo_apdc_vencido"]
-    out.reportable_apdc_calculado = extra["reportable_apdc_calculado"]
+    out.horas_desde_conocimiento = extra["horas_desde_conocimiento"]
+    out.plazo_apdp_vencido = extra["plazo_apdp_vencido"]
+    out.reportable_apdp_calculado = extra["reportable_apdp_calculado"]
     return out
 
 
-@router.get("/", summary="Listar brechas de seguridad")
+@router.get("/", response_model=BreachListResponse, summary="Listar brechas de seguridad")
 async def listar(
     company_id: int = Query(..., description="ID de la empresa"),
     skip: int = 0,
@@ -34,8 +36,10 @@ async def listar(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, company_id, "BRECHAS")
     brechas, total = listar_brechas(db, company_id, skip=skip, limit=limit)
-    return {"brechas": [_out(b) for b in brechas], "total": total, "skip": skip, "limit": limit}
+    return BreachListResponse(brechas=[_out(b) for b in brechas], total=total, skip=skip, limit=limit)
 
 
 @router.get("/{breach_id}", response_model=BreachOut, summary="Obtener brecha por ID")
@@ -87,7 +91,7 @@ async def evaluar_riesgo(
     return _out(b)
 
 
-@router.delete("/{breach_id}", summary="Eliminar brecha")
+@router.delete("/{breach_id}", response_model=MessageResponse, summary="Eliminar brecha")
 async def eliminar(
     breach_id: int,
     db: Session = Depends(get_db),
@@ -96,4 +100,4 @@ async def eliminar(
     b = get_breach(db, breach_id)
     check_company_access(current_user, b.company_id, db)
     eliminar_brecha(db, breach_id, usuario=current_user.username)
-    return {"message": "Brecha eliminada correctamente."}
+    return MessageResponse(message="Brecha eliminada correctamente.")

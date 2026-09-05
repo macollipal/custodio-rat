@@ -4,6 +4,7 @@ Genera dinámicamente los 12 ítems requeridos por la ley a partir de los datos 
 """
 
 import hashlib
+import json
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -13,6 +14,7 @@ from app.models.company import Company
 from app.models.rat import RAT
 from app.models.politica_transparencia import PoliticaTransparencia
 from app.schemas.politica_transparencia import PoliticaTransparenciaOut
+from app.services.audit_service import log_audit
 
 
 DERECHOS_ARCO = (
@@ -27,8 +29,9 @@ DERECHOS_ARCO = (
 
 RECURRIR_APDC = (
     "Si el titular considera que sus derechos no han sido atendidos por el responsable del tratamiento, "
-    "puede recurrir gratuitamente ante la Agencia Española de Protección de Datos (AEPD) — equivalente local: "
-    "la Autoridad de Protección de Datos de Chile (APDC) — para进行检查 y eventual sanción."
+    "puede recurrir gratuitamente ante la Agencia de Protección de Datos Personales (APDP) de Chile, "
+    "conforme al Artículo 28 de la Ley 21.719, para solicitar la revisión de su caso y, "
+    "de corresponder, la imposición de las sanciones que procedan."
 )
 
 
@@ -41,13 +44,23 @@ def generar_politica(db: Session, company_id: int) -> PoliticaTransparenciaOut:
 
     rats = db.query(RAT).filter(RAT.company_id == company_id).all()
 
-    items = _generar_items(empresa, rats)
-    contenido = _serializar_items(items)
-    hash_val = hashlib.sha256(contenido.encode("utf-8")).hexdigest()
-
     politica = db.query(PoliticaTransparencia).filter(
         PoliticaTransparencia.company_id == company_id
     ).first()
+
+    items = _generar_items(empresa, rats)
+
+    overrides: dict = {}
+    if politica and politica.overrides_json:
+        try:
+            overrides = json.loads(politica.overrides_json)
+        except Exception:
+            overrides = {}
+
+    items_finales = {k: (overrides[k] if overrides.get(k) is not None else v) for k, v in items.items()}
+
+    contenido = _serializar_items(items_finales)
+    hash_val = hashlib.sha256(contenido.encode("utf-8")).hexdigest()
 
     ahora = datetime.now(timezone.utc)
     if politica:
@@ -77,7 +90,7 @@ def generar_politica(db: Session, company_id: int) -> PoliticaTransparenciaOut:
         version=politica.version,
         fecha_generacion=politica.fecha_generacion,
         hash_sha256=politica.hash_sha256,
-        **items,
+        **items_finales,
     )
 
 
@@ -171,3 +184,57 @@ def _incrementar_version(version: str) -> str:
         major, minor = parts
         return f"{major}.{int(minor) + 1}"
     return f"{version}.1"
+
+
+def guardar_overrides(db: Session, company_id: int, overrides: dict, usuario: str = "system") -> PoliticaTransparenciaOut:
+    """Persiste overrides de ítems de la política y regenera (M-04).
+
+    Un override con valor None o cadena vacía elimina el override para ese ítem
+    (vuelve al texto auto-generado).
+    """
+    empresa = db.query(Company).filter(Company.id == company_id).first()
+    if not empresa:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Empresa no encontrada.")
+
+    politica = db.query(PoliticaTransparencia).filter(
+        PoliticaTransparencia.company_id == company_id
+    ).first()
+
+    if not politica:
+        politica = PoliticaTransparencia(
+            company_id=company_id,
+            version="1.0",
+            fecha_generacion=datetime.now(timezone.utc),
+            hash_sha256="",
+        )
+        db.add(politica)
+        db.flush()
+
+    existing: dict = {}
+    if politica.overrides_json:
+        try:
+            existing = json.loads(politica.overrides_json)
+        except Exception:
+            existing = {}
+
+    for key, value in overrides.items():
+        if value is None or (isinstance(value, str) and not value.strip()):
+            existing.pop(key, None)
+        else:
+            existing[key] = value
+
+    politica.overrides_json = json.dumps(existing, ensure_ascii=False) if existing else None
+
+    log_audit(
+        db=db,
+        entidad="politica_transparencia",
+        entidad_id=politica.id,
+        accion="update_overrides",
+        usuario=usuario,
+        detalle={"company_id": company_id, "items_modificados": list(overrides.keys())},
+    )
+
+    db.commit()
+
+    return generar_politica(db, company_id)

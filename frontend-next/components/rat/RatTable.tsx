@@ -6,14 +6,19 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
+import { Button } from '@/components/ui/Button';
 import type { RAT, Company } from '@/types';
-import { DIAS_REVISION, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
-import { useApp } from '@/context/AppContext';
+import { DIAS_REVISION, ESTADO_MAP, ESTADO_OPTIONS, RIESGO_OPTIONS, EIPD_OPTIONS } from '@/lib/constants';
+
+function necesitaRevision(rat: RAT, now: number) {
+  const dias = (now - new Date(rat.updated_at).getTime()) / 86_400_000;
+  return dias > DIAS_REVISION;
+}
 
 interface RatTableProps {
   rats: RAT[];
   company: Company;
-  onEdit: (rat: RAT) => void;
+  onSelect: (rat: RAT) => void;
   onRefresh: () => void;
   puedeEditar?: boolean;
 }
@@ -27,11 +32,7 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const ESTADO_MAP: Record<string, string> = {
-  'Borrador': 'borrador', 'Completo': 'completo', 'En revisión': 'en_revision', 'Aprobado': 'aprobado',
-};
-
-export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar = true }: RatTableProps) {
+export default function RatTable({ rats, company, onSelect, onRefresh, puedeEditar = true }: RatTableProps) {
   const router = useRouter();
   const [filtroEstado, setFiltroEstado] = useState('Todos');
   const [filtroSensibles, setFiltroSensibles] = useState('Todos');
@@ -40,16 +41,9 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
   const [buscar, setBuscar] = useState('');
   const [filteredRats, setFilteredRats] = useState<RAT[] | null>(null);
   const [filtersActive, setFiltersActive] = useState(false);
-  const [confirmDel, setConfirmDel] = useState<number | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [auditLogs, setAuditLogs] = useState<Record<number, { accion: string; usuario: string; timestamp: string }[]>>({});
   const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
   const [duplicating, setDuplicating] = useState<number | null>(null);
-
-  function necesitaRevision(rat: RAT) {
-    const dias = (Date.now() - new Date(rat.updated_at).getTime()) / 86_400_000;
-    return dias > DIAS_REVISION;
-  }
+  const now = Date.now();
 
   async function aplicarFiltros() {
     const estadoMap: Record<string, string> = { Todos: '', Borrador: 'borrador', Completo: 'completo', 'En revisión': 'en_revision', Aprobado: 'aprobado' };
@@ -69,7 +63,10 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
       }
       setFilteredRats(filtered);
       setFiltersActive(true);
-    } catch {}
+    } catch (e) {
+      toast.error('Error al aplicar filtros. Inténtalo de nuevo.');
+      console.error('aplicarFiltros:', e);
+    }
   }
 
   function limpiarFiltros() {
@@ -82,7 +79,8 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
     setBuscar('');
   }
 
-  const displayRats = filtersActive && filteredRats ? filteredRats : rats;
+  const displayRats = [...(filtersActive && filteredRats ? filteredRats : rats)]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const filtrados = displayRats.filter(r => {
     if (filtroEstado !== 'Todos' && r.estado !== ESTADO_MAP[filtroEstado]) return false;
@@ -93,68 +91,6 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
     }
     return true;
   });
-
-  async function handleDelete(id: number) {
-    const ratToDelete = rats.find(r => r.id === id);
-    try {
-      await api.eliminarRat(id);
-      toast.success('Proceso eliminado.', {
-        duration: 5000,
-        action: {
-          label: 'Deshacer',
-          onClick: () => {
-            if (ratToDelete) {
-              api.crearRat({
-                company_id: ratToDelete.company_id,
-                nombre_proceso: ratToDelete.nombre_proceso,
-                categoria_datos: ratToDelete.categoria_datos ?? '',
-                categoria_titulares: ratToDelete.categoria_titulares ?? '',
-                finalidad: ratToDelete.finalidad ?? '',
-                base_legal: ratToDelete.base_legal ?? 'Otra',
-                fuente_datos: ratToDelete.fuente_datos ?? '',
-                plazo_retencion: ratToDelete.plazo_retencion ?? '',
-                transferencia_datos: ratToDelete.transferencia_datos,
-                medidas_seguridad: ratToDelete.medidas_seguridad,
-                destinatarios: ratToDelete.destinatarios,
-                transferencia_internacional: ratToDelete.transferencia_internacional,
-                pais_destino: ratToDelete.pais_destino,
-                garantias_transferencia_int: ratToDelete.garantias_transferencia_int,
-                datos_sensibles: ratToDelete.datos_sensibles,
-                tipo_dato_sensible: ratToDelete.tipo_dato_sensible,
-                evaluacion_impacto: ratToDelete.evaluacion_impacto,
-                decisiones_automatizadas: ratToDelete.decisiones_automatizadas,
-                test_interes_legitimo: ratToDelete.test_interes_legitimo,
-                nombre_encargado: ratToDelete.nombre_encargado,
-                tiene_contrato_encargado: ratToDelete.tiene_contrato_encargado,
-                estado_eipd: ratToDelete.estado_eipd,
-                fecha_eipd: ratToDelete.fecha_eipd,
-                estado: ratToDelete.estado,
-                observaciones_auditoria: ratToDelete.observaciones_auditoria,
-              }).then(() => {
-                toast.success('Proceso restaurado correctamente.');
-                onRefresh();
-              }).catch(() => toast.error('Error al restaurar el proceso.'));
-            }
-          },
-        },
-      });
-      setConfirmDel(null);
-      onRefresh();
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Error al eliminar.');
-    }
-  }
-
-  async function toggleExpand(rat: RAT) {
-    if (expandedId === rat.id) { setExpandedId(null); return; }
-    setExpandedId(rat.id);
-    if (!auditLogs[rat.id]) {
-      try {
-        const logs = await api.getAuditoria(rat.id);
-        setAuditLogs(l => ({ ...l, [rat.id]: logs }));
-      } catch {}
-    }
-  }
 
   async function handleDuplicate(rat: RAT) {
     setDuplicating(rat.id);
@@ -218,17 +154,17 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
             <label htmlFor="filtroSensibles" className="text-xs" style={{ color: '#6B7280' }}>Solo con datos sensibles</label>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs" style={{ color: '#6B7280' }}>Buscar</label>
-            <input type="text" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar proceso..." className="px-3.5 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 180 }} />
+            <label className="text-xs" htmlFor="rat-buscar" style={{ color: '#6B7280' }}>Buscar</label>
+            <input id="rat-buscar" type="text" value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar proceso..." aria-label="Buscar procesos RAT" className="px-3.5 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ borderColor: '#D1D5DB', backgroundColor: '#FFFFFF', minWidth: 180 }} />
           </div>
           <div className="flex gap-2 pb-1">
-            <button onClick={aplicarFiltros} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar</button>
-            {filtersActive && <button onClick={limpiarFiltros} className="px-4 py-2 rounded-lg text-sm font-semibold border transition" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Limpiar</button>}
+            <Button onClick={aplicarFiltros} aria-label="Aplicar filtros de busqueda">Aplicar</Button>
+            {filtersActive && <Button variant="secondary" onClick={limpiarFiltros} aria-label="Limpiar filtros aplicados">Limpiar</Button>}
           </div>
         </div>
       </details>
 
-      <p className="text-xs" style={{ color: '#9CA3AF' }}>
+      <p className="text-xs" style={{ color: '#6B7280' }}>
         {filtrados.length < rats.length ? `Mostrando ${filtrados.length} de ${rats.length} procesos` : `${rats.length} proceso${rats.length !== 1 ? 's' : ''} registrado${rats.length !== 1 ? 's' : ''}`}
       </p>
 
@@ -244,16 +180,15 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
               : 'Intenta ajustar los filtros de búsqueda'}
           </p>
           {rats.length === 0 && puedeEditar && (
-            <button
+            <Button
+              size="lg"
               onClick={() => router.push('/rat')}
-              className="px-6 py-3 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ background: '#2563EB' }}
             >
               + Crear mi primer proceso RAT
-            </button>
+            </Button>
           )}
           {rats.length === 0 && !puedeEditar && (
-            <p className="text-xs" style={{ color: '#9CA3AF' }}>Contacta al administrador para crear procesos RAT.</p>
+            <p className="text-xs" style={{ color: '#6B7280' }}>Contacta al administrador para crear procesos RAT.</p>
           )}
         </div>
       ) : (
@@ -264,15 +199,13 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
           {filtrados.map((rat, i) => (
             <div key={rat.id}>
               <button
-                aria-expanded={expandedId === rat.id}
-                aria-controls={`rat-detail-${rat.id}`}
-                onClick={() => toggleExpand(rat)}
+                onClick={() => onSelect(rat)}
                 className="hidden sm:grid items-center px-5 py-3.5 cursor-pointer transition-colors text-left w-full"
-                style={{ gridTemplateColumns: '3fr 2fr 1.5fr 1fr 120px 80px', background: i % 2 === 0 ? 'white' : '#FAFAFA', borderTop: i > 0 ? '1px solid #F3F4F6' : 'none' }}
+                style={{ gridTemplateColumns: '3fr 2fr 1.5fr 1fr 120px 100px', background: i % 2 === 0 ? 'white' : '#FAFAFA', borderTop: i > 0 ? '1px solid #F3F4F6' : 'none' }}
               >
                 <div>
                   <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
-                  <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
+                  <div className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
                 </div>
                 <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.categoria_datos ?? '').slice(0, 45)}{(rat.categoria_datos ?? '').length > 45 ? '...' : ''}</div>
                 <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '').slice(0, 30)}</div>
@@ -285,7 +218,7 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
                       <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#DC2626' }} />
                     </span>
                   )}
-                  {necesitaRevision(rat) && <span title="Sin actualizar hace +6 meses" className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>⏰ Revisar</span>}
+                  {necesitaRevision(rat, now) && <span title="Sin actualizar hace +6 meses" className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>⏰ Revisar</span>}
                   {rat.datos_sensibles && <span title={`Datos sensibles${rat.tipo_dato_sensible ? ': ' + rat.tipo_dato_sensible : ''}`}>⚠️</span>}
                   {rat.evaluacion_impacto && <span title="EIPD requerida">📋</span>}
                   {rat.transferencia_internacional && <span title={`Transfer. internacional${rat.pais_destino ? ' — ' + rat.pais_destino : ''}${rat.garantias_transferencia_int ? ' (' + rat.garantias_transferencia_int + ')' : ''}`}>🌐</span>}
@@ -296,12 +229,20 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
                   {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
                     <span title="Documento de base legal adjunto">📄</span>
                   )}
+                  {puedeEditar && (
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDuplicate(rat); }}
+                      disabled={duplicating === rat.id}
+                      className="text-xs font-medium px-1.5 py-0.5 rounded transition hover:bg-gray-200 disabled:opacity-60"
+                      title="Duplicar"
+                    >
+                      📋
+                    </button>
+                  )}
                 </div>
               </button>
               <button
-                aria-expanded={expandedId === rat.id}
-                aria-controls={`rat-detail-${rat.id}`}
-                onClick={() => toggleExpand(rat)}
+                onClick={() => onSelect(rat)}
                 className="sm:hidden px-4 py-3.5 cursor-pointer transition-colors bg-white text-left w-full"
                 style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA', borderTop: i > 0 ? '1px solid #F3F4F6' : 'none', borderBottom: '1px solid #E5E7EB' }}
               >
@@ -311,7 +252,7 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge estado={rat.estado} />
                       <CompletitudBar pct={rat.completitud ?? 0} />
-                      <span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id}</span>
+                      <span className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id}</span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-wrap flex-shrink-0">
@@ -329,109 +270,20 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
                       <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEE2E2', color: '#DC2626' }}>📄 Sin doc</span>
                     )}
                     {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && <span>📄</span>}
+                    {puedeEditar && (
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDuplicate(rat); }}
+                        disabled={duplicating === rat.id}
+                        className="text-xs font-medium px-1 py-0.5 rounded transition hover:bg-gray-200 disabled:opacity-60"
+                        title="Duplicar"
+                      >
+                        📋
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="text-xs truncate" style={{ color: '#6B7280' }}>{rat.categoria_datos || '—'}</div>
-                {expandedId === rat.id && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs" style={{ color: '#9CA3AF' }}>Toca para ver detalle</span>
-                    <span style={{ color: '#9CA3AF' }}>▲</span>
-                  </div>
-                )}
               </button>
-              {expandedId === rat.id && (
-                <div id={`rat-detail-${rat.id}`} className="mx-4 sm:mx-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 space-y-4" style={{ background: '#F9FAFB', borderTop: '1px solid #E5E7EB' }}>
-                  <div className="flex gap-2 flex-wrap">
-                    {rat.datos_sensibles && <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>⚠️ Datos sensibles</span>}
-                    {rat.evaluacion_impacto && <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📋 EIPD requerida</span>}
-                    {rat.transferencia_internacional && <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#F3E8FF', color: '#5B21B6' }}>🌐 Transfer. internacional</span>}
-                    {rat.decisiones_automatizadas && <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Dec. automatizadas</span>}
-                    {necesitaRevision(rat) && <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>⏰ Sin actualizar +6m</span>}
-                    {rat.nivel_riesgo === 'Crítico' && <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#FEE2E2', color: '#DC2626' }}>⚠️ Crítico</span>}
-                  </div>
-                  <div className="space-y-2">
-                    {([
-                      ['Categoría titulares', rat.categoria_titulares],
-                      ['Fuente de datos', rat.fuente_datos],
-                      ['Finalidad', rat.finalidad],
-                      ['Plazo retención', rat.plazo_retencion],
-                      ['Medidas de seguridad', rat.medidas_seguridad],
-                      ['Destinatarios', rat.destinatarios],
-                      rat.datos_sensibles ? ['Tipo dato sensible', rat.tipo_dato_sensible || 'No especificado'] : null,
-                      rat.transferencia_internacional ? ['País destino', rat.pais_destino || '—'] : null,
-                      rat.transferencia_internacional ? ['Garantías transferencia', rat.garantias_transferencia_int || '⚠️ No especificadas'] : null,
-                      rat.observaciones_auditoria ? ['Obs. auditoría', rat.observaciones_auditoria] : null,
-                      rat.base_legal && rat.base_legal !== 'Otra' ? [
-                        'Doc. base legal',
-                        rat.tiene_archivo_base_legal
-                          ? '📄 Documento adjunto'
-                          : '⚠️ Sin documento',
-                      ] : null,
-                    ].filter(Boolean) as [string, string][]).map(([k, v]) => (
-                      <div key={k as string} className="bg-white rounded-lg p-3" style={{ border: '1px solid #E5E7EB' }}>
-                        <span className="text-xs font-semibold block mb-0.5" style={{ color: '#9CA3AF' }}>{k}</span>
-                        <span className="text-sm break-words" style={{ color: v && (v as string).startsWith('⚠️') ? '#DC2626' : '#111827' }}>{(v as string) || '—'}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 flex-wrap items-center pt-2">
-                    {puedeEditar ? (
-                      <>
-                        {rat.estado !== 'aprobado' && (
-                          <button
-                            onClick={async e => {
-                              e.stopPropagation();
-                              try {
-                                await api.aprobarRat(rat.id);
-                                toast.success(`RAT "${rat.nombre_proceso}" aprobado correctamente.`);
-                                onRefresh();
-                              } catch (err: unknown) {
-                                toast.error(err instanceof Error ? err.message : 'Error al aprobar.');
-                              }
-                            }}
-                            className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition"
-                            style={{ background: '#059669' }}
-                          >
-                            ✓ Aprobar RAT
-                          </button>
-                        )}
-                        {rat.estado === 'aprobado' && (
-                          <div className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: '#DCFCE7', color: '#166534' }}>
-                            ✓ Aprobado{rat.aprobado_por ? ` por ${rat.aprobado_por}` : ''}{rat.fecha_aprobacion ? ` el ${new Date(rat.fecha_aprobacion).toLocaleDateString('es-CL')}` : ''}
-                          </div>
-                        )}
-                        <button onClick={e => { e.stopPropagation(); onEdit(rat); }} className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition" style={{ background: '#2563EB' }}>✏ Editar</button>
-                        {rat.base_legal && rat.base_legal !== 'Otra' && rat.tiene_archivo_base_legal && (
-                          <button onClick={e => { e.stopPropagation(); window.open(`/api/rats/${rat.id}/archivo`, '_blank'); }} className="px-4 py-2 rounded-lg text-xs font-semibold border transition hover:bg-gray-50" style={{ color: '#059669', borderColor: '#A7F3D0', background: '#ECFDF5' }}>📄 Ver documento</button>
-                        )}
-                        <button onClick={e => { e.stopPropagation(); handleDuplicate(rat); }} disabled={duplicating === rat.id} className="px-4 py-2 rounded-lg text-xs font-semibold border transition hover:bg-gray-50 disabled:opacity-60" style={{ color: '#374151', borderColor: '#E5E7EB' }}>📋 Duplicar</button>
-                        <button onClick={e => { e.stopPropagation(); setConfirmDel(rat.id); }} className="px-4 py-2 rounded-lg text-xs font-semibold border transition hover:bg-red-50" style={{ color: '#DC2626', borderColor: '#FCA5A5' }}>🗑 Eliminar</button>
-                      </>
-                    ) : <span className="text-xs px-3 py-1.5 rounded-lg" style={{ background: '#F3F4F6', color: '#6B7280' }}>Solo lectura</span>}
-                  </div>
-                  {confirmDel === rat.id && (
-                    <div className="rounded-lg p-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
-                      <p className="text-sm font-medium mb-2" style={{ color: '#7F1D1D' }}>¿Eliminar <strong>{rat.nombre_proceso}</strong>? Irreversible.</p>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleDelete(rat.id)} className="px-3 py-1 rounded text-xs font-semibold text-white" style={{ background: '#DC2626' }}>Confirmar</button>
-                        <button onClick={() => setConfirmDel(null)} className="px-3 py-1 rounded text-xs font-semibold border" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-                      </div>
-                    </div>
-                  )}
-                  {auditLogs[rat.id] && auditLogs[rat.id].length > 0 && (
-                    <div className="pt-1">
-                      <p className="text-xs font-semibold mb-2" style={{ color: '#374151' }}>Historial ({auditLogs[rat.id].length})</p>
-                      <div className="space-y-1">
-                        {auditLogs[rat.id].slice(0, 4).map((log, li) => (
-                          <div key={li} className="text-xs" style={{ color: '#9CA3AF' }}>
-                            <span className="font-bold" style={{ color: '#2563EB' }}>{log.accion?.toUpperCase()}</span> · {log.usuario} · {log.timestamp?.slice(0, 16).replace('T', ' ')}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -441,8 +293,12 @@ export default function RatTable({ rats, company, onEdit, onRefresh, puedeEditar
         <h3 className="text-sm font-semibold mb-1" style={{ color: '#111827' }}>Exportar Registro RAT</h3>
         <p className="text-xs mb-4" style={{ color: '#6B7280' }}>Descarga el RAT completo para presentar ante la Agencia de Protección de Datos Personales.</p>
         <div className="flex gap-3">
-          <button onClick={exportCsv} disabled={exporting === 'csv'} className="px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-60 hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>{exporting === 'csv' ? 'Exportando...' : '📥 Descargar CSV'}</button>
-          <button onClick={exportPdf} disabled={exporting === 'pdf'} className="px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-60 hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>{exporting === 'pdf' ? 'Exportando...' : '📄 Descargar PDF'}</button>
+          <Button variant="secondary" onClick={exportCsv} disabled={exporting === 'csv'}>
+            {exporting === 'csv' ? 'Exportando...' : '📥 Descargar CSV'}
+          </Button>
+          <Button variant="secondary" onClick={exportPdf} disabled={exporting === 'pdf'}>
+            {exporting === 'pdf' ? 'Exportando...' : '📄 Descargar PDF'}
+          </Button>
         </div>
       </div>
     </div>

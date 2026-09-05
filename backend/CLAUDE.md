@@ -4,7 +4,59 @@
 
 **Custodio RAT Manager** — Gestión del Registro de Actividades de Tratamiento (RAT) conforme a la Ley 21.719 de Chile.
 
-Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt + ReportLab (PDF).
+Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) + JWT + Bcrypt + ReportLab (PDF).
+
+---
+
+## LEY DIVINA DE SEGURIDAD ⚠️
+
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+Reglas absolutas (resumen; ver skill para detalles):
+
+```
+1. NUNCA hardcodear credenciales en código fuente
+2. Todas las passwords/tokens/keys van en variables de entorno (.env)
+3. NO hacer fallback con valores por defecto que expongan secretos
+4. Los archivos .env están en .gitignore y NUNCA se commitear
+5. Si una credencial se expone, ROTARLA inmediatamente
+6. Usar Secrets Manager en producción (Vercel Env Variables)
+7. Pre-commit hook con gitleaks es OBLIGATORIO (ver .git/hooks/pre-commit)
+```
+
+**Si el agente detecta un secret hardcodeado DEBE negarse a proceder y reportar al usuario antes de continuar.**
+8. Si una credencial se expone en git: git filter-repo para limpiar historial + force-push
+```
+
+**Si detectas una credencial expuesta:**
+1. Informar inmediatamente
+2. La credencial debe ser rotada (Neon Console → Reset password)
+3. Remover del historial de git con `git filter-repo --replace-text`
+4. Force-push coordinated con todos los contribuidores
+
+---
+
+## Skills disponibles para backend
+
+Las siguientes skills (en `.opencode/skills/`) son relevantes para este proyecto:
+
+- **security-secret-scan**: para detectar/prevenir exposición de credenciales (OBLIGATORIA antes de commit)
+- **commit-helper**: para mensajes de commit con conventional commits
+- **tester-rat**: para diseñar planes de prueba (pytest + Playwright) y validar compliance Ley 21.719
+- **custodio-auditoria**: para regenerar documentación oficial v1.x y validar compliance
+- **qa-senior**: para revisión de calidad de código, seguridad y compliance RAT
+- **architect-senior**: para auditorías arquitectónicas (score de madurez del producto)
+- **deploy-cors-multienv**: para configurar CORS multi-ambiente (Dev/QA/Prod)
+- **debug-login**: para diagnosticar problemas de login (401, credenciales, BD)
+- **rat-compliance**: para validar compliance de un RAT (Art. 16, campos obligatorios 7+3, EIPD)
+- **breach-management**: para gestionar brechas de seguridad (72h APDP, notificación titulares)
+- **arco-rights**: para validar workflow ARCO (10 días hábiles, verificación identidad, causal rechazo)
+- **multi-tenant-security**: para auditar aislamiento multi-tenant (IDOR, RBAC, acceso cruzado)
+- **api-review**: para revisar nuevos endpoints antes de deploy (seguridad, compliance, REST)
+- **eipd-management**: para validar workflow EIPD (Art. 15 bis, metodologia, plazos, resultado)
+- **consentimiento-management**: para validar ciclo de vida del consentimiento (Art. 12, revocacion, evidencia)
+- **politica-transparencia**: para validar politica de transparencia (Art. 14 ter, endpoint publico)
+- **encargado-tratamiento**: para validar contratos de encargado (Art. 14 quater, vigencias, PDF)
 
 ---
 
@@ -28,7 +80,7 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
 |---------|-----|---------------|
 | **Producción** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
 | **QA** | https://custodio-qa.vercel.app | Neon QA |
-| **Local** | http://localhost:8002 | SQLite (`data/database.db`) |
+| **Local** | http://localhost:8002 | Neon PostgreSQL (desarrollo) |
 
 ### Vercel (Producción)
 
@@ -41,26 +93,13 @@ Stack: FastAPI + SQLAlchemy + PostgreSQL (Neon) / SQLite (local) + JWT + Bcrypt 
   - `SEED_ADMIN=true` + `SEED_ADMIN_PASSWORD=<pwd>` → para crear admin inicial (no automático)
   - `ALLOWED_ORIGINS` → **único mecanismo de CORS** (OBLIGATORIO en todos los ambientes)
     - Prod: `ALLOWED_ORIGINS=https://custodio-rat.vercel.app`
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` → para envío de emails reales
+  - `SMTP_URL` → SMTP en formato DSN (ej. `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT`). Compatibilidad legacy con SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL, SMTP_FROM_NAME si SMTP_URL no está seteada.
 
 ### Vercel (QA)
 
 - `ALLOWED_ORIGINS` es la única variable que controla CORS — sin heurísticas, sin VERCEL_URL, sin ENVIRONMENT
 - Si no está seteada, la app no levanta (fail loud)
 - Requerido: `ALLOWED_ORIGINS=https://custodio-qa.vercel.app,http://localhost:3000`
-
-### Migración SQLite → Neon
-
-```bash
-# 1. Exportar datos de SQLite
-python migrate_to_neon.py export    # → backend/backup_data.json
-
-# 2. Crear schema en Neon
-python migrate_to_neon.py init       # crea tablas + reinicia sequences
-
-# 3. Importar datos a Neon
-python migrate_to_neon.py import      # desde backup_data.json
-```
 
 ### Desarrollo local
 
@@ -97,7 +136,7 @@ Envío de emails transaccionales via SMTP:
 - `notificar_vencimiento_rat()` → al DPO cuando un RAT requiere revisión
 - `notificar_respuesta_arco()` → al titular cuando se responde su solicitud ARCO
 
-**Modo DRY_RUN:** si `SMTP_HOST` no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
+**Modo DRY_RUN:** si `SMTP_URL` (o `SMTP_HOST` en legacy) no está configurado, loguea la intención (no falla). En producción, las excepciones se propagan.
 
 ### Scheduler (`app/services/scheduler.py`)
 Tareas periódicas en thread daemon. **Modo enqueue** (compatible con Vercel serverless):
@@ -264,7 +303,7 @@ completitud = round((completados / total) * 100)
 ### AI
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/ai/ask` | Chat IA (requiere MINIMAX_API_KEY u OPENAI_API_KEY) |
+| POST | `/ai/ask` | Chat IA genérico (requiere GROQ_API_KEY) |
 
 ### Consentimientos (Art. 12)
 | Método | Ruta | Descripción |
@@ -282,6 +321,72 @@ completitud = round((completados / total) * 100)
 | POST | `/eipd/` | Crea EIPD (1:1 con RAT) |
 | PUT | `/eipd/{id}` | Actualiza EIPD (workflow) |
 
+### ARCO — Solicitudes de Derecho (Art. 12, 12.5, 14)
+
+Único modelo canónico: ``TktSolicitudDerecho``. La tabla y endpoints legacy ``SolicitudDerecho``
+fueron eliminados completamente (jul-2026). No existe formulario público en frontend: las solicitudes
+ARCO se gestionan internamente como tickets.
+
+#### Public tracking (titular, sin auth)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/seguimiento/{tracking_token}` | Consulta pública del estado (sin auth) |
+
+#### Workflow staff (autenticado, RBAC estricto)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/tkt-solicitud-derecho/` | Lista TKTs con filtros |
+| POST | `/tkt-solicitud-derecho/` | Crear TKT interno |
+| GET | `/tkt-solicitud-derecho/{id}` | Detalle TKT |
+| PATCH | `/tkt-solicitud-derecho/{id}` | Actualizar (requiere `metodo_verificacion_identidad` si pasa a `resuelto`) |
+| POST | `/tkt-solicitud-derecho/{id}/bloquear` | Bloquear RAT (Art. 8 ter) |
+| POST | `/tkt-solicitud-derecho/{id}/desbloquear` | Desbloquear antes de vencer |
+| POST | `/tkt-solicitud-derecho/{id}/rechazar` | Rechazo fundado con `causal_rechazo` enum (Art. 12.5) |
+| POST | `/tkt-solicitud-derecho/{id}/subsanar` | Pedir subsanación al titular |
+| POST | `/tkt-solicitud-derecho/{id}/completar-subsanacion` | Cerrar subsanación |
+| POST | `/tkt-solicitud-derecho/{id}/prorrogar` | Extender plazo +10 días hábiles (Art. 12 bis) |
+| POST | `/tkt-solicitud-derecho/{id}/portabilidad/guardar` | Guardar datos portabilidad |
+| GET | `/tkt-solicitud-derecho/{id}/portabilidad/export` | Exportar JSON portabilidad (Art. 9) |
+
+#### Reglas de compliance automatizadas
+
+| Regla | Detalle |
+|-------|---------|
+| **Verificación de identidad** | Backend rechaza PATCH→`resuelto` si `metodo_verificacion_identidad` no existe (Art. 12) |
+| **Hash de integridad** | Al resolver se computa `evidencia_respuesta_hash = SHA256(respuesta + username + timestamp)` |
+| **Causal de rechazo** | `causal_rechazo` debe estar en `CausalRechazo` enum; valores: `falta_identidad`, `solicitud_manifiestamente_infundada`, `solicitud_excesiva`, `falta_poder_notorial`, `plazo_vencido`, `identidad_no_verificada`, `otro` |
+| **Plazo legal** | 10 días hábiles, calculado con feriados Chile hardcoded hasta 2040 + Semana Santa (Art. 14) |
+| **SLA** | Estados válido intermedio: `abierto` → `en_proceso`/`pendiente` → `resuelto`/`rechazado`. Prórroga 1 vez por ticket (Art. 12 bis). |
+| **Magic bytes** | Upload de archivos valida magic bytes PDF/JPEG/PNG/GIF (S3.1) — rechaza ``.exe`` renombrado |
+| **Rate-limit** | Form público: 10/h por IP (lee X-Forwarded-For). Token: 5/min. CSRF: 30/min |
+
+#### Estructura de tablas
+
+```sql
+-- Tabla canónica (moderna)
+tkt_solicitud_derecho(
+  id, company_id, tipo, estado, prioridad, origen,
+  titular_nombre, titular_email, titular_rut,
+  descripcion, fecha_recepcion, fecha_vencimiento,
+  responsable_id, respuesta_texto, respuesta_fecha,
+  rat_id, plazo_bloqueo_vencimiento, portability_data,
+  tracking_token, acuse_enviado_at,
+  -- Compliance Ley 21.719 (Iter 10)
+  metodo_verificacion_identidad, evidencia_identidad,
+  evidencia_respuesta_hash, causal_rechazo, medio_respuesta,
+  -- Workflow extension
+  subsanacion_detalle, subsanacion_fecha_pedido,
+  prorroga_fecha, prorroga_dias,
+  -- Multi-representante
+  representante_nombre, representante_rut,
+  telefono, fecha_nacimiento, pais,
+  created_by, created_at, updated_at
+)
+```
+
+> **Nota:** La tabla legacy `solicitudes_derecho` y el modelo `SolicitudDerecho` fueron eliminados en julio 2026.
+> `TktSolicitudDerecho` es la única entidad ARCO canónica. La sincronización legacy ya no existe.
+
 ### Admin - Cola de Tareas
 | Método | Ruta | Descripción |
 |--------|------|-------------|
@@ -296,12 +401,12 @@ completitud = round((completados / total) * 100)
 
 - Puerto: `8002`, URL base: `http://localhost:8002`
 - Reiniciar backend: `run_server.bat` (cmd.exe, porque `&` no funciona en PowerShell)
-- Base de datos: `backend/database.db` (SQLite)
+- Base de datos: Neon PostgreSQL (todas las bases de datos son Neon)
 - El usuario `admin` existente fue renombrado a `superadmin` y `jpe` a `admin_empresa`
 - Para queries que filtran por empresa sin ser superadmin: usar `get_empresas_usuario(db, user_id)` que retorna lista de `company_ids`
 - `get_current_user` en `routes/deps.py` extrae el usuario del token JWT
 - **CORS:** se usa `ALLOWED_ORIGINS` (env var, lista blanca). Si `ENVIRONMENT=production` y no está definida, la app levanta con `RuntimeError`
-- **Email:** si `SMTP_HOST` no está configurado, opera en modo DRY_RUN (loguea sin enviar)
+- **Email:** si `SMTP_URL` (o `SMTP_HOST` legacy) no está configurado, opera en modo DRY_RUN (loguea sin enviar)
 - **Logs:** en producción los logs son JSON con `request_id` para correlación de extremo a extremo
 
 ---
@@ -320,9 +425,42 @@ completitud = round((completados / total) * 100)
 
 ## Tests
 
+### REGLA INVIOLABLE: Tests contra PostgreSQL (Neon QA)
+
+**Los tests DEBEN ejecutarse contra PostgreSQL (Neon QA)** antes de cualquier deploy.
+
+### Setup
+
 ```bash
 cd backend
-pytest tests/ -v
+
+# 1. Crear/resetear BD de test en Neon QA
+python reset_test_db.py
+
+# 2. Ejecutar TODOS los tests contra PostgreSQL
+python -m pytest tests/ -v
+
+# 3. Ejecutar solo tests ARCO (más rápido para desarrollo iterativo)
+python -m pytest tests/test_arco_tickets.py \
+  tests/test_subsanacion.py tests/test_prorroga.py \
+  tests/test_qw8_seguimiento.py tests/test_qw10_formulario.py \
+  tests/test_plantillas.py tests/test_reglas_asignacion.py \
+  tests/test_hash_chain.py -v
 ```
 
-Los tests couvren: CRUD RAT, completitud, dashboard stats, auth, brechas, auditoría, exportación.
+### BD de test
+
+- **Host:** Neon QA (`ep-fragrant-wildflower-apeqosx9-pooler.c-7.us-east-1.aws.neon.tech`)
+- **Database:** `custodio_test` (aislada, no afecta prod ni QA)
+- **Connection:** configurable via `TEST_DATABASE_URL` env var
+- **Schema:** creado desde modelos Python (equivalente a ejecutar todas las migraciones)
+
+### Pre-deploy checklist
+
+1. `python reset_test_db.py`
+2. `python -m pytest tests/ -v`
+3. Si hay cambios de schema: ejecutar migraciones en Neon QA manualmente
+4. Commit + push
+5. Verificar deploy en Vercel
+
+Los tests couvren: CRUD RAT, completitud, dashboard stats, auth, brechas, auditoría, exportación, ARCO completo.

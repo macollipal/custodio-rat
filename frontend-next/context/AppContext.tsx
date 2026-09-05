@@ -1,8 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal, SecurityBreach } from '@/types';
-import { STORAGE_KEYS, API_BASE } from '@/lib/constants';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import type { User, Company, RAT, DashboardStats, RolEmpresa, RolGlobal } from '@/types';
+
+export type Theme = 'light' | 'dark' | 'mac';
+import { STORAGE_KEYS, API_BASE, DRAFT_KEY_PREFIX } from '@/lib/constants';
+import { listarBaseLegalOptions, getActiveCompanyModules } from '@/lib/api';
 
 interface AppState {
   token: string | null;
@@ -14,13 +17,18 @@ interface AppState {
   rolEnEmpresa: RolEmpresa | null;
   puedeEditar: boolean;
   rolGlobal: RolGlobal | null;
+  theme: Theme;
   darkMode: boolean;
+  baseLegalOptions: string[];
+  baseLegalDescripciones: Record<string, string>;
+  activeModules: string[];
   setToken: (token: string) => void;
   setUser: (user: User) => void;
   setCompany: (company: Company) => void;
   setCompanies: (companies: Company[]) => void;
   setRats: (rats: RAT[]) => void;
   setDashboardStats: (stats: DashboardStats) => void;
+  cycleTheme: () => void;
   toggleDarkMode: () => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -40,37 +48,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [companies, setCompaniesState] = useState<Company[]>([]);
   const [rats, setRatsState] = useState<RAT[]>([]);
   const [dashboardStats, setDashboardStatsState] = useState<DashboardStats | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState<Theme>('light');
+  const [baseLegalOptions, setBaseLegalOptions] = useState<string[]>([]);
+  const [baseLegalDescripciones, setBaseLegalDescripciones] = useState<Record<string, string>>({});
+  const [activeModules, setActiveModules] = useState<string[]>([
+    'RAT', 'ARCO', 'BRECHAS', 'EIPD', 'CONSENTIMIENTOS', 'ENCARGADOS', 'TRANSPARENCIA', 'REPORTES', 'ASESOR',
+  ]);
 
   useEffect(() => {
     const t = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const u = localStorage.getItem(STORAGE_KEYS.USER);
     const c = localStorage.getItem(STORAGE_KEYS.COMPANY);
+    const cs = localStorage.getItem(STORAGE_KEYS.COMPANIES);
     if (t) setTokenState(t);
     if (u) try { setUserState(JSON.parse(u)); } catch {}
     if (c) try { setCompanyState(JSON.parse(c)); } catch {}
+    if (cs) try { setCompaniesState(JSON.parse(cs)); } catch {}
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('custodio_dark_mode');
-    if (stored === 'true') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
+    const stored = localStorage.getItem('custodio_theme') as Theme | null;
+    if (stored === 'dark' || stored === 'mac') {
+      setTheme(stored);
+      document.documentElement.classList.add(stored);
+    } else if (!stored) {
+      // migración: leer clave legacy
+      const legacy = localStorage.getItem('custodio_dark_mode');
+      if (legacy === 'true') {
+        setTheme('dark');
+        document.documentElement.classList.add('dark');
+      }
     }
   }, []);
 
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => {
-      const next = !prev;
-      localStorage.setItem('custodio_dark_mode', String(next));
-      if (next) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+  const ALL_MODULES = ['RAT', 'ARCO', 'BRECHAS', 'EIPD', 'CONSENTIMIENTOS', 'ENCARGADOS', 'TRANSPARENCIA', 'REPORTES', 'ASESOR'];
+
+  useEffect(() => {
+    if (!token || !company?.id) return;
+    if (user?.rol_global === 'superadmin') {
+      setActiveModules(ALL_MODULES);
+      return;
+    }
+    getActiveCompanyModules(company.id)
+      .then(res => setActiveModules(res.active_modules))
+      .catch(() => setActiveModules(ALL_MODULES));
+  }, [token, company?.id, user?.rol_global]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!token) return;
+    listarBaseLegalOptions()
+      .then(data => {
+        setBaseLegalOptions(data.opciones);
+        setBaseLegalDescripciones(data.descripciones);
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const cycleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next: Theme = prev === 'light' ? 'dark' : prev === 'dark' ? 'mac' : 'light';
+      localStorage.setItem('custodio_theme', next);
+      document.documentElement.classList.remove('dark', 'mac');
+      if (next !== 'light') document.documentElement.classList.add(next);
       return next;
     });
   }, []);
+
+  const toggleDarkMode = cycleTheme;
 
   useEffect(() => {
     if (!token) return;
@@ -82,9 +126,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER);
       localStorage.removeItem(STORAGE_KEYS.COMPANY);
+      localStorage.removeItem(STORAGE_KEYS.COMPANIES);
       setTokenState(null);
       setUserState(null);
       setCompanyState(null);
+      setCompaniesState([]);
     });
   }, [token]);
 
@@ -99,13 +145,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCompany = useCallback((c: Company) => {
+    setCompanyState(prev => {
+      if (prev?.id && prev.id !== c.id) {
+        localStorage.removeItem(`${DRAFT_KEY_PREFIX}${prev.id}`);
+      }
+      return c;
+    });
     localStorage.setItem(STORAGE_KEYS.COMPANY, JSON.stringify(c));
-    setCompanyState(c);
     setRatsState([]);
     setDashboardStatsState(null);
   }, []);
 
   const setCompanies = useCallback((cs: Company[]) => {
+    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(cs));
     setCompaniesState(cs);
   }, []);
 
@@ -152,34 +204,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const rolGlobal = user?.rol_global ?? null;
   const puedeEditar = rolGlobal !== null && rolGlobal !== 'usuario' ? true : rolEnEmpresa === 'admin' || rolEnEmpresa === 'editor';
 
+  const value = useMemo<AppState>(() => ({
+    token,
+    user,
+    company,
+    companies,
+    rats,
+    dashboardStats,
+    rolEnEmpresa,
+    puedeEditar,
+    rolGlobal,
+    theme,
+    darkMode: theme === 'dark',
+    baseLegalOptions,
+    baseLegalDescripciones,
+    activeModules,
+    cycleTheme,
+    toggleDarkMode,
+    setToken,
+    setUser,
+    setCompany,
+    setCompanies,
+    setRats,
+    setDashboardStats,
+    logout,
+    isAuthenticated: !!token,
+    actualizarRatEnCache,
+    agregarRatEnCache,
+    eliminarRatDeCache,
+    actualizarStatsEnCache,
+  }), [
+    token, user, company, companies, rats, dashboardStats, theme,
+    baseLegalOptions, baseLegalDescripciones, activeModules,
+    cycleTheme, toggleDarkMode, setToken, setUser, setCompany, setCompanies,
+    setRats, setDashboardStats, logout,
+    actualizarRatEnCache, agregarRatEnCache, eliminarRatDeCache, actualizarStatsEnCache,
+    rolEnEmpresa, rolGlobal, puedeEditar,
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        token,
-        user,
-        company,
-        companies,
-        rats,
-        dashboardStats,
-        rolEnEmpresa,
-        puedeEditar,
-        rolGlobal,
-        darkMode,
-        toggleDarkMode,
-        setToken,
-        setUser,
-        setCompany,
-        setCompanies,
-        setRats,
-        setDashboardStats,
-        logout,
-        isAuthenticated: !!token,
-        actualizarRatEnCache,
-        agregarRatEnCache,
-        eliminarRatDeCache,
-        actualizarStatsEnCache,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

@@ -7,8 +7,33 @@ interface TopbarProps {
   onMenuClick: () => void;
 }
 
+const TOPBAR_PALETTE = {
+  light: {
+    bg: '#FFFFFF', border: '#E5E7EB',
+    textPrimary: '#111827', textSecondary: '#6B7280', textMuted: '#9CA3AF',
+    inputBorder: '#E5E7EB', hoverBg: '#F9FAFB',
+    activeBg: '#EFF6FF', accentText: '#2563EB', accentBg: '#DBEAFE',
+    dropdownBg: '#FFFFFF',
+  },
+  dark: {
+    bg: '#0F172A', border: '#334155',
+    textPrimary: '#F1F5F9', textSecondary: '#94A3B8', textMuted: '#64748B',
+    inputBorder: '#334155', hoverBg: '#1E293B',
+    activeBg: '#1E3A5F', accentText: '#60A5FA', accentBg: '#1E3A5F',
+    dropdownBg: '#1E293B',
+  },
+  mac: {
+    bg: '#E8E8E8', border: '#ABABAB',
+    textPrimary: '#000000', textSecondary: '#555555', textMuted: '#888888',
+    inputBorder: '#ABABAB', hoverBg: '#D4D4D4',
+    activeBg: '#C5E0F5', accentText: '#3075D1', accentBg: '#C5E0F5',
+    dropdownBg: '#E8E8E8',
+  },
+};
+
 export default function Topbar({ onMenuClick }: TopbarProps) {
-  const { user, company, companies, setCompany, dashboardStats, darkMode, toggleDarkMode } = useApp();
+  const { user, company, companies, setCompany, dashboardStats, theme, cycleTheme } = useApp();
+  const p = TOPBAR_PALETTE[theme];
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -37,7 +62,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   return (
     <div
       className="flex items-center justify-between px-4 lg:px-8 py-3 border-b"
-      style={{ background: 'white', borderColor: '#E5E7EB' }}
+      style={{ background: p.bg, borderColor: p.border }}
     >
       <div className="flex items-center gap-3 relative">
         {/* Hamburger button - mobile only */}
@@ -45,43 +70,44 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           onClick={onMenuClick}
           aria-label="Abrir menú de navegación"
           aria-controls="main-sidebar"
-          className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition border border-gray-200 lg:hidden"
+          className="flex items-center justify-center w-10 h-10 rounded-lg transition lg:hidden"
+          style={{ border: `1px solid ${p.border}`, color: p.textSecondary }}
         >
-          <span aria-hidden="true" className="text-gray-600 text-xl">☰</span>
+          <span aria-hidden="true" className="text-xl">☰</span>
         </button>
-        <span className="text-sm" style={{ color: '#6B7280' }}>Empresa activa:</span>
+        <span className="text-sm" style={{ color: p.textSecondary }}>Empresa activa:</span>
         <button
           onClick={() => setOpen(o => !o)}
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-label="Cambiar empresa activa"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition hover:bg-gray-50"
-          style={{ color: '#111827', border: '1px solid #E5E7EB' }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition"
+          style={{ color: p.textPrimary, border: `1px solid ${p.border}` }}
         >
           {company?.nombre ?? 'Sin empresa'}
-          <span style={{ color: '#9CA3AF', fontSize: 10 }}>▼</span>
+          <span style={{ color: p.textMuted, fontSize: 10 }}>▼</span>
         </button>
 
         {open && (
           <div
-            className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg z-50 overflow-hidden"
-            style={{ border: '1px solid #E5E7EB', minWidth: 260, maxWidth: 340 }}
+            className="absolute top-full left-0 mt-1 rounded-xl shadow-lg z-50 overflow-hidden"
+            style={{ background: p.dropdownBg, border: `1px solid ${p.border}`, minWidth: 260, maxWidth: 340 }}
           >
-            <div className="p-2 border-b" style={{ borderColor: '#E5E7EB' }}>
+            <div className="p-2 border-b" style={{ borderColor: p.border }}>
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar empresa..."
                 className="w-full px-3 py-1.5 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ borderColor: '#E5E7EB' }}
+                style={{ borderColor: p.inputBorder, background: p.hoverBg, color: p.textPrimary }}
                 autoFocus
                 onClick={e => e.stopPropagation()}
               />
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
               {filtered.length === 0 ? (
-                <p className="text-xs px-3 py-2" style={{ color: '#9CA3AF' }}>Sin resultados</p>
+                <p className="text-xs px-3 py-2" style={{ color: p.textSecondary }}>Sin resultados</p>
               ) : (
                 filtered.map(emp => (
                   <button
@@ -91,25 +117,29 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                       setOpen(false);
                       setSearch('');
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 transition"
-                    style={{ background: emp.id === company?.id ? '#EFF6FF' : undefined }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-left transition"
+                    style={{ background: emp.id === company?.id ? p.activeBg : undefined }}
+                    onMouseEnter={e => { if (emp.id !== company?.id) (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+                    onMouseLeave={e => { if (emp.id !== company?.id) (e.currentTarget as HTMLElement).style.background = ''; }}
                   >
                     <div>
-                      <div className="text-sm font-medium" style={{ color: '#111827' }}>{emp.nombre}</div>
-                      <div className="text-xs" style={{ color: '#9CA3AF' }}>{emp.rut}</div>
+                      <div className="text-sm font-medium" style={{ color: p.textPrimary }}>{emp.nombre}</div>
+                      <div className="text-xs" style={{ color: p.textSecondary }}>{emp.rut}</div>
                     </div>
                     {emp.id === company?.id && (
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#2563EB' }}>✓</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: p.accentBg, color: p.accentText }}>✓</span>
                     )}
                   </button>
                 ))
               )}
             </div>
-            <div className="p-2 border-t text-center" style={{ borderColor: '#E5E7EB' }}>
+            <div className="p-2 border-t text-center" style={{ borderColor: p.border }}>
               <button
                 onClick={() => { setOpen(false); setSearch(''); }}
-                className="text-xs px-3 py-1 rounded-lg hover:bg-gray-100 transition"
-                style={{ color: '#6B7280' }}
+                className="text-xs px-3 py-1 rounded-lg transition"
+                style={{ color: p.textSecondary }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
               >
                 Cerrar
               </button>
@@ -120,11 +150,17 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
 <div className="flex items-center gap-3">
         <button
-          onClick={toggleDarkMode}
-          aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          className="p-2 rounded-lg transition hover:bg-gray-100"
+          onClick={cycleTheme}
+          aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : theme === 'dark' ? 'Cambiar a tema Mac Aqua' : 'Cambiar a modo claro'}
+          className="p-2 rounded-lg transition"
+          style={{ color: p.textPrimary }}
+          title={theme === 'light' ? 'Modo claro' : theme === 'dark' ? 'Modo oscuro' : 'Tema Mac Aqua'}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
         >
-          <span aria-hidden="true" role="img" style={{ fontSize: 16 }}>{darkMode ? '☀️' : '🌙'}</span>
+          <span aria-hidden="true" role="img" style={{ fontSize: 16 }}>
+            {theme === 'light' ? '🌞' : theme === 'dark' ? '🌙' : '🍎'}
+          </span>
         </button>
         {alertCount > 0 && (
           <div className="relative">
@@ -133,7 +169,10 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
               aria-label={`Alertas de cumplimiento: ${alertCount} alerta${alertCount !== 1 ? 's' : ''}`}
               aria-expanded={notifOpen}
               aria-haspopup="menu"
-              className="relative p-2 rounded-lg transition hover:bg-gray-100"
+              className="relative p-2 rounded-lg transition"
+            style={{ color: p.textPrimary }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
             >
               <span aria-hidden="true" role="img" style={{ fontSize: 18 }}>🔔</span>
               <span
@@ -148,30 +187,35 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
               <div
                 role="menu"
                 aria-label="Alertas de cumplimiento"
-                className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-50 overflow-hidden"
-                style={{ border: '1px solid #E5E7EB', minWidth: 280, maxWidth: 'calc(100vw - 32px)' }}
+                className="absolute right-0 top-full mt-1 rounded-xl shadow-lg z-50 overflow-hidden"
+                style={{ background: p.dropdownBg, border: `1px solid ${p.border}`, minWidth: 280, maxWidth: 'calc(100vw - 32px)' }}
                 onKeyDown={e => { if (e.key === 'Escape') setNotifOpen(false); }}
               >
-                <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: '#E5E7EB', color: '#111827' }}>
+                <div className="px-4 py-3 border-b font-semibold text-sm" style={{ borderColor: p.border, color: p.textPrimary }}>
                   Alertas de cumplimiento
                 </div>
                 <div className="py-1 max-h-64 overflow-y-auto">
                   {alertItems.length === 0 ? (
-                    <p className="text-xs px-4 py-3" style={{ color: '#9CA3AF' }}>Sin alertas</p>
+                    <p className="text-xs px-4 py-3" style={{ color: p.textSecondary }}>Sin alertas</p>
                   ) : (
                     alertItems.map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 px-4 py-2 hover:bg-gray-50">
+                      <div key={i} className="flex items-start gap-2 px-4 py-2" style={{ color: p.textPrimary }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
+                      >
                         <span>{item.type === 'danger' ? '🔴' : '🟡'}</span>
-                        <span className="text-xs" style={{ color: '#374151' }}>{item.label}</span>
+                        <span className="text-xs">{item.label}</span>
                       </div>
                     ))
                   )}
                 </div>
-                <div className="px-4 py-2 border-t text-center" style={{ borderColor: '#E5E7EB' }}>
+                <div className="px-4 py-2 border-t text-center" style={{ borderColor: p.border }}>
                   <button
                     onClick={() => setNotifOpen(false)}
-                    className="text-xs px-3 py-1 rounded-lg hover:bg-gray-100 transition"
-                    style={{ color: '#6B7280' }}
+                    className="text-xs px-3 py-1 rounded-lg transition"
+                    style={{ color: p.textSecondary }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = p.hoverBg; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                   >
                     Cerrar
                   </button>
@@ -181,7 +225,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           </div>
         )}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold" style={{ color: '#111827' }}>
+          <span className="text-sm font-semibold" style={{ color: p.textPrimary }}>
             {user?.full_name ?? user?.username}
           </span>
           {user?.rol_global === 'superadmin' && (

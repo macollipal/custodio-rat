@@ -1,0 +1,222 @@
+'use client';
+
+import { useEffect, useReducer, useState } from 'react';
+import Drawer from '@/components/ui/Drawer';
+import RatDetailView from './RatDetailView';
+import RatEditForm from './RatEditForm';
+import * as api from '@/lib/api';
+import type { RAT } from '@/types';
+import { ESTADO_LABEL } from '@/lib/constants';
+
+interface AuditLog { accion: string; usuario: string; timestamp: string; }
+
+interface RatDetailModalProps {
+  rat: RAT | null;
+  mode: 'view' | 'edit';
+  onClose: () => void;
+  onSwitchToEdit: () => void;
+  onDuplicate: (rat: RAT) => void;
+  onDelete: (id: number) => void;
+  onRefresh: () => void;
+  puedeEditar: boolean;
+}
+
+type AuditAction = { type: 'SET'; logs: AuditLog[] } | { type: 'CLEAR' };
+type ModeAction = { type: 'SET_MODE'; mode: 'view' | 'edit' } | { type: 'RESET' };
+
+function auditReducer(_: AuditLog[], action: AuditAction): AuditLog[] {
+  if (action.type === 'SET') return action.logs;
+  return [];
+}
+
+function modeReducer(_: 'view' | 'edit', action: ModeAction): 'view' | 'edit' {
+  switch (action.type) {
+    case 'SET_MODE': return action.mode;
+    case 'RESET': return 'view';
+  }
+}
+
+export default function RatDetailModal({
+  rat,
+  mode,
+  onClose,
+  onSwitchToEdit,
+  onDuplicate,
+  onDelete,
+  onRefresh,
+  puedeEditar,
+}: RatDetailModalProps) {
+  const [currentMode, modeDispatch] = useReducer(modeReducer, mode);
+  const [auditLogs, auditDispatch] = useReducer(auditReducer, []);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  async function handleExportPdf() {
+    if (!rat || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      await api.descargarRatPdf(rat.id, rat.nombre_proceso);
+    } catch {
+      // silencioso — el navegador mostrará error de descarga si falla
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
+  useEffect(() => { modeDispatch({ type: 'SET_MODE', mode }); }, [mode]);
+
+  useEffect(() => {
+    if (!rat) {
+      auditDispatch({ type: 'CLEAR' });
+      return;
+    }
+    let cancelled = false;
+    api.getAuditoria(rat.id)
+      .then(logs => { if (!cancelled) auditDispatch({ type: 'SET', logs }); })
+      .catch(() => { if (!cancelled) auditDispatch({ type: 'CLEAR' }); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rat?.id]);
+
+  function handleClose() {
+    modeDispatch({ type: 'RESET' });
+    onClose();
+  }
+
+  function handleSwitchToEdit() {
+    modeDispatch({ type: 'SET_MODE', mode: 'edit' });
+    onSwitchToEdit();
+  }
+
+  async function handleFormSaved() {
+    modeDispatch({ type: 'SET_MODE', mode: 'view' });
+    await onRefresh();
+  }
+
+  function handleCancel() {
+    modeDispatch({ type: 'SET_MODE', mode: 'view' });
+  }
+
+  if (!rat) return null;
+
+  const tabsCls = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition';
+  const activeTabCls = tabsCls + ' text-white';
+  const inactiveTabCls = tabsCls + ' text-white/60 hover:text-white';
+
+  return (
+    <Drawer
+      open={!!rat}
+      onClose={handleClose}
+      title="RAT"
+      size="xl"
+    >
+      <div>
+        <div
+          className="rounded-2xl p-5 mb-4"
+          style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
+              >
+                #{rat.id}
+              </div>
+              <div>
+                <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  RAT · {rat.estado === 'borrador' ? 'Borrador' : rat.estado === 'completo' ? 'Completo' : rat.estado === 'en_revision' ? 'En revisión' : 'Aprobado'}
+                </p>
+                <h2 className="text-base font-bold text-white leading-tight">
+                  {rat.nombre_proceso}
+                </h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {rat.completitud > 0 && (
+                <div
+                  className="flex items-center gap-1.5"
+                  role="progressbar"
+                  aria-valuenow={rat.completitud}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Completitud del RAT: ${rat.completitud}%`}
+                >
+                  <span className="text-xs font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    {rat.completitud}%
+                  </span>
+                  <div className="w-16 sm:w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${rat.completitud}%`, background: rat.completitud >= 80 ? '#34D399' : rat.completitud >= 50 ? '#FBBF24' : '#F87171' }}
+                    />
+                  </div>
+                </div>
+              )}
+              <span
+                role="status"
+                aria-label={`Estado del RAT: ${ESTADO_LABEL[rat.estado] ?? rat.estado}`}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}
+              >
+                {ESTADO_LABEL[rat.estado] ?? rat.estado}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => modeDispatch({ type: 'SET_MODE', mode: 'view' })}
+                className={currentMode === 'view' ? activeTabCls : inactiveTabCls}
+              >
+                Ver
+              </button>
+              {puedeEditar && (
+                <button
+                  onClick={handleSwitchToEdit}
+                  className={currentMode === 'edit' ? activeTabCls : inactiveTabCls}
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleExportPdf}
+              disabled={exportingPdf}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
+              title="Exportar este RAT como PDF"
+            >
+              {exportingPdf ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Exportando…
+                </>
+              ) : (
+                <>⬇ PDF</>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {currentMode === 'view' ? (
+          <RatDetailView
+            rat={rat}
+            puedeEditar={puedeEditar}
+            onEdit={handleSwitchToEdit}
+            onDuplicate={onDuplicate}
+            onDelete={onDelete}
+            onRefresh={onRefresh}
+            auditLogs={auditLogs}
+          />
+        ) : (
+          <RatEditForm
+            rat={rat}
+            onDone={handleFormSaved}
+            onCancel={handleCancel}
+          />
+        )}
+      </div>
+    </Drawer>
+  );
+}

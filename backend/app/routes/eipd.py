@@ -2,23 +2,20 @@
 Endpoints para Evaluación de Impacto en Protección de Datos (EIPD / DPIA).
 Art. 15 bis Ley 21.719.
 """
-from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.eipd import EIPD, ResultadoEIPD
-from app.models.rat import RAT as RATModel
-from app.schemas.eipd import EIPDCreate, EIPDOut, EIPDUpdate
-from app.services.audit_service import log_audit
+from app.schemas.eipd import EIPDCreate, EIPDOut, EIPDUpdate, EIPDListResponse
 from app.routes.deps import get_current_user, check_company_access
+from app.services import eipd_service
 
 router = APIRouter(prefix="/eipd", tags=["EIPD"])
 
 
-@router.get("/", summary="Listar EIPDs de la empresa")
+@router.get("/", response_model=EIPDListResponse, summary="Listar EIPDs de la empresa")
 async def listar_eipds(
     company_id: int = Query(..., description="ID de la empresa"),
     estado: Optional[str] = None,
@@ -27,26 +24,14 @@ async def listar_eipds(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Lista todos los EIPDs registrados para RATs de la empresa."""
     check_company_access(current_user, company_id, db)
-
-    q = (
-        db.query(EIPD)
-        .join(RATModel, EIPD.rat_id == RATModel.id)
-        .filter(RATModel.company_id == company_id)
+    items, total = eipd_service.listar_eipds(db, company_id, estado, skip, limit)
+    return EIPDListResponse(
+        eipds=[EIPDOut.model_validate(e) for e in items],
+        total=total,
+        skip=skip,
+        limit=limit,
     )
-    if estado:
-        q = q.filter(EIPD.resultado == estado)
-
-    total = q.count()
-    items = q.order_by(EIPD.updated_at.desc()).offset(skip).limit(limit).all()
-
-    return {
-        "eipds": [EIPDOut.model_validate(e).model_dump() for e in items],
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-    }
 
 
 @router.get("/rat/{rat_id}", response_model=EIPDOut, summary="Obtener EIPD de un RAT")
@@ -55,14 +40,12 @@ async def obtener_eipd_por_rat(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
-    if not rat:
-        raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    check_company_access(current_user, rat.company_id, db)
+    from app.models.rat import RAT as RATModel
 
-    eipd = db.query(EIPD).filter(EIPD.rat_id == rat_id).first()
-    if not eipd:
-        raise HTTPException(status_code=404, detail="EIPD no encontrado para este RAT.")
+    eipd = eipd_service.obtener_eipd_por_rat(db, rat_id)
+    rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
+    if rat:
+        check_company_access(current_user, rat.company_id, db)
     return eipd
 
 
@@ -72,46 +55,15 @@ async def crear_eipd(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
-    if not rat:
-        raise HTTPException(status_code=404, detail="RAT no encontrado.")
-    check_company_access(current_user, rat.company_id, db)
-
-    existing = db.query(EIPD).filter(EIPD.rat_id == data.rat_id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Ya existe un EIPD para este RAT. Use PUT para actualizar.")
-
     try:
-        resultado = ResultadoEIPD(data.resultado)
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Resultado inválido. Valores permitidos: {[r.value for r in ResultadoEIPD]}")
-
-    eipd = EIPD(
-        rat_id=data.rat_id,
-        metodologia=data.metodologia,
-        objetivos=data.objetivos,
-        necesidad_proporcionalidad=data.necesidad_proporcionalidad,
-        riesgos_identificados=data.riesgos_identificados,
-        medidas_propuestas=data.medidas_propuestas,
-        parecer_dpo=data.parecer_dpo,
-        fecha_elaboracion=data.fecha_elaboracion,
-        fecha_aprobacion=data.fecha_aprobacion,
-        resultado=resultado,
-        created_by=current_user.username,
-    )
-    db.add(eipd)
-    db.flush()
-    log_audit(
-        db=db,
-        entidad="eipd",
-        entidad_id=eipd.id,
-        accion="create",
-        usuario=current_user.username,
-        detalle={"rat_id": data.rat_id, "resultado": data.resultado},
-    )
-    db.commit()
-    db.refresh(eipd)
-    return eipd
+        eipd = eipd_service.crear_eipd(db, data, current_user.username)
+        return eipd
+    except eipd_service.RATNotFoundError:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    except eipd_service.EIPDJaExisteError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except eipd_service.ResultadoInvalidoError as e:
+        raise HTTPException(status_code=400, detail=f"Resultado inválido. Valores permitidos: {e.valores_permitidos}")
 
 
 @router.put("/{eipd_id}", response_model=EIPDOut, summary="Actualizar EIPD")
@@ -121,32 +73,15 @@ async def actualizar_eipd(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    eipd = db.query(EIPD).filter(EIPD.id == eipd_id).first()
-    if not eipd:
+    from app.models.rat import RAT as RATModel
+
+    try:
+        eipd = eipd_service.actualizar_eipd(db, eipd_id, data, current_user.username)
+        rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
+        if rat:
+            check_company_access(current_user, rat.company_id, db)
+        return eipd
+    except eipd_service.EIPDNotFoundError:
         raise HTTPException(status_code=404, detail="EIPD no encontrado.")
-
-    rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
-    if rat:
-        check_company_access(current_user, rat.company_id, db)
-
-    cambios = data.model_dump(exclude_none=True)
-    if "resultado" in cambios:
-        try:
-            cambios["resultado"] = ResultadoEIPD(cambios["resultado"])
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Resultado inválido")
-
-    for field, value in cambios.items():
-        setattr(eipd, field, value)
-
-    log_audit(
-        db=db,
-        entidad="eipd",
-        entidad_id=eipd.id,
-        accion="update",
-        usuario=current_user.username,
-        detalle={"rat_id": eipd.rat_id, "campos": list(cambios.keys())},
-    )
-    db.commit()
-    db.refresh(eipd)
-    return eipd
+    except eipd_service.ResultadoInvalidoError as e:
+        raise HTTPException(status_code=400, detail=f"Resultado inválido. Valores permitidos: {e.valores_permitidos}")

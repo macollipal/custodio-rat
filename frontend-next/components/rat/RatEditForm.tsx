@@ -5,13 +5,22 @@ import { toast } from 'sonner';
 import * as api from '@/lib/api';
 import AlertBanner from '@/components/dashboard/AlertBanner';
 import StepIndicator from '@/components/ui/StepIndicator';
-import { BASES_LEGALES, DESCRIPCIONES_BASE, TIPOS_DATO_SENSIBLE } from '@/lib/constants';
+import Spinner from '@/components/ui/Spinner';
+import CategoryChips from '@/components/ui/CategoryChips';
+import { Button } from '@/components/ui/Button';
+import { useApp } from '@/context/AppContext';
+import { TIPOS_DATO_SENSIBLE, DATOS_NNA_OPCIONES, NIVEL_CONFIDENCIALIDAD_OPCIONES, ESTRUCTURA_DATO_OPCIONES, CICLO_PROCESAMIENTO_OPCIONES, AUTOMATIZACION_OPCIONES, FRECUENCIA_OPCIONES, OPERACIONES_TRATAMIENTO_OPCIONES } from '@/lib/constants';
 import type { RAT } from '@/types';
 
 const ESTADOS_EIPD = ['no_requerida', 'pendiente', 'en_proceso', 'completada'];
 const ESTADOS: RAT['estado'][] = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias'];
+const STEPS = ['Identificación', 'Datos tratados', 'Finalidad y ley', 'Transferencias', 'Compliance'];
 
+const validatePaso4 = (form: any): string | null => {
+  if (!form.plazo_retencion?.toString().trim()) return 'Debes indicar el plazo de retención.';
+  if (!form.medidas_seguridad?.toString().trim()) return 'Debes describir las medidas de seguridad.';
+  return null;
+};
 interface RatEditFormProps {
   rat: RAT;
   onDone: () => void;
@@ -19,7 +28,34 @@ interface RatEditFormProps {
 }
 
 export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps) {
+  const { baseLegalOptions, baseLegalDescripciones } = useApp();
   const [step, setStep] = useState(1);
+
+  // Parsear el test_interes_legitimo existente: JSON {paso1,paso2,paso3} o legacy "Paso 1:...\nPaso 2:...\nPaso 3:..."
+  const initialTestIL = (() => {
+    const raw = rat.test_interes_legitimo ?? '';
+    if (!raw) return { paso1: '', paso2: '', paso3: '' };
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && 'paso1' in parsed) {
+        return {
+          paso1: parsed.paso1 ?? '',
+          paso2: parsed.paso2 ?? '',
+          paso3: parsed.paso3 ?? '',
+        };
+      }
+    } catch {}
+    const m1 = raw.match(/Paso 1:\s*([\s\S]*?)(?=\nPaso 2:|$)/);
+    const m2 = raw.match(/Paso 2:\s*([\s\S]*?)(?=\nPaso 3:|$)/);
+    const m3 = raw.match(/Paso 3:\s*([\s\S]*?)$/);
+    return {
+      paso1: m1 ? m1[1].trim() : '',
+      paso2: m2 ? m2[1].trim() : '',
+      paso3: m3 ? m3[1].trim() : '',
+    };
+  })();
+  const [testIL, setTestIL] = useState(initialTestIL);
+
   const [form, setForm] = useState({
     nombre_proceso:               rat.nombre_proceso ?? '',
     categoria_titulares:          rat.categoria_titulares ?? '',
@@ -33,7 +69,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     fecha_eipd:                  rat.fecha_eipd ?? '',
     decisiones_automatizadas:     rat.decisiones_automatizadas ?? false,
     finalidad:                    rat.finalidad ?? '',
-    base_legal:                   rat.base_legal ?? BASES_LEGALES[0],
+    base_legal:                   rat.base_legal ?? baseLegalOptions[0],
     test_interes_legitimo:        rat.test_interes_legitimo ?? '',
     plazo_retencion:              rat.plazo_retencion ?? '',
     medidas_seguridad:            rat.medidas_seguridad ?? '',
@@ -51,6 +87,29 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     consentimiento_nombre:  '',
     consentimiento_email:  '',
     consentimiento_texto:  '',
+    // Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: rat.sistema_almacenamiento ?? '',
+    volumen_titulares_estimado: rat.volumen_titulares_estimado ?? '',
+    operaciones_tratamiento: rat.operaciones_tratamiento ?? [],
+    logica_automatizada: rat.logica_automatizada ?? '',
+    responsable_tratamiento_email: rat.responsable_tratamiento_email ?? '',
+    // Campos Tier 1 - Gaps criticos (Iter 11)
+    datos_nna: rat.datos_nna ?? 'ninguno',
+    nivel_confidencialidad: rat.nivel_confidencialidad ?? '',
+    estructura_dato: rat.estructura_dato ?? '',
+    datos_anonimizados: rat.datos_anonimizados ?? false,
+    datos_seudonimizados: rat.datos_seudonimizados ?? false,
+    // Campos Tier 2 - Operativos (Iter 11)
+    ciclo_procesamiento: rat.ciclo_procesamiento ?? '',
+    automatizacion: rat.automatizacion ?? '',
+    frecuencia: rat.frecuencia ?? '',
+    transferencia_nacional: rat.transferencia_nacional ?? false,
+    doc_clausulas: rat.doc_clausulas ?? '',
+    medidas_organizativas: rat.medidas_organizativas ?? '',
+    mecanismos_eliminacion: rat.mecanismos_eliminacion ?? '',
+    tecnica_anonimizacion: rat.tecnica_anonimizacion ?? '',
+    origen_dato_portabilidad: rat.origen_dato_portabilidad ?? '',
+    fecha_levantamiento: rat.fecha_levantamiento ?? '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -60,17 +119,43 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
 
   async function handleSave() {
     if (!form.nombre_proceso.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
-    if (!form.categoria_datos.trim()) { toast.error('La categoria de datos es obligatoria.'); return; }
+    if (!form.categoria_datos.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
     if (!form.finalidad.trim()) { toast.error('La finalidad es obligatoria.'); return; }
     if (!form.base_legal.trim()) { toast.error('La base legal es obligatoria.'); return; }
     if (!form.fuente_datos.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
-    if (!form.plazo_retencion.trim()) { toast.error('El plazo de retencion es obligatorio.'); return; }
+    if (!form.plazo_retencion.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
+    if (form.base_legal === 'Interés legítimo') {
+      const totalTestIL = [testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim();
+      if (!totalTestIL) {
+        toast.error('Complete los 3 pasos del test de interés legítimo.');
+        return;
+      }
+      if (totalTestIL.length < 50) {
+        toast.error(`El test de interés legítimo debe tener al menos 50 caracteres (actual: ${totalTestIL.length}).`);
+        return;
+      }
+    }
+    // Consentimiento expreso obligatorio para datos sensibles (Art. 16 Ley 21.719)
+    if (form.datos_sensibles) {
+      const consentimientos = await api.listarConsentimientos(rat.company_id, rat.id, true);
+      if (consentimientos.length === 0) {
+        toast.error('Un RAT con datos sensibles requiere al menos un consentimiento expreso registrado. Use la alerta de Consentimiento en el detalle del RAT.');
+        setSaving(false);
+        return;
+      }
+    }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(form)) {
         if (typeof v === 'string') payload[k] = v?.trim() || null;
         else payload[k] = v ?? null;
+      }
+      // Reemplazar test_interes_legitimo con JSON estructurado
+      if (form.base_legal === 'Interés legítimo') {
+        payload.test_interes_legitimo = JSON.stringify({ paso1: testIL.paso1.trim(), paso2: testIL.paso2.trim(), paso3: testIL.paso3.trim() });
+      } else {
+        payload.test_interes_legitimo = null;
       }
       await api.actualizarRat(rat.id, payload as Partial<RAT>);
       if (form.datos_sensibles && form.consentimiento_nombre && form.consentimiento_email) {
@@ -83,7 +168,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
           datos_sensibles: true,
         });
  }
-      toast.success(`"${form.nombre_proceso}" actualizado correctamente.`);
+      toast.success(`RAT "${form.nombre_proceso}" actualizado correctamente`);
       onDone();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Error al actualizar.');
@@ -98,48 +183,56 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button
+        <Button
+          variant="secondary"
+          size="md"
           onClick={onCancel}
-          className="text-sm font-medium px-4 py-2 rounded-lg border transition hover:bg-gray-50"
-          style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
         >
           ← Volver
-        </button>
+        </Button>
         <h2 className="text-lg font-bold" style={{ color: '#111827' }}>
           Editar proceso · {rat.nombre_proceso}
         </h2>
       </div>
 
-      <StepIndicator steps={STEPS} current={step} />
-
-      <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+      <div className="bg-white rounded-xl shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+        <div className="px-6 pt-5 pb-4" style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <StepIndicator steps={STEPS} current={step} className="" />
+        </div>
+        <div className="p-6">
 
         {/* PASO 1 */}
         {step === 1 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Información básica del proceso de tratamiento.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 1 · Identificación del proceso</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Información básica del proceso de tratamiento.</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
                 Nombre del proceso *
               </label>
-              <input type="text" value={form.nombre_proceso} onChange={e => set('nombre_proceso', e.target.value)} className={inputCls} style={inputStyle} />
+              <input type="text" value={form.nombre_proceso} onChange={e => set('nombre_proceso', e.target.value)} aria-required="true" className={inputCls} style={inputStyle} />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 16 Ley 21.719)</span>
+                Categorías de titulares * <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 16 Ley 21.719)</span>
               </label>
-              <input type="text" value={form.categoria_titulares} onChange={e => set('categoria_titulares', e.target.value)} placeholder="Ej: Clientes, empleados, proveedores..." className={inputCls} style={inputStyle} />
+              <CategoryChips
+                value={form.categoria_titulares}
+                onChange={v => set('categoria_titulares', v)}
+                suggestions={['Clientes', 'Empleados', 'Proveedores', 'Pacientes', 'Postulantes', 'Estudiantes', 'Usuarios web', 'Menores de edad', 'Acreedores']}
+                placeholder="Ej: Clientes, empleados, proveedores..."
+                ariaLabel="Categorías de titulares"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fuente de los datos *</label>
-                <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} className={inputCls} style={inputStyle} />
+                <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} aria-required="true" className={inputCls} style={inputStyle} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Destinatarios / Encargados</label>
@@ -160,19 +253,19 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button
+                size="lg"
                 onClick={() => {
                   if (!form.nombre_proceso?.trim()) { toast.error('El nombre del proceso es obligatorio.'); return; }
                   if (!form.categoria_titulares?.trim()) { toast.error('Las categorías de titulares son obligatorias.'); return; }
                   if (!form.fuente_datos?.trim()) { toast.error('La fuente de datos es obligatoria.'); return; }
                   setStep(2);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -181,8 +274,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Qué datos personales se tratan y si existen categorías especiales.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 2 · Datos personales tratados</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Qué datos personales se tratan, su clasificación y si existen categorías especiales.</p>
             </div>
 
             <div>
@@ -193,7 +286,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={form.datos_sensibles} onChange={e => set('datos_sensibles', e.target.checked)} className="mt-0.5 rounded" />
+                    <input type="checkbox" checked={form.datos_sensibles} onChange={e => set('datos_sensibles', e.target.checked)} className="mt-0.5 rounded" />
                   <span className="text-sm font-medium" style={{ color: '#374151' }}>⚠️ El proceso trata datos sensibles (Art. 2 letra g)</span>
                 </label>
                 {form.datos_sensibles && (
@@ -205,7 +298,7 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     <AlertBanner message="Dato sensible: requiere base legal expresa y medidas de seguridad reforzadas." type="warning" />
                     <div className="rounded-lg p-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
                       <p className="text-xs font-semibold mb-2" style={{ color: '#1E40AF' }}>B-06: Consentimiento Expreso (Art. 12)</p>
-                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registrá el consentimiento del titular.</p>
+                      <p className="text-xs mb-2" style={{ color: '#374151' }}>Para datos sensibles, el consentimiento debe ser expreso. Registre el consentimiento del titular.</p>
                       <div className="grid grid-cols-2 gap-2">
                         <input type="text" value={form.consentimiento_nombre ?? ''} onChange={e => set('consentimiento_nombre', e.target.value)} placeholder="Nombre del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
                         <input type="email" value={form.consentimiento_email ?? ''} onChange={e => set('consentimiento_email', e.target.value)} placeholder="Email del titular" className="px-2 py-1.5 rounded text-xs border" style={{ borderColor: '#BFDBFE' }} />
@@ -228,7 +321,16 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                         {ESTADOS_EIPD.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                       </select>
                       <input type="date" value={form.fecha_eipd ?? ''} onChange={e => set('fecha_eipd', e.target.value)} className={inputCls} style={inputStyle} />
-                      <AlertBanner message="La EIPD debe completarse antes de iniciar el tratamiento (Art. 15 bis)." type="info" />
+                      <AlertBanner message="La EIPD debe completarse antes de iniciar el tratamiento (Art. 15 ter)." type="info" />
+                      <a
+                        href={`/eipd?rat_id=${rat.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-medium underline underline-offset-2"
+                        style={{ color: '#2563EB' }}
+                      >
+                        Ir a Evaluación de Impacto →
+                      </a>
                     </div>
                   )}
                 </div>
@@ -238,24 +340,83 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                     <span className="text-sm font-medium" style={{ color: '#374151' }}>🤖 Involucra decisiones automatizadas</span>
                   </label>
                   {form.decisiones_automatizadas && (
-                    <AlertBanner message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8)." type="info" />
+                    <div className="pl-6 space-y-2">
+                      <AlertBanner message="Los titulares tienen derecho a solicitar revisión humana e impugnar la decisión (Art. 8)." type="info" />
+                      <textarea
+                        value={form.logica_automatizada}
+                        onChange={e => set('logica_automatizada', e.target.value)}
+                        rows={3}
+                        placeholder="Describa la lógica aplicada, consecuencias para el titular y posibilidad de revisión humana..."
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(1)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+            {/* Clasificación y NNA — canonical Step 2 */}
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>Clasificación y NNA</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Tratamiento de NNA
+                  </label>
+                  <select value={form.datos_nna ?? 'ninguno'} onChange={e => set('datos_nna', e.target.value)} className={inputCls} style={inputStyle}>
+                    {DATOS_NNA_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                    Nivel de confidencialidad
+                  </label>
+                  <select value={form.nivel_confidencialidad ?? ''} onChange={e => set('nivel_confidencialidad', e.target.value)} aria-describedby="nivel-conf-tooltip-edit-form" className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {NIVEL_CONFIDENCIALIDAD_OPCIONES.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  {form.nivel_confidencialidad && (() => {
+                    const opt = NIVEL_CONFIDENCIALIDAD_OPCIONES.find(o => o.value === form.nivel_confidencialidad);
+                    return opt?.tooltip ? (
+                      <div role="tooltip" id="nivel-conf-tooltip-edit-form" className="text-xs mt-1" style={{ color: '#6B7280' }}>{opt.tooltip}</div>
+                    ) : null;
+                  })()}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Estructura del dato</label>
+                  <select value={form.estructura_dato ?? ''} onChange={e => set('estructura_dato', e.target.value)} className={inputCls} style={inputStyle}>
+                    <option value="">— Seleccionar —</option>
+                    {ESTRUCTURA_DATO_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_anonimizados} onChange={e => set('datos_anonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos anonimizados</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.datos_seudonimizados} onChange={e => set('datos_seudonimizados', e.target.checked)} className="mt-0.5 rounded" />
+                  <span className="text-sm font-medium" style={{ color: '#374151' }}>Datos seudonimizados</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => setStep(1)}>← Anterior</Button>
+              <Button
+                size="lg"
                 onClick={() => {
                   if (!form.categoria_datos?.trim()) { toast.error('La categoría de datos es obligatoria.'); return; }
                   setStep(3);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -264,26 +425,26 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 3 · Finalidad y base legal</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por qué y con qué fundamento jurídico se tratan los datos.</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Finalidad del tratamiento *</label>
-              <textarea value={form.finalidad} onChange={e => set('finalidad', e.target.value)} rows={3} className={inputCls} style={inputStyle} />
+              <textarea value={form.finalidad} onChange={e => set('finalidad', e.target.value)} rows={3} aria-required="true" className={inputCls} style={inputStyle} />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(Art. 13 Ley 21.719)</span>
+                Base legal del tratamiento * <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 13 Ley 21.719)</span>
               </label>
               <select value={form.base_legal} onChange={e => set('base_legal', e.target.value)} className={inputCls} style={inputStyle}>
-                {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+                {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
-              {form.base_legal && DESCRIPCIONES_BASE[form.base_legal] && (
+              {form.base_legal && baseLegalDescripciones[form.base_legal] && (
                 <div className="mt-2">
                   <AlertBanner
-                    message={DESCRIPCIONES_BASE[form.base_legal]}
+                    message={baseLegalDescripciones[form.base_legal]}
                     type={form.base_legal === 'Interés legítimo' || form.base_legal === 'Datos biométricos de identificación (Art. 16 BIS)' ? 'warning' : 'info'}
                   />
                 </div>
@@ -330,27 +491,39 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                       <span className="text-lg">📎</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate" style={{ color: '#111827' }}>{form.archivo_base_legal_nombre}</p>
-                        <p className="text-xs" style={{ color: '#9CA3AF' }}>{form.archivo_base_legal_tipo}</p>
+                        <p className="text-xs" style={{ color: '#6B7280' }}>{form.archivo_base_legal_tipo}</p>
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setForm(f => ({ ...f, archivo_base_legal_base64: '', archivo_base_legal_nombre: '', archivo_base_legal_tipo: '' }))}
-                        className="text-xs font-semibold px-2 py-1 rounded"
                         style={{ color: '#DC2626', background: '#FEE2E2' }}
                       >
                         Eliminar
-                      </button>
+                      </Button>
                     </div>
                   )}
                   {rat.tiene_archivo_base_legal && !form.archivo_base_legal_base64 && (
-                    <button
+                    <Button
                       type="button"
-                      onClick={() => window.open(`/api/rats/${rat.id}/archivo`, '_blank')}
-                      className="mt-2 text-xs font-medium underline"
-                      style={{ color: '#2563EB' }}
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                      onClick={async () => {
+                        try {
+                          const blob = await api.descargarArchivoRAT(rat.id);
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                          setTimeout(() => URL.revokeObjectURL(url), 60000);
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : 'Error al abrir el documento');
+                        }
+                      }}
+                      style={{ color: '#2563EB', textDecoration: 'underline' }}
                     >
                       Ver documento actual
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -359,34 +532,79 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
             </div>
 
             {(form.base_legal === 'Interés legítimo') && (
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-                  Test de interés legítimo (3 pasos) <span className="text-xs font-normal" style={{ color: '#9CA3AF' }}>(obligatorio para esta base legal)</span>
-                </label>
-                <textarea
-                  value={form.test_interes_legitimo}
-                  onChange={e => set('test_interes_legitimo', e.target.value)}
-                  rows={4}
-                  placeholder="Documente los 3 pasos: (1) ¿existe interés legítimo real? (2) ¿el tratamiento es necesario? (3) ¿prevalece sobre los derechos del titular?"
-                  className={inputCls}
-                  style={inputStyle}
-                />
-                <AlertBanner message="Sin este test documentado, la base 'Interés legítimo' no sirve como defensa ante la APDC." type="warning" />
+              <div className="rounded-lg p-4 space-y-3" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold" style={{ color: '#374151' }}>
+                    Test de interés legítimo (3 pasos)
+                  </p>
+                  <span className="text-xs font-medium" style={{ color: '#6B7280' }}>
+                    {[testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim().length} / 50+ caracteres
+                  </span>
+                </div>
+                <AlertBanner message="El test de interés legítimo es obligatorio (Art. 16 Ley 21.719). Mínimo 50 caracteres necesarios para ser válido como documentación ante la APDP." type="warning" />
+                <div>
+                  <label htmlFor="ef-testil-paso1" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 1 — ¿Existe un interés legítimo real?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso1"
+                    rows={2}
+                    value={testIL.paso1}
+                    onChange={e => setTestIL(t => ({ ...t, paso1: e.target.value }))}
+                    placeholder="Describa el interés legítimo: marketing directo, seguridad, prevención de fraude..."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="ef-testil-paso2" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 2 — ¿El tratamiento es necesario para ese interés?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso2"
+                    rows={2}
+                    value={testIL.paso2}
+                    onChange={e => setTestIL(t => ({ ...t, paso2: e.target.value }))}
+                    placeholder="Justifique por qué el tratamiento es necesario y no hay alternativa menos invasiva."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="ef-testil-paso3" className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                    Paso 3 — ¿Prevalece sobre los derechos del titular?
+                  </label>
+                  <textarea
+                    id="ef-testil-paso3"
+                    rows={3}
+                    value={testIL.paso3}
+                    onChange={e => setTestIL(t => ({ ...t, paso3: e.target.value }))}
+                    placeholder="Considere expectativas razonables del titular, impacto en su privacidad, medidas mitigadoras..."
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
               </div>
             )}
 
-            <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(2)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => setStep(2)}>← Anterior</Button>
+              <Button
+                size="lg"
                 onClick={() => {
                   if (!form.finalidad?.trim()) { toast.error('La finalidad es obligatoria.'); return; }
+                  if (form.base_legal === 'Interés legítimo') {
+                    const totalIL = [testIL.paso1, testIL.paso2, testIL.paso3].join(' ').trim();
+                    if (!totalIL || totalIL.length < 50) {
+                      toast.error('El test de interés legítimo debe tener al menos 50 caracteres (Art. 16 Ley 21.719).'); return;
+                    }
+                  }
                   setStep(4);
                 }}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
-                style={{ background: '#2563EB' }}
+                className="flex-1"
               >
                 Siguiente →
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -395,15 +613,41 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
-              <p className="text-sm" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 4 · Almacenamiento y transferencias</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Por cuánto tiempo se conservan los datos y cómo se comparten.</p>
+            </div>
+
+            {/* Iter 10 fields — storage system and volume */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Sistema de almacenamiento</label>
+                <input
+                  type="text"
+                  value={form.sistema_almacenamiento}
+                  onChange={e => set('sistema_almacenamiento', e.target.value)}
+                  placeholder="Ej: CRM Salesforce, Excel, Google Drive, Sistema clínico..."
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Volumen estimado de titulares</label>
+                <input
+                  type="number"
+                  value={form.volumen_titulares_estimado}
+                  onChange={e => set('volumen_titulares_estimado', e.target.value ? parseInt(e.target.value) : '')}
+                  placeholder="Ej: 50000"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Plazo de retención *</label>
-                  <input type="text" value={form.plazo_retencion} onChange={e => set('plazo_retencion', e.target.value)} placeholder="Ej: 5 años desde el último contacto" className={inputCls} style={inputStyle} />
+                  <input type="text" value={form.plazo_retencion} onChange={e => set('plazo_retencion', e.target.value)} placeholder="Ej: 5 años desde el último contacto" aria-required="true" className={inputCls} style={inputStyle} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas de seguridad</label>
@@ -451,23 +695,135 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
               <textarea value={form.observaciones_auditoria} onChange={e => set('observaciones_auditoria', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
             </div>
 
-            <div className="flex justify-between pt-2">
-              <button onClick={() => setStep(3)} className="px-5 py-2.5 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>← Anterior</button>
-              <button
+            {/* Campos nuevos gaps Ley 21.719 (Iter 10) */}
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <h4 className="text-sm font-bold" style={{ color: '#374151' }}>📋 Operaciones y responsable</h4>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Operaciones de tratamiento</label>
+                <div className="flex flex-wrap gap-2">
+                  {OPERACIONES_TRATAMIENTO_OPCIONES.map(op => (
+                    <label key={op} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full text-xs font-medium border transition" style={{
+                      backgroundColor: (form.operaciones_tratamiento as string[])?.includes(op) ? '#DBEAFE' : 'white',
+                      borderColor: (form.operaciones_tratamiento as string[])?.includes(op) ? '#2563EB' : '#D1D5DB',
+                      color: (form.operaciones_tratamiento as string[])?.includes(op) ? '#1D4ED8' : '#6B7280',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={(form.operaciones_tratamiento as string[])?.includes(op) || false}
+                        onChange={e => {
+                          const current = (form.operaciones_tratamiento as string[]) || [];
+                          if (e.target.checked) {
+                            set('operaciones_tratamiento', [...current, op]);
+                          } else {
+                            set('operaciones_tratamiento', current.filter((x: string) => x !== op));
+                          }
+                        }}
+                        className="sr-only"
+                      />
+                      {op}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Responsable del tratamiento (email)</label>
+                <input
+                  type="email"
+                  value={form.responsable_tratamiento_email}
+                  onChange={e => set('responsable_tratamiento_email', e.target.value)}
+                  placeholder="Ej: responsable@empresa.cl"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => setStep(3)}>← Anterior</Button>
+              <Button
+                size="lg"
+                onClick={() => {
+                  const err = validatePaso4(form);
+                  if (err) {
+                    toast.error(err);
+                    return;
+                  }
+                  setStep(5);
+                }}
+                className="flex-1"
+              >
+                Siguiente →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* PASO 5 */}
+        {step === 5 && (
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-bold" style={{ color: '#111827' }}>Paso 5 · Compliance avanzado</h3>
+              <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Campos de cierre de gaps críticos y operativos. Opcionales pero recomendados para auditorías.</p>
+            </div>
+
+            <div className="rounded-lg p-4 space-y-4" style={{ border: '1px solid #E5E7EB' }}>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.transferencia_nacional} onChange={e => set('transferencia_nacional', e.target.checked)} className="mt-0.5 rounded" />
+                <span className="text-sm font-medium" style={{ color: '#374151' }}>Existe transferencia de datos a nivel nacional (dentro de Chile)</span>
+              </label>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Documentación de cláusulas informativas</label>
+                <textarea value={form.doc_clausulas ?? ''} onChange={e => set('doc_clausulas', e.target.value)} rows={2} placeholder="Ej: Politica de privacidad en sitio web, aviso de privacidad en formularios..." className={inputCls} style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Medidas organizativas</label>
+                <textarea value={form.medidas_organizativas ?? ''} onChange={e => set('medidas_organizativas', e.target.value)} rows={2} placeholder="Ej: Designacion RAI, procedimientos de acceso, politicas internas..." className={inputCls} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Mecanismos de eliminación</label>
+                  <textarea value={form.mecanismos_eliminacion ?? ''} onChange={e => set('mecanismos_eliminacion', e.target.value)} rows={2} placeholder="Ej: Borrado seguro NIST 800-88, destrucción física, retención hasta fin de plazo..." className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Técnica de anonimización</label>
+                  <input value={form.tecnica_anonimizacion ?? ''} onChange={e => set('tecnica_anonimizacion', e.target.value)} placeholder="Ej: Pseudonimización, k-anonimidad, agregación..." className={inputCls} style={inputStyle} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Origen del dato (portabilidad)</label>
+                  <input value={form.origen_dato_portabilidad ?? ''} onChange={e => set('origen_dato_portabilidad', e.target.value)} placeholder="Ej: Directamente del titular, de otro responsable..." className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Fecha de levantamiento</label>
+                  <input type="date" value={form.fecha_levantamiento ?? ''} onChange={e => set('fecha_levantamiento', e.target.value)} className={inputCls} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4" style={{ borderTop: '1px solid #F3F4F6' }}>
+              <Button variant="secondary" size="lg" onClick={() => setStep(4)}>← Anterior</Button>
+              <Button
+                variant="success"
+                size="lg"
                 onClick={() => {
                   if (!form.plazo_retencion?.trim()) { toast.error('El plazo de retención es obligatorio.'); return; }
                   handleSave();
                 }}
-                disabled={saving}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-60"
-                style={{ background: '#059669' }}
+                loading={saving}
+                className="flex-1"
               >
-                {saving ? 'Guardando...' : '✓ Guardar cambios'}
-              </button>
+                ✓ Guardar cambios
+              </Button>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
 }
+

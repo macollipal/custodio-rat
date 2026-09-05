@@ -12,8 +12,6 @@ Aqui solo encolamos la tarea; el procesamiento lo hace el worker.
 import logging
 import threading
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Callable
 
 from app.core.config import settings
 from app.database.database import SessionLocal
@@ -46,9 +44,90 @@ def _job_enqueue_cleanup_tokens() -> None:
         db.close()
 
 
+def _job_enqueue_revisar_encargados_vencidos() -> None:
+    """Encola la tarea de revisión de contratos de encargado próximos a vencer."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "revisar_encargados_vencidos")
+        logger.info("Scheduler: tarea 'revisar_encargados_vencidos' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_notificar_eipd_vencida() -> None:
+    """Encola la tarea de notificar EIPDs abiertas >90 días."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "notificar_eipd_vencida")
+        logger.info("Scheduler: tarea 'notificar_eipd_vencida' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_solicitar_renovacion_consentimiento() -> None:
+    """Encola la tarea de revisar consentimientos activos >2 años."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "solicitar_renovacion_consentimiento")
+        logger.info("Scheduler: tarea 'solicitar_renovacion_consentimiento' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_sla_alert_t2() -> None:
+    """Encola alerta SLA T-2 para tickets ARCO proximos a vencer plazo 10 dias habiles.
+
+    Art. 14 Ley 21.719: solicitudes ARCO deben responderse en 10 dias habiles.
+    Esta alerta avisa al DPO 2 dias antes (T-2) para que tenga tiempo de
+    responder. Tambien alerta tickets ya vencidos.
+    """
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_t2")
+        logger.info("Scheduler: tarea 'sla_alert_t2' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_sla_alert_brecha_72h() -> None:
+    """C-03: Monitor secundario — brechas sin notificar APDP que superaron 72h (Art. 14 bis Ley 21.719).
+
+    Complementa la notificación inmediata del POST /brechas: detecta casos donde
+    el email falló o la brecha se cargó sin triggear la alerta inicial.
+    """
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_brecha_72h")
+        logger.info("Scheduler: tarea 'sla_alert_brecha_72h' encolada")
+    finally:
+        db.close()
+
+
+def _job_enqueue_sla_alert_plazo_retencion() -> None:
+    """C-02: Alerta RATs aprobados cuyo plazo de retención venció (Art. 16 Ley 21.719)."""
+    from app.services.task_service import enqueue_task
+    db = SessionLocal()
+    try:
+        enqueue_task(db, "sla_alert_plazo_retencion")
+        logger.info("Scheduler: tarea 'sla_alert_plazo_retencion' encolada")
+    finally:
+        db.close()
+
+
 _JOBS = [
     (_job_enqueue_revisar_rats_vencidos, 24 * 60 * 60),  # cada 24h
     (_job_enqueue_cleanup_tokens, 6 * 60 * 60),  # cada 6h
+    (_job_enqueue_revisar_encargados_vencidos, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_notificar_eipd_vencida, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_solicitar_renovacion_consentimiento, 24 * 60 * 60),  # cada 24h
+    (_job_enqueue_sla_alert_t2, 24 * 60 * 60),  # cada 24h (QW5 SLA T-2)
+    (_job_enqueue_sla_alert_brecha_72h, 12 * 60 * 60),  # cada 12h (C-03 monitor 72h brechas)
+    (_job_enqueue_sla_alert_plazo_retencion, 24 * 60 * 60),  # cada 24h (C-02 plazo retención)
 ]  # type: ignore
 
 

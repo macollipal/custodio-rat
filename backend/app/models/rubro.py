@@ -16,7 +16,7 @@ class Rubro(Base):
     nombre: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     orden: Mapped[int] = mapped_column(Integer, default=0)
 
-    rats_sugeridos: Mapped[list["RATSugerido"]] = relationship(
+    rats_sugeridos: Mapped[list["RATSugerido"]] = relationship(  # noqa: F821
         "RATSugerido", back_populates="rubro", cascade="all, delete-orphan"
     )
 

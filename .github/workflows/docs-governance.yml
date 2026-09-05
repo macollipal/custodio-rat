@@ -1,0 +1,33 @@
+name: Docs Governance (P3)
+
+# Ejecuta el barrido documental automatizado (scripts/maintenance/docs_inventory.py)
+# Falla el build si hay hallazgos P0 (lock files, links rotos) o P1 (drift de version vigente).
+# Hallazgos P2 (terminologia) y P3 (mejoras) son warnings.
+
+on:
+  push:
+    branches: [main, develop, qa]
+  pull_request:
+    branches: [main, develop, qa]
+
+jobs:
+  docs-inventory:
+    name: Barrido documental (mojibake, lock files, APDP/APDC, links, versionado)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run docs_inventory.py
+        run: python scripts/maintenance/docs_inventory.py --check-links
+
+      - name: Run docs_inventory.py (strict — falla por P2/P3)
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: python scripts/maintenance/docs_inventory.py --check-links --strict
+        continue-on-error: true

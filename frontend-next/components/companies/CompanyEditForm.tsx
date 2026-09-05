@@ -1,0 +1,139 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import * as api from '@/lib/api';
+import type { Company, Rubro } from '@/types';
+
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import Button from '@/components/ui/Button';
+
+interface CompanyEditFormProps {
+  empresa: Company;
+  onDone: (updated: Company) => void;
+  onCancel: () => void;
+}
+
+function formatRutEmpresa(raw: string): string {
+  const v = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (v.length <= 1) return v;
+  const dv = v.slice(-1);
+  const num = v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${num}-${dv}`;
+}
+
+function validarRutEmpresa(rut: string): boolean {
+  if (!rut.trim()) return true;
+  const clean = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length < 2) return false;
+  const dv = clean.slice(-1);
+  const num = parseInt(clean.slice(0, -1), 10);
+  if (isNaN(num)) return false;
+  let sum = 0, factor = 2, n = num;
+  while (n > 0) { sum += (n % 10) * factor; n = Math.floor(n / 10); factor = factor === 7 ? 2 : factor + 1; }
+  const rem = 11 - (sum % 11);
+  const expected = rem === 11 ? '0' : rem === 10 ? 'K' : String(rem);
+  return dv === expected;
+}
+
+export function CompanyEditForm({ empresa, onDone, onCancel }: CompanyEditFormProps) {
+  const [form, setFormState] = useState({
+    nombre: empresa.nombre ?? '',
+    rut: empresa.rut ?? '',
+    rubro_id: empresa.rubro_id?.toString() ?? '',
+    direccion: empresa.direccion ?? '',
+    contacto_dpo: empresa.contacto_dpo ?? '',
+    email_dpo: empresa.email_dpo ?? '',
+    descripcion: empresa.descripcion ?? '',
+    canal_ejercicio_derechos: empresa.canal_ejercicio_derechos ?? '',
+  });
+  const [rutError, setRutError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [rubros, setRubros] = useState<Rubro[]>([]);
+
+  useEffect(() => { api.listarRubros().then(setRubros).catch(() => {}); }, []);
+
+  function set(k: string, v: string) { setFormState(f => ({ ...f, [k]: v })); }
+
+  async function handleSave() {
+    if (form.rut && !validarRutEmpresa(form.rut)) {
+      setRutError('RUT de empresa inválido — verifica el dígito verificador');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(form)) {
+        if (k === 'rubro_id') payload[k] = v ? Number(v) : null;
+        else payload[k] = v.trim ? (v.trim() || null) : v;
+      }
+      const result = await api.actualizarEmpresa(empresa.id, payload as Partial<Company>);
+      toast.success('Empresa actualizada correctamente.');
+      onDone(result);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Error al actualizar.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl p-5 mt-4 space-y-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+      <p className="text-sm font-semibold" style={{ color: '#111827' }}>Editar: {empresa.nombre}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls} style={labelStyle}>Razón social</label>
+          <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>RUT de empresa</label>
+          <input
+            type="text"
+            value={form.rut}
+            onChange={e => { setRutError(''); set('rut', formatRutEmpresa(e.target.value)); }}
+            onBlur={() => { if (form.rut && !validarRutEmpresa(form.rut)) setRutError('RUT inválido — verifica el dígito verificador'); }}
+            placeholder="12.345.678-9"
+            maxLength={12}
+            className={inputCls}
+            style={{ ...inputStyle, borderColor: rutError ? '#FCA5A5' : undefined }}
+          />
+          {rutError && <p className="text-xs mt-1" style={{ color: '#DC2626' }}>{rutError}</p>}
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>Rubro</label>
+          <select value={form.rubro_id} onChange={e => set('rubro_id', e.target.value)} className={inputCls} style={inputStyle}>
+            <option value="">— Sin rubro —</option>
+            {rubros.map(r => <option key={r.id} value={String(r.id)}>{r.nombre}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>Dirección</label>
+          <input type="text" value={form.direccion} onChange={e => set('direccion', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>DPO</label>
+          <input type="text" value={form.contacto_dpo} onChange={e => set('contacto_dpo', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div>
+          <label className={labelCls} style={labelStyle}>Email DPO</label>
+          <input type="email" value={form.email_dpo} onChange={e => set('email_dpo', e.target.value)} className={inputCls} style={inputStyle} />
+        </div>
+        <div className="col-span-2">
+          <label className={labelCls} style={labelStyle}>Descripción</label>
+          <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={2} className={inputCls} style={inputStyle} />
+        </div>
+        <div className="col-span-2">
+          <label className={labelCls} style={labelStyle}>Canal de ejercicio de derechos <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 12)</span></label>
+          <textarea value={form.canal_ejercicio_derechos} onChange={e => set('canal_ejercicio_derechos', e.target.value)} rows={2} placeholder="Ej: Formulario en www.empresa.cl/derechos o email a dpo@empresa.cl" className={inputCls} style={inputStyle} />
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end">
+        <Button variant="secondary" size="sm" onClick={onCancel}>Cancelar</Button>
+        <Button variant="primary" size="sm" loading={saving} onClick={handleSave}>
+          {saving ? 'Guardando...' : 'Guardar cambios'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+

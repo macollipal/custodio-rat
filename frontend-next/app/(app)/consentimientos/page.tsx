@@ -7,6 +7,10 @@ import { API_BASE } from '@/lib/constants';
 import * as api from '@/lib/api';
 import type { RAT } from '@/types';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+import { Button } from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+
 interface Consentimiento {
   id: number;
   company_id: number;
@@ -47,6 +51,8 @@ export default function ConsentimientosPage() {
   const [soloActivos, setSoloActivos] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState<Consentimiento | null>(null);
+  const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
+  const [pendingRevoke, setPendingRevoke] = useState<Consentimiento | null>(null);
 
   async function load() {
     if (!company) return;
@@ -74,7 +80,6 @@ export default function ConsentimientosPage() {
   }, [company, filtroRat, soloActivos]);
 
   async function handleRevoke(c: Consentimiento) {
-    if (!confirm(`¿Revocar el consentimiento de "${c.nombre_titular}"?`)) return;
     try {
       const res = await api.apiFetch(`${API_BASE}/consentimientos/${c.id}/revocar`, {
         method: 'POST',
@@ -101,20 +106,19 @@ export default function ConsentimientosPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: '#111827' }}>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>
             ✅ Consentimientos
           </h1>
           <p className="text-sm text-gray-600 mt-1">
             Gestión de consentimientos expresos (Art. 12 Ley 21.719)
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 rounded-lg text-white font-medium text-sm"
-          style={{ background: '#2563EB' }}
+          aria-label="Crear nuevo consentimiento"
         >
           + Nuevo consentimiento
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -136,6 +140,7 @@ export default function ConsentimientosPage() {
         <select
           value={filtroRat}
           onChange={(e) => setFiltroRat(e.target.value)}
+          aria-label="Filtrar consentimientos por RAT"
           className="px-3 py-2 border rounded-lg text-sm"
         >
           <option value="">Todos los RATs</option>
@@ -150,6 +155,7 @@ export default function ConsentimientosPage() {
             type="checkbox"
             checked={soloActivos}
             onChange={(e) => setSoloActivos(e.target.checked)}
+            aria-label="Mostrar solo consentimientos activos"
           />
           Solo activos
         </label>
@@ -212,19 +218,27 @@ export default function ConsentimientosPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!min-h-0"
                           onClick={() => setDetail(c)}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          aria-label={`Ver detalle de consentimiento de ${c.nombre_titular}`}
+                          style={{ color: '#1D4ED8' }}
                         >
                           Ver
-                        </button>
+                        </Button>
                         {c.activo && (
-                          <button
-                            onClick={() => handleRevoke(c)}
-                            className="text-xs px-2 py-1 rounded text-red-700 hover:bg-red-50"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="!min-h-0"
+                            onClick={() => { setPendingRevoke(c); setConfirmRevokeOpen(true); }}
+                            aria-label={`Revocar consentimiento de ${c.nombre_titular}`}
+                            style={{ color: '#DC2626' }}
                           >
                             Revocar
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -252,9 +266,19 @@ export default function ConsentimientosPage() {
           consentimiento={detail}
           rat={rats.find((r) => r.id === detail.rat_id)}
           onClose={() => setDetail(null)}
-          onRevoke={detail.activo ? () => handleRevoke(detail) : undefined}
+          onRevoke={detail.activo ? () => { setPendingRevoke(detail); setConfirmRevokeOpen(true); } : undefined}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmRevokeOpen}
+        onClose={() => { setConfirmRevokeOpen(false); setPendingRevoke(null); }}
+        onConfirm={() => { if (pendingRevoke) handleRevoke(pendingRevoke); setConfirmRevokeOpen(false); setPendingRevoke(null); }}
+        title="Revocar consentimiento"
+        message={pendingRevoke ? `¿Revocar el consentimiento de "${pendingRevoke.nombre_titular}"? Esta acción no se puede deshacer.` : ''}
+        confirmText="Revocar"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -313,17 +337,17 @@ function CreateConsentimientoModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4">Nuevo consentimiento</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">RAT *</label>
+            <label className={labelCls}>RAT *</label>
             <select
               value={ratId}
               onChange={(e) => setRatId(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               required
             >
               <option value="">Seleccionar RAT</option>
@@ -335,30 +359,35 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre del titular *</label>
+            <label className={labelCls} htmlFor="consent-nombre">Nombre del titular *</label>
             <input
+              id="consent-nombre"
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
+              aria-required="true"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Email del titular</label>
+            <label className={labelCls} htmlFor="consent-email">Email del titular</label>
             <input
+              id="consent-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Canal de obtención *</label>
+            <label className={labelCls} htmlFor="consent-canal">Canal de obtención *</label>
             <select
+              id="consent-canal"
               value={canal}
               onChange={(e) => setCanal(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
+              aria-required="true"
             >
               {Object.entries(CANAL_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -366,32 +395,35 @@ function CreateConsentimientoModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Texto del consentimiento *</label>
+            <label className={labelCls} htmlFor="consent-texto">Texto del consentimiento *</label>
             <textarea
+              id="consent-texto"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={inputCls}
               placeholder="Por medio del presente autorizo el tratamiento de mis datos personales para..."
+              aria-required="true"
               required
             />
           </div>
           <div className="flex gap-2 justify-end pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border"
+              aria-label="Cancelar creacion de consentimiento"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded-lg text-white font-medium"
-              style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
+              loading={saving}
+              aria-label="Guardar consentimiento"
             >
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+              Guardar
+            </Button>
           </div>
         </form>
       </div>
@@ -416,7 +448,7 @@ function DetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4">Detalle del consentimiento</h2>
@@ -473,19 +505,14 @@ function DetailModal({
         </div>
         <div className="flex gap-2 justify-end mt-4">
           {onRevoke && (
-            <button
-              onClick={onRevoke}
-              className="px-4 py-2 rounded-lg text-white font-medium"
-              style={{ background: '#DC2626' }}
-            >
+            <Button variant="danger" onClick={onRevoke}>
               Revocar consentimiento
-            </button>
+            </Button>
           )}
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border">
-            Cerrar
-          </button>
+          <Button variant="secondary" onClick={onClose}>Cerrar</Button>
         </div>
       </div>
     </div>
   );
 }
+

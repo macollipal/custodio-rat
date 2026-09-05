@@ -1,9 +1,8 @@
-"""
-Tests del servicio de sugerencias automáticas para el RAT.
+﻿"""
+Tests del servicio de sugerencias automÃ¡ticas para el RAT.
 Valida: tipos conocidos, coincidencia parcial, tipos desconocidos, estructura de respuesta.
 """
 
-import pytest
 
 
 class TestSugerenciasAPI:
@@ -49,7 +48,7 @@ class TestSugerenciasAPI:
         )
         assert resp.status_code == 200
         data = resp.json()
-        # Pacientes maneja datos sensibles → debe advertirlo
+        # Pacientes maneja datos sensibles â†’ debe advertirlo
         assert data["datos_sensibles"] is True
 
     def test_sugerencia_coincidencia_parcial(self, client, auth_headers):
@@ -70,7 +69,7 @@ class TestSugerenciasAPI:
         )
         assert resp.status_code == 200
         data = resp.json()
-        # Debe retornar algo (sugerencia genérica)
+        # Debe retornar algo (sugerencia genÃ©rica)
         assert "categoria_datos" in data
 
     def test_sugerencia_tipo_vacio(self, client, auth_headers):
@@ -79,14 +78,14 @@ class TestSugerenciasAPI:
             json={"tipo_proceso": ""},
             headers=auth_headers,
         )
-        assert resp.status_code == 200  # Retorna sugerencia genérica
+        assert resp.status_code == 200  # Retorna sugerencia genÃ©rica
 
     def test_sugerencia_sin_auth_falla(self, client):
         resp = client.post("/rats/sugerencias", json={"tipo_proceso": "empleados"})
         assert resp.status_code in (401, 403)
 
     def test_sugerencia_todos_los_tipos_disponibles(self, client, auth_headers):
-        """Cada tipo listado debe retornar una sugerencia válida."""
+        """Cada tipo listado debe retornar una sugerencia vÃ¡lida."""
         tipos_resp = client.get("/rats/sugerencias/tipos", headers=auth_headers)
         tipos = tipos_resp.json()["tipos"]
 
@@ -96,7 +95,7 @@ class TestSugerenciasAPI:
                 json={"tipo_proceso": tipo},
                 headers=auth_headers,
             )
-            assert resp.status_code == 200, f"Falló para tipo: {tipo}"
+            assert resp.status_code == 200, f"FallÃ³ para tipo: {tipo}"
             data = resp.json()
-            assert data["categoria_datos"], f"categoria_datos vacía para: {tipo}"
-            assert data["finalidad"], f"finalidad vacía para: {tipo}"
+            assert data["categoria_datos"], f"categoria_datos vacÃ­a para: {tipo}"
+            assert data["finalidad"], f"finalidad vacÃ­a para: {tipo}"

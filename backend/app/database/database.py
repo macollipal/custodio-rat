@@ -1,6 +1,6 @@
 """
 Configuración de SQLAlchemy: engine, sesión y función de inicialización de tablas.
-PostgreSQL/Neon en producción.
+PostgreSQL/Neon en todos los entornos (producción, QA, desarrollo, tests).
 """
 
 import os
@@ -67,13 +67,7 @@ def init_db():
     """Crea todas las tablas si no existen. Llamar al arrancar la app."""
     if os.getenv("ENV") == "test":
         return
-    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, solicitud_derecho, token_blacklist, solicitud_token  # noqa: F401
-    from app.models import tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial  # noqa: F401
+    from app.models import company, rat, user, audit_log, user_company, breach, eipd, consentimiento, rubro, rats_sugerido, token_blacklist, solicitud_token  # noqa: F401
+    from app.models import tkt_solicitud_derecho, tkt_nota, tkt_adjunto, tkt_historial, tkt_plantilla  # noqa: F401
+    from app.models import asesor  # noqa: F401
     Base.metadata.create_all(bind=engine)
-
-
-if os.getenv("ENV") == "test":
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    engine_test = create_engine("sqlite:///:memory:", echo=False)
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)

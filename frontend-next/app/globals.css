@@ -37,6 +37,26 @@
   --color-border: #334155;
 }
 
+.mac {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #E8E8E8;
+  --bg-tertiary: #D4D4D4;
+  --bg-sidebar: #C6C6C6;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-inverse: #FFFFFF;
+  --color-primary: #5EA0D7;
+  --color-primary-dark: #4B87BE;
+  --color-primary-light: #C5E0F5;
+  --color-sidebar: #C6C6C6;
+  --color-sidebar-hover: #B0B0B0;
+  --color-border: #ABABAB;
+  --color-muted: #888888;
+  --color-secondary: #555555;
+  --font-sans: 'Lucida Grande', 'Lucida Sans Unicode', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -70,4 +90,9 @@ input, textarea, select, button {
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spinner-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

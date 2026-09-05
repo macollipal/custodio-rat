@@ -1,13 +1,12 @@
-"""
-Tests de autenticación: login, token JWT, acceso sin credenciales.
+﻿"""
+Tests de autenticaciÃ³n: login, token JWT, acceso sin credenciales.
 
 Notas de comportamiento real:
-- Sin token → 401 Unauthorized (no autenticado).
-- Token inválido/expirado → 401 Unauthorized.
-- Con token válido pero sin permisos → 403 Forbidden.
+- Sin token â†’ 401 Unauthorized (no autenticado).
+- Token invÃ¡lido/expirado â†’ 401 Unauthorized.
+- Con token vÃ¡lido pero sin permisos â†’ 403 Forbidden.
 """
 
-import pytest
 
 
 class TestLogin:
@@ -38,12 +37,12 @@ class TestLogin:
         assert resp.status_code == 422
 
     def test_acceso_sin_token_bloqueado(self, client, admin_user):
-        """Sin token → 401 Unauthorized (no autenticado)."""
+        """Sin token â†’ 401 Unauthorized (no autenticado)."""
         resp = client.get("/companies/")
         assert resp.status_code == 401
 
     def test_acceso_token_invalido_bloqueado(self, client, admin_user):
-        """Token presente pero inválido → 401."""
+        """Token presente pero invÃ¡lido â†’ 401."""
         resp = client.get("/companies/", headers={"Authorization": "Bearer token_inventado_invalido"})
         assert resp.status_code == 401
 

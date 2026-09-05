@@ -1,11 +1,11 @@
 """
 Modelo de Brechas de Seguridad (Art. 14 bis Ley 21.719).
-Plazos: notificación APDC en 72 horas; titulares sin dilación si son datos sensibles/menores/financieros.
+Plazos: notificación APDP en 72 horas desde el conocimiento; titulares sin dilación si son datos sensibles/menores/financieros.
 """
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -16,6 +16,12 @@ class NivelRiesgo(str, PyEnum):
     MEDIO = "medio"
     ALTO = "alto"
     CRITICO = "critico"
+
+
+class NaturalezaBreach(str, PyEnum):
+    CONFIDENCIALIDAD = "confidencialidad"
+    INTEGRIDAD = "integridad"
+    DISPONIBILIDAD = "disponibilidad"
 
 
 class SecurityBreach(Base):
@@ -33,9 +39,13 @@ class SecurityBreach(Base):
     datos_comprometidos: Mapped[str] = mapped_column(Text, nullable=True)
     medidas_adoptadas: Mapped[str] = mapped_column(Text, nullable=True)
 
-    # Notificación APDC (72 horas desde detección)
-    notificado_apdc: Mapped[bool] = mapped_column(Boolean, default=False)
-    fecha_notificacion_apdc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Fecha en que el responsable tuvo CONOCIMIENTO de la brecha (Art. 14 bis — contador de 72h)
+    # Distinto de fecha_deteccion: la detección técnica puede ocurrir antes del conocimiento formal.
+    fecha_conocimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Notificación APDP (72 horas desde el conocimiento — Art. 14 bis)
+    notificado_apdp: Mapped[bool] = mapped_column(Boolean, default=False)
+    fecha_notificacion_apdp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Notificación a titulares (sin dilación cuando hay datos sensibles/menores/financieros)
     notificado_titulares: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -47,7 +57,20 @@ class SecurityBreach(Base):
     incluye_datos_sensibles: Mapped[bool] = mapped_column(Boolean, default=False)
     incluye_datos_nna: Mapped[bool] = mapped_column(Boolean, default=False)
     incluye_datos_financieros: Mapped[bool] = mapped_column(Boolean, default=False)
-    reportable_apdc_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
+    reportable_apdp_calculado: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Naturaleza de la brecha (Art. 14 bis) — requerida para notificacion APDP completa
+    naturaleza: Mapped[NaturalezaBreach] = mapped_column(
+        SAEnum(NaturalezaBreach), nullable=True
+    )
+
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    fecha_ocurrencia_estimada: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    efectos_probables: Mapped[str] = mapped_column(Text, nullable=True)
+    causa_raiz: Mapped[str] = mapped_column(String(50), nullable=True)
+    evidencia_notificacion_apdp_folio: Mapped[str] = mapped_column(String(100), nullable=True)
+    estado_cierre: Mapped[str] = mapped_column(String(20), nullable=True)
+    fecha_cierre: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     creado_por: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -57,6 +80,15 @@ class SecurityBreach(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # F3.2: Soft delete para compliance Art. 19 Ley 21.719.
+    # Permite "eliminar" breach sin perder trazabilidad de auditoria.
+    deleted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_by_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
     )
 
     company: Mapped["Company"] = relationship("Company")  # noqa: F821

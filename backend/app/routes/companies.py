@@ -2,18 +2,26 @@
 Endpoints CRUD para empresas (responsables del tratamiento).
 """
 
-from fastapi import APIRouter, Depends, Request
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database.database import get_db
-from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate
+from app.models.company import Company as CompanyModel
+from app.models.rat import RAT as RATModel
+from app.models.tkt_solicitud_derecho import TktSolicitudDerecho, EstadoTicket
+from app.models.politica_transparencia import PoliticaTransparencia
+from app.models.user_company import UserCompany
+from app.models.user import RolGlobal
+from app.schemas.company import CompanyCreate, CompanyOut, CompanyPublicOut, CompanyUpdate, CompanyListResponse
 from app.services.company_service import (
-    create_company, delete_company, get_companies, get_company, update_company
+    create_company, delete_company, deactivate_company, get_companies, get_company,
+    reactivate_company, update_company, calcular_metricas_empresa,
 )
 from app.services.user_company_service import get_empresas_usuario, get_rol_usuario
 from app.routes.deps import get_current_user, require_admin, get_client_ip, check_company_access
-from app.models.rat import RAT as RATModel
 
 router = APIRouter(prefix="/companies", tags=["Empresas"])
 
@@ -23,25 +31,27 @@ async def listar_publico(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    from app.models.company import Company
-    companies = db.query(Company).order_by(Company.nombre).all()
+    companies = db.query(CompanyModel).filter(CompanyModel.activa).order_by(CompanyModel.nombre).all()
     return companies
 
 
-@router.get("/", summary="Listar empresas")
+@router.get("/", response_model=CompanyListResponse, summary="Listar empresas")
 async def listar(
     skip: int = 0,
     limit: int = 200,
+    incluir_inactivas: bool = False,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     if current_user.rol_global == "superadmin":
-        companies, total = get_companies(db, skip, limit)
+        companies, total = get_companies(db, skip, limit, incluir_inactivas=incluir_inactivas)
     else:
         ids = get_empresas_usuario(db, current_user.id)
-        from app.models.company import Company as CompanyModel
-        count_total = db.query(CompanyModel).filter(CompanyModel.id.in_(ids)).count()
-        companies = db.query(CompanyModel).filter(CompanyModel.id.in_(ids)).offset(skip).limit(limit).all()
+        query = db.query(CompanyModel).filter(CompanyModel.id.in_(ids))
+        if not incluir_inactivas:
+            query = query.filter(CompanyModel.activa)
+        count_total = query.count()
+        companies = query.offset(skip).limit(limit).all()
         total = count_total
 
     count_q = (
@@ -51,15 +61,66 @@ async def listar(
     )
     rat_counts = {row.company_id: row.cnt for row in db.query(count_q).all()}
 
+    rats_by_company: dict[int, list] = {}
+    for rat in db.query(RATModel).filter(RATModel.company_id.in_([c.id for c in companies])).all():
+        rats_by_company.setdefault(rat.company_id, []).append(rat)
+
+    company_ids = [c.id for c in companies]
+    now = datetime.now(timezone.utc)
+    estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
+    all_pending = (
+        db.query(TktSolicitudDerecho.company_id, func.count(TktSolicitudDerecho.id))
+        .filter(
+            TktSolicitudDerecho.company_id.in_(company_ids),
+            TktSolicitudDerecho.estado.in_(estados_pendientes),
+        )
+        .group_by(TktSolicitudDerecho.company_id)
+        .all()
+    )
+    pending_by_company = {cid: cnt for cid, cnt in all_pending}
+    all_vencidas = (
+        db.query(TktSolicitudDerecho.company_id, func.count(TktSolicitudDerecho.id))
+        .filter(
+            TktSolicitudDerecho.company_id.in_(company_ids),
+            TktSolicitudDerecho.fecha_vencimiento < now,
+            TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
+        )
+        .group_by(TktSolicitudDerecho.company_id)
+        .all()
+    )
+    vencidas_by_company = {cid: cnt for cid, cnt in all_vencidas}
+
+    politicas_exists = {
+        row.company_id for row in
+        db.query(PoliticaTransparencia.company_id).filter(
+            PoliticaTransparencia.company_id.in_(company_ids)
+        ).all()
+    }
+
+    # Batch-fetch roles del usuario para todas las empresas (evita N+1 en el loop)
+    rol_by_company: dict[int, object] = {}
+    if current_user.rol_global != "superadmin":
+        uc_rows = db.query(UserCompany).filter(
+            UserCompany.user_id == current_user.id,
+            UserCompany.company_id.in_(company_ids),
+        ).all()
+        rol_by_company = {uc.company_id: uc.rol for uc in uc_rows}
+
     result = []
     for c in companies:
         out = CompanyOut.model_validate(c)
         out.total_rats = rat_counts.get(c.id, 0)
+        rats = rats_by_company.get(c.id, [])
+
+        out.completitud_promedio, out.rats_vencidos, out.requiere_dpo = calcular_metricas_empresa(rats, now)
+        out.solicitudes_pendientes = pending_by_company.get(c.id, 0)
+        out.solicitudes_vencidas_sla = vencidas_by_company.get(c.id, 0)
+        out.has_politica_transparencia = c.id in politicas_exists
         if current_user.rol_global != "superadmin":
-            rol = get_rol_usuario(db, current_user.id, c.id)
+            rol = rol_by_company.get(c.id)
             out.mi_rol = rol.value if rol else None
         result.append(out)
-    return {"empresas": result, "total": total, "skip": skip, "limit": limit}
+    return CompanyListResponse(empresas=result, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{company_id}", response_model=CompanyOut, summary="Obtener empresa por ID")
@@ -71,11 +132,57 @@ async def obtener(
     check_company_access(current_user, company_id, db)
     c = get_company(db, company_id)
     out = CompanyOut.model_validate(c)
-    out.total_rats = len(c.rats)
+    rats = c.rats
+    out.total_rats = len(rats)
+
+    now = datetime.now(timezone.utc)
+    out.completitud_promedio, out.rats_vencidos, out.requiere_dpo = calcular_metricas_empresa(rats, now)
+    estados_pendientes = [EstadoTicket.ABIERTO.value, EstadoTicket.EN_PROCESO.value, EstadoTicket.PENDIENTE.value]
+    out.solicitudes_pendientes = db.query(func.count(TktSolicitudDerecho.id)).filter(
+        TktSolicitudDerecho.company_id == company_id,
+        TktSolicitudDerecho.estado.in_(estados_pendientes),
+    ).scalar() or 0
+    out.solicitudes_vencidas_sla = db.query(func.count(TktSolicitudDerecho.id)).filter(
+        TktSolicitudDerecho.company_id == company_id,
+        TktSolicitudDerecho.fecha_vencimiento < now,
+        TktSolicitudDerecho.estado != EstadoTicket.RESUELTO.value,
+    ).scalar() or 0
+
+    out.has_politica_transparencia = db.query(PoliticaTransparencia).filter(
+        PoliticaTransparencia.company_id == company_id
+    ).first() is not None
+
     if current_user.rol_global != "superadmin":
         rol = get_rol_usuario(db, current_user.id, c.id)
         out.mi_rol = rol.value if rol else None
     return out
+
+
+@router.patch("/{company_id}/desactivar", response_model=CompanyOut, summary="Desactivar empresa (soft delete)")
+async def desactivar(
+    request: Request,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    check_company_access(current_user, company_id, db)
+    if current_user.rol_global != "superadmin":
+        rol = get_rol_usuario(db, current_user.id, company_id)
+        if not rol or rol.value == "viewer":
+            raise HTTPException(status_code=403, detail="Se requiere rol Editor o Admin para desactivar una empresa.")
+    return deactivate_company(db, company_id, current_user.username, get_client_ip(request))
+
+
+@router.patch("/{company_id}/reactivar", response_model=CompanyOut, summary="Reactivar empresa desactivada")
+async def reactivar(
+    request: Request,
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    if current_user.rol_global != RolGlobal.SUPERADMIN.value:
+        raise HTTPException(status_code=403, detail="Solo superadmin puede reactivar empresas.")
+    return reactivate_company(db, company_id, current_user.username, get_client_ip(request))
 
 
 @router.post("/", response_model=CompanyOut, status_code=201, summary="Crear empresa")
@@ -97,6 +204,10 @@ async def actualizar(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, company_id, db)
+    if current_user.rol_global != "superadmin":
+        rol = get_rol_usuario(db, current_user.id, company_id)
+        if not rol or rol.value == "viewer":
+            raise HTTPException(status_code=403, detail="Se requiere rol Editor o Admin para editar una empresa.")
     return update_company(db, company_id, data, current_user.username, get_client_ip(request))
 
 

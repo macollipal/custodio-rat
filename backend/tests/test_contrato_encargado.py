@@ -1,8 +1,7 @@
-"""
-Tests para B-03: Contrato formal de Encargado (Art. 14 quater — REC-03).
+﻿"""
+Tests para B-03: Contrato formal de Encargado (Art. 14 quater â€” REC-03).
 """
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 
@@ -19,10 +18,10 @@ class TestContratoEncargado:
             "objeto": "Tratamiento de datos personales de clientes por cuenta del responsable.",
             "duracion_inicio": datetime.now(timezone.utc).isoformat(),
             "duracion_fin": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
-            "finalidad": "Gestión de clientes y soporte.",
+            "finalidad": "GestiÃ³n de clientes y soporte.",
             "tipo_datos": "Datos identificativos, datos de contacto.",
             "categorias_titulares": "Clientes, usuarios.",
-            "derechos_obligaciones": "El encargado se obliga a tratar los datos solo según instrucciones del responsable.",
+            "derechos_obligaciones": "El encargado se obliga a tratar los datos solo segÃºn instrucciones del responsable.",
         }
         resp = client.post("/encargados-contrato/", json=contrato, headers=auth_headers)
         assert resp.status_code == 201, f"Error: {resp.text}"
@@ -131,10 +130,10 @@ class TestContratoEncargado:
             "nombre_encargado": "Encargado Con Contrato SpA",
             "objeto": "Tratamiento de datos.",
             "duracion_inicio": datetime.now(timezone.utc).isoformat(),
-            "finalidad": "Gestión.",
+            "finalidad": "GestiÃ³n.",
             "tipo_datos": "Datos identificativos.",
             "categorias_titulares": "Clientes.",
-            "derechos_obligaciones": "Solo según instrucciones.",
+            "derechos_obligaciones": "Solo segÃºn instrucciones.",
         }
         client.post("/encargados-contrato/", json=contrato, headers=auth_headers)
 

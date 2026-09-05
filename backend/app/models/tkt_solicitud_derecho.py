@@ -1,7 +1,8 @@
 import enum
+import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
@@ -12,6 +13,8 @@ class TktTipo(str, enum.Enum):
     RECTIFICACION = "rectificacion"
     CANCELACION = "cancelacion"
     OPOSICION = "oposicion"
+    BLOQUEO = "bloqueo"
+    PORTABILIDAD = "portabilidad"
 
 
 class EstadoTicket(str, enum.Enum):
@@ -19,6 +22,10 @@ class EstadoTicket(str, enum.Enum):
     EN_PROCESO = "en_proceso"
     PENDIENTE = "pendiente"
     RESUELTO = "resuelto"
+    BLOQUEADO = "bloqueado"
+    RECHAZADO = "rechazado"
+    SUBSANACION = "subsanacion"
+    PRORROGA = "prorroga"
 
 
 class PrioridadTicket(str, enum.Enum):
@@ -35,12 +42,26 @@ class OrigenTicket(str, enum.Enum):
     MANUAL = "manual"
 
 
+class CausalRechazo(str, enum.Enum):
+    FALTA_IDENTIDAD = "falta_identidad"
+    SOLICITUD_INFUNDADA = "solicitud_manifiestamente_infundada"
+    SOLICITUD_EXCESIVA = "solicitud_excesiva"
+    FALTA_PODER_NOTORIO = "falta_poder_notorial"
+    PLAZO_VENCIDO = "plazo_vencido"
+    IDENTIDAD_NO_VERIFICADA = "identidad_no_verificada"
+    OTRO = "otro"
+
+
 class TktSolicitudDerecho(Base):
     __tablename__ = "tkt_solicitud_derecho"
     __table_args__ = (
         Index("idx_tkt_estado_company", "estado", "company_id"),
         Index("idx_tkt_fecha_vencimiento", "fecha_vencimiento"),
         Index("idx_tkt_estado_prioridad", "estado", "prioridad"),
+        Index("idx_tkt_tracking_token", "tracking_token"),
+        Index("idx_tkt_fecha_recepcion", "fecha_recepcion"),
+        Index("idx_tkt_responsable_id", "responsable_id"),
+        Index("idx_tkt_rat_id", "rat_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -58,12 +79,35 @@ class TktSolicitudDerecho(Base):
     responsable_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     respuesta_texto: Mapped[str] = mapped_column(String(1000), nullable=True)
     respuesta_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True)
+    plazo_bloqueo_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    portability_data: Mapped[str] = mapped_column(Text, nullable=True)
+    tracking_token: Mapped[str] = mapped_column(String(36), nullable=False, unique=True, default=lambda: str(uuid.uuid4()))
+    acuse_enviado_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    subsanacion_detalle: Mapped[str] = mapped_column(String(1000), nullable=True)
+    subsanacion_fecha_pedido: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    prorroga_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    prorroga_dias: Mapped[int] = mapped_column(Integer, nullable=True)
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    representante_nombre: Mapped[str] = mapped_column(String(255), nullable=True)
+    representante_rut: Mapped[str] = mapped_column(String(20), nullable=True)
+    representante_poder_notarial_notas: Mapped[str] = mapped_column(Text, nullable=True)
+    telefono: Mapped[str] = mapped_column(String(50), nullable=True)
+    fecha_nacimiento: Mapped[datetime] = mapped_column(Date, nullable=True)
+    pais: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    metodo_verificacion_identidad: Mapped[str] = mapped_column(String(50), nullable=True)
+    evidencia_identidad: Mapped[str] = mapped_column(Text, nullable=True)
+    evidencia_respuesta_hash: Mapped[str] = mapped_column(String(64), nullable=True)
+    causal_rechazo: Mapped[str] = mapped_column(String(50), nullable=True)
+    medio_respuesta: Mapped[str] = mapped_column(String(50), nullable=True)
 
     company: Mapped["Company"] = relationship("Company", back_populates="tkt_solicitudes")  # noqa: F821
     responsable: Mapped["User"] = relationship("User", foreign_keys=[responsable_id])  # noqa: F821
+    rat: Mapped["RAT"] = relationship("RAT", foreign_keys=[rat_id])  # noqa: F821
     notas: Mapped[list["TktNota"]] = relationship("TktNota", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
     adjuntos: Mapped[list["TktAdjunto"]] = relationship("TktAdjunto", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821
     historial: Mapped[list["TktHistorial"]] = relationship("TktHistorial", back_populates="ticket", cascade="all, delete-orphan")  # noqa: F821

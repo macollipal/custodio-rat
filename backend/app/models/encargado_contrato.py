@@ -17,6 +17,8 @@ class EncargadoContrato(Base):
     rat_id: Mapped[int] = mapped_column(Integer, ForeignKey("rats.id"), nullable=True, index=True)
 
     nombre_encargado: Mapped[str] = mapped_column(String(500), nullable=False)
+    pais: Mapped[str] = mapped_column(String(100), nullable=True)
+    direccion: Mapped[str] = mapped_column(Text, nullable=True)
     objeto: Mapped[str] = mapped_column(Text, nullable=False)
     duracion_inicio: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     duracion_fin: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

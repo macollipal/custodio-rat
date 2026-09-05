@@ -1,12 +1,9 @@
-"""
-Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 — REC-06).
+﻿"""
+Tests para B-06: Consentimiento expreso para datos sensibles (Art. 16 â€” REC-06).
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from app.services.rat_service import _tiene_consentimiento_activo, _validar_consentimiento_sensibles
-from app.models.rat import RAT
-from fastapi import HTTPException
+from datetime import datetime, timezone
+from app.services.rat_validators import tiene_consentimiento_activo
 
 
 class TestConsentimientoExpreso:
@@ -21,20 +18,20 @@ class TestConsentimientoExpreso:
 
         consentimiento = {
             "rat_id": rat_id,
-            "nombre_titular": "Juan Pérez",
+            "nombre_titular": "Juan PÃ©rez",
             "email_titular": "juan@test.cl",
             "canal": "web",
-            "texto_consentimiento": "Yo, Juan Pérez, otorgo mi consentimiento expreso para el tratamiento de mis datos.",
+            "texto_consentimiento": "Yo, Juan PÃ©rez, otorgo mi consentimiento expreso para el tratamiento de mis datos.",
             "fecha_obtencion": datetime.now(timezone.utc).isoformat(),
         }
         resp = client.post(f"/rats/{rat_id}/consentimientos", json=consentimiento, headers=auth_headers)
         assert resp.status_code == 201, f"Error: {resp.text}"
         data = resp.json()
-        assert data["nombre_titular"] == "Juan Pérez"
+        assert data["nombre_titular"] == "Juan PÃ©rez"
         assert data["activo"] is True
 
     def test_tiene_consentimiento_activo_false(self, db):
-        assert _tiene_consentimiento_activo(db, rat_id=99999) is False
+        assert tiene_consentimiento_activo(db, rat_id=99999) is False
 
     def test_actualizar_rat_a_datos_sensibles_sin_consentimiento_falla(
         self, client, auth_headers, empresa, rat_base
@@ -56,7 +53,7 @@ class TestConsentimientoExpreso:
 
         consentimiento = {
             "rat_id": rat_id,
-            "nombre_titular": "Ana López",
+            "nombre_titular": "Ana LÃ³pez",
             "email_titular": "ana@test.cl",
             "canal": "papel",
             "texto_consentimiento": "Consentimiento expreso para datos sensibles.",
@@ -65,6 +62,14 @@ class TestConsentimientoExpreso:
         resp = client.post(f"/rats/{rat_id}/consentimientos", json=consentimiento, headers=auth_headers)
         assert resp.status_code == 201
 
-        resp = client.put(f"/rats/{rat_id}", json={"datos_sensibles": True}, headers=auth_headers)
+        # Crear EIPD en BD (requerida por Art. 15 bis cuando datos_sensibles=True)
+        resp_eipd = client.post("/eipd/", json={"rat_id": rat_id, "resultado": "en_proceso"}, headers=auth_headers)
+        assert resp_eipd.status_code == 201, f"Error creando EIPD: {resp_eipd.text}"
+
+        resp = client.put(
+            f"/rats/{rat_id}",
+            json={"datos_sensibles": True, "evaluacion_impacto": True, "estado_eipd": "pendiente"},
+            headers=auth_headers,
+        )
         assert resp.status_code == 200, f"Error: {resp.text}"
         assert resp.json()["datos_sensibles"] is True

@@ -1,14 +1,26 @@
-"""
+﻿"""
 Modelo del Registro de Actividades de Tratamiento (RAT).
 Basado en los requisitos del Art. 16 de la Ley 21.719 de Chile.
 """
 
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String, Text, Boolean, LargeBinary
+from sqlalchemy import DateTime, Date, Enum, ForeignKey, Index, Integer, String, Text, Boolean, LargeBinary, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+from app.services.rat_calculations import (
+    UMBRAL_RIESGO_CRITICO,
+    UMBRAL_RIESGO_ALTO,
+    UMBRAL_RIESGO_MEDIO,
+    calcular_completitud_de_modelo,
+    calcular_nivel_riesgo_de_modelo,
+)
+
+
+UMBRAL_RIESGO_CRITICO = UMBRAL_RIESGO_CRITICO
+UMBRAL_RIESGO_ALTO = UMBRAL_RIESGO_ALTO
+UMBRAL_RIESGO_MEDIO = UMBRAL_RIESGO_MEDIO
 
 
 class EstadoRAT(str, PyEnum):
@@ -16,6 +28,7 @@ class EstadoRAT(str, PyEnum):
     COMPLETO = "completo"
     EN_REVISION = "en_revision"
     APROBADO = "aprobado"
+    ARCHIVADO = "archivado"
 
 
 class EstadoEIPD(str, PyEnum):
@@ -43,8 +56,8 @@ class RAT(Base):
     transferencia_datos: Mapped[str] = mapped_column(Text, nullable=True)
     plazo_retencion: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    # Categorías de titulares (Art. 16 Ley 21.719 — campo mínimo obligatorio)
-    categoria_titulares: Mapped[str] = mapped_column(String(500), nullable=True)
+    # Categoría de titulares (Art. 16 Ley 21.719 — campo mínimo obligatorio)
+    categoria_titulares: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # Campos adicionales de cumplimiento
     medidas_seguridad: Mapped[str] = mapped_column(Text, nullable=True)
@@ -59,14 +72,43 @@ class RAT(Base):
     fecha_eipd: Mapped[datetime] = mapped_column(Date, nullable=True)
     decisiones_automatizadas: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Campos nuevos gaps Ley 21.719 (Iter 10)
+    sistema_almacenamiento: Mapped[str] = mapped_column(String(500), nullable=True)
+    volumen_titulares_estimado: Mapped[int] = mapped_column(Integer, nullable=True)
+    operaciones_tratamiento: Mapped[dict] = mapped_column(JSON, nullable=True)
+    logica_automatizada: Mapped[str] = mapped_column(Text, nullable=True)
+    responsable_tratamiento_email: Mapped[str] = mapped_column(String(200), nullable=True)
+
+    # Campos Tier 1 - Gaps criticos Ley 21.719 (Iter 11 - analisis ProBest)
+    datos_nna: Mapped[str] = mapped_column(String(50), nullable=True)
+    nivel_confidencialidad: Mapped[str] = mapped_column(String(20), nullable=True)
+    estructura_dato: Mapped[str] = mapped_column(String(50), nullable=True)
+    datos_anonimizados: Mapped[bool] = mapped_column(Boolean, default=False)
+    datos_seudonimizados: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Origen de los datos (Art. 14 ter lit. e) — obligación de informar cuando no viene del titular)
+    origen_datos: Mapped[str] = mapped_column(String(50), nullable=True)
+
+    # Campos Tier 2 - Operativos (Iter 11 - analisis ProBest)
+    ciclo_procesamiento: Mapped[str] = mapped_column(String(100), nullable=True)
+    automatizacion: Mapped[str] = mapped_column(String(100), nullable=True)
+    frecuencia: Mapped[str] = mapped_column(String(100), nullable=True)
+    transferencia_nacional: Mapped[bool] = mapped_column(Boolean, default=False)
+    doc_clausulas: Mapped[str] = mapped_column(Text, nullable=True)
+    medidas_organizativas: Mapped[str] = mapped_column(Text, nullable=True)
+    mecanismos_eliminacion: Mapped[str] = mapped_column(Text, nullable=True)
+    tecnica_anonimizacion: Mapped[str] = mapped_column(String(100), nullable=True)
+    origen_dato_portabilidad: Mapped[str] = mapped_column(String(200), nullable=True)
+    fecha_levantamiento: Mapped[datetime] = mapped_column(Date, nullable=True)
+
     # Encargado del tratamiento (Art. 16 Ley 21.719)
     nombre_encargado: Mapped[str] = mapped_column(String(500), nullable=True)
     tiene_contrato_encargado: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Bloqueo temporal (Art. 8 ter — REC-01)
+    # Bloqueo temporal (Art. 8 ter ÔÇö REC-01)
     bloqueado: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Test interés legítimo (Art. 16 — 3 pasos obligatorios)
+    # Test inter├®s leg├¡timo (Art. 16 ÔÇö 3 pasos obligatorios)
     test_interes_legitimo: Mapped[str] = mapped_column(Text, nullable=True)
 
     # Documento que respalda la base legal (MVP: almacena en la BD)
@@ -75,13 +117,13 @@ class RAT(Base):
     # Tipo MIME del archivo
     archivo_base_legal_tipo: Mapped[str] = mapped_column(String(100), nullable=True)
     # Contenido del archivo como binario (PostgreSQL BYTEA)
-    archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    archivo_base_legal_datos: Mapped[bytes] = mapped_column(LargeBinary(10_000_000), nullable=True)
     # Hash SHA-256 para verificar integridad
     archivo_base_legal_hash: Mapped[str] = mapped_column(String(64), nullable=True)
     # URL en OCI Object Storage (cuando se migra el archivo fuera de la BD)
     archivo_base_legal_storage_url: Mapped[str] = mapped_column(String(1000), nullable=True)
 
-    # Estado y auditoría
+    # Estado y auditor├¡a
     estado: Mapped[EstadoRAT] = mapped_column(
         Enum(EstadoRAT), default=EstadoRAT.BORRADOR, nullable=False
     )
@@ -98,6 +140,13 @@ class RAT(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    # F3.2: Soft delete para compliance Art. 19 Ley 21.719.
+    deleted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_by_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
 
     # Relaciones
     company: Mapped["Company"] = relationship("Company", back_populates="rats")  # noqa: F821
@@ -105,51 +154,24 @@ class RAT(Base):
     consentimientos: Mapped[list["Consentimiento"]] = relationship("Consentimiento", back_populates="rat", cascade="all, delete-orphan")  # noqa: F821
 
     def calcular_completitud(self) -> int:
-        """Retorna el porcentaje de completitud del registro."""
-        campos_obligatorios = [
-            self.nombre_proceso,
-            self.categoria_datos,
-            self.categoria_titulares,
-            self.finalidad,
-            self.base_legal,
-            self.fuente_datos,
-            self.plazo_retencion,
-        ]
-        campos_recomendados = [
-            self.medidas_seguridad,
-            self.destinatarios,
-            self.transferencia_datos,
-        ]
-        total = len(campos_obligatorios) + len(campos_recomendados)
-        completados = sum(1 for c in campos_obligatorios + campos_recomendados if c and str(c).strip())
+        """Retorna el porcentaje de completitud del registro (0-100).
 
-        # Penalización: si base legal ≠ "Otra" y no hay documento que la respalde
-        if self.base_legal and self.base_legal.strip().lower() != "otra":
-            if not self.archivo_base_legal_datos:
-                completados = max(completados - 1, 0)
+        H3.1 (auditoria 2026-07-07): delega a app.services.rat_calculations
+        para evitar el bug 2026-07-08 donde SQLAlchemy intentaba invocar este
+        metodo como columna y lanzaba TypeError en runtime.
 
-        return round((completados / total) * 100)
+        Formula Ley 21.719 (Art. 16) + gaps Tier 1/Tier 2 (Iter 11):
+        - 7 obligatorios Art. 16
+        - 3 recomendados Art. 16
+        - 5 Tier 1 criticos compliance APDP
+        - 10 Tier 2 operativos
+        Total: 25 campos. Penalizacion -1 si base legal != 'Otra' sin doc adjunto.
+        """
+        return calcular_completitud_de_modelo(self)
 
     def calcular_nivel_riesgo(self) -> str:
-        """Calcula el nivel de riesgo del proceso según factores de la Ley 21.719."""
-        score = 0
-        if self.datos_sensibles:
-            score += 2
-        if self.evaluacion_impacto and (self.estado_eipd or "pendiente") != "completada":
-            score += 2
-        if self.decisiones_automatizadas:
-            score += 2
-        if self.transferencia_internacional and not self.garantias_transferencia_int:
-            score += 1
-        tipo = (self.tipo_dato_sensible or "").lower()
-        if "biométric" in tipo or "biometric" in tipo or "menor" in tipo:
-            score += 1
-        if self.nombre_encargado and not self.tiene_contrato_encargado:
-            score += 1
-        if score >= 7:
-            return "critico"
-        if score >= 5:
-            return "alto"
-        if score >= 3:
-            return "medio"
-        return "bajo"
+        """Calcula el nivel de riesgo del proceso segun factores de la Ley 21.719.
+
+        H3.1 (auditoria 2026-07-07): delega a app.services.rat_calculations.
+        """
+        return calcular_nivel_riesgo_de_modelo(self)

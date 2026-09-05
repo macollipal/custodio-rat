@@ -9,15 +9,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.task import TaskQueue, TaskStatus
+from app.models.task import TaskQueue
+from app.routes.deps import get_current_user
 from app.services.task_service import process_pending_tasks, enqueue_task
+from app.schemas.admin_tasks import (
+    TaskListResponse, TaskStatsResponse, TaskRunResponse, TaskEnqueueResponse,
+)
 
 router = APIRouter(prefix="/admin/tasks", tags=["Admin - Tareas Asíncronas"])
-
-
-def _get_user():
-    from app.routes.deps import get_current_user as _u
-    return _u()
 
 
 class EnqueueRequest(BaseModel):
@@ -26,13 +25,13 @@ class EnqueueRequest(BaseModel):
     max_attempts: int = 3
 
 
-@router.get("/", summary="Listar tareas de la cola")
+@router.get("/", response_model=TaskListResponse, summary="Listar tareas de la cola")
 async def listar_tareas(
     status: str = None,
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Lista las tareas en la cola. Solo para diagnostico."""
     if current_user.rol_global != "superadmin":
@@ -44,8 +43,8 @@ async def listar_tareas(
     total = q.count()
     items = q.order_by(TaskQueue.scheduled_for.desc()).offset(skip).limit(limit).all()
 
-    return {
-        "tasks": [
+    return TaskListResponse(
+        tasks=[
             {
                 "id": t.id,
                 "task_type": t.task_type,
@@ -59,16 +58,16 @@ async def listar_tareas(
             }
             for t in items
         ],
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-    }
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@router.get("/stats", summary="Estadísticas de la cola")
+@router.get("/stats", response_model=TaskStatsResponse, summary="Estadísticas de la cola")
 async def stats(
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     if current_user.rol_global != "superadmin":
         raise HTTPException(status_code=403, detail="Solo superadmin puede ver estadísticas")
@@ -80,20 +79,20 @@ async def stats(
         .all()
     )
     by_status = {s: c for s, c in rows}
-    return {
-        "pending": by_status.get("pending", 0),
-        "running": by_status.get("running", 0),
-        "retrying": by_status.get("retrying", 0),
-        "done": by_status.get("done", 0),
-        "failed": by_status.get("failed", 0),
-    }
+    return TaskStatsResponse(
+        pending=by_status.get("pending", 0),
+        running=by_status.get("running", 0),
+        retrying=by_status.get("retrying", 0),
+        done=by_status.get("done", 0),
+        failed=by_status.get("failed", 0),
+    )
 
 
-@router.post("/run", summary="Procesar tareas pendientes (llamado por cron)")
+@router.post("/run", response_model=TaskRunResponse, summary="Procesar tareas pendientes (llamado por cron)")
 async def run_tasks(
     max_tasks: int = 20,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     """Procesa las tareas pendientes. Pensado para ser llamado por un cron externo
     (Vercel Cron, GitHub Actions, EasyCron, etc.) cada 1-5 minutos.
@@ -104,17 +103,14 @@ async def run_tasks(
         raise HTTPException(status_code=403, detail="Solo superadmin puede ejecutar el worker")
 
     result = process_pending_tasks(db, max_tasks=max_tasks)
-    return {
-        "ok": True,
-        **result,
-    }
+    return TaskRunResponse(ok=True, **result)
 
 
-@router.post("/enqueue", summary="Encolar una tarea manualmente")
+@router.post("/enqueue", response_model=TaskEnqueueResponse, summary="Encolar una tarea manualmente")
 async def enqueue(
     data: EnqueueRequest,
     db: Session = Depends(get_db),
-    current_user=Depends(_get_user),
+    current_user=Depends(get_current_user),
 ):
     if current_user.rol_global != "superadmin":
         raise HTTPException(status_code=403, detail="Solo superadmin puede encolar tareas")
@@ -125,4 +121,22 @@ async def enqueue(
         payload=data.payload,
         max_attempts=data.max_attempts,
     )
-    return {"id": task.id, "task_type": task.task_type, "status": task.status}
+    return TaskEnqueueResponse(id=task.id, task_type=task.task_type, status=task.status)
+
+
+@router.post("/enqueue-sla-alerts", summary="Encolar alerta SLA T-2 para todos los tickets próximos a vencer")
+async def enqueue_sla_alerts(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Encola tarea SLA_ALERT_T2 para ejecutar inmediatamente."""
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin puede encolar alertas SLA")
+
+    task = enqueue_task(
+        db=db,
+        task_type="sla_alert_t2",
+        payload={},
+        max_attempts=2,
+    )
+    return TaskEnqueueResponse(id=task.id, task_type=task.task_type, status=task.status)

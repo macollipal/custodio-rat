@@ -5,6 +5,22 @@ conforme a la Ley 21.719 de Protección de Datos Personales de Chile.
 
 ---
 
+## 🔒 Seguridad y secrets
+
+**REGLA ABSOLUTA:** Este proyecto NUNCA acepta credenciales en el código fuente o historial de git.
+
+**📖 Fuente canónica:** `.opencode/skills/security-secret-scan/SKILL.md`
+
+Reglas clave:
+- Credenciales via variables de entorno (`.env`, Vercel Env Vars)
+- `.env` en `.gitignore` (siempre)
+- `.env.example` con placeholders (sin valores reales)
+- Si accidentalmente commiteaste un secret: ROTAR + `git filter-repo` + force-push
+
+Si sos un agente de IA: detectá secrets y **NEGATE** a commitear hasta corregir.
+
+---
+
 ## Arquitectura
 
 ```
@@ -21,21 +37,21 @@ RAT_opencode/
 │   │   │                 PoliticaTransparencia, TaskQueue, TokenBlacklist
 │   │   ├── schemas/      Validación Pydantic
 │   │   ├── routes/       Endpoints: /auth, /auth/refresh, /companies, /rats, /brechas, /ai,
-│   │   │                 /rubros, /encargados-contrato, /politica-transparencia,
+│   │   │                 /rubros, /encargados-contrato, /transparencia, /publico/transparencia,
 │   │   │                 /tkt-solicitud-derecho, /consentimientos, /eipd,
-│   │   │                 /solicitudes-derecho, /admin/tasks
+│   │   │                 /seguimiento, /admin/tasks, /feriados, /module-permissions
 │   │   └── services/     Lógica: rat, company, export, suggestions, user, breach, rubro,
 │   │                      ticket, email (SMTP), scheduler (enqueue), task_service (cola),
 │   │                      audit (transversal), policy, eipd
-│   ├── tests/             95+ tests (pytest + httpx)
-│   ├── data/             SQLite local para desarrollo (git ignored)
+│   ├── tests/             761+ tests (pytest + httpx)
+
 │   └── venv/             Entorno virtual Python
 │
 ├── frontend-next/        Next.js 16.2 + React 19 + TypeScript + Tailwind CSS v4
 │   ├── app/
 │   │   ├── login/        Pantalla de autenticación
 │   │   ├── onboarding/   Configuración inicial (primera empresa)
-│   │   ├── solicitud_derecho/  Formulario público ARCO
+│   │   ├── seguimiento/  Consulta pública de estado ARCO (titular, sin auth)
 │   │   ├── (app)/
 │   │   │   ├── dashboard/   KPIs, gráfico, alertas + OnboardingChecklist
 │   │   │   ├── rat/         CRUD procesos RAT + wizard 4 pasos + exportación
@@ -46,7 +62,7 @@ RAT_opencode/
 │   │   │   ├── conexion/     Diagnóstico de conexión
 │   │   │   ├── rubros/       Gestión de rubros y sugerencias
 │   │   │   ├── encargados-contrato/  CRUD contratos Art. 14 quater
-│   │   │   ├── transparencia/   Política de transparencia Art. 14 ter
+│   │   │   ├── transparencia/   Política de transparencia Art. 14 ter (editor M-04)
 │   │   │   ├── tkt_solicitud_derecho/  Gestión tickets ARCO
 │   │   │   ├── consentimientos/   Gestión de consentimientos (Art. 12)
 │   │   │   ├── eipd/            EIPD editable (Art. 15 bis)
@@ -64,7 +80,7 @@ RAT_opencode/
 │   └── types/index.ts    Tipos TypeScript
 │
 ├── docs/                 Documentación (casos de uso, flujos, manual de usuario, errores de deploy Vercel)
-└── data/                 Base de datos SQLite local (fuera del repo)
+
 ```
 
 ---
@@ -76,7 +92,7 @@ RAT_opencode/
 | **Backend API** | https://custodio-api-prod.vercel.app | Neon PostgreSQL |
 | **Frontend Prod** | https://custodio-rat.vercel.app | — |
 | **QA (Frontend + API)** | https://custodio-qa.vercel.app | Neon QA |
-| **Local** | http://localhost:3000 (frontend) / :8002 (backend) | SQLite local |
+| **Local** | http://localhost:3000 (frontend) / :8002 (backend) | Neon PostgreSQL (desarrollo) |
 
 ---
 
@@ -103,6 +119,10 @@ pip install -r requirements.txt
 # Frontend (usa Bun)
 cd ..\frontend-next
 bun install
+
+# Pre-commit hook (detecta secretos antes de push)
+pip install pre-commit
+pre-commit install
 ```
 
 ### Scripts de inicio rápido
@@ -147,10 +167,7 @@ pytest tests/ -v
 # Verificar conexión a base
 python -c "from app.core.config import settings; print(settings.DATABASE_URL[:50])"
 
-# Migrar datos SQLite → Neon (production)
-python migrate_to_neon.py export    # Exporta SQLite a JSON
-python migrate_to_neon.py init       # Crea schema en Neon
-python migrate_to_neon.py import     # Importa datos a Neon
+# Migrar datos (script deprecated: migrate_to_neon.py esta deprecado jul-2026)
 ```
 
 ---
@@ -221,19 +238,14 @@ npm run test:e2e:headed
 
 | Variable | Descripción | development | production |
 |----------|-------------|--------------|-------------|
-| `DATABASE_URL` | Connection string | `sqlite:///data/database.db` | `postgresql://...neon.tech` |
+| `DATABASE_URL` | Connection string | `postgresql://...neon.tech` | `postgresql://...neon.tech` |
 | `ALLOWED_ORIGINS` | CORS lista blanca (URLs separadas por coma) | `http://localhost:3000` | **Requerida en todos los ambientes** |
 | `SECRET_KEY` | JWT secret (256-bit) |默认值 | **Requerida** |
-| `MINIMAX_API_KEY` | IA chat | — | Opcional |
-| `OPENAI_API_KEY` | IA chat | — | Opcional |
-| `SMTP_HOST` | Servidor SMTP (ej. smtp.sendgrid.net) | — | Opcional |
-| `SMTP_PORT` | Puerto SMTP (587 o465) | — | Opcional |
-| `SMTP_USERNAME` | Usuario SMTP | — | Opcional |
-| `SMTP_PASSWORD` | Password/API key SMTP | — | Opcional |
-| `SMTP_FROM_EMAIL` | Email remitente | — | Opcional |
-| `SMTP_FROM_NAME` | Nombre remitente | — | Opcional |
+| `GROQ_API_KEY` | LLM chat IA (llama-3.3-70b-versatile via Groq) | — | Opcional |
+| `COHERE_API_KEY` | Embeddings para el Asesor IA (Cohere) | — | Opcional |
+| `SMTP_URL` | SMTP DSN (ej. `smtplib://apikey:SG.xxx@smtp.sendgrid.net:587/?use_tls=true&from_email=admin@yopmail.com&from_name=Custodio%20RAT`) | — | Opcional |
 
-> **Nota:** Si `SMTP_HOST` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
+> **Nota:** Si `SMTP_URL` no está configurado, el servicio de email opera en modo DRY_RUN (loguea sin enviar). Si `ALLOWED_ORIGINS` no está configurada, la app **no levanta** (fail loud).
 
 ### Frontend (.env.local)
 
@@ -247,11 +259,11 @@ npm run test:e2e:headed
 
 **Backend:**
 - FastAPI 0.115 + Uvicorn
-- SQLAlchemy 2.0 + PostgreSQL (Neon) / SQLite (local)
+- SQLAlchemy 2.0 + PostgreSQL (Neon)
 - Pydantic 2.10
 - JWT + Bcrypt
 - ReportLab (exportación PDF)
-- Zod (validación)
+- Groq (LLM chat) + Cohere (embeddings)
 
 **Frontend:**
 - Next.js 16.2 (App Router)
@@ -320,6 +332,27 @@ npm run test:e2e:headed
 - Gestión multi-empresa con usuarios por empresa (`user_companies`)
 - Topbar con nombre de usuario en negrita + badge de rol con colores diferenciados
 
+### Módulo Empresas
+
+Gestión de responsables del tratamiento de datos personales.
+
+**Endpoints:** `GET/POST /companies`, `GET/PUT/DELETE /companies/{id}`, `PATCH /companies/{id}/desactivar`, `GET /companies/{id}/usuarios/`, `GET /admin/companies/{id}/hard-delete`
+
+**Campos destacados en `CompanyOut`:**
+- `completitud_promedio` — promedio de completitud de todos los RATs de la empresa
+- `rats_vencidos` — RATs cuyo plazo de retención ha expirado
+- `solicitudes_pendientes` — tickets ARCO en estado abierto o en_proceso
+- `solicitudes_vencidas_sla` — tickets ARCO con plazo legal vencido
+- `has_politica_transparencia` — si existe política Art. 14 ter publicada
+- `canal_ejercicio_derechos` — canal oficial para ejercicio de derechos (Art. 12)
+- `desactivada_por` — username que desactivó la empresa
+
+**Roles de empresa (tabla `user_companies`):** `admin` | `editor` | `viewer`
+- VIEWER solo puede consultar; no puede editar ni desactivar.
+- Solo superadmin puede realizar hard-delete.
+
+**Frontend:** `/companies` — cards con badges de alertas (RATs vencidos, ARCO pendientes/SLA), botón "Ver RATs →", **Ficha de empresa** (tabs Datos/RATs/ARCO/Brechas con carga lazy), drawer de auditoría, gestión de accesos, exportación APDP.
+
 ### Módulo de Consentimientos (Art. 12 Ley 21.719) — NUEVO
 - Página `/consentimientos` con tabla y KPIs (Total / Activos / Revocados)
 - Filtros: por RAT, solo activos
@@ -336,14 +369,15 @@ npm run test:e2e:headed
 - Fechas de elaboración y aprobación
 - Audit log automático en todas las operaciones
 
-### Cola de Tareas Asíncronas — NUEVO
+### Cola de Tareas Asíncronas
 - Modelo `task_queue` persistente en BD
-- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`
-- Scheduler actualizado a **modo enqueue** (compatible con Vercel serverless)
+- Tipos: `revisar_rats_vencidos`, `notificar_brecha_dpo`, `notificar_respuesta_arco`, `cleanup_tokens`, `revisar_encargados_vencidos`, `sla_alert_t2`, `notificar_eipd_vencida`, `solicitar_renovacion_consentimiento`, `sla_alert_brecha_72h`, `sla_alert_plazo_retencion`
+- Scheduler en **modo enqueue** (compatible con Vercel serverless) — 8 jobs periódicos
 - Endpoint `POST /admin/tasks/run` para que un cron externo procese la cola
 - Dashboard de admin: `/admin/tasks/stats` y `/admin/tasks/` para listar
 - Reintentos automáticos con backoff (max 3 intentos)
-- Las notificaciones de brechas ahora son asíncronas (no bloquean la request)
+- Monitor brechas 72h (C-03): cada 12h detecta brechas sin notificar APDP y alerta al DPO
+- Alerta plazo retención (C-02): cada 24h notifica RATs con plazo de retención vencido
 
 ### Gestión RAT
 - CRUD completo de procesos RAT con wizard de 4 pasos
@@ -372,11 +406,11 @@ npm run test:e2e:headed
   - Historial de cambios (auditoría)
   - **Botón Exportar PDF** → descarga PDF individual del RAT
 - Chat IA flotante (botón 🤚 esquina inferior derecha)
-  - Requiere `MINIMAX_API_KEY` o `OPENAI_API_KEY` en `backend/.env`
+  - Requiere `GROQ_API_KEY` en `backend/.env`
 
 ### Módulo de Brechas de Seguridad (Art. 14 bis Ley 21.719)
 - Gestión de brechas con plazos legales obligatorios
-- Plazo APDC (72h) vencido + cálculo de horas desde detección
+- Plazo APDP (72h) vencido + cálculo de horas desde detección
 - Notificación automática al DPO por email (si SMTP configurado)
 
 ### Módulo Encargados de Tratamiento (Art. 14 quater Ley 21.719)
@@ -386,25 +420,33 @@ npm run test:e2e:headed
 
 ### Módulo de Transparencia (Art. 14 ter Ley 21.719)
 - Política de transparencia pública generada dinámicamente desde los RATs
-- Versionado con hash SHA-256
-- Disponible en `/transparencia` para cada empresa
+- **Editor por ítem** (M-04): admin_empresa puede personalizar cada sección; override se persiste en BD
+- Versionado con hash SHA-256 recalculado en cada guardado
+- Disponible en `/transparencia` (autenticado, con editor) y `/publico/transparencia/{id}` (público)
 
-### Módulo ARCO — Solicitudes de Derecho (Art. 14 y 16 bis Ley 21.719)
-- **Formulario público** (`/solicitud_derecho`): permite a cualquier persona ejercer sus derechos ARCO
+### Módulo ARCO — Solicitudes de Derecho (Art. 12 y 14 Ley 21.719)
+- **Gestión interna de tickets** (`/tkt_solicitud_derecho`): el staff crea y gestiona solicitudes ARCO
   - Tipos: Acceso, Rectificación, Cancelación, Oposición, Bloqueo temporal, Portabilidad
   - Validación de RUT chileno, email, límite de 2000 caracteres en descripción
-  - Creación de ticket → registra `solicitud_fecha`
-- **Gestión tickets** (`/tkt_solicitud_derecho`): gestión completa de solicitudes ARCO
-  - Tabla con paginación
-  - Historial de cambios de estado
-  - Notas internas y adjuntos
+  - Tabla con paginación, historial de cambios de estado, notas internas y adjuntos
   - Respuesta al titular + notificación por email automática (si SMTP configurado)
+  - Plazo legal 10 días hábiles con cálculo de feriados Chile hasta 2040
+  - Prórroga de plazo (+10 días hábiles, Art. 12 bis) — 1 vez por ticket
+  - Causal de rechazo (enum), verificación de identidad obligatoria para resolver
+  - Hash de integridad SHA-256 al resolver (Art. 12.5)
+- **Formulario público ARCOP+** (`/ejercer-derechos`): formulario de 3 pasos para que el titular ejerza sus derechos sin login — validación RUT, confirmación email, stepper, glosario intro, detección de titular repetido (aviso si ya tiene ticket abierto en esa empresa)
+- **Acuse de recibo automático** (ARCO-QW6): email al titular al crear su solicitud, con tracking token
+- **Chips de placeholders** (ARCO-QW7): al redactar respuesta, chips insertan `{{nombre_titular}}`, `{{empresa}}`, `{{fecha}}`, etc.
+- **Banner SLA con tiempos reales** (ARCO-QW8): FlujoModal muestra días hábiles consumidos y días restantes con semáforo de color
+- **Consulta pública** (`/seguimiento/{tracking_token}`): titular consulta estado sin autenticación
+- **Monitor SLA** (C-03): job cada 12h alerta DPO por brechas sin notificar APDP >72h
+- Tabla canónica: `tkt_solicitud_derecho` (tabla legacy `solicitudes_derecho` eliminada jul-2026)
 
 ### Exportación
 - CSV por empresa
 - PDF por empresa
 - PDF individual de RAT (`/rats/{id}/export/pdf`)
-- Formato CNI para presentación a la APDC (Ley 21.719)
+- Formato CNI para presentación a la APDP (Ley 21.719)
 
 ### Tema oscuro
 - Switch en Topbar (🌙/☀️)
@@ -412,17 +454,6 @@ npm run test:e2e:headed
 - Clase `.dark` aplicada al `<html>`
 
 ---
-
-## Próximas funcionalidades
-
-### Rubros + Sugerencias de RAT por Rubro (V1-04)
-- Tabla `rubros`: id, nombre, orden (BD, ordenable por superadmin)
-- Tabla `rats_sugeridos`: id, rubro_id, campos pre-llenados de RAT
-- 13 rubros adicionales con plantillas pre-seedeadas
-- Wizard de RAT con Paso 0: muestra tarjetas de sugerencias según el rubro de la empresa
-- "Usar sugerencia" → wizard pre-llenado; "Crear personalizado" → wizard en blanco
-- Permisos: superadmin CRUD todos, admin_empresa CRUD solo de su rubro
-- Página de gestión de rubros (drag-to-reorder) y sugerencias
 
 ---
 

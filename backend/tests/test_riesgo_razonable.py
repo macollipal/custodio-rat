@@ -1,11 +1,10 @@
-"""
-Tests para B-05: Filtro de riesgo razonable en Brechas (Art. 14 sexies — REC-05).
+﻿"""
+Tests para B-05: Filtro de riesgo razonable en Brechas (Art. 14 sexies â€” REC-05).
 """
 
-import pytest
 from datetime import datetime, timezone
 from app.models.breach import SecurityBreach, NivelRiesgo
-from app.services.breach_service import _calcular_reportable, evaluar_riesgo_brecha
+from app.services.breach_service import _calcular_reportable
 
 
 class TestCalcularReportable:
@@ -98,7 +97,7 @@ class TestBreachCrud:
         assert data["nivel_riesgo"] == "alto"
         assert data["volumen_titulares_afectados"] == 150
         assert data["incluye_datos_sensibles"] is True
-        assert data["reportable_apdc_calculado"] is True
+        assert data["reportable_apdp_calculado"] is True
 
     def test_evaluar_riesgo_endpoint(self, client, auth_headers, empresa):
         payload = {
@@ -113,14 +112,15 @@ class TestBreachCrud:
 
         resp = client.post(f"/brechas/{breach_id}/evaluar-riesgo", headers=auth_headers)
         assert resp.status_code == 200
-        assert "reportable_apdc_calculado" in resp.json()
+        assert "reportable_apdp_calculado" in resp.json()
 
     def test_listar_brechas_con_campos_riesgo(self, client, auth_headers, empresa):
         payload = {
             "company_id": empresa["id"],
             "descripcion": "Brecha con riesgo",
             "fecha_deteccion": datetime.now(timezone.utc).isoformat(),
-            "nivel_riesgo": "critico",
+            "incluye_datos_sensibles": True,    # +3
+            "incluye_datos_nna": True,          # +3  → score 6 = CRITICO
             "incluye_datos_financieros": True,
         }
         resp = client.post("/brechas/", json=payload, headers=auth_headers)

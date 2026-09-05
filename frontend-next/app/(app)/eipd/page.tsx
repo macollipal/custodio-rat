@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { API_BASE } from '@/lib/constants';
 import * as api from '@/lib/api';
 import type { RAT } from '@/types';
+import { Button } from '@/components/ui/Button';
 
 interface EIPD {
   id: number;
@@ -16,9 +18,12 @@ interface EIPD {
   riesgos_identificados: string | null;
   medidas_propuestas: string | null;
   parecer_dpo: string | null;
+  parecer_dpo_autor: string | null;
+  parecer_dpo_fecha: string | null;
+  justificacion_no_aplica: string | null;
   fecha_elaboracion: string | null;
   fecha_aprobacion: string | null;
-  resultado: 'completada' | 'no_requerida' | 'en_proceso';
+  resultado: 'completada' | 'no_requerida' | 'no_requerida_justificada' | 'en_proceso';
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -28,21 +33,26 @@ const RESULTADO_LABELS: Record<string, string> = {
   en_proceso: 'En proceso',
   completada: 'Completada',
   no_requerida: 'No requerida',
+  no_requerida_justificada: 'No requerida (justificada)',
 };
 
 const RESULTADO_COLORS: Record<string, { bg: string; fg: string }> = {
   en_proceso: { bg: '#FEF3C7', fg: '#92400E' },
   completada: { bg: '#D1FAE5', fg: '#065F46' },
   no_requerida: { bg: '#E5E7EB', fg: '#374151' },
+  no_requerida_justificada: { bg: '#EFF6FF', fg: '#1E40AF' },
 };
 
 export default function EIPDPage() {
   const { company, user } = useApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const ratIdParam = searchParams.get('rat_id');
   const [items, setItems] = useState<EIPD[]>([]);
   const [rats, setRats] = useState<RAT[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EIPD | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(!!ratIdParam);
 
   async function load() {
     if (!company) return;
@@ -82,11 +92,11 @@ export default function EIPDPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: '#111827' }}>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>
             📑 Evaluaciones de Impacto (EIPD)
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Art. 15 bis Ley 21.719 — Obligatoria para datos sensibles y transferencias de alto riesgo
+            Art. 15 ter Ley 21.719 — Obligatoria para datos sensibles y tratamientos de alto riesgo
           </p>
         </div>
       </div>
@@ -122,13 +132,13 @@ export default function EIPDPage() {
             {ratsRequiringEipd.map((r) => (
               <li key={r.id} className="flex justify-between items-center bg-white/60 rounded p-2">
                 <span>• {r.nombre_proceso}</span>
-                <button
+                <Button
+                  size="sm"
                   onClick={() => setCreating(true)}
-                  className="text-xs px-2 py-1 rounded text-white"
-                  style={{ background: '#D97706' }}
+                  style={{ background: '#D97706', color: '#FFFFFF' }}
                 >
                   Crear EIPD
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -182,19 +192,25 @@ export default function EIPDPage() {
                     </td>
                     <td className="px-4 py-3">
                       {canEdit ? (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setEditing(e)}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          className="!min-h-0"
+                          style={{ color: '#1D4ED8' }}
                         >
                           Editar
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setEditing(e)}
-                          className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50"
+                          className="!min-h-0"
+                          style={{ color: '#1D4ED8' }}
                         >
                           Ver
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -210,6 +226,7 @@ export default function EIPDPage() {
           eipd={editing}
           ratsRequiring={ratsRequiringEipd}
           existingRats={rats}
+          preselectedRatId={creating ? (ratIdParam || undefined) : undefined}
           onClose={() => {
             setEditing(null);
             setCreating(false);
@@ -217,7 +234,11 @@ export default function EIPDPage() {
           onSaved={() => {
             setEditing(null);
             setCreating(false);
-            load();
+            if (ratIdParam) {
+              router.push(`/rat?selected=${ratIdParam}`);
+            } else {
+              load();
+            }
           }}
         />
       )}
@@ -233,27 +254,47 @@ function EIPDForm({
   eipd,
   ratsRequiring,
   existingRats,
+  preselectedRatId,
   onClose,
   onSaved,
 }: {
   eipd: EIPD | null;
   ratsRequiring: RAT[];
   existingRats: RAT[];
+  preselectedRatId?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const allRats = Array.from(new Map([...ratsRequiring, ...existingRats].map((r) => [r.id, r])).values());
-  const [ratId, setRatId] = useState<string>(eipd?.rat_id?.toString() || ratsRequiring[0]?.id?.toString() || allRats[0]?.id?.toString() || '');
+  const [ratId, setRatId] = useState<string>(
+    preselectedRatId ||
+    eipd?.rat_id?.toString() ||
+    ratsRequiring[0]?.id?.toString() ||
+    allRats[0]?.id?.toString() ||
+    ''
+  );
   const [metodologia, setMetodologia] = useState(eipd?.metodologia || '');
   const [objetivos, setObjetivos] = useState(eipd?.objetivos || '');
   const [necesidad, setNecesidad] = useState(eipd?.necesidad_proporcionalidad || '');
   const [riesgos, setRiesgos] = useState(eipd?.riesgos_identificados || '');
   const [medidas, setMedidas] = useState(eipd?.medidas_propuestas || '');
   const [parecerDpo, setParecerDpo] = useState(eipd?.parecer_dpo || '');
+  const [parecerDpoAutor, setParecerDpoAutor] = useState(eipd?.parecer_dpo_autor || '');
+  const [parecerDpoFecha, setParecerDpoFecha] = useState(eipd?.parecer_dpo_fecha ? eipd.parecer_dpo_fecha.substring(0, 10) : '');
+  const [justificacionNoAplica, setJustificacionNoAplica] = useState(eipd?.justificacion_no_aplica || '');
   const [fechaElaboracion, setFechaElaboracion] = useState(eipd?.fecha_elaboracion || '');
   const [fechaAprobacion, setFechaAprobacion] = useState(eipd?.fecha_aprobacion || '');
   const [resultado, setResultado] = useState(eipd?.resultado || 'en_proceso');
   const [saving, setSaving] = useState(false);
+
+  const inputCls = 'w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
+  const inputStyle = { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' };
+  const labelCls = 'block text-sm font-medium mb-1.5';
+  const labelStyle = { color: '#374151' };
+  const panelIdent = { background: '#F9FAFB', border: '1px solid #E5E7EB' };
+  const panelBlue = { background: '#EFF6FF', border: '1px solid #BFDBFE' };
+  const panelRed = { background: '#FEF2F2', border: '1px solid #FECACA' };
+  const panelGreen = { background: '#F0FDF4', border: '1px solid #BBF7D0' };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -273,6 +314,9 @@ function EIPDForm({
             riesgos_identificados: riesgos || null,
             medidas_propuestas: medidas || null,
             parecer_dpo: parecerDpo || null,
+            parecer_dpo_autor: parecerDpoAutor || null,
+            parecer_dpo_fecha: parecerDpoFecha ? new Date(parecerDpoFecha).toISOString() : null,
+            justificacion_no_aplica: justificacionNoAplica || null,
             fecha_elaboracion: fechaElaboracion || null,
             fecha_aprobacion: fechaAprobacion || null,
             resultado,
@@ -294,6 +338,9 @@ function EIPDForm({
             riesgos_identificados: riesgos || null,
             medidas_propuestas: medidas || null,
             parecer_dpo: parecerDpo || null,
+            parecer_dpo_autor: parecerDpoAutor || null,
+            parecer_dpo_fecha: parecerDpoFecha ? new Date(parecerDpoFecha).toISOString() : null,
+            justificacion_no_aplica: justificacionNoAplica || null,
             fecha_elaboracion: fechaElaboracion || null,
             fecha_aprobacion: fechaAprobacion || null,
             resultado,
@@ -316,135 +363,235 @@ function EIPDForm({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div
-        className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4">
-          {eipd ? 'Editar EIPD' : 'Nueva EIPD'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {!eipd && (
+        {/* Header con gradiente */}
+        <div className="rounded-t-xl px-6 py-4" style={{ background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)' }}>
+          <h2 className="text-lg font-bold text-white">
+            {eipd ? '📋 Editar EIPD' : '🆕 Nueva EIPD'}
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Art. 15 ter Ley 21.719 — Evaluación de Impacto en Protección de Datos
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Panel 1: Identificación */}
+          <div className="rounded-xl p-5 space-y-4" style={panelIdent}>
+            <h3 className="text-sm font-semibold" style={{ color: '#1E40AF' }}>1. Identificación del proceso</h3>
+            {!eipd && (
+              <div>
+                <label className={labelCls} style={labelStyle}>RAT *</label>
+                <select
+                  value={ratId}
+                  onChange={(e) => setRatId(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                  required
+                >
+                  <option value="">Seleccionar RAT</option>
+                  {allRats.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nombre_proceso}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium mb-1">RAT *</label>
+              <label className={labelCls} style={labelStyle}>Metodología</label>
+              <input
+                type="text"
+                value={metodologia}
+                onChange={(e) => setMetodologia(e.target.value)}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Ej: NIST Privacy Framework, ISO 29134"
+              />
+            </div>
+          </div>
+
+          {/* Panel 2: Evaluación */}
+          <div className="rounded-xl p-5 space-y-4" style={panelBlue}>
+            <h3 className="text-sm font-semibold" style={{ color: '#1D4ED8' }}>2. Evaluación del tratamiento</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Objetivos</label>
+              <textarea
+                value={objetivos}
+                onChange={(e) => setObjetivos(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="¿Qué se busca evaluar con esta EIPD?"
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Necesidad y proporcionalidad</label>
+              <textarea
+                value={necesidad}
+                onChange={(e) => setNecesidad(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="¿Por qué el tratamiento es necesario y proporcionado?"
+              />
+            </div>
+          </div>
+
+          {/* Panel 3: Riesgos y Medidas */}
+          <div className="rounded-xl p-5 space-y-4" style={panelRed}>
+            <h3 className="text-sm font-semibold" style={{ color: '#B91C1C' }}>3. Riesgos y medidas</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Riesgos identificados</label>
+              <textarea
+                value={riesgos}
+                onChange={(e) => setRiesgos(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Lista de riesgos para los derechos de los titulares"
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Medidas propuestas</label>
+              <textarea
+                value={medidas}
+                onChange={(e) => setMedidas(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Medidas para mitigar los riesgos identificados"
+              />
+            </div>
+          </div>
+
+          {/* Panel 4: Conclusiones */}
+          <div className="rounded-xl p-5 space-y-4" style={panelGreen}>
+            <h3 className="text-sm font-semibold" style={{ color: '#065F46' }}>4. Conclusiones y aprobación</h3>
+            <div>
+              <label className={labelCls} style={labelStyle}>Parecer del DPO</label>
+              <textarea
+                value={parecerDpo}
+                onChange={(e) => setParecerDpo(e.target.value)}
+                rows={3}
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Opinión del Delegado de Protección de Datos"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls} style={labelStyle}>Autor del parecer (DPO)</label>
+                <input
+                  type="text"
+                  value={parecerDpoAutor}
+                  onChange={(e) => setParecerDpoAutor(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                  placeholder="Nombre del DPO"
+                />
+              </div>
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha del parecer</label>
+                <input
+                  type="date"
+                  value={parecerDpoFecha}
+                  onChange={(e) => setParecerDpoFecha(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            {resultado === 'no_requerida_justificada' && (
+              <div>
+                <label className={labelCls} style={labelStyle}>
+                  Justificación de no aplicación (mínimo 20 caracteres) *
+                </label>
+                <textarea
+                  value={justificacionNoAplica}
+                  onChange={(e) => setJustificacionNoAplica(e.target.value)}
+                  rows={3}
+                  minLength={20}
+                  required
+                  className={inputCls}
+                  style={inputStyle}
+                  placeholder="Explique por qué el tratamiento no requiere EIPD pese a tener datos sensibles (Art. 15 ter Ley 21.719)."
+                />
+                <div className="text-xs mt-1" style={{ color: justificacionNoAplica.length < 20 ? '#DC2626' : '#059669' }}>
+                  {justificacionNoAplica.length} / 20 caracteres
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha elaboración</label>
+                <input
+                  type="date"
+                  value={fechaElaboracion}
+                  onChange={(e) => setFechaElaboracion(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className={labelCls} style={labelStyle}>Fecha aprobación</label>
+                <input
+                  type="date"
+                  value={fechaAprobacion}
+                  onChange={(e) => setFechaAprobacion(e.target.value)}
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>Resultado *</label>
               <select
-                value={ratId}
-                onChange={(e) => setRatId(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-                required
+                value={resultado}
+                onChange={(e) => setResultado(e.target.value as EIPD['resultado'])}
+                className={inputCls}
+                style={inputStyle}
               >
-                <option value="">Seleccionar RAT</option>
-                {allRats.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.nombre_proceso}
-                  </option>
+                {Object.entries(RESULTADO_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
                 ))}
               </select>
-            </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium mb-1">Metodología</label>
-            <input
-              type="text"
-              value={metodologia}
-              onChange={(e) => setMetodologia(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Ej: NIST Privacy Framework, ISO 29134"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Objetivos</label>
-            <textarea
-              value={objetivos}
-              onChange={(e) => setObjetivos(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="¿Qué se busca evaluar con esta EIPD?"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Necesidad y proporcionalidad</label>
-            <textarea
-              value={necesidad}
-              onChange={(e) => setNecesidad(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="¿Por qué el tratamiento es necesario y proporcionado?"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Riesgos identificados</label>
-            <textarea
-              value={riesgos}
-              onChange={(e) => setRiesgos(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Lista de riesgos para los derechos de los titulares"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Medidas propuestas</label>
-            <textarea
-              value={medidas}
-              onChange={(e) => setMedidas(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Medidas para mitigar los riesgos identificados"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Parecer del DPO</label>
-            <textarea
-              value={parecerDpo}
-              onChange={(e) => setParecerDpo(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Opinión del Delegado de Protección de Datos"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Fecha elaboración</label>
-              <input
-                type="date"
-                value={fechaElaboracion}
-                onChange={(e) => setFechaElaboracion(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Fecha aprobación</label>
-              <input
-                type="date"
-                value={fechaAprobacion}
-                onChange={(e) => setFechaAprobacion(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              />
+              {resultado === 'no_requerida' && (
+                <div className="mt-2 p-2 rounded text-xs" style={{ background: '#FEF2F2', color: '#B91C1C' }}>
+                  ⚠️ Si el RAT tiene datos sensibles este resultado será rechazado por validación.
+                </div>
+              )}
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Resultado *</label>
-            <select
-              value={resultado}
-              onChange={(e) => setResultado(e.target.value as EIPD['resultado'])}
-              className="w-full px-3 py-2 border rounded-lg"
-            >
-              {Object.entries(RESULTADO_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border">
-              Cancelar
-            </button>
-            <button
+
+          {/* Footer */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-between pt-2">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50"
+                style={{ color: '#6B7280', borderColor: '#E5E7EB' }}
+              >
+                Cancelar
+              </button>
+              <a
+                href={`/rat?selected=${ratId}`}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-gray-50 inline-flex items-center gap-1"
+                style={{ color: '#374151', borderColor: '#E5E7EB' }}
+              >
+                ← Volver al RAT
+              </a>
+            </div>
+            <Button
               type="submit"
+              size="lg"
               disabled={saving}
-              className="px-4 py-2 rounded-lg text-white font-medium"
-              style={{ background: saving ? '#9CA3AF' : '#2563EB' }}
+              loading={saving}
             >
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+              Guardar EIPD
+            </Button>
           </div>
         </form>
       </div>

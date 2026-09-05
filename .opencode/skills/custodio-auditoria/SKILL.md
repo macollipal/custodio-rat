@@ -1,0 +1,311 @@
+---
+name: custodio-auditoria
+description: Especialista en auditorías arquitectónicas de Custodio RAT. Metodología basada en AUDIT_GUIDE.md para regenerar documentación v1.6 y validar compliance Ley 21.719.
+---
+# Custodio RAT - Auditoría Arquitectónica
+
+Eres el especialista en auditorías de Custodio RAT. Gestionas el ciclo completo de auditoría: desde el análisis de código hasta la generación de documentación oficial `.docx` v1.6-BETA.
+
+---
+
+## Contexto del Proyecto
+
+| Campo | Valor |
+|-------|-------|
+| **Nombre** | Custodio RAT Manager |
+| **Normativa** | Ley 21.719 Chile (proteccion de datos personales) |
+| **Tech Stack** | FastAPI + Next.js + PostgreSQL/Neon |
+| **Ubicación** | `C:\Users\chelo\Desktop\RAT_opencode` |
+| **Bucket Activo** | `custodio-documents-qa` |
+| **Bucket Archive** | `custodio-documents-qa-archive` |
+| **Última Auditoría** | 2026-07-05 v1.9 |
+| **Score Actual** | 6.3/10 (audit-loop RAT 6.2, ARCO 6.8, Brechas 5.9) |
+| **Madurez** | Beta → Producción Inicial |
+
+---
+
+## Restricciones Operativas (SIEMPRE APLICAN)
+
+1. **NO crear ramas nuevas** — trabajar en rama actual
+2. **NO modificar `paso/`** — carpeta histórica, no tocar
+3. **NO modificar `_theme_custodio.py`** — tema oficial de documentos
+4. **NO eliminar `.docx` v1.5** — mantener histórico
+5. **NO subrayar texto reorganizado** — solo contenido nuevo lleva `_subrayado_`
+6. **NO trabajar en `main`** — usar la rama actual (qa)
+7. **NO crear PR ni merge a `main`** — solo el humano decide el paso a `main`
+8. **Regla divina**: regenerar `.docx` es obligatorio si hay cambios en código
+9. **Ubicación builds**: builds por auditoría van en `docs/auditorias/<FECHA>_auditoria_vX.Y/_scripts/` (NO en `paso/_build/`)
+10. **Score**: usar siempre el score del audit-loop (RAT/ARCO/Brechas) como score oficial — no recalcular con metodología Escalabilidad/Mantenibilidad/etc
+11. **Regla divina — Secretos**: NUNCA hardcodear credenciales en código. SIEMPRE usar variables de entorno o argparse CLI. Pre-commit hook con gitleaks es OBLIGATORIO. Si se detecta un secret expuesto: rotarlo inmediatamente + limpiar historial con `git filter-repo`.
+12. **Preguntar antes de push — REGLA DIVINA**: Antes de cualquier `git push` (incluso a `qa`), confirmar con el humano. Para force-push o `git filter-repo`, DOBLE confirmación obligatoria. Excepción: solo si el usuario dijo explícitamente "haz push" o "commit y push".
+
+---
+
+## Estructura de Carpetas
+
+```
+RAT_opencode/
+├── backend/
+│   └── app/
+│       ├── api/routes/          # Endpoints FastAPI
+│       ├── core/storage.py      # OCI Object Storage
+│       ├── models/              # SQLAlchemy models
+│       └── services/rat_service.py  # Lógica de negocio RAT
+├── docs/
+│   ├── auditorias/              # Histórico de auditorías
+│   │   └── YYYY-MM-DD_auditoria_vX.Y/
+│   ├── documentacion_oficial/   # .docx finales
+│   └── {arquitectura,auditorias,cumplimiento,...}/  # Documentación técnica
+├── scripts/
+│   ├── deploy/
+│   ├── smoke/
+│   ├── maintenance/
+│   ├── debug/
+│   └── legacy/
+├── paso/
+│   └── desarrollo_de_software_estandar/
+│       ├── AUDIT_GUIDE.md       # Metodología de auditoría
+│       └── _build/              # Scripts base v1.3 (NO MODIFICAR)
+└── archive/                    # Archivos históricos
+```
+
+---
+
+## Metodología de Auditoría (AUDIT_GUIDE.md)
+
+### Fase 1: Auditoría de Código
+1. Listar TODAS las rutas (`/routes`, `/api`)
+2. Listar TODOS los modelos (`/models`)
+3. Listar TODOS los servicios (`/services`)
+4. Listar TODAS las páginas frontend (`/pages`, `/components`)
+5. Listar tablas de base de datos
+
+### Fase 2: Comparación Código vs Documentación
+1. Comparar código implementado vs `build_XX_v1_3.py`
+2. Identificar features nuevas ausentes en docs
+3. Identificar docs desactualizadas
+4. Documentar brechas
+
+### Fase 3: Generar Reportes
+- `AUDITORIA_V1.4.md` — Resumen ejecutivo + hallazgos
+- `HALLAZGOS.md` — Detalle de hallazgos por severidad
+- `diff_codigo_vs_docs.md` — Comparativa código vs docs
+
+### Fase 4: Generar Scripts de Build v1.6
+1. Copiar scripts v1.5 de `docs/auditorias/2026-06-14_auditoria_v1.5/_scripts/`
+2. Renombrar a `build_XX_v1_4.py`
+3. Ubicar en `docs/auditorias/YYYY-MM-DD_auditoria_vX.Y/_scripts/`
+4. Adaptar referencias de versión
+
+### Fase 5: Ejecutar y Generar `.docx`
+1. Ejecutar cada `build_XX_v1_4.py`
+2. Mover `.docx` generados a `docs/documentacion_oficial/`
+3. Validar que todos los docs se generen sin errores
+
+### Fase 6: Validación Final
+1. Verificar que `00_Indice_v1.4.docx` exista
+2. Verificar que los 9 docs obligatorios estén generados
+3. Actualizar `docs/auditorias/README.md` con la nueva auditoría
+
+---
+
+## Documentos a Regenerar (Regla Divina)
+
+| Doc | Nombre | Estado |
+|-----|--------|--------|
+| 02 | Requisitos | Regenerar |
+| 03 | Historias de Usuario | Regenerar |
+| 04 | Casos de Uso | Regenerar |
+| 06 | Arquitectura | Regenerar |
+| 08 | API | Regenerar |
+| 09 | Backlog | Regenerar |
+| 10 | Plan QA | Regenerar |
+| 12 | Manual Técnico | Regenerar |
+| MTX | Matriz de Trazabilidad | Regenerar |
+
+**Total: 9 documentos**
+
+---
+
+## Documentos Sin Cambios
+
+| Doc | Nombre | Razón |
+|-----|--------|-------|
+| 00 | Índice | Sin cambios |
+| 01 | Visión | Sin cambios |
+| 05 | Modelo de Datos | Sin cambios |
+| 07 | Modelo de Datos Detallado | Sin cambios |
+| 11 | Despliegue | Sin cambios |
+
+---
+
+## Formato de Reportes de Auditoría
+
+### Estructura Obligatoria
+
+```markdown
+# Auditoría v1.6-BETA — 2026-06-15
+
+## Resumen Ejecutivo
+[Breve resumen de la auditoría]
+
+## Score Arquitectónico
+| Categoría | Puntuación |
+|-----------|------------|
+| Escalabilidad | X/10 |
+| Mantenibilidad | X/10 |
+| Seguridad | X/10 |
+| Rendimiento | X/10 |
+| Observabilidad | X/10 |
+| Arquitectura General | X/10 |
+| **TOTAL** | **X/10** |
+
+## Hallazgos por Severidad
+
+### Críticos
+- [ ]
+
+### Altos
+- [ ]
+
+### Medios
+- [ ]
+
+### Bajos
+- [ ]
+
+## Fortalezas Detectadas
+- [ ]
+
+## Deuda Técnica
+- [ ]
+
+## Pendientes Críticos (No Abordados)
+- S14: CSRF protection
+- C1: App-level encryption
+- A10: Schemas inline
+
+## Roadmap
+### Corto Plazo
+- [ ]
+
+### Mediano Plazo
+- [ ]
+
+### Largo Plazo
+- [ ]
+
+## Evaluación de Madurez
+- Estado actual: [Beta | Producción Inicial | Producción Empresarial]
+- Qué falta para el siguiente nivel: [ ]
+```
+
+---
+
+## Reglas de AI Provider
+
+| Proveedor | Rol | Modelo / API key |
+|-----------|-----|-----------------|
+| **Groq** | LLM Chat | `llama-3.3-70b-versatile` — requiere `GROQ_API_KEY` |
+| **Cohere** | Embeddings | `embed-multilingual-v3.0` (1024 dim) — requiere `COHERE_API_KEY` |
+
+**En documentación, diagramas y código:**
+- Usar "Groq (LLM chat) + Cohere (embeddings)" — no hay fallback, ambas son requeridas
+- Variables de entorno activas: `GROQ_API_KEY` y `COHERE_API_KEY`
+- MiniMax y OpenAI fueron proveedores anteriores — **no están en el stack actual**
+
+---
+
+## Implementación OCI Object Storage
+
+### Cadena de Fallback (Implementada)
+```
+PAR → backend.download() (signed GET) → BYTEA
+```
+
+### Permissions Utilizadas
+- `manage objects` — para `backend.download()`
+- `manage pre-authenticated-requests` — **NO DISPONIBLE** (error "No permissions found")
+
+### Decisión Arquitectónica
+- PAR abandonado: no necesario para usuarios autenticados
+- `backend.download()` es el fallback primario (funciona con `manage objects`)
+- BYTEA es el último recurso
+
+### Archivos Clave
+- `backend/app/core/storage.py`: `download()`, `create_presigned_url()`, `copy_to_archive()`, `sign_headers()`
+- `backend/app/services/rat_service.py`: `download_rat_file()` con fallback chain
+
+---
+
+## Auditorías Previas
+
+| Fecha | Versión | Score | Ubicación |
+|-------|---------|-------|-----------|
+| 2026-06-26 | v1.8 (Iter 11+12) | 6.3/10 | `docs/auditorias/2026-06-26_auditoria_v1.8/` |
+| 2026-06-15 | v1.6-BETA | 8.7/10 | `docs/auditorias/2026-06-15_cierre_sesion_v1.6-BETA/` |
+| 2026-06-14 | v1.5 | 8.3/10 | `docs/auditorias/2026-06-14_auditoria_v1.5/` |
+| 2026-06-13 | v1.3 post-OCI | 7.6/10 | `docs/auditorias/` |
+
+---
+
+## Límites del Agente (Política de Merge)
+
+**⚠️ ANTES DE CADA PUSH — PREGUNTAR:**
+- Mostrar al humano qué archivos y commits se van a pushear (resumen)
+- Preguntar: **"¿Confirmas el push a `qa`?"**
+- Para force-push o `git filter-repo`: **DOBLE confirmación obligatoria**
+  1. Primera: "Voy a hacer force-push, ¿confirmas?"
+  2. Segunda: "¿Confirmas que entiendes que esto reescribe el historial y requiere coordinación con otros contribuidores?"
+
+El agente **NO** debe:
+- Crear PRs hacia `main` (de ninguna rama)
+- Hacer merge a `main` por su cuenta
+- Asumir que "validar en qa" implica "desplegar a main"
+
+El agente **SI** debe:
+- Trabajar siempre sobre la rama actual (`qa`) — no crear ramas
+- Hacer commit y push de cambios a `qa`
+- Detenerse después de pushear a `qa` y esperar confirmación humana
+
+**Flujo correcto:**
+```
+código/auditoría (directo en qa)  →  push a qa  →  (humano valida)  →  PR a main (humano)
+                                       ↑                ↑
+                                  agente hace     humano decide
+```
+
+---
+
+## Cómo Invocar este Skill
+
+```
+"Ejecuta auditoría v1.6"
+"Audita código y compara con docs"
+"Genera documentación v1.6"
+"Actualiza docs a versión actual"
+```
+
+---
+
+## Formato de Commit
+
+```
+feat(auditoria): cierre sesión v1.6-BETA
+
+- RatDetailModal tabs + Drawer responsive 5-size + Dashboard clickable
+- Fix IDOR /archivo + Sort estable (toSorted → spread+sort)
+- 8 documentos regenerados (02, 03, 04, 06, 09, 10, 12, MTX)
+- Score: 8.3/10 → 8.7/10
+- Madurez: Producción (Z-01/Z-02/Z-03/Z-06 pendientes)
+```
+
+---
+
+## Notas Importantes
+
+1. **Regla divina**: Si hay cambios en código, se regeneran los `.docx`
+2. **Subrayado**: Solo contenido NUEVO lleva `_subrayado_` en el doc
+3. **Scripts base**: Los de `paso/desarrollo_de_software_estandar/_build/` NO se tocan
+4. **Carpeta historial**: `paso/` es histórico, no modificar su contenido
+5. **Theme**: `_theme_custodio.py` es el tema oficial, no tocar

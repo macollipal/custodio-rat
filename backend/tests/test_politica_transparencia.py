@@ -1,9 +1,7 @@
-"""
-Tests para B-02: Módulo de Transparencia Pública (Art. 14 ter — REC-02).
+﻿"""
+Tests para B-02: MÃ³dulo de Transparencia PÃºblica (Art. 14 ter â€” REC-02).
 """
 
-import pytest
-from datetime import datetime, timezone
 
 
 class TestTransparenciaPublica:
@@ -32,7 +30,7 @@ class TestTransparenciaPublica:
                      "item_e_medidas", "item_f_derechos_arco", "item_g_recurir_apdc", "item_h_transferencias",
                      "item_i_conservacion", "item_j_fuente", "item_k_retirar_consentimiento",
                      "item_l_decisiones_automatizadas"]:
-            assert item in data, f"Falta {item} en la política"
+            assert item in data, f"Falta {item} en la polÃ­tica"
 
     def test_politica_empresa_inexistente_404(self, client):
         resp = client.get("/publico/transparencia/99999")

@@ -110,18 +110,29 @@ class JSONFormatter(logging.Formatter):
 
 
 def setup_logging() -> logging.Logger:
-    is_production = os.getenv("ENVIRONMENT") == "production"
+    env = os.getenv("ENVIRONMENT", "development").lower()
+    is_json_env = env in ("production", "qa", "staging")
+    is_verbose_level = env not in ("production", "qa", "staging")
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO if is_production else logging.DEBUG)
+    root_logger.setLevel(logging.INFO if not is_verbose_level else logging.DEBUG)
 
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
 
     handler = logging.StreamHandler(sys.stdout)
+    # En Windows, sys.stdout usa codepage cp1252 que no soporta emojis/UTF-8.
+    # Forzamos utf-8 para evitar UnicodeEncodeError cuando se logean mensajes
+    # con caracteres no-ASCII (ej. emojis en alertas de auditoria).
+    # C2 fix complementario (era bug pre-existente que afectaba tests).
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
     handler.addFilter(PIIMaskingFilter())
     handler.addFilter(RequestIdFilter())
-    if is_production:
+    if is_json_env:
         handler.setFormatter(JSONFormatter())
     else:
         handler.setFormatter(

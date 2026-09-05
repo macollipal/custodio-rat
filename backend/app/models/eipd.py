@@ -13,6 +13,7 @@ from app.database.database import Base
 class ResultadoEIPD(str, PyEnum):
     COMPLETADA = "completada"
     NO_REQUERIDA = "no_requerida"
+    NO_REQUERIDA_JUSTIFICADA = "no_requerida_justificada"
     EN_PROCESO = "en_proceso"
 
 
@@ -28,6 +29,9 @@ class EIPD(Base):
     riesgos_identificados: Mapped[str] = mapped_column(Text, nullable=True)
     medidas_propuestas: Mapped[str] = mapped_column(Text, nullable=True)
     parecer_dpo: Mapped[str] = mapped_column(Text, nullable=True)
+    parecer_dpo_autor: Mapped[str] = mapped_column(String(200), nullable=True)
+    parecer_dpo_fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    justificacion_no_aplica: Mapped[str] = mapped_column(Text, nullable=True)
     fecha_elaboracion: Mapped[date] = mapped_column(Date, nullable=True)
     fecha_aprobacion: Mapped[date] = mapped_column(Date, nullable=True)
     resultado: Mapped[ResultadoEIPD] = mapped_column(

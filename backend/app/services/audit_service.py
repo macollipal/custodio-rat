@@ -7,27 +7,67 @@ Implementa hash chain para inmutabilidad (Art. 12 Ley 21.719).
 import hashlib
 import json
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text
 
 from app.models.audit_log import AuditLog, GENESIS_HASH
 
 logger = logging.getLogger(__name__)
+
+_EMAIL_RE = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+', re.IGNORECASE)
+_RUT_RE = re.compile(r'\b\d{1,2}\.\d{3}\.\d{3}[-][\dkK]\b')
+_RUN_RE = re.compile(r'\b\d{7,8}-[\dkK]\b')
+_IP_RE = re.compile(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b')
+
+
+def _mask_pii_value(v: str) -> str:
+    if _EMAIL_RE.search(v):
+        return re.sub(_EMAIL_RE, lambda m: f"{m.group()[0]}***@{m.group().rsplit('@', 1)[1]}", v)
+    if _RUT_RE.search(v) or _RUN_RE.search(v):
+        return _RUT_RE.sub(lambda m: f"{m.group()[:-2]}-*", v)
+    if _IP_RE.fullmatch(v):
+        parts = v.split('.')
+        return f"***.***.***.{parts[3]}"
+    return v
+
+
+def _sanitize_pii(obj):
+    if isinstance(obj, dict):
+        return {k: _sanitize_pii(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_pii(item) for item in obj]
+    if isinstance(obj, str):
+        return _mask_pii_value(obj)
+    return obj
 
 
 def _compute_hash(prev_hash: str, timestamp: datetime, accion: str, entidad: str,
                  entidad_id: int, usuario: Optional[str], detalle: Optional[str]) -> str:
     """
     Computa el hash SHA-256 para el registro de auditoría.
-    Fórmula: sha256(prev_hash + timestamp.isoformat() + accion + entidad + str(entidad_id) + usuario + detalle)
+    Fórmula: sha256(prev_hash + timestamp_utc_isoformat + accion + entidad + str(entidad_id) + usuario + detalle)
+
+    El timestamp SIEMPRE se normaliza a UTC antes de hashear (Art. 28 Ley 21.719).
+    Esto garantiza que el hash sea determinístico independiente del timezone del
+    servidor o de las instancias en Vercel serverless (que pueden correr en
+    UTC, us-east-1, eu-west-1, etc.).
+
+    Si el datetime viene naive (sin tzinfo), se asume UTC.
     """
-    ts_normalized = timestamp.replace(tzinfo=None) if timestamp.tzinfo else timestamp
+    if timestamp.tzinfo is None:
+        # Naive datetime: asumir UTC (no naive local).
+        ts_utc = timestamp.replace(tzinfo=timezone.utc)
+    else:
+        # Aware datetime: convertir a UTC.
+        ts_utc = timestamp.astimezone(timezone.utc)
+
     data = (
         f"{prev_hash}"
-        f"{ts_normalized.isoformat()}"
+        f"{ts_utc.isoformat()}"
         f"{accion}"
         f"{entidad}"
         f"{entidad_id}"
@@ -51,7 +91,6 @@ def log_audit(
     - Obtiene el hash del último registro para encadenar
     - Calcula el hash del nuevo registro
     - PostgreSQL/Neon: usa nextval() directo para evitar problemas con el pooler.
-    - SQLite (tests): deja que la BD asigne el ID automáticamente.
     """
     prev_hash = GENESIS_HASH
     last_log = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
@@ -59,7 +98,7 @@ def log_audit(
         prev_hash = last_log.hash
 
     timestamp = datetime.now(timezone.utc)
-    detalle_str = json.dumps(detalle, ensure_ascii=False, default=str)
+    detalle_str = json.dumps(_sanitize_pii(detalle), ensure_ascii=False, default=str)
 
     record_hash = _compute_hash(
         prev_hash, timestamp, accion, entidad, entidad_id, usuario, detalle_str

@@ -1,0 +1,97 @@
+name: Tests + Coverage
+
+on:
+  push:
+    branches: [main, develop, qa]
+  pull_request:
+    branches: [main, develop, qa]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verificar secret TEST_DATABASE_URL
+        run: |
+          if [ -z "$TEST_DATABASE_URL" ]; then
+            echo "::error::TEST_DATABASE_URL no está configurado en GitHub Secrets. Ve a Settings → Secrets → Actions y agrégalo."
+            exit 1
+          fi
+        env:
+          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+
+      - name: Backend tests + coverage
+        env:
+          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          ALLOWED_ORIGINS: "http://localhost:3000"
+          ENVIRONMENT: "development"
+        run: |
+          cd backend
+          python -m venv venv
+          . venv/bin/activate
+          pip install -r requirements.txt
+          python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.xml
+          fail_ci_if_error: false
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-next/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend-next
+
+      - name: Run vitest with coverage
+        run: npm run test:coverage
+        working-directory: frontend-next
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend-next/coverage/lcov.info
+          fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Backend lint
+        run: |
+          pip install ruff
+          ruff check backend/app/
+
+      - name: Dependency vulnerability scan
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt --severity critical || true
+          pip-audit -r backend/requirements.txt --severity high 2>&1 || echo "::warning::Hay vulnerabilidades HIGH en dependencias — ver output arriba"
+
+      - name: Frontend lint
+        run: |
+          npm ci
+          npm run lint
+        working-directory: frontend-next

@@ -8,6 +8,8 @@ export interface User {
   rol_global: RolGlobal;
   empresa_nombre?: string;
   empresa_id?: number;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export interface Company {
@@ -23,6 +25,13 @@ export interface Company {
   canal_ejercicio_derechos?: string;
   total_rats?: number;
   mi_rol?: RolEmpresa | null;
+  activa?: boolean;
+  desactivada_at?: string | null;
+  completitud_promedio?: number;
+  rats_vencidos?: number;
+  solicitudes_pendientes?: number;
+  solicitudes_vencidas_sla?: number;
+  has_politica_transparencia?: boolean;
 }
 
 export interface Rubro {
@@ -84,9 +93,32 @@ export interface RAT {
   archivo_base_legal_nombre?: string;
   archivo_base_legal_tipo?: string;
   tiene_archivo_base_legal?: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  sistema_almacenamiento?: string;
+  volumen_titulares_estimado?: number;
+  operaciones_tratamiento?: string[];
+  logica_automatizada?: string;
+  responsable_tratamiento_email?: string;
+  // Campos Tier 1 - Gaps criticos (Iter 11)
+  datos_nna?: 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' | null;
+  nivel_confidencialidad?: 'DC0' | 'DC1' | 'DC2' | 'DC3' | null;
+  estructura_dato?: 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' | null;
+  datos_anonimizados?: boolean;
+  datos_seudonimizados?: boolean;
+  // Campos Tier 2 - Operativos (Iter 11)
+  ciclo_procesamiento?: string;
+  automatizacion?: string;
+  frecuencia?: string;
+  transferencia_nacional?: boolean;
+  doc_clausulas?: string;
+  medidas_organizativas?: string;
+  mecanismos_eliminacion?: string;
+  tecnica_anonimizacion?: string;
+  origen_dato_portabilidad?: string;
+  fecha_levantamiento?: string | null;
 }
 
-export type EstadoEIPD = 'no_requerida' | 'pendiente' | 'en_proceso' | 'completada';
+export type EstadoEIPD = 'no_requerida' | 'no_requerida_justificada' | 'pendiente' | 'en_proceso' | 'completada';
 
 export interface SecurityBreach {
   id: number;
@@ -96,6 +128,7 @@ export interface SecurityBreach {
   rats_afectados?: string;
   datos_comprometidos?: string;
   medidas_adoptadas?: string;
+  naturaleza?: 'confidencialidad' | 'integridad' | 'disponibilidad';
   notificado_apdc: boolean;
   fecha_notificacion_apdc?: string;
   notificado_titulares: boolean;
@@ -111,6 +144,13 @@ export interface SecurityBreach {
   incluye_datos_nna?: boolean;
   incluye_datos_financieros?: boolean;
   reportable_apdc_calculado?: boolean;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  fecha_ocurrencia_estimada?: string;
+  efectos_probables?: string;
+  causa_raiz?: string;
+  evidencia_notificacion_apdc_folio?: string;
+  estado_cierre?: string;
+  fecha_cierre?: string;
 }
 
 export interface DashboardStats {
@@ -204,6 +244,10 @@ export interface RATWizardData {
   estado_eipd?: string;
   fecha_eipd?: string;
   decisiones_automatizadas?: boolean;
+  logica_automatizada?: string;
+  consentimiento_nombre?: string;
+  consentimiento_email?: string;
+  consentimiento_texto?: string;
   finalidad?: string;
   base_legal?: string;
   test_interes_legitimo?: string;
@@ -218,4 +262,26 @@ export interface RATWizardData {
   archivo_base_legal_base64?: string;
   archivo_base_legal_nombre?: string;
   archivo_base_legal_tipo?: string;
+  // Campos nuevos gaps Ley 21.719 (Iter 10)
+  sistema_almacenamiento?: string;
+  volumen_titulares_estimado?: number;
+  operaciones_tratamiento?: string[];
+  responsable_tratamiento_email?: string;
+  // Campos Tier 1 - Gaps criticos (Iter 11)
+  datos_nna?: 'ninguno' | 'ninos' | 'adolescentes' | 'ambos' | null;
+  nivel_confidencialidad?: 'DC0' | 'DC1' | 'DC2' | 'DC3' | null;
+  estructura_dato?: 'estructurado' | 'semiestructurado' | 'no_estructurado' | 'fisico' | null;
+  datos_anonimizados?: boolean;
+  datos_seudonimizados?: boolean;
+  // Campos Tier 2 - Operativos (Iter 11)
+  ciclo_procesamiento?: string;
+  automatizacion?: string;
+  frecuencia?: string;
+  transferencia_nacional?: boolean;
+  doc_clausulas?: string;
+  medidas_organizativas?: string;
+  mecanismos_eliminacion?: string;
+  tecnica_anonimizacion?: string;
+  origen_dato_portabilidad?: string;
+  fecha_levantamiento?: string | null;
 }

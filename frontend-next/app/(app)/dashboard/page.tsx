@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
@@ -11,20 +11,59 @@ import AlertBanner, { AlertCard } from '@/components/dashboard/AlertBanner';
 import StatusChart from '@/components/dashboard/StatusChart';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Badge from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
+import RatDetailModal from '@/components/rat/RatDetailModal';
+import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
+import type { RAT } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { company, rats, dashboardStats, setRats, setDashboardStats, actualizarStatsEnCache } = useApp();
+  const { user, company, rats, dashboardStats, setRats, setDashboardStats } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
   const [brechaCount, setBrechaCount] = useState(0);
+  const [brechasActivas, setBrechasActivas] = useState<Array<{
+    id: number;
+    descripcion: string;
+    fecha_deteccion: string;
+    notificado_apdc?: boolean;
+    notificado_titulares?: boolean;
+    nivel_riesgo?: string;
+    incluye_datos_sensibles?: boolean;
+    incluye_datos_nna?: boolean;
+    incluye_datos_financieros?: boolean;
+    volumen_titulares_afectados?: number;
+    horas_desde_deteccion?: number;
+    plazo_apdc_vencido?: boolean;
+    estado_cierre?: string;
+  }>>([]);
   const [hasPolitica, setHasPolitica] = useState(false);
+  const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
+  const nowRef = useRef(Date.now());
+  const now = nowRef.current;
 
   const hasCache = dashboardStats !== null;
+
+  const recientes = useMemo(() =>
+    [...rats]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 6),
+    [rats]
+  );
+
+  const sinRevisionCount = useMemo(() =>
+    rats.filter(r => {
+      const dias = (now - new Date(r.updated_at).getTime()) / 86_400_000;
+      return dias > DIAS_REVISION;
+    }).length,
+    [rats, now]
+  );
+
+  const alertas = useDashboardAlerts(dashboardStats, sinRevisionCount);
 
   useEffect(() => {
     const tourDone = localStorage.getItem('custodio_tour_completed');
@@ -38,7 +77,7 @@ export default function DashboardPage() {
     { target: '[style*="grid"]', title: 'KPIs de cumplimiento', content: 'Estas tarjetas muestran el resumen de tus procesos RAT: total de procesos, completitud promedio, datos sensibles y EIPDs pendientes.' },
     { target: 'button[style*="2563EB"]', title: 'Crear procesos RAT', content: 'Haz clic aquí para crear tu primer proceso RAT. Cada proceso documenta cómo tu organización trata datos personales.' },
     { target: '[style*="F9FAFB"]', title: 'Alertas de cumplimiento', content: 'Las alertas te avisan de problemas críticos que requieren atención inmediata, como EIPDs pendientes o transferencias sin garantías.' },
-    { target: '.\\32 xl\\:grid-cols-4', title: 'Procesos recientes', content: 'Aquí puedes ver los últimos procesos RAT creados o modificados. Haz clic en cualquier proceso para ver su detalle completo.' },
+    { target: '.\\32 xl\\:grid-cols-4', title: 'Tratamientos de datos personales recientes', content: 'Aquí puedes ver los últimos tratamientos de datos personales creados o modificados. Haz clic en cualquier proceso para ver su detalle completo.' },
   ];
 
   function nextStep() {
@@ -68,7 +107,13 @@ export default function DashboardPage() {
     ]).then(([s, ratList, breaches, hasPoliticaVal]) => {
       setDashboardStats(s);
       setRats(ratList);
-      setBrechaCount(Array.isArray(breaches) ? breaches.length : 0);
+      const brechasArr = Array.isArray(breaches) ? breaches : [];
+      setBrechaCount(brechasArr.length);
+      const abiertas = brechasArr
+        .filter((b: any) => b.estado_cierre !== 'cerrada')
+        .sort((a: any, b: any) => (b.horas_desde_deteccion ?? 0) - (a.horas_desde_deteccion ?? 0))
+        .slice(0, 3);
+      setBrechasActivas(abiertas as any);
       setHasPolitica(hasPoliticaVal);
       setLastSync(new Date());
     }).catch(() => {
@@ -118,65 +163,42 @@ export default function DashboardPage() {
   const completos  = por_estado?.completo  ?? 0;
   const borradores = por_estado?.borrador  ?? 0;
 
-  const recientes = rats
-    .toSorted((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 6);
-
-  const sinRevision = rats.filter(r => {
-    const dias = (Date.now() - new Date(r.updated_at).getTime()) / 86_400_000;
-    return dias > DIAS_REVISION;
-  }).length;
-
-  const alertas: { message: string; type: 'warning' | 'danger' | 'info' | 'success' }[] = [];
-  if (procesos_con_datos_sensibles > 0)
-    alertas.push({ type: 'warning', message: `<strong>${procesos_con_datos_sensibles} proceso(s)</strong> tratan datos sensibles. Verifique base legal expresa y medidas de seguridad reforzadas.` });
-  if (requieren_eipd > 0)
-    alertas.push({ type: 'danger', message: `<strong>${requieren_eipd} proceso(s)</strong> requieren EIPD. No pueden iniciarse sin completar la evaluación.` });
-  if (transferencias_internacionales > 0)
-    alertas.push({ type: 'info', message: `<strong>${transferencias_internacionales}</strong> transferencia(s) internacional(es). Verifique las garantías del Art. 28 Ley 21.719.` });
-  if (sinRevision > 0)
-    alertas.push({ type: 'warning', message: `<strong>${sinRevision} proceso(s)</strong> sin actualización hace más de 6 meses. La Ley 21.719 exige revisión periódica del RAT.` });
-  if (completitud_promedio < 60)
-    alertas.push({ type: 'warning', message: `Completitud del RAT en <strong>${completitud_promedio}%</strong>. Complete los campos obligatorios para estar preparado ante fiscalización.` });
-  if (eipd_pendientes > 0)
-    alertas.push({ type: 'danger', message: `<strong>${eipd_pendientes} EIPD(s)</strong> pendientes de completar. No puede iniciarse el tratamiento hasta completar la evaluación (Art. 15 bis).` });
-  if (transferencias_sin_garantias > 0)
-    alertas.push({ type: 'warning', message: `<strong>${transferencias_sin_garantias} transferencia(s)</strong> internacional(es) sin garantías documentadas. Documente SCC, BCR u otras garantías (Art. 28).` });
-  if (interes_legitimo_sin_test > 0)
-    alertas.push({ type: 'warning', message: `<strong>${interes_legitimo_sin_test} proceso(s)</strong> con base legal "Interés legítimo" sin test de 3 pasos documentado. La base no sirve como defensa ante la APDC sin esto.` });
-  if (encargados_sin_contrato > 0)
-    alertas.push({ type: 'info', message: `<strong>${encargados_sin_contrato} encargado(s)</strong> del tratamiento sin contrato de encargo (Art. 14 quáter Ley 21.719).` });
-  if (rats_sin_doc_base_legal > 0)
-    alertas.push({ type: 'warning', message: `<strong>${rats_sin_doc_base_legal} proceso(s)</strong> sin documento de base legal adjunto. Para alcanzar el 100% de completitud, adjunte el documento que respalda la base legal.` });
-
-  const kpiColor = completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
+  const sinProcesos = total_procesos === 0;
+  const kpiColor = sinProcesos
+    ? '#6B7280'
+    : completitud_promedio >= 75 ? '#059669' : completitud_promedio >= 50 ? '#D97706' : '#DC2626';
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {(!company?.contacto_dpo || !company?.email_dpo) && (
+        <AlertBanner
+          message={
+            !company?.contacto_dpo && !company?.email_dpo
+              ? <><strong>DPO no configurado.</strong> Complete el nombre y email del Delegado de Protección de Datos en la configuración de la empresa.</>
+              : !company?.contacto_dpo
+              ? <><strong>Nombre del DPO no configurado.</strong> Complete el nombre del Delegado de Protección de Datos en la configuración de la empresa.</>
+              : <><strong>Email del DPO no configurado.</strong> Complete el email del Delegado de Protección de Datos en la configuración de la empresa.</>
+          }
+          type="danger"
+        />
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
             Resumen de cumplimiento · <strong>{company.nombre}</strong>
-            {refreshing && <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>actualizando...</span>}
+            {refreshing && <span className="ml-2 text-xs" style={{ color: '#6B7280' }}>actualizando...</span>}
             {lastSync && !refreshing && (
-              <span className="ml-2 text-xs" style={{ color: '#9CA3AF' }}>· Actualizado {formatLastSync(lastSync)}</span>
+              <span className="ml-2 text-xs" style={{ color: '#6B7280' }}>· Actualizado {formatLastSync(lastSync)}</span>
             )}
           </p>
         </div>
-        <button
-          onClick={() => router.push('/rat')}
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
-          style={{ background: '#2563EB' }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
-        >
+        <Button onClick={() => router.push('/rat')}>
           + Nuevo proceso
-        </button>
+        </Button>
       </div>
 
-      {/* Checklist de primeros pasos */}
       <OnboardingChecklist
         ratsCount={total_procesos}
         hasDpo={Boolean(company?.contacto_dpo && company?.email_dpo)}
@@ -185,7 +207,6 @@ export default function DashboardPage() {
         hasPoliticaTransparencia={hasPolitica}
       />
 
-      {/* KPIs principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total de procesos" value={total_procesos}
@@ -193,8 +214,8 @@ export default function DashboardPage() {
           icon="📋" color="#2563EB"
         />
         <KPICard
-          title="Completitud promedio" value={`${completitud_promedio}%`}
-          subtitle="Nivel de madurez del RAT"
+          title="Completitud promedio" value={sinProcesos ? '—' : `${completitud_promedio}%`}
+          subtitle={sinProcesos ? 'Sin procesos registrados' : 'Nivel de madurez del RAT'}
           icon="📊" color={kpiColor}
         />
         <KPICard
@@ -209,7 +230,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* KPIs de riesgo adicional */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="EIPDs pendientes" value={eipd_pendientes}
@@ -233,7 +253,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Gráfico + Alertas */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
@@ -248,7 +267,7 @@ export default function DashboardPage() {
               Nivel de completitud global
             </h3>
             <CompletitudBar pct={completitud_promedio} />
-            <p className="text-xs mt-3" style={{ color: '#9CA3AF' }}>
+            <p className="text-xs mt-3" style={{ color: '#6B7280' }}>
               Promedio de {total_procesos} proceso(s) registrado(s) en el RAT de {company.nombre}.
             </p>
           </div>
@@ -280,22 +299,132 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Procesos recientes */}
+      {brechasActivas.length > 0 && (
+        <div
+          className="bg-white rounded-xl p-6 shadow-sm"
+          style={{
+            border: brechasActivas.some(b => b.plazo_apdc_vencido) ? '2px solid #DC2626' : '1px solid #E5E7EB',
+            background: brechasActivas.some(b => b.plazo_apdc_vencido) ? '#FEF2F2' : 'white',
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-sm" style={{ color: '#111827' }}>
+                ⚠️ Brechas abiertas ({brechaCount})
+              </h3>
+              <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                Ley 21.719 Art. 14 sexies: notificación APDP sin dilación
+              </p>
+            </div>
+            <Button variant="danger" size="sm" onClick={() => router.push('/breaches')}>
+              Ver todas →
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {brechasActivas.map(b => {
+              const h = b.horas_desde_deteccion ?? 0;
+              const restantes = Math.max(0, 72 - h);
+              const vencimiento = b.plazo_apdc_vencido;
+              const apdcOk = b.notificado_apdc;
+              const titOk = b.notificado_titulares;
+              const flags: string[] = [];
+              if (b.incluye_datos_sensibles) flags.push('🔒 sensibles');
+              if (b.incluye_datos_nna) flags.push('👶 NNA');
+              if (b.incluye_datos_financieros) flags.push('💳 financieros');
+              return (
+                <div
+                  key={b.id}
+                  className="rounded-lg p-3"
+                  style={{
+                    border: '1px solid',
+                    borderColor: vencimiento ? '#FCA5A5' : restantes < 12 ? '#FCD34D' : '#E5E7EB',
+                    background: vencimiento ? '#FEE2E2' : restantes < 12 ? '#FEF3C7' : '#F9FAFB',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-semibold text-sm" style={{ color: '#111827' }}>
+                          Brecha #{b.id}
+                        </span>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-bold"
+                          style={{
+                            background: b.nivel_riesgo === 'critico' ? '#7F1D1D'
+                              : b.nivel_riesgo === 'alto' ? '#FEE2E2'
+                              : b.nivel_riesgo === 'medio' ? '#DBEAFE' : '#DCFCE7',
+                            color: b.nivel_riesgo === 'critico' ? '#FEE2E2'
+                              : b.nivel_riesgo === 'alto' ? '#7F1D1D'
+                              : b.nivel_riesgo === 'medio' ? '#1E40AF' : '#166534',
+                          }}
+                        >
+                          Riesgo {b.nivel_riesgo ?? 'bajo'}
+                        </span>
+                        {flags.map(f => (
+                          <span key={f} className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#854D0E' }}>
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs" style={{ color: '#374151' }}>
+                        {b.descripcion.slice(0, 100)}{b.descripcion.length > 100 ? '...' : ''}
+                      </p>
+                      {b.volumen_titulares_afectados != null && b.volumen_titulares_afectados > 0 && (
+                        <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                          {b.volumen_titulares_afectados.toLocaleString('es-CL')} titulares afectados
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xs font-bold" style={{ color: vencimiento ? '#7F1D1D' : restantes < 12 ? '#854D0E' : '#374151' }}>
+                        {vencimiento
+                          ? `🔴 VENCIDO +${Math.floor(h - 72)}h`
+                          : `🟡 ${Math.floor(restantes)}h restantes`}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                        72h APDP
+                      </div>
+                      <div className="flex gap-1 mt-1 justify-end">
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ background: apdcOk ? '#DCFCE7' : '#FEE2E2', color: apdcOk ? '#166534' : '#7F1D1D' }}
+                          title={apdcOk ? 'APDP notificada' : 'APDP NO notificada'}
+                        >
+                          APDP {apdcOk ? '✓' : '✗'}
+                        </span>
+                        {titOk !== undefined && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded"
+                            style={{ background: titOk ? '#DCFCE7' : '#FEF3C7', color: titOk ? '#166534' : '#854D0E' }}
+                            title={titOk ? 'Titulares notificados' : 'Titulares pendientes'}
+                          >
+                            Tit. {titOk ? '✓' : '⏳'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl p-6 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
         <h3 className="font-semibold text-sm mb-4" style={{ color: '#111827' }}>
-          Procesos recientes
+          Tratamientos de datos personales recientes
         </h3>
         {recientes.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-3xl mb-2">📋</div>
             <p className="text-sm font-medium" style={{ color: '#374151' }}>Sin procesos registrados</p>
-            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
               Crea el primer proceso de tratamiento de datos para esta empresa.
             </p>
           </div>
         ) : (
           <div className="space-y-0">
-            {/* Desktop header */}
             <div
               className="hidden sm:grid text-xs font-semibold uppercase tracking-wide py-2 px-3 rounded-t-lg whitespace-nowrap"
               style={{ gridTemplateColumns: '3fr 2fr 1.5fr 120px', color: '#6B7280', background: '#F9FAFB', border: '1px solid #E5E7EB', borderBottom: 'none' }}
@@ -305,12 +434,12 @@ export default function DashboardPage() {
               <span>Estado</span>
               <span>Completitud</span>
             </div>
-            {/* Desktop rows */}
             <div className="hidden sm:block">
               {recientes.map((rat, i) => (
-                <div
+                <button
                   key={rat.id}
-                  className="grid items-center py-3 px-3 whitespace-nowrap"
+                  onClick={() => setSelectedRat(rat)}
+                  className="grid items-center py-3 px-3 whitespace-nowrap w-full text-left cursor-pointer transition-colors"
                   style={{
                     gridTemplateColumns: '3fr 2fr 1.5fr 120px',
                     background: i % 2 === 0 ? 'white' : '#FAFAFA',
@@ -320,37 +449,88 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="text-sm font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
-                    <div className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.updated_at?.slice(0, 10)}</div>
+                    <div className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id} · {rat.created_at?.slice(0, 10)}</div>
                   </div>
                   <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</div>
                   <div><Badge estado={rat.estado} /></div>
                   <div><CompletitudBar pct={rat.completitud ?? 0} /></div>
-                </div>
+                </button>
               ))}
             </div>
-            {/* Mobile cards */}
             <div className="sm:hidden divide-y" style={{ border: '1px solid #E5E7EB', borderRadius: '0 0 8px 8px' }}>
               {recientes.map((rat, i) => (
-                <div key={rat.id} className="px-4 py-3 bg-white" style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                <button
+                  key={rat.id}
+                  onClick={() => setSelectedRat(rat)}
+                  className="px-4 py-3 w-full text-left cursor-pointer transition-colors"
+                  style={{ background: i % 2 === 0 ? 'white' : '#FAFAFA' }}
+                >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate" style={{ color: '#111827' }}>{rat.nombre_proceso}</div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge estado={rat.estado} />
                         <CompletitudBar pct={rat.completitud ?? 0} />
-                        <span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id}</span>
+                        <span className="text-xs" style={{ color: '#6B7280' }}>ID #{rat.id}</span>
                       </div>
                     </div>
                   </div>
                   <div className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 40)}{rat.base_legal && rat.base_legal.length > 40 ? '...' : ''}</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Tour guiado */}
+      {selectedRat && (
+        <RatDetailModal
+          rat={selectedRat}
+          mode="view"
+          onClose={() => setSelectedRat(null)}
+          onSwitchToEdit={() => router.push('/rat')}
+          onDuplicate={async (rat) => {
+            try {
+              await api.duplicarRat(rat);
+              toast.success(`"${rat.nombre_proceso}" duplicado correctamente.`);
+              const [newStats, ratList] = await Promise.all([
+                api.getDashboardStats(company!.id),
+                api.listarRats(company!.id),
+              ]);
+              setDashboardStats(newStats);
+              setRats(ratList);
+              setSelectedRat(null);
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : 'Error al duplicar.');
+            }
+          }}
+          onDelete={async (id) => {
+            try {
+              await api.eliminarRat(id);
+              toast.success('RAT eliminado.');
+              setSelectedRat(null);
+              const [stats, ratList] = await Promise.all([
+                api.getDashboardStats(company!.id),
+                api.listarRats(company!.id),
+              ]);
+              setDashboardStats(stats);
+              setRats(ratList);
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : 'Error al eliminar.');
+            }
+          }}
+          onRefresh={async () => {
+            const [stats, ratList] = await Promise.all([
+              api.getDashboardStats(company!.id),
+              api.listarRats(company!.id),
+            ]);
+            setDashboardStats(stats);
+            setRats(ratList);
+          }}
+          puedeEditar={user?.rol_global !== 'usuario'}
+        />
+      )}
+
       {showTour && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm mx-4 overflow-hidden">
@@ -367,12 +547,12 @@ export default function DashboardPage() {
               <h4 className="font-bold text-base mb-2" style={{ color: '#111827' }}>{tourSteps[tourStep].title}</h4>
               <p className="text-sm mb-5" style={{ color: '#6B7280' }}>{tourSteps[tourStep].content}</p>
               <div className="flex gap-2 justify-end">
-                <button onClick={skipTour} className="px-4 py-2 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+                <Button variant="secondary" size="sm" onClick={skipTour}>
                   Omitir tour
-                </button>
-                <button onClick={nextStep} className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition" style={{ background: '#2563EB' }}>
+                </Button>
+                <Button size="sm" onClick={nextStep}>
                   {tourStep < tourSteps.length - 1 ? 'Siguiente →' : '¡Comenzar!'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

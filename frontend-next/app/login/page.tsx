@@ -6,9 +6,11 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 
+import { inputCls, inputStyle, labelCls, labelStyle, panelStyles, panelWrapperCls, panelTitleStyles, btnPrimaryCls, btnPrimaryStyle, btnSecondaryCls, btnSecondaryStyle, gridResponsive1to2, modalHeaderStyle, modalHeaderCls, modalContentCls, formFooterCls } from '@/lib/styles';
+
 export default function LoginPage() {
   const router = useRouter();
-  const { setToken, setUser } = useApp();
+  const { setToken, setUser, setCompanies, setCompany } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,9 +27,11 @@ export default function LoginPage() {
       setToken(result.access_token);
       setUser(result.user);
       const empresas = await api.listarEmpresas();
+      setCompanies(empresas);
       if (empresas.length === 0) {
         router.push('/onboarding');
       } else {
+        setCompany(empresas[0]);
         router.push('/dashboard');
       }
     } catch (err: unknown) {
@@ -38,7 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div
+    <main
       className="h-screen flex items-center justify-center p-4"
       style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%)' }}
     >
@@ -95,11 +99,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-5">
+          <p className="text-center text-xs text-gray-500 mt-5">
             Acceso restringido · Ley 21.719 de Protección de Datos
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
+

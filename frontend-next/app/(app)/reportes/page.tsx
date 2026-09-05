@@ -1,44 +1,52 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import * as api from '@/lib/api';
 import type { RAT, ReportesParams } from '@/types';
-import { BASES_LEGALES as basesLegalesConst } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import CompletitudBar from '@/components/ui/CompletitudBar';
 import Drawer from '@/components/ui/Drawer';
-
-function Field({ label, value }: { label: string; value?: string | null }) {
-  const isEmpty = !value || value.trim() === '';
-  return (
-    <div className="flex flex-col gap-1 p-2 sm:p-3 rounded-lg" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
-      <span className="text-xs font-semibold" style={{ color: '#6B7280' }}>{label}</span>
-      <span className="text-sm break-words" style={{ color: isEmpty ? '#9CA3AF' : '#111827' }}>{isEmpty ? <em style={{ color: '#DC2626' }}>** {label}</em> : value}</span>
-    </div>
-  );
-}
+import { ReportTable } from '@/components/report';
+import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/Button';
 
 const ESTADOS = ['borrador', 'completo', 'en_revision', 'aprobado'];
-const BASES_LEGALES = basesLegalesConst;
 
 const COLUMN_OPTIONS = [
   { key: 'nombre_proceso', label: 'Proceso' },
+  { key: 'categoria_datos', label: 'Categoría datos' },
   { key: 'base_legal', label: 'Base legal' },
   { key: 'estado', label: 'Estado' },
   { key: 'created_by', label: 'Creado por' },
   { key: 'completitud', label: 'Completitud' },
   { key: 'flags', label: 'Flags' },
+  { key: 'nivel_riesgo', label: 'Nivel riesgo' },
   { key: 'categoria_titulares', label: 'Categoría titulares' },
   { key: 'fuente_datos', label: 'Fuente de datos' },
   { key: 'finalidad', label: 'Finalidad' },
   { key: 'plazo_retencion', label: 'Plazo retención' },
   { key: 'medidas_seguridad', label: 'Medidas seguridad' },
   { key: 'destinatarios', label: 'Destinatarios' },
+  { key: 'transferencia_datos', label: 'Transferencia datos' },
   { key: 'pais_destino', label: 'País destino' },
-  { key: 'nivel_riesgo', label: 'Nivel riesgo' },
+  { key: 'datos_nna', label: 'Datos NNA' },
+  { key: 'nivel_confidencialidad', label: 'Nivel confidencialidad' },
+  { key: 'estructura_dato', label: 'Estructura dato' },
+  { key: 'ciclo_procesamiento', label: 'Ciclo procesamiento' },
+  { key: 'automatizacion', label: 'Automatización' },
+  { key: 'frecuencia', label: 'Frecuencia' },
+  { key: 'sistema_almacenamiento', label: 'Sistema almacenamiento' },
+  { key: 'volumen_titulares_estimado', label: 'Volumen titulares' },
+  { key: 'logica_automatizada', label: 'Lógica automatizada' },
+  { key: 'responsable_tratamiento_email', label: 'Responsable email' },
+  { key: 'transferencia_nacional', label: 'Transferencia nacional' },
+  { key: 'datos_anonimizados', label: 'Anonimizados' },
+  { key: 'datos_seudonimizados', label: 'Seudonimizados' },
+  { key: 'tiene_archivo_base_legal', label: 'Archivo base legal' },
+  { key: 'aprobado_por', label: 'Aprobado por' },
 ];
 
 const SORT_OPTIONS = [
@@ -53,14 +61,70 @@ const SORT_OPTIONS = [
 
 const SAVED_FILTERS_KEY = 'custodio_saved_filters';
 
+const ESTADO_COLOR: Record<string, string> = {
+  borrador:    '#94A3B8',
+  completo:    '#3B82F6',
+  en_revision: '#F59E0B',
+  aprobado:    '#10B981',
+};
+
+const RIESGO_COLOR: Record<string, string> = {
+  'Crítico': '#DC2626',
+  'Alto':    '#F59E0B',
+  'Medio':   '#3B82F6',
+  'Bajo':    '#10B981',
+};
+
+function HBarChart({
+  data, title, getColor,
+}: {
+  data: Record<string, number>;
+  title: string;
+  getColor?: (key: string) => string;
+}) {
+  const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+  const total  = sorted.reduce((s, [, v]) => s + v, 0) || 1;
+  return (
+    <div className="bg-white rounded-xl p-5" style={{ border: '1px solid #E5E7EB' }}>
+      <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: '#6B7280' }}>{title}</p>
+      {sorted.length === 0 ? (
+        <p className="text-xs" style={{ color: '#D1D5DB' }}>Sin datos</p>
+      ) : (
+        <div className="space-y-3">
+          {sorted.map(([key, count]) => {
+            const pct   = Math.round((count / total) * 100);
+            const color = getColor ? getColor(key) : '#2563EB';
+            const label = key.replace(/_/g, ' ');
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium truncate max-w-[60%]" style={{ color: '#374151' }} title={label}>{label}</span>
+                  <span className="text-xs font-bold tabular-nums ml-2 flex-shrink-0" style={{ color }}>
+                    {count} <span className="font-normal" style={{ color: '#9CA3AF' }}>({pct}%)</span>
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full" style={{ background: '#F3F4F6' }}>
+                  <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ReportesPage() {
-  const { company, puedeEditar } = useApp();
+  const { company, puedeEditar, baseLegalOptions } = useApp();
   const [rats, setRats] = useState<RAT[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedRat, setSelectedRat] = useState<RAT | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [auditLogs, setAuditLogs] = useState<Record<number, { accion: string; usuario: string; timestamp: string }[]>>({});
+  const auditLogsRef = useRef(auditLogs);
+  auditLogsRef.current = auditLogs;
   const [columns, setColumns] = useState<string[]>(['nombre_proceso', 'base_legal', 'estado', 'created_by', 'completitud', 'flags']);
   const [showColPicker, setShowColPicker] = useState(false);
   const [groupBy, setGroupBy] = useState<string>('none');
@@ -237,16 +301,16 @@ export default function ReportesPage() {
     load();
   }
 
-  async function openDrawer(rat: RAT) {
+  const openDrawer = useCallback(async (rat: RAT) => {
     setSelectedRat(rat);
     setDrawerOpen(true);
-    if (!auditLogs[rat.id]) {
+    if (!auditLogsRef.current[rat.id]) {
       try {
         const logs = await api.getAuditoria(rat.id);
         if (Array.isArray(logs)) { setAuditLogs(l => ({ ...l, [rat.id]: logs })); }
       } catch {}
     }
-  }
+  }, []);
 
   function toggleFiltro(key: keyof typeof filtrosActivos) {
     setFiltrosActivos(f => ({ ...f, [key]: !f[key] }));
@@ -319,8 +383,8 @@ export default function ReportesPage() {
       head: [['ID', 'Proceso', 'Base Legal', 'Estado', 'Compl.', 'Riesgo', 'Sens.', 'EIPD', 'Transf. Int.']],
       body: rats.map(r => [
         String(r.id),
-        (r.nombre_proceso ?? '').slice(0, 30),
-        (r.base_legal ?? '').slice(0, 20),
+        r.nombre_proceso ?? '',
+        r.base_legal ?? '',
         r.estado ?? '',
         `${r.completitud ?? 0}%`,
         r.nivel_riesgo ?? '',
@@ -328,8 +392,12 @@ export default function ReportesPage() {
         r.evaluacion_impacto ? 'Sí' : 'No',
         r.transferencia_internacional ? 'Sí' : 'No',
       ]),
-      styles: { fontSize: 8 },
+      styles: { fontSize: 8, overflow: 'linebreak', cellPadding: 2 },
       headStyles: { fillColor: [37, 99, 235] },
+      columnStyles: {
+        1: { cellWidth: 50 },
+        2: { cellWidth: 35 },
+      },
     });
     doc.save(`reportes_rat_${new Date().toISOString().slice(0, 10)}.pdf`);
     toast.success('PDF exportado');
@@ -349,100 +417,6 @@ export default function ReportesPage() {
     return { porEstado, porBaseLegal, porRiesgo, completitudAvg: rats.length ? Math.round(sumaComp / rats.length) : 0 };
   }
 
-  function renderMiniChart(data: Record<string, number>, color: string) {
-    const max = Math.max(...Object.values(data), 1);
-    return (
-      <div className="flex items-center gap-1">
-        {Object.entries(data).slice(0, 5).map(([k, v]) => (
-          <div key={k} className="flex flex-col items-center gap-0.5" style={{ minWidth: 40 }}>
-            <div className="text-xs font-bold" style={{ color }}>{v}</div>
-            <div className="h-1.5 rounded-full" style={{ width: Math.max(4, (v / max) * 40), background: color, opacity: 0.7 }} />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
-    return (
-      <div className="flex flex-col p-4 rounded-xl" style={{ background: 'white', border: '1px solid #E5E7EB' }}>
-        <span className="text-xs font-medium" style={{ color: '#6B7280' }}>{label}</span>
-        <span className="text-2xl font-bold mt-1" style={{ color }}>{value}</span>
-      </div>
-    );
-  }
-
-  function GroupedRows({ rats: ratList }: { rats: RAT[] }) {
-    if (groupBy === 'none') {
-      return (
-        <tbody>
-          {ratList.map((rat, i) => (
-            <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
-              {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      );
-    }
-    const groups: Record<string, RAT[]> = {};
-    ratList.forEach(r => {
-      const key = groupBy === 'estado' ? r.estado : groupBy === 'base_legal' ? (r.base_legal ?? 'Sin base legal') : (r.nivel_riesgo ?? 'Sin riesgo');
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(r);
-    });
-    return (
-      <tbody>
-        {Object.entries(groups).map(([groupKey, groupRats]) => (
-          <>
-            <tr key={`hdr-${groupKey}`} style={{ background: '#F9FAFB' }}>
-              <td colSpan={columns.length} className="px-4 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: '#374151', borderBottom: '1px solid #E5E7EB', textAlign: 'left' }}>
-                {groupBy === 'estado' ? groupKey.replace('_', ' ') : groupKey} ({groupRats.length})
-              </td>
-            </tr>
-            {groupRats.map((rat) => (
-              <tr key={rat.id} className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => openDrawer(rat)}>
-                {columns.map(col => <td key={col} className="px-4 py-3 text-sm border-b" style={{ borderColor: '#F3F4F6' }}>{renderCell(rat, col)}</td>)}
-              </tr>
-            ))}
-          </>
-        ))}
-      </tbody>
-    );
-  }
-
-  function renderCell(rat: RAT, col: string): React.ReactNode {
-    switch (col) {
-      case 'nombre_proceso': return <><span className="font-semibold" style={{ color: '#111827' }}>{rat.nombre_proceso}</span><br /><span className="text-xs" style={{ color: '#9CA3AF' }}>ID #{rat.id} · {rat.categoria_titulares || '—'}</span></>;
-      case 'base_legal': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.base_legal ?? '—').slice(0, 30)}</span>;
-      case 'estado': return <Badge estado={rat.estado} />;
-      case 'created_by': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.created_by ?? '—'}</span>;
-      case 'completitud': return <div className="w-24"><CompletitudBar pct={rat.completitud ?? 0} /></div>;
-      case 'flags': return <div className="flex gap-1 flex-wrap">{rat.datos_sensibles && <span title="Datos sensibles" className="text-sm">⚠️</span>}{rat.evaluacion_impacto && <span title="EIPD" className="text-sm">📋</span>}{rat.transferencia_internacional && <span title="Transf. internacional" className="text-sm">🌐</span>}{rat.decisiones_automatizadas && <span title="Dec. automatizadas" className="text-sm">🤖</span>}</div>;
-      case 'categoria_titulares': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.categoria_titulares || '—'}</span>;
-      case 'fuente_datos': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.fuente_datos ?? '—').slice(0, 25)}</span>;
-      case 'finalidad': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.finalidad ?? '—').slice(0, 40)}</span>;
-      case 'plazo_retencion': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.plazo_retencion || '—'}</span>;
-      case 'medidas_seguridad': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.medidas_seguridad ?? '—').slice(0, 30)}</span>;
-      case 'destinatarios': return <span className="text-xs" style={{ color: '#6B7280' }}>{(rat.destinatarios ?? '—').slice(0, 25)}</span>;
-      case 'pais_destino': return <span className="text-xs" style={{ color: '#6B7280' }}>{rat.pais_destino || '—'}</span>;
-      case 'nivel_riesgo': {
-          const isCritico = rat.nivel_riesgo === 'Crítico';
-          return (
-            <div className="flex items-center gap-1">
-              {isCritico && (
-                <span className="relative flex h-2 w-2" title="Riesgo crítico — acción requerida">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#DC2626' }} />
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#DC2626' }} />
-                </span>
-              )}
-              <span className="text-xs font-medium" style={{ color: isCritico || rat.nivel_riesgo === 'Alto' ? '#DC2626' : '#374151' }}>{rat.nivel_riesgo || '—'}</span>
-            </div>
-          );
-        }
-      default: return null;
-    }
-  }
-
   const tieneFiltrosActivos = Object.values(filtrosActivos).some(Boolean) || filters.search || filters.estado || filters.base_legal || filters.categoria_titulares;
   const stats = calcStats();
   const totalPages = Math.ceil(total / limit);
@@ -453,53 +427,82 @@ export default function ReportesPage() {
     <div className="p-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Reportes RAT</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111827' }}>Reportes & Analíticas</h1>
           <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
-            {total} proceso(s) encontrado(s) · página {page + 1} de {totalPages || 1}
+            {total} proceso(s) · página {page + 1} de {totalPages || 1}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => exportCSV()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          <Button variant="secondary" size="md" onClick={() => exportCSV()}>
             📥 CSV
-          </button>
-          <button onClick={() => exportPDF()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          </Button>
+          <Button variant="secondary" size="md" onClick={() => exportPDF()}>
             📥 PDF
-          </button>
-          <button onClick={() => load()} className="px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-gray-50" style={{ color: '#374151', borderColor: '#E5E7EB' }}>
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={async () => {
+              if (!company) return;
+              try {
+                const blob = await api.exportarPdfApdp(company.id);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `APDP_${company.nombre}_${new Date().toISOString().slice(0, 10)}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success('Reporte APDP exportado');
+              } catch { toast.error('Error al exportar Reporte APDP'); }
+            }}
+          >
+            📋 Reporte APDP
+          </Button>
+          <Button variant="secondary" size="md" onClick={() => load()}>
             🔄 Actualizar
-          </button>
+          </Button>
           {puedeEditar && (
-            <button onClick={() => window.location.href = '/rat'} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>
+            <Button onClick={() => window.location.href = '/rat'}>
               + Nuevo proceso
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
-        <StatCard label="Total" value={total} color="#2563EB" />
-        <StatCard label="Completitud prom." value={`${stats.completitudAvg}%`} color={stats.completitudAvg >= 75 ? '#059669' : stats.completitudAvg >= 50 ? '#D97706' : '#DC2626'} />
-        <StatCard label="Datos sensibles" value={rats.filter(r => r.datos_sensibles).length} color="#D97706" />
-        <StatCard label="Requieren EIPD" value={rats.filter(r => r.evaluacion_impacto).length} color="#2563EB" />
-        <StatCard label="Transf. int." value={rats.filter(r => r.transferencia_internacional).length} color="#7C3AED" />
-        <StatCard label="Dec. automatizadas" value={rats.filter(r => r.decisiones_automatizadas).length} color="#374151" />
+      {/* Panel de analytics */}
+      <div className="bg-white rounded-xl overflow-hidden mb-6" style={{ border: '1px solid #E5E7EB' }}>
+        {/* KPI strip */}
+        <div className="flex flex-wrap divide-x divide-gray-100 border-b" style={{ borderColor: '#F3F4F6' }}>
+          {(() => {
+            const nSensibles = rats.filter(r => r.datos_sensibles).length;
+            const nAprobados = stats.porEstado['aprobado'] ?? 0;
+            const compColor  = stats.completitudAvg >= 75 ? '#059669' : stats.completitudAvg >= 50 ? '#D97706' : '#DC2626';
+            const items = [
+              { label: 'Procesos totales', value: total,                                  color: '#2563EB' },
+              { label: 'Aprobados',         value: `${nAprobados} (${total ? Math.round(nAprobados/total*100) : 0}%)`, color: '#059669' },
+              { label: 'Completitud prom.', value: `${stats.completitudAvg}%`,            color: compColor },
+              { label: 'Datos sensibles',   value: `${nSensibles} (${total ? Math.round(nSensibles/total*100) : 0}%)`, color: '#D97706' },
+              { label: 'Requieren EIPD',    value: rats.filter(r => r.evaluacion_impacto).length, color: '#2563EB' },
+              { label: 'Transfer. int.',    value: rats.filter(r => r.transferencia_internacional).length, color: '#7C3AED' },
+            ];
+            return items.map(({ label, value, color }) => (
+              <div key={label} className="flex-1 px-5 py-4 min-w-[120px]">
+                <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>{label}</p>
+                <p className="text-xl font-bold" style={{ color }}>{value}</p>
+              </div>
+            ));
+          })()}
+        </div>
+        {/* Bar charts */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 divide-x divide-gray-100">
+          <HBarChart title="Por estado"     data={stats.porEstado}    getColor={k => ESTADO_COLOR[k] ?? '#94A3B8'} />
+          <HBarChart title="Por riesgo"     data={stats.porRiesgo}    getColor={k => RIESGO_COLOR[k] ?? '#6B7280'} />
+        </div>
       </div>
 
-      {/* Mini bar charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por estado</p>
-          {renderMiniChart(stats.porEstado, '#2563EB')}
-        </div>
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por riesgo</p>
-          {renderMiniChart(stats.porRiesgo, '#DC2626')}
-        </div>
-        <div className="bg-white rounded-xl p-4" style={{ border: '1px solid #E5E7EB' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#6B7280' }}>Por base legal</p>
-          {renderMiniChart(stats.porBaseLegal, '#059669')}
-        </div>
+      {/* Gráfico base legal (ancho completo) */}
+      <div className="mb-6">
+        <HBarChart title="Distribución por base legal" data={stats.porBaseLegal} getColor={() => '#4F46E5'} />
       </div>
 
       {/* Filtros */}
@@ -508,7 +511,7 @@ export default function ReportesPage() {
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold" style={{ color: '#111827' }}>Filtros</span>
             {tieneFiltrosActivos && (
-              <button onClick={limpiarFiltros} className="text-xs px-2 py-0.5 rounded-lg transition hover:bg-gray-100" style={{ color: '#6B7280' }}>
+              <button onClick={limpiarFiltros} className="text-xs px-3 py-2 rounded-lg transition hover:bg-gray-100 min-h-[44px]" style={{ color: '#6B7280' }}>
                 Limpiar todos
               </button>
             )}
@@ -524,7 +527,7 @@ export default function ReportesPage() {
                 ))}
               </div>
             )}
-            <button onClick={() => setShowSaveModal(true)} className="text-xs px-2 py-1 rounded-lg border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+            <button onClick={() => setShowSaveModal(true)} className="text-xs px-3 py-2.5 rounded-lg border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
               💾 Guardar filtro
             </button>
           </div>
@@ -538,7 +541,7 @@ export default function ReportesPage() {
           </select>
           <select value={filters.base_legal ?? ''} onChange={e => setFilters(f => ({ ...f, base_legal: e.target.value }))} className={inputCls}>
             <option value="">Base legal (todas)</option>
-            {BASES_LEGALES.map(b => <option key={b} value={b}>{b}</option>)}
+            {baseLegalOptions.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <input type="text" value={filters.categoria_titulares ?? ''} onChange={e => setFilters(f => ({ ...f, categoria_titulares: e.target.value }))} placeholder="Categoría titulares..." className={inputCls} style={{ minWidth: 160 }} />
           <button onClick={limpiarFiltros} className="px-4 py-2 rounded-lg text-xs font-semibold border transition" style={{ background: '#CCFBF1', borderColor: '#06B6D4', color: '#0F766E' }}>
@@ -547,26 +550,26 @@ export default function ReportesPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, datos_sensibles: !f.datos_sensibles }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.datos_sensibles ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.datos_sensibles ? '#FEF3C7' : '#F9FAFB', borderColor: filtrosActivos.datos_sensibles ? '#D97706' : '#E5E7EB', color: filtrosActivos.datos_sensibles ? '#92400E' : '#6B7280' }}>⚠️ Datos sensibles</button>
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, evaluacion_impacto: !f.evaluacion_impacto }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.evaluacion_impacto ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.evaluacion_impacto ? '#DBEAFE' : '#F9FAFB', borderColor: filtrosActivos.evaluacion_impacto ? '#2563EB' : '#E5E7EB', color: filtrosActivos.evaluacion_impacto ? '#1E3A8A' : '#6B7280' }}>📋 Requieren EIPD</button>
-          <button onClick={() => setFiltrosActivos(f => ({ ...f, transferencia_internacional: !f.transferencia_internacional }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filtrosActivos.transferencia_internacional ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.transferencia_internacional ? '#F3E8FF' : '#F9FAFB', borderColor: filtrosActivos.transferencia_internacional ? '#7C3AED' : '#E5E7EB', color: filtrosActivos.transferencia_internacional ? '#5B21B6' : '#6B7280' }}>🌐 Transfer. internacional</button>
-          <button onClick={applyFilters} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition" style={{ background: '#2563EB' }}>Aplicar filtros</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, datos_sensibles: !f.datos_sensibles }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.datos_sensibles ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.datos_sensibles ? '#FEF3C7' : '#F9FAFB', borderColor: filtrosActivos.datos_sensibles ? '#D97706' : '#E5E7EB', color: filtrosActivos.datos_sensibles ? '#92400E' : '#6B7280' }}>⚠️ Datos sensibles</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, evaluacion_impacto: !f.evaluacion_impacto }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.evaluacion_impacto ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.evaluacion_impacto ? '#DBEAFE' : '#F9FAFB', borderColor: filtrosActivos.evaluacion_impacto ? '#2563EB' : '#E5E7EB', color: filtrosActivos.evaluacion_impacto ? '#1E3A8A' : '#6B7280' }}>📋 Requieren EIPD</button>
+          <button onClick={() => setFiltrosActivos(f => ({ ...f, transferencia_internacional: !f.transferencia_internacional }))} className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition min-h-[44px] ${filtrosActivos.transferencia_internacional ? '' : 'opacity-60'}`} style={{ background: filtrosActivos.transferencia_internacional ? '#F3E8FF' : '#F9FAFB', borderColor: filtrosActivos.transferencia_internacional ? '#7C3AED' : '#E5E7EB', color: filtrosActivos.transferencia_internacional ? '#5B21B6' : '#6B7280' }}>🌐 Transfer. internacional</button>
+          <button onClick={applyFilters} className="px-3 py-2.5 rounded-lg text-xs font-semibold text-white transition min-h-[44px]" style={{ background: '#2563EB' }}>Aplicar filtros</button>
         </div>
 
         {/* Ordenar y agrupar */}
         <div className="flex gap-3 mt-4 flex-wrap items-center">
           <div className="flex items-center gap-2">
             <span className="text-xs" style={{ color: '#6B7280' }}>Ordenar por:</span>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={`${inputCls} py-1.5`} style={{ minWidth: 130 }}>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={`${inputCls} py-2.5 min-h-[44px]`} style={{ minWidth: 130 }}>
               {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <button onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')} className="px-2 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB' }}>
+            <button onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')} className="px-3 py-2.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB' }}>
               {sortOrder === 'desc' ? '↓ Desc' : '↑ Asc'}
             </button>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs" style={{ color: '#6B7280' }}>Agrupar por:</span>
-            <select value={groupBy} onChange={e => setGroupBy(e.target.value)} className={`${inputCls} py-1.5`} style={{ minWidth: 120 }}>
+            <select value={groupBy} onChange={e => setGroupBy(e.target.value)} className={`${inputCls} py-2.5 min-h-[44px]`} style={{ minWidth: 120 }}>
               <option value="none">Sin agrupar</option>
               <option value="estado">Estado</option>
               <option value="base_legal">Base legal</option>
@@ -574,7 +577,7 @@ export default function ReportesPage() {
             </select>
           </div>
           <div className="relative" ref={colPickerRef}>
-            <button onClick={() => setShowColPicker(v => !v)} className="px-3 py-1.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
+            <button onClick={() => setShowColPicker(v => !v)} className="px-3 py-2.5 rounded-lg text-xs font-medium border transition hover:bg-gray-50 min-h-[44px]" style={{ borderColor: '#E5E7EB', color: '#6B7280' }}>
               ☰ Columnas ({columns.length})
             </button>
             {showColPicker && (
@@ -620,7 +623,7 @@ export default function ReportesPage() {
                   {columns.map(col => <th key={col} role="columnheader" scope="col" className="px-4 py-3 text-left whitespace-nowrap">{COLUMN_OPTIONS.find(c => c.key === col)?.label ?? col}</th>)}
                 </tr>
               </thead>
-              <GroupedRows rats={rats} />
+              <ReportTable rats={rats} columns={columns} groupBy={groupBy} onRowClick={openDrawer} />
             </table>
           </div>
         </div>
@@ -630,7 +633,8 @@ export default function ReportesPage() {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title=""
+        title="Detalle RAT"
+        size="xl"
         extraAction={
           <button
             onClick={async () => {
@@ -688,7 +692,9 @@ export default function ReportesPage() {
               {selectedRat.datos_sensibles && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>⚠️ Datos sensibles</span>}
               {selectedRat.evaluacion_impacto && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>📋 EIPD requerida</span>}
               {selectedRat.transferencia_internacional && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#F3E8FF', color: '#5B21B6' }}>🌐 Transfer. internacional</span>}
+              {selectedRat.transferencia_nacional && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#ECFDF5', color: '#065F46' }}>🏠 Transfer. nacional</span>}
               {selectedRat.decisiones_automatizadas && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#F3F4F6', color: '#374151' }}>🤖 Decisiones automatizadas</span>}
+              {selectedRat.datos_nna && <span className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>👶 Datos NNA</span>}
             </div>
 
             {/* Sección: Identificación */}
@@ -714,6 +720,12 @@ export default function ReportesPage() {
                     <p className="text-sm whitespace-pre-wrap" style={{ color: '#374151' }}>{selectedRat.test_interes_legitimo}</p>
                   </div>
                 )}
+                {selectedRat.logica_automatizada && (
+                  <div className="p-4 rounded-xl" style={{ background: '#F3F4F6', border: '1px solid #E5E7EB' }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: '#374151' }}>Lógica automatizada (Art. 8)</p>
+                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#374151' }}>{selectedRat.logica_automatizada}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -723,6 +735,11 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Categoría datos" value={selectedRat.categoria_datos} />
                 <Field label="Tipo dato sensible" value={selectedRat.tipo_dato_sensible} />
+                <Field label="Datos NNA" value={selectedRat.datos_nna} />
+                <Field label="Nivel confidencialidad" value={selectedRat.nivel_confidencialidad} />
+                <Field label="Estructura dato" value={selectedRat.estructura_dato} />
+                <Field label="Anonimizados" value={selectedRat.datos_anonimizados ? 'Sí' : 'No'} />
+                <Field label="Seudonimizados" value={selectedRat.datos_seudonimizados ? 'Sí' : 'No'} />
               </div>
             </div>
 
@@ -732,9 +749,14 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Plazo retención" value={selectedRat.plazo_retencion} />
                 <Field label="Medidas de seguridad" value={selectedRat.medidas_seguridad} />
+                <Field label="Sistema almacenamiento" value={selectedRat.sistema_almacenamiento} />
+                <Field label="Frecuencia" value={selectedRat.frecuencia} />
                 <Field label="Transferencia datos" value={selectedRat.transferencia_datos} />
                 <Field label="País destino" value={selectedRat.pais_destino} />
                 <Field label="Garantías transferencia" value={selectedRat.garantias_transferencia_int} />
+                <Field label="Responsable email" value={selectedRat.responsable_tratamiento_email} />
+                <Field label="Ciclo procesamiento" value={selectedRat.ciclo_procesamiento} />
+                <Field label="Automatización" value={selectedRat.automatizacion} />
               </div>
             </div>
 
@@ -746,6 +768,23 @@ export default function ReportesPage() {
                 <Field label="Fecha creación" value={selectedRat.created_at?.slice(0, 10) ?? '—'} />
                 <Field label="Última actualización" value={selectedRat.updated_at?.slice(0, 10) ?? '—'} />
                 <Field label="Observaciones auditoría" value={selectedRat.observaciones_auditoria} />
+                <Field label="Aprobado por" value={selectedRat.aprobado_por} />
+                <Field label="Fecha aprobación" value={selectedRat.fecha_aprobacion?.slice(0, 10) ?? '—'} />
+                <Field label="Archivo base legal" value={selectedRat.tiene_archivo_base_legal ? 'Sí' : 'No'} />
+                <Field label="Técnica anonimización" value={selectedRat.tecnica_anonimizacion} />
+                <Field label="Mecanismos eliminación" value={selectedRat.mecanismos_eliminacion} />
+                <Field label="Origen portabilidad" value={selectedRat.origen_dato_portabilidad} />
+                <Field label="Fecha levantamiento" value={selectedRat.fecha_levantamiento?.slice(0, 10) ?? '—'} />
+              </div>
+            </div>
+
+            {/* Sección: Métricas avanzadas (Tier 1 / Tier 2) */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Métricas avanzadas — Tier 1 y Tier 2</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Volumen titulares" value={selectedRat.volumen_titulares_estimado?.toLocaleString('es-CL')} />
+                <Field label="Doc cláusulas" value={selectedRat.doc_clausulas} />
+                <Field label="Medidas organizativas" value={selectedRat.medidas_organizativas} />
               </div>
             </div>
 
@@ -855,8 +894,8 @@ export default function ReportesPage() {
             <h3 className="text-base font-semibold mb-4" style={{ color: '#111827' }}>Guardar filtro</h3>
             <input type="text" value={saveFilterName} onChange={e => setSaveFilterName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveFilter()} placeholder="Nombre del filtro..." className="w-full px-3 py-2 rounded-lg text-sm border mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#E5E7EB' }} />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowSaveModal(false)} className="px-4 py-2 rounded-lg text-sm border transition hover:bg-gray-50" style={{ borderColor: '#E5E7EB', color: '#374151' }}>Cancelar</button>
-              <button onClick={saveFilter} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition" style={{ background: '#2563EB' }}>Guardar</button>
+              <Button variant="secondary" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
+              <Button onClick={saveFilter}>Guardar</Button>
             </div>
           </div>
         </div>
