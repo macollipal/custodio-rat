@@ -107,7 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const cycleTheme = useCallback(() => {
     setTheme(prev => {
       const next: Theme = prev === 'light' ? 'dark' : prev === 'dark' ? 'mac' : 'light';
-      localStorage.setItem('custodio_theme', next);
+      try { localStorage.setItem('custodio_theme', next); } catch {}
       document.documentElement.classList.remove('dark', 'mac');
       if (next !== 'light') document.documentElement.classList.add(next);
       return next;
@@ -123,10 +123,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }).then(r => {
       if (!r.ok) throw new Error();
     }).catch(() => {
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER);
-      localStorage.removeItem(STORAGE_KEYS.COMPANY);
-      localStorage.removeItem(STORAGE_KEYS.COMPANIES);
+      try {
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER);
+        localStorage.removeItem(STORAGE_KEYS.COMPANY);
+        localStorage.removeItem(STORAGE_KEYS.COMPANIES);
+      } catch {}
       setTokenState(null);
       setUserState(null);
       setCompanyState(null);
@@ -135,29 +137,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const setToken = useCallback((t: string) => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, t);
+    try { localStorage.setItem(STORAGE_KEYS.TOKEN, t); } catch {}
     setTokenState(t);
   }, []);
 
   const setUser = useCallback((u: User) => {
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(u));
+    try { localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(u)); } catch {}
     setUserState(u);
   }, []);
 
   const setCompany = useCallback((c: Company) => {
     setCompanyState(prev => {
       if (prev?.id && prev.id !== c.id) {
-        localStorage.removeItem(`${DRAFT_KEY_PREFIX}${prev.id}`);
+        try { localStorage.removeItem(`${DRAFT_KEY_PREFIX}${prev.id}`); } catch {}
       }
       return c;
     });
-    localStorage.setItem(STORAGE_KEYS.COMPANY, JSON.stringify(c));
+    try { localStorage.setItem(STORAGE_KEYS.COMPANY, JSON.stringify(c)); } catch {}
     setRatsState([]);
     setDashboardStatsState(null);
   }, []);
 
   const setCompanies = useCallback((cs: Company[]) => {
-    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(cs));
+    try { localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(cs)); } catch {}
     setCompaniesState(cs);
   }, []);
 
@@ -170,9 +172,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    localStorage.removeItem(STORAGE_KEYS.COMPANY);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      localStorage.removeItem(STORAGE_KEYS.COMPANY);
+    } catch {}
     setTokenState(null);
     setUserState(null);
     setCompanyState(null);

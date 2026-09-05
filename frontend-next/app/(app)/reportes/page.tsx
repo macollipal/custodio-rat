@@ -205,8 +205,10 @@ export default function ReportesPage() {
   }, [chatMessages, chatLoading]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(SAVED_FILTERS_KEY);
-    if (stored) setSavedFilters(JSON.parse(stored));
+    try {
+      const stored = localStorage.getItem(SAVED_FILTERS_KEY);
+      if (stored) setSavedFilters(JSON.parse(stored));
+    } catch {}
   }, []);
 
   useEffect(() => {

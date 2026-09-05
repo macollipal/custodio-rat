@@ -16,7 +16,7 @@ import { SkeletonTable } from '@/components/ui/Skeleton';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 import RatDetailModal from '@/components/rat/RatDetailModal';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
-import type { RAT } from '@/types';
+import type { RAT, SecurityBreach } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -99,27 +99,32 @@ export default function DashboardPage() {
     if (!company) return;
     if (!hasCache) setRefreshing(true);
 
+    let cancelled = false;
     Promise.all([
       api.getDashboardStats(company.id),
       api.listarRats(company.id),
       api.listarBrechas(company.id).catch(() => []),
       api.getPoliticaTransparencia(company.id).then(p => !!p).catch(() => false),
     ]).then(([s, ratList, breaches, hasPoliticaVal]) => {
+      if (cancelled) return;
       setDashboardStats(s);
       setRats(ratList);
-      const brechasArr = Array.isArray(breaches) ? breaches : [];
+      const brechasArr: SecurityBreach[] = Array.isArray(breaches) ? breaches : [];
       setBrechaCount(brechasArr.length);
       const abiertas = brechasArr
-        .filter((b: any) => b.estado_cierre !== 'cerrada')
-        .sort((a: any, b: any) => (b.horas_desde_deteccion ?? 0) - (a.horas_desde_deteccion ?? 0))
+        .filter(b => b.estado_cierre !== 'cerrada')
+        .sort((a, b) => (b.horas_desde_deteccion ?? 0) - (a.horas_desde_deteccion ?? 0))
         .slice(0, 3);
-      setBrechasActivas(abiertas as any);
+      setBrechasActivas(abiertas);
       setHasPolitica(hasPoliticaVal);
       setLastSync(new Date());
     }).catch(() => {
+      if (cancelled) return;
       if (!hasCache) toast.error('No se pudieron cargar las estadísticas.');
-    }).finally(() => setRefreshing(false));
-  }, [company?.id]);
+    }).finally(() => { if (!cancelled) setRefreshing(false); });
+
+    return () => { cancelled = true; };
+  }, [company?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function formatLastSync(date: Date): string {
     const diff = Math.floor((Date.now() - date.getTime()) / 1000);
