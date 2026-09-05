@@ -56,13 +56,17 @@ async def listar(
 
     count_q = (
         db.query(RATModel.company_id, func.count(RATModel.id).label("cnt"))
+        .filter(RATModel.deleted_at.is_(None))
         .group_by(RATModel.company_id)
         .subquery()
     )
     rat_counts = {row.company_id: row.cnt for row in db.query(count_q).all()}
 
     rats_by_company: dict[int, list] = {}
-    for rat in db.query(RATModel).filter(RATModel.company_id.in_([c.id for c in companies])).all():
+    for rat in db.query(RATModel).filter(
+        RATModel.company_id.in_([c.id for c in companies]),
+        RATModel.deleted_at.is_(None),
+    ).all():
         rats_by_company.setdefault(rat.company_id, []).append(rat)
 
     company_ids = [c.id for c in companies]
@@ -132,7 +136,7 @@ async def obtener(
     check_company_access(current_user, company_id, db)
     c = get_company(db, company_id)
     out = CompanyOut.model_validate(c)
-    rats = c.rats
+    rats = [r for r in c.rats if r.deleted_at is None]
     out.total_rats = len(rats)
 
     now = datetime.now(timezone.utc)

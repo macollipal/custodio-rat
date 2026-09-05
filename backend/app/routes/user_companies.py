@@ -19,8 +19,9 @@ router = APIRouter(prefix="/companies/{company_id}/usuarios", tags=["Accesos por
 
 
 def _require_company_admin(db: Session, user, company_id: int):
-    if user.rol_global in ("superadmin", "admin_empresa"):
+    if user.rol_global == "superadmin":
         return
+    # admin_empresa y usuario deben tener rol ADMIN en la empresa específica
     rol = get_rol_usuario(db, user.id, company_id)
     if rol != RolEmpresa.ADMIN:
         raise HTTPException(status_code=403, detail="Se requiere rol administrador en esta empresa.")
