@@ -101,10 +101,14 @@ async def actualizar(
     current_user=Depends(get_current_user),
 ):
     try:
+        existing = svc.obtener_contrato(db, contrato_id)
+    except svc.ContratoNotFoundError:
+        raise HTTPException(status_code=404, detail="Contrato no encontrado.")
+    check_company_access(current_user, existing.company_id, db)
+    try:
         c = svc.actualizar_contrato(db, contrato_id, data)
     except svc.ContratoNotFoundError:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
-    check_company_access(current_user, c.company_id, db)
     _notificar_si_cerca_vencer(db, c)
     return svc._transform_to_out(c)
 
