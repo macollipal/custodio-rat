@@ -443,7 +443,7 @@ def ejecutar_scan_manual(
     db.add(run)
     db.flush()
 
-    rats = db.query(RAT).filter(RAT.company_id == source.company_id).all()
+    rats = db.query(RAT).filter(RAT.company_id == source.company_id, RAT.deleted_at.is_(None)).all()
     tablas_vistas: set[str] = set()
     hallazgos = []
 

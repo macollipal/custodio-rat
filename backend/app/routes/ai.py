@@ -6,6 +6,7 @@ from app.core.limiter import limiter
 from app.services.audit_service import log_audit
 from app.database.database import get_db
 from typing import Optional
+from pydantic import Field
 
 router = APIRouter(prefix="/ai", tags=["Asistente IA"])
 
@@ -26,8 +27,8 @@ SYSTEM_PROMPT = (
 
 
 class AskRequest(BaseModel):
-    question: str
-    context: Optional[str] = None
+    question: str = Field(..., min_length=3, max_length=2000)
+    context: Optional[str] = Field(None, max_length=3000)
 
 
 class AskResponse(BaseModel):
