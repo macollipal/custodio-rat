@@ -30,7 +30,7 @@ export default function DashboardPage() {
     id: number;
     descripcion: string;
     fecha_deteccion: string;
-    notificado_apdc?: boolean;
+    notificado_apdp?: boolean;
     notificado_titulares?: boolean;
     nivel_riesgo?: string;
     incluye_datos_sensibles?: boolean;
@@ -38,7 +38,7 @@ export default function DashboardPage() {
     incluye_datos_financieros?: boolean;
     volumen_titulares_afectados?: number;
     horas_desde_deteccion?: number;
-    plazo_apdc_vencido?: boolean;
+    plazo_apdp_vencido?: boolean;
     estado_cierre?: string;
   }>>([]);
   const [hasPolitica, setHasPolitica] = useState(false);
@@ -303,8 +303,8 @@ export default function DashboardPage() {
         <div
           className="bg-white rounded-xl p-6 shadow-sm"
           style={{
-            border: brechasActivas.some(b => b.plazo_apdc_vencido) ? '2px solid #DC2626' : '1px solid #E5E7EB',
-            background: brechasActivas.some(b => b.plazo_apdc_vencido) ? '#FEF2F2' : 'white',
+            border: brechasActivas.some(b => b.plazo_apdp_vencido) ? '2px solid #DC2626' : '1px solid #E5E7EB',
+            background: brechasActivas.some(b => b.plazo_apdp_vencido) ? '#FEF2F2' : 'white',
           }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -324,8 +324,8 @@ export default function DashboardPage() {
             {brechasActivas.map(b => {
               const h = b.horas_desde_deteccion ?? 0;
               const restantes = Math.max(0, 72 - h);
-              const vencimiento = b.plazo_apdc_vencido;
-              const apdcOk = b.notificado_apdc;
+              const vencimiento = b.plazo_apdp_vencido;
+              const apdcOk = b.notificado_apdp;
               const titOk = b.notificado_titulares;
               const flags: string[] = [];
               if (b.incluye_datos_sensibles) flags.push('🔒 sensibles');

@@ -30,7 +30,7 @@ interface BreachFormData {
   datos_comprometidos: string;
   medidas_adoptadas: string;
   naturaleza: 'confidencialidad' | 'integridad' | 'disponibilidad' | undefined;
-  notificado_apdc: boolean;
+  notificado_apdp: boolean;
   notificado_titulares: boolean;
   volumen_titulares_afectados: number;
   incluye_datos_sensibles: boolean;
@@ -40,7 +40,7 @@ interface BreachFormData {
   fecha_ocurrencia_estimada?: string;
   efectos_probables?: string;
   causa_raiz?: string;
-  evidencia_notificacion_apdc_folio?: string;
+  evidencia_notificacion_apdp_folio?: string;
   estado_cierre?: string;
   fecha_cierre?: string;
   // Ley 21.719 Art. 14 bis
@@ -65,7 +65,7 @@ function BreachForm({
     datos_comprometidos: initial?.datos_comprometidos ?? '',
     medidas_adoptadas: initial?.medidas_adoptadas ?? '',
     naturaleza: initial?.naturaleza ?? undefined,
-    notificado_apdc: initial?.notificado_apdc ?? false,
+    notificado_apdp: initial?.notificado_apdp ?? false,
     notificado_titulares: initial?.notificado_titulares ?? false,
     volumen_titulares_afectados: initial?.volumen_titulares_afectados ?? 0,
     incluye_datos_sensibles: initial?.incluye_datos_sensibles ?? false,
@@ -75,7 +75,7 @@ function BreachForm({
     fecha_ocurrencia_estimada: initial?.fecha_ocurrencia_estimada ?? '',
     efectos_probables: initial?.efectos_probables ?? '',
     causa_raiz: initial?.causa_raiz ?? '',
-    evidencia_notificacion_apdc_folio: initial?.evidencia_notificacion_apdc_folio ?? '',
+    evidencia_notificacion_apdp_folio: initial?.evidencia_notificacion_apdp_folio ?? '',
     estado_cierre: initial?.estado_cierre ?? '',
     fecha_cierre: initial?.fecha_cierre ?? '',
     fecha_conocimiento: initial?.fecha_conocimiento ?? '',
@@ -186,8 +186,8 @@ function BreachForm({
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input
               type="checkbox"
-              checked={form.notificado_apdc}
-              onChange={e => set('notificado_apdc', e.target.checked)}
+              checked={form.notificado_apdp}
+              onChange={e => set('notificado_apdp', e.target.checked)}
               className="mt-0.5 rounded"
             />
             <div>
@@ -304,8 +304,8 @@ function BreachForm({
             <label className={labelCls} style={labelStyle}>Folio notificación APDC</label>
             <input
               type="text"
-              value={form.evidencia_notificacion_apdc_folio ?? ''}
-              onChange={e => set('evidencia_notificacion_apdc_folio', e.target.value || undefined)}
+              value={form.evidencia_notificacion_apdp_folio ?? ''}
+              onChange={e => set('evidencia_notificacion_apdp_folio', e.target.value || undefined)}
               placeholder="Ej: APDC-2026-001234"
               className={inputCls}
               style={{ borderColor: '#E5E7EB' }}
@@ -406,7 +406,7 @@ export default function BreachesPage() {
         datos_comprometidos: data.datos_comprometidos || undefined,
         medidas_adoptadas: data.medidas_adoptadas || undefined,
         naturaleza: data.naturaleza,
-        notificado_apdc: data.notificado_apdc,
+        notificado_apdp: data.notificado_apdp,
         notificado_titulares: data.notificado_titulares,
         volumen_titulares_afectados: data.volumen_titulares_afectados,
         incluye_datos_sensibles: data.incluye_datos_sensibles,
@@ -416,7 +416,7 @@ export default function BreachesPage() {
         fecha_ocurrencia_estimada: data.fecha_ocurrencia_estimada ? new Date(data.fecha_ocurrencia_estimada).toISOString() : undefined,
         efectos_probables: data.efectos_probables || undefined,
         causa_raiz: data.causa_raiz || undefined,
-        evidencia_notificacion_apdc_folio: data.evidencia_notificacion_apdc_folio || undefined,
+        evidencia_notificacion_apdp_folio: data.evidencia_notificacion_apdp_folio || undefined,
         estado_cierre: data.estado_cierre || undefined,
         fecha_cierre: data.fecha_cierre ? new Date(data.fecha_cierre).toISOString() : undefined,
         fecha_conocimiento: data.fecha_conocimiento ? new Date(data.fecha_conocimiento).toISOString() : undefined,
@@ -511,7 +511,7 @@ export default function BreachesPage() {
                     className="bg-white rounded-xl p-5 shadow-sm"
                     style={{
                       border: `1px solid ${plazoVencido ? '#FCA5A5' : '#E5E7EB'}`,
-                      borderLeft: `4px solid ${plazoVencido ? '#DC2626' : b.notificado_apdc ? '#059669' : '#D97706'}`,
+                      borderLeft: `4px solid ${plazoVencido ? '#DC2626' : b.notificado_apdp ? '#059669' : '#D97706'}`,
                     }}
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -556,11 +556,11 @@ export default function BreachesPage() {
 
                     {/* Indicadores de notificación */}
                     <div className="flex gap-3 mb-3 flex-wrap">
-                      <div className="flex items-center gap-1.5" aria-label={`APDP ${b.notificado_apdc ? 'notificada' : 'pendiente'}`}>
-                        <div className="w-3 h-3 rounded-full" style={{ background: b.notificado_apdc ? '#059669' : '#D97706' }} />
+                      <div className="flex items-center gap-1.5" aria-label={`APDP ${b.notificado_apdp ? 'notificada' : 'pendiente'}`}>
+                        <div className="w-3 h-3 rounded-full" style={{ background: b.notificado_apdp ? '#059669' : '#D97706' }} />
                         <span className="text-xs" style={{ color: '#6B7280' }}>
-                          APDP {b.notificado_apdc ? 'notificada' : 'pendiente'}
-                          {b.fecha_notificacion_apdc && ` (${new Date(b.fecha_notificacion_apdc).toLocaleDateString('es-CL')})`}
+                          APDP {b.notificado_apdp ? 'notificada' : 'pendiente'}
+                          {b.fecha_notificacion_apdp && ` (${new Date(b.fecha_notificacion_apdp).toLocaleDateString('es-CL')})`}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5" aria-label={`Titulares ${b.notificado_titulares ? 'notificados' : 'pendiente'}`}>
@@ -600,7 +600,7 @@ export default function BreachesPage() {
                             { label: 'Efectos y consecuencias probables', value: b.efectos_probables },
                             { label: 'Medidas adoptadas', value: b.medidas_adoptadas },
                             { label: 'Causa raíz', value: b.causa_raiz },
-                            { label: 'Notificación APDP', value: b.notificado_apdc ? `Notificada${b.fecha_notificacion_apdc ? ` el ${new Date(b.fecha_notificacion_apdc).toLocaleDateString('es-CL')}` : ''}${b.evidencia_notificacion_apdc_folio ? ` · Folio: ${b.evidencia_notificacion_apdc_folio}` : ''}` : 'Pendiente' },
+                            { label: 'Notificación APDP', value: b.notificado_apdp ? `Notificada${b.fecha_notificacion_apdp ? ` el ${new Date(b.fecha_notificacion_apdp).toLocaleDateString('es-CL')}` : ''}${b.evidencia_notificacion_apdp_folio ? ` · Folio: ${b.evidencia_notificacion_apdp_folio}` : ''}` : 'Pendiente' },
                             { label: 'Notificación titulares', value: b.notificado_titulares ? `Notificados${b.fecha_notificacion_titulares ? ` el ${new Date(b.fecha_notificacion_titulares).toLocaleDateString('es-CL')}` : ''}` : 'Pendiente' },
                             { label: 'Estado de cierre', value: b.estado_cierre ?? null },
                           ].map(({ label, value }) => (
@@ -663,13 +663,13 @@ export default function BreachesPage() {
               rats_afectados: editingBreach.rats_afectados ?? '',
               datos_comprometidos: editingBreach.datos_comprometidos ?? '',
               medidas_adoptadas: editingBreach.medidas_adoptadas ?? '',
-              notificado_apdc: editingBreach.notificado_apdc,
+              notificado_apdp: editingBreach.notificado_apdp,
               notificado_titulares: editingBreach.notificado_titulares,
               // Campos nuevos gaps Ley 21.719 (Iter 10)
               fecha_ocurrencia_estimada: editingBreach.fecha_ocurrencia_estimada ? new Date(editingBreach.fecha_ocurrencia_estimada).toISOString().slice(0, 16) : '',
               efectos_probables: editingBreach.efectos_probables ?? '',
               causa_raiz: editingBreach.causa_raiz ?? '',
-              evidencia_notificacion_apdc_folio: editingBreach.evidencia_notificacion_apdc_folio ?? '',
+              evidencia_notificacion_apdp_folio: editingBreach.evidencia_notificacion_apdp_folio ?? '',
               estado_cierre: editingBreach.estado_cierre ?? '',
               fecha_cierre: editingBreach.fecha_cierre ? new Date(editingBreach.fecha_cierre).toISOString().slice(0, 16) : '',
               fecha_conocimiento: editingBreach.fecha_conocimiento ? new Date(editingBreach.fecha_conocimiento).toISOString().slice(0, 16) : '',

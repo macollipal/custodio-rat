@@ -139,6 +139,7 @@ def crear_consentimiento(db: Session, data: ConsentimientoCreate, usuario: str) 
         email_titular=PLACEHOLDER_PII if data.email_titular else None,
         texto_consentimiento=PLACEHOLDER_PII,
         ip_origen=PLACEHOLDER_PII,
+        version_politica=data.version_politica,
     )
     db.add(c)
     db.flush()

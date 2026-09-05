@@ -132,26 +132,27 @@ export interface SecurityBreach {
   datos_comprometidos?: string;
   medidas_adoptadas?: string;
   naturaleza?: 'confidencialidad' | 'integridad' | 'disponibilidad';
-  notificado_apdc: boolean;
-  fecha_notificacion_apdc?: string;
+  notificado_apdp: boolean;
+  fecha_notificacion_apdp?: string;
   notificado_titulares: boolean;
   fecha_notificacion_titulares?: string;
   creado_por?: string;
   created_at: string;
   updated_at: string;
   horas_desde_deteccion?: number;
-  plazo_apdc_vencido?: boolean;
+  horas_desde_conocimiento?: number;
+  plazo_apdp_vencido?: boolean;
   nivel_riesgo?: string;
   volumen_titulares_afectados?: number;
   incluye_datos_sensibles?: boolean;
   incluye_datos_nna?: boolean;
   incluye_datos_financieros?: boolean;
-  reportable_apdc_calculado?: boolean;
+  reportable_apdp_calculado?: boolean;
   // Campos nuevos gaps Ley 21.719 (Iter 10)
   fecha_ocurrencia_estimada?: string;
   efectos_probables?: string;
   causa_raiz?: string;
-  evidencia_notificacion_apdc_folio?: string;
+  evidencia_notificacion_apdp_folio?: string;
   estado_cierre?: string;
   fecha_cierre?: string;
   // Ley 21.719 Art. 14 bis — fecha en que el responsable tomó conocimiento

@@ -480,6 +480,7 @@ export async function duplicarRat(rat: RAT): Promise<RAT> {
     tecnica_anonimizacion:        rat.tecnica_anonimizacion,
     origen_dato_portabilidad:     rat.origen_dato_portabilidad,
     fecha_levantamiento:          rat.fecha_levantamiento,
+    origen_datos:                 rat.origen_datos,
   };
   return crearRat(payload);
 }

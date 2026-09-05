@@ -193,8 +193,8 @@ export function CompanyFichaPanel({ empresa, onUpdated }: Props) {
                     </p>
                   </div>
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: b.notificado_apdc ? '#DCFCE7' : '#FEF9C8', color: b.notificado_apdc ? '#166534' : '#854D0E' }}>
-                    {b.notificado_apdc ? 'Notificada' : 'Pendiente'}
+                    style={{ background: b.notificado_apdp ? '#DCFCE7' : '#FEF9C8', color: b.notificado_apdp ? '#166534' : '#854D0E' }}>
+                    {b.notificado_apdp ? 'Notificada' : 'Pendiente'}
                   </span>
                 </div>
               ))}
