@@ -26,9 +26,11 @@ function authHeaders(): HeadersInit {
 
 async function handle<T>(res: Response): Promise<T> {
   if (res.status === 401) {
-    localStorage.removeItem('custodio_token');
-    localStorage.removeItem('custodio_user');
-    localStorage.removeItem('custodio_company');
+    try {
+      localStorage.removeItem('custodio_token');
+      localStorage.removeItem('custodio_user');
+      localStorage.removeItem('custodio_company');
+    } catch {}
     window.location.replace('/login');
     throw new Error('Sesión expirada');
   }
@@ -175,9 +177,11 @@ export async function uploadAsesorDocument(file: File): Promise<AsesorUploadResp
     body: formData,
   });
   if (res.status === 401) {
-    localStorage.removeItem('custodio_token');
-    localStorage.removeItem('custodio_user');
-    localStorage.removeItem('custodio_company');
+    try {
+      localStorage.removeItem('custodio_token');
+      localStorage.removeItem('custodio_user');
+      localStorage.removeItem('custodio_company');
+    } catch {}
     window.location.replace('/login');
     throw new Error('Sesión expirada');
   }

@@ -69,7 +69,7 @@ export default function OnboardingPage() {
       const empresa = await api.crearEmpresa(payload);
       setCompany(empresa);
       setCompanies([empresa]);
-      localStorage.setItem('custodio_tour_completed', 'false');
+      try { localStorage.setItem('custodio_tour_completed', 'false'); } catch {}
       toast.success(`Empresa "${empresa.nombre}" registrada. ¡Listo para comenzar!`);
       router.push('/dashboard');
     } catch (e: unknown) {

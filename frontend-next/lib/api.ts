@@ -47,7 +47,7 @@ async function tryRefreshToken(): Promise<string | null> {
     if (!res.ok) return null;
     const data = await res.json();
     if (data.access_token) {
-      localStorage.setItem('custodio_token', data.access_token);
+      try { localStorage.setItem('custodio_token', data.access_token); } catch {}
       onTokenRefreshed(data.access_token);
       return data.access_token;
     }
@@ -82,9 +82,11 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
       const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` };
       res = await fetch(url, { ...init, headers: retryHeaders })  // internal use;
     } else {
-      localStorage.removeItem('custodio_token');
-      localStorage.removeItem('custodio_user');
-      localStorage.removeItem('custodio_company');
+      try {
+        localStorage.removeItem('custodio_token');
+        localStorage.removeItem('custodio_user');
+        localStorage.removeItem('custodio_company');
+      } catch {}
       window.location.replace('/login');
     }
   }
@@ -94,9 +96,11 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
 async function handle<T>(res: Response): Promise<T> {
   if (res.status === 204) return {} as T;
   if (res.status === 401) {
-    localStorage.removeItem('custodio_token');
-    localStorage.removeItem('custodio_user');
-    localStorage.removeItem('custodio_company');
+    try {
+      localStorage.removeItem('custodio_token');
+      localStorage.removeItem('custodio_user');
+      localStorage.removeItem('custodio_company');
+    } catch {}
     window.location.replace('/login');
     throw new Error('Sesión expirada');
   }
@@ -126,9 +130,11 @@ export async function login(username: string, password: string): Promise<AuthRes
 }
 
 export async function logout(): Promise<void> {
-  localStorage.removeItem('custodio_token');
-  localStorage.removeItem('custodio_user');
-  localStorage.removeItem('custodio_company');
+  try {
+    localStorage.removeItem('custodio_token');
+    localStorage.removeItem('custodio_user');
+    localStorage.removeItem('custodio_company');
+  } catch {}
   await fetch(`${API_BASE}/auth/logout`, {
     method: 'POST',
     credentials: 'include',

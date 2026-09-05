@@ -85,14 +85,14 @@ export default function DashboardPage() {
       setTourStep(t => t + 1);
     } else {
       setShowTour(false);
-      localStorage.setItem('custodio_tour_completed', 'true');
+      try { localStorage.setItem('custodio_tour_completed', 'true'); } catch {}
       toast.success('Tour completado. ¡Comenzaste tu camino hacia el cumplimiento!');
     }
   }
 
   function skipTour() {
     setShowTour(false);
-    localStorage.setItem('custodio_tour_completed', 'true');
+    try { localStorage.setItem('custodio_tour_completed', 'true'); } catch {}
   }
 
   useEffect(() => {

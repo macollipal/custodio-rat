@@ -327,7 +327,7 @@ export default function ReportesPage() {
     const newFilter = { id: Date.now().toString(), name: saveFilterName.trim(), filters: { ...filters, ...filtrosActivos } };
     const updated = [...savedFilters, newFilter];
     setSavedFilters(updated);
-    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated));
+    try { localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated)); } catch {}
     setSaveFilterName('');
     setShowSaveModal(false);
     toast.success('Filtro guardado');
@@ -336,7 +336,7 @@ export default function ReportesPage() {
   function deleteSavedFilter(id: string) {
     const updated = savedFilters.filter(f => f.id !== id);
     setSavedFilters(updated);
-    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated));
+    try { localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated)); } catch {}
   }
 
   function exportCSV() {
