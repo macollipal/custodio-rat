@@ -110,6 +110,8 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
     tecnica_anonimizacion: rat.tecnica_anonimizacion ?? '',
     origen_dato_portabilidad: rat.origen_dato_portabilidad ?? '',
     fecha_levantamiento: rat.fecha_levantamiento ?? '',
+    // Ley 21.719 Art. 14 ter
+    origen_datos: rat.origen_datos ?? '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -235,6 +237,19 @@ export default function RatEditForm({ rat, onDone, onCancel }: RatEditFormProps)
                 <input type="text" value={form.fuente_datos} onChange={e => set('fuente_datos', e.target.value)} aria-required="true" className={inputCls} style={inputStyle} />
               </div>
               <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Origen de los datos (Art. 14 ter)</label>
+                <select value={form.origen_datos} onChange={e => set('origen_datos', e.target.value)} className={inputCls} style={inputStyle} aria-label="Origen de los datos">
+                  <option value="">— No especificado —</option>
+                  <option value="titular">Del propio titular</option>
+                  <option value="tercero">De un tercero</option>
+                  <option value="fuente_publica">Fuente pública</option>
+                  <option value="mixto">Mixto</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>Destinatarios / Encargados</label>
                 <input type="text" value={form.destinatarios} onChange={e => set('destinatarios', e.target.value)} className={inputCls} style={inputStyle} />
               </div>

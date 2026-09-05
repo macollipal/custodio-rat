@@ -24,6 +24,7 @@ interface Consentimiento {
   activo: boolean;
   ip_origen: string | null;
   created_at: string;
+  version_politica?: string;
 }
 
 const CANAL_LABELS: Record<string, string> = {
@@ -297,6 +298,7 @@ function CreateConsentimientoModal({
   const [email, setEmail] = useState('');
   const [canal, setCanal] = useState('web');
   const [texto, setTexto] = useState('');
+  const [versionPolitica, setVersionPolitica] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -316,6 +318,7 @@ function CreateConsentimientoModal({
           canal,
           texto_consentimiento: texto,
           fecha_obtencion: new Date().toISOString(),
+          ...(versionPolitica ? { version_politica: versionPolitica } : {}),
         }),
       });
       if (!res.ok) {
@@ -407,6 +410,18 @@ function CreateConsentimientoModal({
               required
             />
           </div>
+          <div>
+            <label className={labelCls} htmlFor="consent-version">Versión de la política (Art. 12)</label>
+            <input
+              id="consent-version"
+              type="text"
+              value={versionPolitica}
+              onChange={(e) => setVersionPolitica(e.target.value)}
+              className={inputCls}
+              placeholder="Ej: v2.1, 2026-01-15, 3"
+            />
+            <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Versión de la política de privacidad vigente al momento de obtener el consentimiento.</p>
+          </div>
           <div className="flex gap-2 justify-end pt-2">
             <Button
               type="button"
@@ -475,6 +490,14 @@ function DetailModal({
             <span className="font-medium">Fecha de obtención:</span>{' '}
             {new Date(consentimiento.fecha_obtencion).toLocaleString('es-CL')}
           </div>
+          {consentimiento.version_politica && (
+            <div>
+              <span className="font-medium">Versión política (Art. 12):</span>{' '}
+              <span className="font-mono text-sm px-1.5 py-0.5 rounded" style={{ background: '#F3F4F6', color: '#374151' }}>
+                {consentimiento.version_politica}
+              </span>
+            </div>
+          )}
           {consentimiento.fecha_revocacion && (
             <div>
               <span className="font-medium">Fecha de revocación:</span>{' '}

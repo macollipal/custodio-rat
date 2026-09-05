@@ -92,11 +92,22 @@ export function CompanyFichaPanel({ empresa, onUpdated }: Props) {
       {/* Content */}
       <div className="p-4">
         {tab === 'datos' && (
-          <CompanyEditForm
-            empresa={empresa}
-            onDone={onUpdated}
-            onCancel={() => {}}
-          />
+          <>
+            {empresa.requiere_dpo && (
+              <div className="mb-4 flex items-start gap-3 rounded-lg px-4 py-3" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+                <span className="text-lg flex-shrink-0">⚠️</span>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: '#92400E' }}>DPO obligatorio — Art. 14 Ley 21.719</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#78350F' }}>Esta empresa trata datos sensibles o de alto riesgo que exigen la designación de un Delegado de Protección de Datos (DPO). Asigne un nombre y email de DPO en el formulario.</p>
+                </div>
+              </div>
+            )}
+            <CompanyEditForm
+              empresa={empresa}
+              onDone={onUpdated}
+              onCancel={() => {}}
+            />
+          </>
         )}
 
         {tab === 'rats' && (

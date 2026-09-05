@@ -163,6 +163,7 @@ export default function RatWizard({ company, onDone, onCancel }: RatWizardProps)
         tecnica_anonimizacion:        data.tecnica_anonimizacion || undefined,
         origen_dato_portabilidad:     data.origen_dato_portabilidad || undefined,
         fecha_levantamiento:          data.fecha_levantamiento || undefined,
+        origen_datos:                 data.origen_datos || undefined,
       };
       const result = await api.crearRat(payload);
       if (data.datos_sensibles && data.consentimiento_nombre && data.consentimiento_email) {

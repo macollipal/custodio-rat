@@ -32,6 +32,7 @@ export interface Company {
   solicitudes_pendientes?: number;
   solicitudes_vencidas_sla?: number;
   has_politica_transparencia?: boolean;
+  requiere_dpo?: boolean;
 }
 
 export interface Rubro {
@@ -116,6 +117,8 @@ export interface RAT {
   tecnica_anonimizacion?: string;
   origen_dato_portabilidad?: string;
   fecha_levantamiento?: string | null;
+  // Ley 21.719 Art. 14 ter
+  origen_datos?: 'titular' | 'tercero' | 'fuente_publica' | 'mixto';
 }
 
 export type EstadoEIPD = 'no_requerida' | 'no_requerida_justificada' | 'pendiente' | 'en_proceso' | 'completada';
@@ -151,6 +154,8 @@ export interface SecurityBreach {
   evidencia_notificacion_apdc_folio?: string;
   estado_cierre?: string;
   fecha_cierre?: string;
+  // Ley 21.719 Art. 14 bis — fecha en que el responsable tomó conocimiento
+  fecha_conocimiento?: string;
 }
 
 export interface DashboardStats {
@@ -284,4 +289,6 @@ export interface RATWizardData {
   tecnica_anonimizacion?: string;
   origen_dato_portabilidad?: string;
   fecha_levantamiento?: string | null;
+  // Ley 21.719 Art. 14 ter
+  origen_datos?: 'titular' | 'tercero' | 'fuente_publica' | 'mixto';
 }

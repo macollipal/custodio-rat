@@ -43,6 +43,8 @@ interface BreachFormData {
   evidencia_notificacion_apdc_folio?: string;
   estado_cierre?: string;
   fecha_cierre?: string;
+  // Ley 21.719 Art. 14 bis
+  fecha_conocimiento?: string;
 }
 
 function BreachForm({
@@ -76,6 +78,7 @@ function BreachForm({
     evidencia_notificacion_apdc_folio: initial?.evidencia_notificacion_apdc_folio ?? '',
     estado_cierre: initial?.estado_cierre ?? '',
     fecha_cierre: initial?.fecha_cierre ?? '',
+    fecha_conocimiento: initial?.fecha_conocimiento ?? '',
   });
 
   function set(k: keyof BreachFormData, v: string | number | boolean | undefined) {
@@ -245,6 +248,17 @@ function BreachForm({
         <p className="text-sm font-semibold" style={{ color: '#0369A1' }}>📋 Compliance · Ley 21.719</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className={labelCls} style={labelStyle}>Fecha de conocimiento (Art. 14 bis) *</label>
+            <input
+              type="datetime-local"
+              value={form.fecha_conocimiento ?? ''}
+              onChange={e => set('fecha_conocimiento', e.target.value || undefined)}
+              className={inputCls}
+              style={{ borderColor: '#E5E7EB' }}
+            />
+            <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Momento exacto en que el responsable tomó conocimiento de la brecha. El plazo de 72 h para notificar a la APDP corre desde esta fecha.</p>
+          </div>
+          <div>
             <label className={labelCls} style={labelStyle}>Fecha ocurrencia estimada</label>
             <input
               type="datetime-local"
@@ -254,6 +268,8 @@ function BreachForm({
               style={{ borderColor: '#E5E7EB' }}
             />
           </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls} style={labelStyle}>Causa raíz</label>
             <select

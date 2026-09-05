@@ -319,6 +319,18 @@ export default function RatDetailView({
           <ReadOnlyChips value={rat.categoria_titulares} />
         </FieldRow>
         <FieldRow label="Fuente de datos" value={rat.fuente_datos} criticalIfEmpty />
+        {rat.origen_datos && (
+          <FieldRow
+            label="Origen de los datos (Art. 14 ter)"
+            value={
+              rat.origen_datos === 'titular' ? 'Del propio titular'
+              : rat.origen_datos === 'tercero' ? 'De un tercero'
+              : rat.origen_datos === 'fuente_publica' ? 'Fuente pública'
+              : rat.origen_datos === 'mixto' ? 'Mixto'
+              : rat.origen_datos
+            }
+          />
+        )}
         <FieldRow label="Destinatarios" value={rat.destinatarios} />
         <FieldRow label="Encargado tratamiento" value={rat.nombre_encargado} />
         {rat.tiene_contrato_encargado !== undefined && (

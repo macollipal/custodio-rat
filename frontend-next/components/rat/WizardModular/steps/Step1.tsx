@@ -146,17 +146,36 @@ export function Step1({
         </FormField>
         <div>
           <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
-            Destinatarios / Encargados del tratamiento
+            Origen de los datos <span className="text-xs font-normal" style={{ color: '#6B7280' }}>(Art. 14 ter)</span>
           </label>
-          <input
-            type="text"
-            value={data.destinatarios ?? ''}
-            onChange={e => setData(d => ({ ...d, destinatarios: e.target.value }))}
-            placeholder="Ej: Proveedor CRM (encargado), área de RRHH, SII"
+          <select
+            value={data.origen_datos ?? ''}
+            onChange={e => setData(d => ({ ...d, origen_datos: e.target.value as RATWizardData['origen_datos'] }))}
             className={inputCls}
             style={inputStyle}
-          />
+            aria-label="Origen de los datos"
+          >
+            <option value="">— No especificado —</option>
+            <option value="titular">Del propio titular</option>
+            <option value="tercero">De un tercero</option>
+            <option value="fuente_publica">Fuente pública</option>
+            <option value="mixto">Mixto</option>
+          </select>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+          Destinatarios / Encargados del tratamiento
+        </label>
+        <input
+          type="text"
+          value={data.destinatarios ?? ''}
+          onChange={e => setData(d => ({ ...d, destinatarios: e.target.value }))}
+          placeholder="Ej: Proveedor CRM (encargado), área de RRHH, SII"
+          className={inputCls}
+          style={inputStyle}
+        />
       </div>
 
       <div>

@@ -904,6 +904,8 @@ export interface ConsentimientoCreate {
   texto_consentimiento: string;
   fecha_obtencion?: string;
   datos_sensibles?: boolean;
+  // Ley 21.719 Art. 12
+  version_politica?: string;
 }
 
 export async function registrarConsentimiento(data: ConsentimientoCreate): Promise<void> {
@@ -1028,6 +1030,7 @@ export interface ConsentimientoItem {
   activo: boolean;
   ip_origen: string | null;
   created_at: string;
+  version_politica?: string;
 }
 
 export interface ConsentimientoListResponse {
