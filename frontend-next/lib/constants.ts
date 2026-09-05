@@ -24,14 +24,17 @@ export const ESTADO_LABEL: Record<string, string> = {
 };
 export const RIESGO_OPTIONS = ['Bajo', 'Medio', 'Alto', 'Crítico'] as const;
 export const EIPD_OPTIONS = ['Requerida', 'No requerida'] as const;
+// Categorías taxativas Art. 4 Ley 21.719 — deben coincidir con CATEGORIAS_SENSIBLES_ART4 en backend/app/schemas/rat.py
 export const TIPOS_DATO_SENSIBLE = [
-  'Origen racial o étnico',
-  'Situación socioeconómica',
-  'Salud (física o mental)',
-  'Vida sexual, orientación sexual e identidad de género',
-  'Opiniones políticas, creencias religiosas o filosóficas',
+  'Origen étnico o racial',
+  'Opiniones políticas',
+  'Convicciones religiosas o filosóficas',
   'Afiliación sindical',
-  'Datos biométricos de identificación (Art. 16 BIS)',
+  'Datos genéticos',
+  'Datos biométricos',
+  'Datos relativos a la salud',
+  'Vida u orientación sexual',
+  'Condenas penales o delitos',
 ] as const;
 export const BASES_LEGALES = [
   'Consentimiento del titular',

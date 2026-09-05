@@ -419,6 +419,7 @@ export default function BreachesPage() {
         evidencia_notificacion_apdc_folio: data.evidencia_notificacion_apdc_folio || undefined,
         estado_cierre: data.estado_cierre || undefined,
         fecha_cierre: data.fecha_cierre ? new Date(data.fecha_cierre).toISOString() : undefined,
+        fecha_conocimiento: data.fecha_conocimiento ? new Date(data.fecha_conocimiento).toISOString() : undefined,
       };
       if (editingBreach) {
         await api.actualizarBrecha(editingBreach.id, payload);
@@ -671,6 +672,7 @@ export default function BreachesPage() {
               evidencia_notificacion_apdc_folio: editingBreach.evidencia_notificacion_apdc_folio ?? '',
               estado_cierre: editingBreach.estado_cierre ?? '',
               fecha_cierre: editingBreach.fecha_cierre ? new Date(editingBreach.fecha_cierre).toISOString().slice(0, 16) : '',
+              fecha_conocimiento: editingBreach.fecha_conocimiento ? new Date(editingBreach.fecha_conocimiento).toISOString().slice(0, 16) : '',
             } : undefined}
             onSave={handleSave}
             onCancel={() => { setView('list'); setEditingBreach(null); }}
