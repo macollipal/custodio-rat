@@ -148,14 +148,27 @@ def listar_sources(
         DataSource.activo == True,
     ).all()
 
+    source_ids = [s.id for s in sources]
+    from sqlalchemy import func as _func
+    last_run_ids_subq = (
+        db.query(
+            DiscoveryRun.source_id,
+            _func.max(DiscoveryRun.id).label("max_id"),
+        )
+        .filter(DiscoveryRun.source_id.in_(source_ids))
+        .group_by(DiscoveryRun.source_id)
+        .subquery()
+    )
+    last_runs = (
+        db.query(DiscoveryRun)
+        .join(last_run_ids_subq, DiscoveryRun.id == last_run_ids_subq.c.max_id)
+        .all()
+    )
+    last_run_by_source = {r.source_id: r for r in last_runs}
+
     result = []
     for s in sources:
-        last_run = (
-            db.query(DiscoveryRun)
-            .filter(DiscoveryRun.source_id == s.id)
-            .order_by(DiscoveryRun.started_at.desc())
-            .first()
-        )
+        last_run = last_run_by_source.get(s.id)
         out = DataSourceOut(
             id=s.id,
             company_id=s.company_id,
