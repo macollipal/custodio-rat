@@ -42,11 +42,14 @@ async def obtener_eipd_por_rat(
 ):
     from app.models.rat import RAT as RATModel
 
-    eipd = eipd_service.obtener_eipd_por_rat(db, rat_id)
     rat = db.query(RATModel).filter(RATModel.id == rat_id).first()
-    if rat:
-        check_company_access(current_user, rat.company_id, db)
-    return eipd
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    check_company_access(current_user, rat.company_id, db)
+    try:
+        return eipd_service.obtener_eipd_por_rat(db, rat_id)
+    except eipd_service.EIPDNotFoundError:
+        raise HTTPException(status_code=404, detail="EIPD no encontrado para este RAT.")
 
 
 @router.post("/", response_model=EIPDOut, status_code=201, summary="Crear EIPD para un RAT")
@@ -55,6 +58,12 @@ async def crear_eipd(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    from app.models.rat import RAT as RATModel
+
+    rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    check_company_access(current_user, rat.company_id, db)
     try:
         eipd = eipd_service.crear_eipd(db, data, current_user.username)
         return eipd
@@ -74,12 +83,16 @@ async def actualizar_eipd(
     current_user=Depends(get_current_user),
 ):
     from app.models.rat import RAT as RATModel
+    from app.models.eipd import EIPD
 
+    eipd_existing = db.query(EIPD).filter(EIPD.id == eipd_id).first()
+    if not eipd_existing:
+        raise HTTPException(status_code=404, detail="EIPD no encontrado.")
+    rat = db.query(RATModel).filter(RATModel.id == eipd_existing.rat_id).first()
+    if rat:
+        check_company_access(current_user, rat.company_id, db)
     try:
         eipd = eipd_service.actualizar_eipd(db, eipd_id, data, current_user.username)
-        rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
-        if rat:
-            check_company_access(current_user, rat.company_id, db)
         return eipd
     except eipd_service.EIPDNotFoundError:
         raise HTTPException(status_code=404, detail="EIPD no encontrado.")

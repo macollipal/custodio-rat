@@ -59,9 +59,13 @@ async def crear_consentimiento(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    from app.models.rat import RAT as RATModel
+    rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT no encontrado.")
+    check_company_access(current_user, rat.company_id, db)
     try:
         c = consentimiento_service.crear_consentimiento(db, data, current_user.username)
-        check_company_access(current_user, c.company_id, db)
         return ConsentimientoOut.from_orm_cifrado(c)
     except consentimiento_service.RATNotFoundError:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
@@ -74,8 +78,12 @@ async def revocar_consentimiento(
     current_user=Depends(get_current_user),
 ):
     try:
+        c_existing = consentimiento_service.obtener_consentimiento(db, consentimiento_id)
+    except consentimiento_service.ConsentimientoNotFoundError:
+        raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
+    check_company_access(current_user, c_existing.company_id, db)
+    try:
         c = consentimiento_service.revocar_consentimiento(db, consentimiento_id, current_user.username)
     except consentimiento_service.ConsentimientoNotFoundError:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
-    check_company_access(current_user, c.company_id, db)
     return ConsentimientoOut.from_orm_cifrado(c)
