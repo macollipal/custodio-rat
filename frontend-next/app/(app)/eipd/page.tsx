@@ -74,7 +74,7 @@ export default function EIPDPage() {
     if (company) {
       api.listarRats(company.id).then(setRats).catch(() => {});
     }
-  }, [company]);
+  }, [company?.id]);
 
   const canEdit = user?.rol_global !== 'usuario';
 

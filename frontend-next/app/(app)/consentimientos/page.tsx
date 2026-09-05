@@ -78,7 +78,7 @@ export default function ConsentimientosPage() {
     if (company) {
       api.listarRats(company.id).then(setRats).catch(() => {});
     }
-  }, [company, filtroRat, soloActivos]);
+  }, [company?.id, filtroRat, soloActivos]);
 
   async function handleRevoke(c: Consentimiento) {
     try {
