@@ -1256,8 +1256,8 @@ export async function verificarTitularPublico(companyId: number, email: string):
 
 async function getCsrfToken(): Promise<string> {
   const res = await publicFetch(`${API_BASE}/publico/csrf-token`);
-  const data: { csrf_token: string } = await res.json();
-  return data.csrf_token;
+  const data: { token: string } = await res.json();
+  return data.token;
 }
 
 export async function ejercerDerechoPublico(data: EjercerDerechosPayload): Promise<EjercerDerechosResponse> {
