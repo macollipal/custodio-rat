@@ -342,10 +342,13 @@ def actualizar_ticket(
 
     # S1.4: Calcular evidencia_respuesta_hash si no existe aún (SHA-256 sobre
     # respuesta_texto + username + timestamp UTC ISO) — Art. 12.5 integridad.
+    # Usar data.respuesta_texto si viene en este request, pues aún no se ha
+    # aplicado al ticket (se aplica más abajo), evitando hashear string vacío.
     if data.estado == "resuelto" and not ticket.evidencia_respuesta_hash:
         import hashlib
+        _respuesta_final = data.respuesta_texto or ticket.respuesta_texto or ""
         hash_input = (
-            f"{(ticket.respuesta_texto or '').strip()}"
+            f"{_respuesta_final.strip()}"
             f"|{current_user.username}"
             f"|{datetime.now(timezone.utc).isoformat()}"
         )
@@ -488,6 +491,9 @@ def agregar_nota(
     current_user=Depends(get_current_user),
 ):
     """Agrega nota interna a un ticket."""
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios de solo-lectura no pueden agregar notas.")
+
     ticket = db.query(TktSolicitudDerecho).filter(TktSolicitudDerecho.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado")
@@ -532,7 +538,7 @@ def listar_notas(
         if ticket.company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
 
-    notas = db.query(TktNota).filter(TktNota.ticket_id == ticket_id).order_by(TktNota.created_at.desc()).all()
+    notas = db.query(TktNota).filter(TktNota.ticket_id == ticket_id).order_by(TktNota.created_at.desc()).limit(200).all()
     return [
         {
             "id": n.id,
@@ -560,7 +566,7 @@ def listar_historial(
         if ticket.company_id not in empresas:
             raise HTTPException(status_code=403, detail="No tiene acceso a este ticket")
 
-    historial = db.query(TktHistorial).filter(TktHistorial.ticket_id == ticket_id).order_by(TktHistorial.created_at.desc()).all()
+    historial = db.query(TktHistorial).filter(TktHistorial.ticket_id == ticket_id).order_by(TktHistorial.created_at.desc()).limit(500).all()
     return [
         {
             "id": h.id,
