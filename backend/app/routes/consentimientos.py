@@ -66,6 +66,8 @@ async def crear_consentimiento(
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
     check_company_access(current_user, rat.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     try:
         c = consentimiento_service.crear_consentimiento(db, data, current_user.username)
         return ConsentimientoOut.from_orm_cifrado(c)
@@ -86,6 +88,8 @@ async def revocar_consentimiento(
     except consentimiento_service.ConsentimientoNotFoundError:
         raise HTTPException(status_code=404, detail="Consentimiento no encontrado.")
     check_company_access(current_user, c_existing.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(c_existing.company_id, db, current_user)
     try:
         c = consentimiento_service.revocar_consentimiento(db, consentimiento_id, current_user.username)
     except consentimiento_service.ConsentimientoNotFoundError:
