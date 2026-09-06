@@ -322,6 +322,7 @@ def get_audit_logs(db: Session, rat_id: int) -> list[AuditLog]:
         db.query(AuditLog)
         .filter(AuditLog.entidad == "rat", AuditLog.entidad_id == rat_id)
         .order_by(AuditLog.timestamp.desc())
+        .limit(500)
         .all()
     )
 

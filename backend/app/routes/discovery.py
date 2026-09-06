@@ -197,6 +197,8 @@ def crear_source(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
 
     source = DataSource(
         company_id=company_id,
@@ -232,6 +234,8 @@ def actualizar_source(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
     source = _get_source_or_404(source_id, company_id, db)
 
     for field, value in payload.model_dump(exclude_none=True).items():
@@ -260,6 +264,8 @@ def eliminar_source(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
     source = _get_source_or_404(source_id, company_id, db)
     source.activo = False  # soft delete
     db.commit()
@@ -277,6 +283,8 @@ def ejecutar_scan(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
     source = _get_source_or_404(source_id, company_id, db)
 
     try:
@@ -288,7 +296,7 @@ def ejecutar_scan(
             detail=f"Error al conectar con la fuente de datos: {exc}",
         )
 
-    findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).all()
+    findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).limit(5000).all()
     sugerencias = generar_sugerencias_rat(findings)
 
     return DiscoveryRunDetail(
@@ -316,7 +324,7 @@ def obtener_run(
     if not run:
         raise HTTPException(status_code=404, detail="Escaneo no encontrado")
 
-    findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run_id).all()
+    findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run_id).limit(5000).all()
     sugerencias = generar_sugerencias_rat(findings)
 
     return DiscoveryRunDetail(
@@ -427,6 +435,8 @@ def ejecutar_scan_manual(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
     source = _get_source_or_404(source_id, company_id, db)
 
     from app.services.discovery_service import _clasificar_columna, _es_gap
@@ -473,7 +483,7 @@ def ejecutar_scan_manual(
     db.commit()
     db.refresh(run)
 
-    saved_findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).all()
+    saved_findings = db.query(DiscoveryFinding).filter(DiscoveryFinding.run_id == run.id).limit(5000).all()
     sugerencias = generar_sugerencias_rat(saved_findings)
 
     return DiscoveryRunDetail(
@@ -496,6 +506,8 @@ def vincular_rat(
     company_ids = _get_company_ids(current_user, db)
     if company_id not in company_ids:
         raise HTTPException(status_code=403, detail="Sin acceso a esta empresa")
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(company_id, db, current_user)
 
     finding = db.query(DiscoveryFinding).filter(DiscoveryFinding.id == finding_id).first()
     if not finding:
