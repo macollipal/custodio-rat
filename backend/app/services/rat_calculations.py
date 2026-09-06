@@ -31,9 +31,13 @@ UMBRAL_RIESGO_MEDIO = 3
 
 
 def _truthy(value: Any) -> bool:
-    """Un valor se considera completado si existe y no es string vacio."""
+    """Un valor se considera completado si existe y no es string vacío.
+    Para booleanos: solo True cuenta — False es el default de BD, no una decisión activa del usuario.
+    """
     if value is None:
         return False
+    if isinstance(value, bool):
+        return value
     if isinstance(value, str) and not value.strip():
         return False
     if isinstance(value, (list, dict)) and len(value) == 0:

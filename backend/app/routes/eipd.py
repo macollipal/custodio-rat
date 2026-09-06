@@ -75,6 +75,25 @@ async def crear_eipd(
         raise HTTPException(status_code=400, detail=f"Resultado inválido. Valores permitidos: {e.valores_permitidos}")
 
 
+@router.get("/{eipd_id}", response_model=EIPDOut, summary="Obtener EIPD por ID")
+async def obtener_eipd(
+    eipd_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    from app.models.rat import RAT as RATModel
+    from app.models.eipd import EIPD
+
+    eipd = db.query(EIPD).filter(EIPD.id == eipd_id).first()
+    if not eipd:
+        raise HTTPException(status_code=404, detail="EIPD no encontrado.")
+    rat = db.query(RATModel).filter(RATModel.id == eipd.rat_id).first()
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT asociado a esta EIPD no encontrado.")
+    check_company_access(current_user, rat.company_id, db)
+    return EIPDOut.model_validate(eipd)
+
+
 @router.put("/{eipd_id}", response_model=EIPDOut, summary="Actualizar EIPD")
 async def actualizar_eipd(
     eipd_id: int,

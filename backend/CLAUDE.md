@@ -218,9 +218,13 @@ security_breaches:
 ```
 eipds:
   id, rat_id (FK, unique)
-  estado, fecha_inicio, fecha_completacion
-  responsables, recursos_necesarios
-  hallazgos, medidas_propuestas
+  metodologia, objetivos, necesidad_proporcionalidad
+  riesgos_identificados, medidas_propuestas
+  parecer_dpo, parecer_dpo_autor, parecer_dpo_fecha
+  justificacion_no_aplica
+  fecha_elaboracion, fecha_aprobacion
+  resultado: completada | no_requerida | no_requerida_justificada | en_proceso
+  created_by, created_at, updated_at
 ```
 
 ### Consentimiento (1:N con RAT)
@@ -318,6 +322,7 @@ completitud = round((completados / total) * 100)
 |--------|------|-------------|
 | GET | `/eipd/` | Lista EIPDs (filtros: company_id, estado) |
 | GET | `/eipd/rat/{rat_id}` | EIPD de un RAT específico |
+| GET | `/eipd/{id}` | Obtener EIPD por ID |
 | POST | `/eipd/` | Crea EIPD (1:1 con RAT) |
 | PUT | `/eipd/{id}` | Actualiza EIPD (workflow) |
 
