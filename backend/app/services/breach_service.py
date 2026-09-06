@@ -275,43 +275,7 @@ def _obtener_emails_titulares_afectados(
     Por compliance, no obtenemos emails de la BD de usuarios empresa
     (esos son DPO/empleados, no titulares afectados).
     """
-    emails: set = set()
-
-    # 1. Consentimientos de RATs afectados
-    if breach.rats_afectados:
-        try:
-            rat_ids = [int(x.strip()) for x in breach.rats_afectados.split(",") if x.strip().isdigit()]
-        except (ValueError, AttributeError):
-            rat_ids = []
-        if rat_ids:
-            from app.models.consentimiento import Consentimiento
-            consentimientos = (
-                db.query(Consentimiento)
-                .filter(
-                    Consentimiento.rat_id.in_(rat_ids),
-                    Consentimiento.company_id == company_id,
-                    Consentimiento.activo.is_(True),
-                )
-                .all()
-            )
-            for c in consentimientos:
-                # nombre_titular_cipher es BYTEA; usamos el placeholder
-                # que escribe el service (no es PII real).
-                # Para email usamos un campo diferente si existe.
-                pass  # El email está en email_titular_cipher (cifrado)
-
-    # 2. Por ahora, no tenemos acceso a emails cifrados sin descifrar
-    # cada uno. Eso requiere una clave de descifrado a nivel de servicio.
-    # En producción, se debe:
-    # - Descifrar email_titular_cipher de cada consentimiento
-    # - O tener un canal alternativo (ej. email en otra tabla no cifrada)
-    # - O enviar via DPO con CSV
-    #
-    # Por ahora retornamos lista vacia y loggeamos. El flujo de notificacion
-    # queda implementado en email_service.notificar_titulares_brecha para
-    # cuando se obtengan los emails (ej. via canal DPO con CSV).
-    logger.info(
-        f"Brecha {breach.id}: _obtener_emails_titulares_afectados no implementado "
-        f"completamente. Emails se obtendran via DPO en produccion."
-    )
-    return list(emails)
+    # Los emails de titulares están en email_titular_cipher (Fernet).
+    # Para notificarlos se requiere descifrar cada registro, lo cual
+    # se debe hacer vía canal DPO con CSV en producción.
+    return []
