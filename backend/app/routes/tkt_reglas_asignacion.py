@@ -136,6 +136,11 @@ def actualizar_regla(
             raise HTTPException(status_code=403, detail="No tiene acceso a esta regla")
 
     if data.company_id is not None:
+        # Verificar que el nuevo company_id también es accesible por este usuario.
+        if current_user.rol_global != "superadmin":
+            empresas = get_empresas_usuario(db, current_user.id)
+            if data.company_id not in empresas:
+                raise HTTPException(status_code=403, detail="No tiene acceso a la empresa destino.")
         regla.company_id = data.company_id
     if data.tipo is not None:
         regla.tipo = data.tipo
