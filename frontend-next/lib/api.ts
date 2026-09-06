@@ -1254,10 +1254,20 @@ export async function verificarTitularPublico(companyId: number, email: string):
   return res.json();
 }
 
+async function getCsrfToken(): Promise<string> {
+  const res = await publicFetch(`${API_BASE}/publico/csrf-token`);
+  const data: { csrf_token: string } = await res.json();
+  return data.csrf_token;
+}
+
 export async function ejercerDerechoPublico(data: EjercerDerechosPayload): Promise<EjercerDerechosResponse> {
+  const csrfToken = await getCsrfToken();
   const res = await fetch(`${API_BASE}/publico/ejercer-derechos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
+    },
     body: JSON.stringify(data),
   });
   if (!res.ok) {
