@@ -1,4 +1,5 @@
 from typing import Optional
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.tkt_regla_asignacion import TktReglaAsignacion
@@ -11,13 +12,15 @@ def evaluar_reglas_asignacion(
     prioridad: Optional[str] = None,
 ) -> Optional[int]:
     rules = db.query(TktReglaAsignacion).filter(
-        TktReglaAsignacion.activo
+        TktReglaAsignacion.activo.is_(True),
+        or_(
+            TktReglaAsignacion.company_id == company_id,
+            TktReglaAsignacion.company_id.is_(None),
+        ),
     ).all()
 
     matched = []
     for rule in rules:
-        if rule.company_id is not None and rule.company_id != company_id:
-            continue
         if rule.tipo is not None and rule.tipo != tipo:
             continue
         if rule.prioridad is not None and rule.prioridad != prioridad:

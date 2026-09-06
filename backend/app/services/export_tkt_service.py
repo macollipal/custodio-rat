@@ -75,7 +75,7 @@ def _get_tickets_para_exportar(
             q = q.filter(TktSolicitudDerecho.fecha_recepcion <= dt_hasta)
         except ValueError:
             pass
-    return q.order_by(TktSolicitudDerecho.fecha_recepcion.desc()).all()
+    return q.order_by(TktSolicitudDerecho.fecha_recepcion.desc()).limit(10_000).all()
 
 
 def _enriquecer_ticket(

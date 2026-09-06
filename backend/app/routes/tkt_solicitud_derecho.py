@@ -430,8 +430,6 @@ def actualizar_ticket(
         ticket.metodo_verificacion_identidad = data.metodo_verificacion_identidad
     if data.evidencia_identidad is not None:
         ticket.evidencia_identidad = data.evidencia_identidad
-    if data.evidencia_respuesta_hash is not None:
-        ticket.evidencia_respuesta_hash = data.evidencia_respuesta_hash
     if data.causal_rechazo is not None:
         ticket.causal_rechazo = data.causal_rechazo
     if data.medio_respuesta is not None:

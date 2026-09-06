@@ -70,7 +70,7 @@ class TktTicketUpdate(BaseModel):
     # Campos nuevos gaps Ley 21.719 (Iter 10)
     metodo_verificacion_identidad: Optional[str] = None
     evidencia_identidad: Optional[str] = None
-    evidencia_respuesta_hash: Optional[str] = None
+    # evidencia_respuesta_hash: calculado server-side, no aceptado como input (Art. 12.5)
     causal_rechazo: Optional[CausalRechazoEnum] = None
     medio_respuesta: Optional[str] = None
 
