@@ -80,7 +80,7 @@ def consultar_seguimiento(
 
     historial = db.query(TktHistorial).filter(
         TktHistorial.ticket_id == ticket.id
-    ).order_by(TktHistorial.created_at.asc()).all()
+    ).order_by(TktHistorial.created_at.asc()).limit(100).all()
 
     from datetime import datetime, timezone
     dias_restantes = None

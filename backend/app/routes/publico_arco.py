@@ -93,14 +93,27 @@ def csrf_token(request: Request):
 @router.get("/empresas", response_model=list[EmpresaPublicaOut])
 @limiter.limit("30/minute")
 def listar_empresas_publicas(request: Request, db: Session = Depends(get_db)):
-    """Lista empresas activas (id + nombre) para el formulario público ARCO."""
+    """Lista empresas con módulo ARCO activo para el formulario público."""
     from app.models.company import Company
+    from app.models.module_permission import ModulePermission
     empresas = (
         db.query(Company.id, Company.nombre)
         .order_by(Company.nombre)
         .all()
     )
-    return [EmpresaPublicaOut(id=e.id, nombre=e.nombre) for e in empresas]
+    # Una sola query: empresas que tienen ARCO explícitamente desactivado.
+    # Por defecto (sin fila), el módulo está activo (opt-out).
+    arco_disabled_ids = {
+        row.company_id
+        for row in db.query(ModulePermission.company_id)
+        .filter(ModulePermission.modulo == "ARCO", ModulePermission.enabled.is_(False))
+        .all()
+    }
+    return [
+        EmpresaPublicaOut(id=e.id, nombre=e.nombre)
+        for e in empresas
+        if e.id not in arco_disabled_ids
+    ]
 
 
 class VerificarTitularResponse(BaseModel):
@@ -168,10 +181,17 @@ def ejercer_derechos(
     _verify_csrf(request)
     from app.models.company import Company
     from app.services.ticket_service import crear_ticket
+    from app.services.module_permission_service import get_active_modules
 
     empresa = db.query(Company).filter(Company.id == body.company_id).first()
     if not empresa:
         raise HTTPException(status_code=404, detail="Empresa no encontrada.")
+
+    if "ARCO" not in get_active_modules(db, body.company_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Esta empresa no está habilitada para recibir solicitudes ARCO en este momento.",
+        )
 
     ticket = crear_ticket(
         db=db,
