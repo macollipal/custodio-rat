@@ -62,6 +62,8 @@ async def crear(
     if current_user.rol_global == "usuario":
         raise HTTPException(status_code=403, detail="Los usuarios no pueden registrar brechas de seguridad.")
     check_company_access(current_user, data.company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, data.company_id, "BRECHAS")
     b = crear_brecha(db, data, current_user.username)
     return _out(b)
 
@@ -73,8 +75,12 @@ async def actualizar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios no pueden modificar brechas de seguridad.")
     b = get_breach(db, breach_id)
     check_company_access(current_user, b.company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, b.company_id, "BRECHAS")
     b = actualizar_brecha(db, breach_id, data, usuario=current_user.username)
     return _out(b)
 
@@ -85,8 +91,12 @@ async def evaluar_riesgo(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios no pueden modificar brechas de seguridad.")
     b = get_breach(db, breach_id)
     check_company_access(current_user, b.company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, b.company_id, "BRECHAS")
     b = evaluar_riesgo_brecha(db, breach_id)
     return _out(b)
 
@@ -97,7 +107,11 @@ async def eliminar(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios no pueden eliminar brechas de seguridad.")
     b = get_breach(db, breach_id)
     check_company_access(current_user, b.company_id, db)
+    from app.services.module_permission_service import require_module_enabled
+    require_module_enabled(db, b.company_id, "BRECHAS")
     eliminar_brecha(db, breach_id, usuario=current_user.username)
     return MessageResponse(message="Brecha eliminada correctamente.")

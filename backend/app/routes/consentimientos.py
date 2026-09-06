@@ -59,6 +59,8 @@ async def crear_consentimiento(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios de solo-lectura no pueden crear consentimientos.")
     from app.models.rat import RAT as RATModel
     rat = db.query(RATModel).filter(RATModel.id == data.rat_id).first()
     if not rat:
@@ -77,6 +79,8 @@ async def revocar_consentimiento(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if current_user.rol_global == "usuario":
+        raise HTTPException(status_code=403, detail="Los usuarios de solo-lectura no pueden revocar consentimientos.")
     try:
         c_existing = consentimiento_service.obtener_consentimiento(db, consentimiento_id)
     except consentimiento_service.ConsentimientoNotFoundError:
