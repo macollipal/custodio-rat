@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
+from app.routes.deps import require_admin
 from app.schemas.feriado import FeriadoListResponse, FeriadoYearsResponse, FeriadoUploadResponse
 from app.schemas.common import MessageResponse
 from app.services import feriado_service
@@ -16,16 +17,11 @@ from app.services import feriado_service
 router = APIRouter(prefix="/admin/feriados", tags=["Admin Feriados"])
 
 
-def _require_admin():
-    from app.routes.deps import require_admin as _ra
-    return _ra()
-
-
 @router.get("/", response_model=FeriadoListResponse, summary="Listar feriados de un año")
 async def listar_feriados(
     anio: int = Query(..., description="Año"),
     db: Session = Depends(get_db),
-    current_user=Depends(_require_admin),
+    current_user=Depends(require_admin),
 ):
     feriados = feriado_service.listar_feriados(db, anio)
     return FeriadoListResponse(
@@ -41,7 +37,7 @@ async def listar_feriados(
 @router.get("/years", response_model=FeriadoYearsResponse, summary="Años con feriados configurados")
 async def listar_anios(
     db: Session = Depends(get_db),
-    current_user=Depends(_require_admin),
+    current_user=Depends(require_admin),
 ):
     anios = feriado_service.listar_anios(db)
     return FeriadoYearsResponse(anios=anios)
@@ -52,7 +48,7 @@ async def upload_feriados(
     anio: int = Query(..., description="Año a reemplazar"),
     file: UploadFile = File(..., description="Archivo CSV (año,mes,día,nombre[,tipo])"),
     db: Session = Depends(get_db),
-    current_user=Depends(_require_admin),
+    current_user=Depends(require_admin),
 ):
     from app.services.file_validation import validate_upload
     raw = validate_upload(
@@ -94,7 +90,7 @@ async def download_example():
 async def eliminar_feriados(
     anio: int,
     db: Session = Depends(get_db),
-    current_user=Depends(_require_admin),
+    current_user=Depends(require_admin),
 ):
     deleted = feriado_service.eliminar_feriados(db, anio)
     return MessageResponse(message=f"{deleted} feriados de {anio} eliminados")
