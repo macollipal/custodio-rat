@@ -59,7 +59,7 @@ def listar_plantillas(
     if solo_activas:
         q = q.filter(TktPlantilla.activo)
 
-    plantillas = q.order_by(TktPlantilla.tipo, TktPlantilla.nombre).all()
+    plantillas = q.order_by(TktPlantilla.tipo, TktPlantilla.nombre).limit(500).all()
     return [TktPlantillaResponse.model_validate(p) for p in plantillas]
 
 

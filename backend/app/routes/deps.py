@@ -76,7 +76,7 @@ def require_editor_or_admin_empresa(company_id: int, db: Session = Depends(get_d
     from app.services.user_company_service import get_rol_usuario
     from app.models.user_company import RolEmpresa
 
-    if current_user.rol_global in ("superadmin", "admin_empresa"):
+    if current_user.rol_global == "superadmin":
         return current_user
     rol = get_rol_usuario(db, current_user.id, company_id)
     if rol is None or rol == RolEmpresa.VIEWER:
@@ -89,14 +89,14 @@ def require_editor_or_admin_empresa(company_id: int, db: Session = Depends(get_d
 
 def require_company_admin(company_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """
-    Exige rol admin en la empresa. Admin global o admin_empresa siempre pasa.
+    Exige rol admin en la empresa. Solo superadmin bypassa; admin_empresa debe tener rol ADMIN en user_companies.
     NOTA: Esta función se llama manualmente con argumentos posicionales.
     No es una dependencia FastAPI estándar (no se puede usar con Depends()).
     """
     from app.services.user_company_service import get_rol_usuario
     from app.models.user_company import RolEmpresa
 
-    if current_user.rol_global in ("superadmin", "admin_empresa"):
+    if current_user.rol_global == "superadmin":
         return current_user
     rol = get_rol_usuario(db, current_user.id, company_id)
     if rol != RolEmpresa.ADMIN:

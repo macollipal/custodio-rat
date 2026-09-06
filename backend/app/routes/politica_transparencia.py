@@ -4,10 +4,11 @@ GET público — sin autenticación.
 PUT privado — requiere admin_empresa o superadmin (M-04 editor).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
+from app.core.limiter import limiter
 from app.routes.deps import get_current_user
 from app.schemas.politica_transparencia import PoliticaTransparenciaOut, PoliticaTransparenciaUpdate
 from app.services.politica_transparencia_service import generar_politica, guardar_overrides
@@ -16,7 +17,9 @@ router = APIRouter(tags=["Transparencia"])
 
 
 @router.get("/publico/transparencia/{company_id}", response_model=PoliticaTransparenciaOut, summary="Política de transparencia pública (Art. 14 ter — REC-02)")
+@limiter.limit("60/minute")
 def obtener_politica(
+    request: Request,
     company_id: int,
     db: Session = Depends(get_db),
 ):

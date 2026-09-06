@@ -89,20 +89,13 @@ def listar_sugerencias(rubro_id: Optional[int] = Query(None), db: Session = Depe
     query = db.query(RATSugerido)
     if rubro_id is not None:
         query = query.filter(RATSugerido.rubro_id == rubro_id)
-    if current_user.rol_global != "superadmin":
-        query = query.filter(RATSugerido.rubro_id == current_user.empresa_id)
     return query.all()
 
 
 @router_sugeridos.post("", response_model=RATSugeridoOut, summary="Crear sugerencia")
 def crear_sugerencia(payload: RATSugeridoCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if current_user.rol_global not in ("superadmin", "admin_empresa"):
-        raise HTTPException(status_code=403, detail="No tienes permisos.")
-    if current_user.rol_global == "admin_empresa":
-        from app.services.user_company_service import get_empresas_usuario
-        empresas = get_empresas_usuario(db, current_user.id)
-        if payload.rubro_id not in empresas:
-            raise HTTPException(status_code=403, detail="Solo puedes crear sugerencias para tu rubro.")
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin puede crear sugerencias de RAT.")
     sugerencia = RATSugerido(**payload.model_dump())
     db.add(sugerencia)
     db.commit()
@@ -112,16 +105,11 @@ def crear_sugerencia(payload: RATSugeridoCreate, db: Session = Depends(get_db), 
 
 @router_sugeridos.put("/{sugerencia_id}", response_model=RATSugeridoOut, summary="Editar sugerencia")
 def editar_sugerencia(sugerencia_id: int, payload: RATSugeridoUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if current_user.rol_global not in ("superadmin", "admin_empresa"):
-        raise HTTPException(status_code=403, detail="No tienes permisos.")
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin puede editar sugerencias de RAT.")
     sugerencia = db.query(RATSugerido).filter(RATSugerido.id == sugerencia_id).first()
     if not sugerencia:
         raise HTTPException(status_code=404, detail="Sugerencia no encontrada.")
-    if current_user.rol_global == "admin_empresa":
-        from app.services.user_company_service import get_empresas_usuario
-        empresas = get_empresas_usuario(db, current_user.id)
-        if sugerencia.rubro_id not in empresas:
-            raise HTTPException(status_code=403, detail="No puedes editar sugerencias de otros rubros.")
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(sugerencia, key, value)
     db.commit()
@@ -131,16 +119,11 @@ def editar_sugerencia(sugerencia_id: int, payload: RATSugeridoUpdate, db: Sessio
 
 @router_sugeridos.delete("/{sugerencia_id}", response_model=OkResponse, summary="Eliminar sugerencia")
 def eliminar_sugerencia(sugerencia_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if current_user.rol_global not in ("superadmin", "admin_empresa"):
-        raise HTTPException(status_code=403, detail="No tienes permisos.")
+    if current_user.rol_global != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin puede eliminar sugerencias de RAT.")
     sugerencia = db.query(RATSugerido).filter(RATSugerido.id == sugerencia_id).first()
     if not sugerencia:
         raise HTTPException(status_code=404, detail="Sugerencia no encontrada.")
-    if current_user.rol_global == "admin_empresa":
-        from app.services.user_company_service import get_empresas_usuario
-        empresas = get_empresas_usuario(db, current_user.id)
-        if sugerencia.rubro_id not in empresas:
-            raise HTTPException(status_code=403, detail="No puedes eliminar sugerencias de otros rubros.")
     db.delete(sugerencia)
     db.commit()
     return OkResponse(ok=True)

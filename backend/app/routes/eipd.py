@@ -89,8 +89,9 @@ async def actualizar_eipd(
     if not eipd_existing:
         raise HTTPException(status_code=404, detail="EIPD no encontrado.")
     rat = db.query(RATModel).filter(RATModel.id == eipd_existing.rat_id).first()
-    if rat:
-        check_company_access(current_user, rat.company_id, db)
+    if not rat:
+        raise HTTPException(status_code=404, detail="RAT asociado a esta EIPD no encontrado.")
+    check_company_access(current_user, rat.company_id, db)
     try:
         eipd = eipd_service.actualizar_eipd(db, eipd_id, data, current_user.username)
         return eipd

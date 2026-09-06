@@ -64,9 +64,12 @@ def _run_revisar_rats_vencidos(db: Session) -> int:
         .all()
     )
 
+    company_ids = {r.company_id for r in rats}
+    empresas_map = {e.id: e for e in db.query(Company).filter(Company.id.in_(company_ids)).all()}
+
     notificados = 0
     for rat in rats:
-        empresa = db.query(Company).filter(Company.id == rat.company_id).first()
+        empresa = empresas_map.get(rat.company_id)
         if not empresa or not empresa.email_dpo:
             continue
         try:
@@ -74,8 +77,9 @@ def _run_revisar_rats_vencidos(db: Session) -> int:
                 email_dpo=empresa.email_dpo,
                 nombre_dpo=empresa.contacto_dpo or "",
                 nombre_empresa=empresa.nombre,
-                rat_nombre=rat.nombre_proceso,
-                dias_revision=DIAS_REVISION,
+                nombre_proceso=rat.nombre_proceso,
+                rat_id=rat.id,
+                dias_remanente=DIAS_REVISION,
             )
             notificados += 1
         except EmailError as e:
@@ -161,9 +165,12 @@ def _run_revisar_encargados_vencidos(db: Session) -> int:
         .all()
     )
 
+    company_ids_enc = {c.company_id for c in contratos}
+    empresas_map_enc = {e.id: e for e in db.query(Company).filter(Company.id.in_(company_ids_enc)).all()}
+
     notificados = 0
     for contrato in contratos:
-        empresa = db.query(Company).filter(Company.id == contrato.company_id).first()
+        empresa = empresas_map_enc.get(contrato.company_id)
         if not empresa or not empresa.email_dpo:
             continue
         dias_restantes = (contrato.duracion_fin - ahora).days

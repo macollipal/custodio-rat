@@ -4,11 +4,12 @@ Endpoints para gestionar la cola de tareas asincronas.
 - GET  /admin/tasks: lista el estado de la cola
 - GET  /admin/tasks/stats: estadísticas
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
+from app.core.limiter import limiter
 from app.models.task import TaskQueue
 from app.routes.deps import get_current_user
 from app.services.task_service import process_pending_tasks, enqueue_task
@@ -89,7 +90,9 @@ async def stats(
 
 
 @router.post("/run", response_model=TaskRunResponse, summary="Procesar tareas pendientes (llamado por cron)")
+@limiter.limit("30/minute")
 async def run_tasks(
+    request: Request,
     max_tasks: int = 20,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
