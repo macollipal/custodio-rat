@@ -64,6 +64,8 @@ async def crear_eipd(
     if not rat:
         raise HTTPException(status_code=404, detail="RAT no encontrado.")
     check_company_access(current_user, rat.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     try:
         eipd = eipd_service.crear_eipd(db, data, current_user.username)
         return eipd
@@ -111,6 +113,8 @@ async def actualizar_eipd(
     if not rat:
         raise HTTPException(status_code=404, detail="RAT asociado a esta EIPD no encontrado.")
     check_company_access(current_user, rat.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(rat.company_id, db, current_user)
     try:
         eipd = eipd_service.actualizar_eipd(db, eipd_id, data, current_user.username)
         return eipd

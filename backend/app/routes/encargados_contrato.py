@@ -88,6 +88,8 @@ async def crear(
     current_user=Depends(get_current_user),
 ):
     check_company_access(current_user, data.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(data.company_id, db, current_user)
     contrato = svc.crear_contrato(db, data, current_user.username)
     _notificar_si_cerca_vencer(db, contrato)
     return svc._transform_to_out(contrato)
@@ -105,6 +107,8 @@ async def actualizar(
     except svc.ContratoNotFoundError:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
     check_company_access(current_user, existing.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(existing.company_id, db, current_user)
     try:
         c = svc.actualizar_contrato(db, contrato_id, data)
     except svc.ContratoNotFoundError:
@@ -124,5 +128,7 @@ async def eliminar(
     except svc.ContratoNotFoundError:
         raise HTTPException(status_code=404, detail="Contrato no encontrado.")
     check_company_access(current_user, c.company_id, db)
+    from app.routes.deps import require_editor_or_admin_empresa
+    require_editor_or_admin_empresa(c.company_id, db, current_user)
     svc.eliminar_contrato(db, contrato_id)
     return MessageResponse(message="Contrato eliminado correctamente.")
