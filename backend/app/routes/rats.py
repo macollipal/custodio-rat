@@ -520,7 +520,7 @@ async def auditoria(
 
 @router.get("/auditoria/verify-chain", summary="Verificar integridad de la cadena de auditor+�a")
 async def verificar_cadena_auditoria(
-    limit: int = Query(1000, description="L+�mite de registros a verificar"),
+    limit: int = Query(1000, le=50_000, description="L+�mite de registros a verificar"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
