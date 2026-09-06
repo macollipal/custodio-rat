@@ -510,6 +510,10 @@ def vincular_rat(
         raise HTTPException(status_code=403, detail="Sin acceso a este hallazgo")
 
     if rat_id is not None:
+        from app.models.rat import RAT
+        rat = db.query(RAT).filter(RAT.id == rat_id, RAT.company_id == company_id, RAT.deleted_at.is_(None)).first()
+        if not rat:
+            raise HTTPException(status_code=404, detail="RAT no encontrado o no pertenece a esta empresa")
         finding.rat_id = rat_id
         finding.es_gap = False
     if descartado is not None:

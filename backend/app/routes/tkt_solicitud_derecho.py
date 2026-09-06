@@ -458,7 +458,8 @@ def actualizar_ticket(
     )
     logger.info(f"Ticket {ticket_id} actualizado por user {current_user.id}")
 
-    if ticket.respuesta_texto and ticket.titular_email:
+    respuesta_enviada_en_este_request = data.respuesta_texto or data.plantilla_id
+    if respuesta_enviada_en_este_request and ticket.respuesta_texto and ticket.titular_email:
         from app.models.company import Company
         from app.services.email_service import notificar_respuesta_arco
         empresa = db.query(Company).filter(Company.id == ticket.company_id).first()
