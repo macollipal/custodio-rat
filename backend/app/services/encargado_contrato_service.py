@@ -115,6 +115,12 @@ def actualizar_contrato(db: Session, contrato_id: int, data: EncargadoContratoUp
     cambios.update(archivo_fields)
     cambios.pop("archivo_pdf_base64", None)
 
+    if "duracion_fin" in cambios:
+        duracion_fin = cambios["duracion_fin"]
+        if isinstance(duracion_fin, str):
+            duracion_fin = datetime.fromisoformat(duracion_fin.replace("Z", "+00:00"))
+        cambios["fecha_alerta_vencimiento"] = _calcular_fecha_alerta(duracion_fin)
+
     for field, value in cambios.items():
         setattr(c, field, value)
 

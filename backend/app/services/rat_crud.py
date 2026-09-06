@@ -340,12 +340,14 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
 
     # SQL aggregations para stats simples
-    total = db.query(func.count(RAT.id)).filter(RAT.company_id == company_id).scalar() or 0
+    base_filter = (RAT.company_id == company_id, RAT.deleted_at.is_(None))
+
+    total = db.query(func.count(RAT.id)).filter(*base_filter).scalar() or 0
 
     # por_estado via GROUP BY
     estado_rows = (
         db.query(RAT.estado, func.count(RAT.id).label("count"))
-        .filter(RAT.company_id == company_id)
+        .filter(*base_filter)
         .group_by(RAT.estado)
         .all()
     )
@@ -354,17 +356,17 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     # Agregados booleanos via SQL
     sensibles = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.datos_sensibles)
+        .filter(*base_filter, RAT.datos_sensibles)
         .scalar()
     ) or 0
     con_transferencia_int = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.transferencia_internacional)
+        .filter(*base_filter, RAT.transferencia_internacional)
         .scalar()
     ) or 0
     requieren_eipd = (
         db.query(func.count(RAT.id))
-        .filter(RAT.company_id == company_id, RAT.evaluacion_impacto)
+        .filter(*base_filter, RAT.evaluacion_impacto)
         .scalar()
     ) or 0
 
@@ -376,7 +378,7 @@ def get_dashboard_stats(db: Session, company_id: int) -> dict:
     # Workaround H3.1 (auditoria): extraer esta logica a un servicio.
     rats_complex = (
         db.query(RAT)
-        .filter(RAT.company_id == company_id)
+        .filter(*base_filter)
         .all()
     )
     # Un solo loop sobre rats_complex para todos los cómputos Python (C5).
