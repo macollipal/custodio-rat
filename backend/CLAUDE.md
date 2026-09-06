@@ -400,6 +400,81 @@ tkt_solicitud_derecho(
 | POST | `/admin/tasks/run` | Procesa tareas pendientes (llamado por cron) |
 | POST | `/admin/tasks/enqueue` | Encola tarea manualmente |
 
+### Discovery & Mapping
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/discovery/sources` | Lista fuentes de datos de la empresa |
+| POST | `/discovery/sources` | Crear fuente de datos |
+| PATCH | `/discovery/sources/{id}` | Actualizar fuente de datos |
+| DELETE | `/discovery/sources/{id}` | Desactivar fuente (soft delete) |
+| POST | `/discovery/sources/{id}/scan` | Ejecutar escaneo automático |
+| POST | `/discovery/sources/{id}/scan/manual` | Escaneo manual (el usuario provee columnas) |
+| GET | `/discovery/sources/{id}/runs` | Listar escaneos de una fuente |
+| GET | `/discovery/runs/{id}` | Detalle de un escaneo (findings + sugerencias) |
+| GET | `/discovery/runs/{id}/gaps/export` | Exportar gaps sin RAT a CSV |
+| PATCH | `/discovery/findings/{id}/vincular-rat` | Vincular hallazgo a RAT o marcar descartado |
+
+---
+
+## RBAC por módulo — reglas críticas
+
+Estas reglas fueron auditadas y corregidas. **No modificar sin revisar el código correspondiente.**
+
+| Módulo | Endpoint | Rol mínimo requerido |
+|--------|----------|---------------------|
+| RATs | GET (listar/detalle) | cualquier rol autenticado con acceso a empresa |
+| RATs | POST / PUT / DELETE / archivar / clonar / aprobar | `editor` o `admin` per-empresa (bloquea `viewer`) |
+| Brechas | GET (listar) | cualquier rol |
+| Brechas | POST / PUT / DELETE / evaluar-riesgo | `admin_empresa` o `superadmin` (bloquea `usuario` global) |
+| Consentimientos | GET | cualquier rol |
+| Consentimientos | POST (crear) / POST (revocar) | bloquea `usuario` global |
+| EIPD | GET (listar / detalle) | cualquier rol con acceso a empresa |
+| EIPD | POST (crear) / PUT (actualizar) | `editor` o `admin` per-empresa (bloquea `viewer`) |
+| Contratos encargado | GET | cualquier rol con acceso a empresa |
+| Contratos encargado | POST / PUT / DELETE | `editor` o `admin` per-empresa (bloquea `viewer`) |
+| TKT tickets | GET (listar/detalle) | cualquier rol con acceso a empresa |
+| TKT tickets | POST notas | bloquea `usuario` global |
+| TKT reglas asignación | GET | `admin_empresa` o `superadmin` (bloquea `usuario`) |
+| TKT reglas asignación | POST / PUT / DELETE | misma restricción + valida `company_id` destino (anti-IDOR) |
+| Discovery | GET (sources/runs/findings) | cualquier rol con acceso a empresa |
+| Discovery | POST / PATCH / DELETE (sources, scan, vincular) | `editor` o `admin` per-empresa (bloquea `viewer`) |
+| Empresas | GET | cualquier rol con acceso |
+| Empresas | POST | `superadmin` |
+| Empresas | PUT / PATCH desactivar | `editor` o `admin` per-empresa |
+| Empresas | DELETE | `superadmin` |
+| Rubros | GET | cualquier rol autenticado |
+| Rubros | POST / PUT / DELETE | `superadmin` |
+| Accesos empresa | todos | `admin` per-empresa o `superadmin` |
+| Política transparencia | GET público | sin autenticación (rate-limited) |
+| Política transparencia | PUT | `admin_empresa` o `superadmin` |
+| ARCO público | GET /publico/* | sin autenticación (rate-limited, CSRF en POST) |
+| Admin tareas | todos | `superadmin` |
+
+### Función RBAC canónica por tipo de check
+
+```python
+# Verifica solo acceso a empresa (lectura)
+check_company_access(current_user, company_id, db)
+
+# Verifica que no sea VIEWER per-empresa (escritura en módulos de datos)
+require_editor_or_admin_empresa(company_id, db, current_user)
+
+# Verifica rol ADMIN per-empresa (gestión de usuarios)
+_require_company_admin(db, current_user, company_id)
+
+# Verifica superadmin global
+require_admin(current_user)  # como Depends()
+```
+
+---
+
+## Fixes de integridad / completitud (2026-09)
+
+- **`_truthy(False)` bug** (`rat_calculations.py`): `isinstance(value, bool): return value` — booleanos `False` eran contados como "completados".
+- **`evidencia_respuesta_hash`** (`tkt_solicitud_derecho.py`): se usa `data.respuesta_texto or ticket.respuesta_texto` para hashear, evitando hash vacío cuando ambos campos llegan en el mismo PATCH.
+- **CSRF frontend** (`api.ts`): `getCsrfToken()` lee `data.token` (no `data.csrf_token`) del endpoint `GET /publico/csrf-token`.
+- **Limits de queries**: `get_audit_logs` → `.limit(500)`, notas/historial TKT → `.limit(200/.limit(500)`, Discovery findings → `.limit(5000)`.
+
 ---
 
 ## Notas importantes
