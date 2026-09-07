@@ -240,10 +240,21 @@ consentimientos:
 ## Fórmula de completitud
 
 ```python
+# 7 obligatorios Art. 16
 campos_obligatorios = [nombre_proceso, categoria_datos, categoria_titulares,
                         finalidad, base_legal, fuente_datos, plazo_retencion]
+# 3 recomendados Art. 16
 campos_recomendados = [medidas_seguridad, destinatarios, transferencia_datos]
-total = 10  # 7 + 3
+# 5 Tier 1 — compliance APDP crítico
+campos_tier1 = [nivel_confidencialidad, estructura_dato, datos_nna,
+                datos_anonimizados, datos_seudonimizados]
+# 10 Tier 2 — operativos
+campos_tier2 = [sistema_almacenamiento, volumen_titulares_estimado,
+                responsable_tratamiento_email, ciclo_procesamiento,
+                automatizacion, frecuencia, transferencia_nacional,
+                doc_clausulas, medidas_organizativas, mecanismos_eliminacion]
+total = 25  # 7 + 3 + 5 + 10
+# Penalización -1 si base_legal != 'Otra' y no hay documento adjunto
 completitud = round((completados / total) * 100)
 ```
 
