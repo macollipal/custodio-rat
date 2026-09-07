@@ -19,7 +19,7 @@ router = APIRouter(prefix="/encargados-contrato", tags=["Contratos de Encargado"
 
 
 def _notificar_si_cerca_vencer(db: Session, contrato) -> None:
-    """Si el contrato vence en <= 30 días o ya venció, notifica al DPO."""
+    """Si el contrato vence en <= 30 días o ya venció, notifica al DPO (máx. 1 vez/24h)."""
     from datetime import datetime, timedelta, timezone
     from app.models.company import Company
     from app.services.email_service import notificar_vencimiento_encargado, EmailError
@@ -30,6 +30,15 @@ def _notificar_si_cerca_vencer(db: Session, contrato) -> None:
     umbral = ahora + timedelta(days=30)
     if contrato.duracion_fin > umbral:
         return
+
+    # Throttle: no reenviar si ya se notificó en las últimas 24 horas.
+    if contrato.ultima_notificacion_at:
+        ultima = contrato.ultima_notificacion_at
+        if ultima.tzinfo is None:
+            ultima = ultima.replace(tzinfo=timezone.utc)
+        if (ahora - ultima) < timedelta(hours=24):
+            return
+
     empresa = db.query(Company).filter(Company.id == contrato.company_id).first()
     if not empresa or not empresa.email_dpo:
         return
@@ -43,6 +52,8 @@ def _notificar_si_cerca_vencer(db: Session, contrato) -> None:
             finalidad=contrato.finalidad or "",
             dias_restantes=dias,
         )
+        contrato.ultima_notificacion_at = ahora
+        db.commit()
     except EmailError as e:
         import logging
         logging.getLogger(__name__).error(f"Encargado contrato {contrato.id}: fallo enviando notificación: {e}")

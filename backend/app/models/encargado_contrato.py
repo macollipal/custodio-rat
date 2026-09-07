@@ -34,6 +34,7 @@ class EncargadoContrato(Base):
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     fecha_alerta_vencimiento: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    ultima_notificacion_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_by: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

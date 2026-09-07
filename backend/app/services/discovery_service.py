@@ -72,10 +72,11 @@ FROM information_schema.columns
 WHERE table_schema = %s
   AND table_name NOT IN ('alembic_version','django_migrations','spatial_ref_sys')
 ORDER BY table_name, ordinal_position
+LIMIT 50000
 """
 
 QUERY_COLUMNS_MSSQL = """
-SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE
+SELECT TOP 50000 TABLE_NAME, COLUMN_NAME, DATA_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_SCHEMA = %s
 ORDER BY TABLE_NAME, ORDINAL_POSITION

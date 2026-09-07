@@ -93,7 +93,11 @@ def log_audit(
     - PostgreSQL/Neon: usa nextval() directo para evitar problemas con el pooler.
     """
     prev_hash = GENESIS_HASH
-    last_log = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
+    dialect = db.bind.dialect.name if db.bind else "unknown"
+    q = db.query(AuditLog).order_by(AuditLog.id.desc())
+    if dialect == "postgresql":
+        q = q.with_for_update()
+    last_log = q.first()
     if last_log:
         prev_hash = last_log.hash
 
@@ -103,8 +107,6 @@ def log_audit(
     record_hash = _compute_hash(
         prev_hash, timestamp, accion, entidad, entidad_id, usuario, detalle_str
     )
-
-    dialect = db.bind.dialect.name if db.bind else "unknown"
 
     if dialect == "postgresql":
         seq_name = db.execute(
