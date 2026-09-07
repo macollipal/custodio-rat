@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { API_BASE } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 
 function StorageTab() {
   const [loading, setLoading] = useState(false);
@@ -16,9 +17,7 @@ function StorageTab() {
   async function fetchStorageInfo() {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/debug/oci`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('custodio_token')}` },
-      });
+      const res = await apiFetch(`${API_BASE}/debug/oci`);
       const data = await res.json();
       if (data.oci_config_parsed) {
         setStorageInfo({

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { API_BASE } from '@/lib/constants';
-import { getToken } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface FeriadoItem {
@@ -28,9 +28,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
 
   async function loadYears() {
     try {
-      const res = await fetch(`${API_BASE}/admin/feriados/years`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiFetch(`${API_BASE}/admin/feriados/years`);
       const data = await res.json();
       const currentYear = new Date().getFullYear();
       const allYears = [...new Set([currentYear, ...(data.anios || [])])].sort((a, b) => b - a);
@@ -43,9 +41,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
   async function loadFeriados() {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/feriados/?anio=${selectedYear}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiFetch(`${API_BASE}/admin/feriados/?anio=${selectedYear}`);
       const data = await res.json();
       setFeriados(data.feriados || []);
     } catch {
@@ -75,11 +71,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
       const formData = new FormData();
       formData.append('file', file);
       const uploadUrl = `${API_BASE}/admin/feriados/upload?anio=${selectedYear}`;
-      const res = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
-      });
+      const res = await apiFetch(uploadUrl, { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) {
         setMessage({ type: 'error', text: data.detail || 'Error al subir feriados' });
@@ -98,10 +90,7 @@ export function FeriadosTab({ currentTab }: FeriadosTabProps) {
 
   async function handleDelete() {
     try {
-      const res = await fetch(`${API_BASE}/admin/feriados/${selectedYear}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiFetch(`${API_BASE}/admin/feriados/${selectedYear}`, { method: 'DELETE' });
       const data = await res.json();
       setMessage({ type: 'success', text: data.mensaje });
       loadYears();
