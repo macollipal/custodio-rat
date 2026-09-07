@@ -1421,8 +1421,11 @@ export async function ejecutarScan(sourceId: number, companyId: number): Promise
   return handle<DiscoveryRunDetail>(res);
 }
 
-export function urlExportarGapsCSV(runId: number, companyId: number): string {
-  return `${API_BASE}/discovery/runs/${runId}/gaps/export?company_id=${companyId}`;
+export async function exportarGapsCSV(runId: number, companyId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/discovery/runs/${runId}/gaps/export?company_id=${companyId}`);
+  if (!res.ok) throw new Error('Error al exportar gaps CSV');
+  const blob = await res.blob();
+  downloadBlob(blob, `gaps_discovery_run${runId}.csv`);
 }
 
 export async function obtenerDiscoveryRun(runId: number, companyId: number): Promise<DiscoveryRunDetail> {
