@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { API_BASE } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 
 interface DbHealth {
@@ -24,9 +25,7 @@ export default function ConexionPage() {
   async function fetchDbHealth() {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/health/db`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('custodio_token')}` },
-      });
+      const res = await apiFetch(`${API_BASE}/health/db`);
       const data = await res.json();
       setDbHealth(data);
     } catch {
@@ -40,9 +39,7 @@ export default function ConexionPage() {
     setTesting(true);
     const start = Date.now();
     try {
-      await fetch(`${API_BASE}/health/db`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('custodio_token')}` },
-      });
+      await apiFetch(`${API_BASE}/health/db`);
       const latency = Date.now() - start;
       setDbHealth(prev => prev ? { ...prev, latency_ms: latency } : null);
       toast.success(`Latencia: ${latency}ms`);

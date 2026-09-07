@@ -65,9 +65,9 @@ function sanitize(text: string | null | undefined): string {
   if (!text) return '';
   return text
     .replace(/&/g, '&amp;')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
 
