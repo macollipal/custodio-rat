@@ -33,15 +33,18 @@ engine = create_engine(
 
 @event.listens_for(engine, "connect")
 def on_connect(dbapi_conn, connection_record):
-    """Saneamiento de conexión nueva en Neon (evita mensajes 'channel binding required')."""
+    """Saneamiento de conexión nueva en Neon (evita mensajes 'channel binding required').
+    El finally garantiza que autocommit vuelva a False aunque SELECT 1 falle en cold-start.
+    """
     try:
         dbapi_conn.autocommit = True
         cursor = dbapi_conn.cursor()
         cursor.execute("SELECT 1")
         cursor.close()
-        dbapi_conn.autocommit = False
     except Exception:
         pass
+    finally:
+        dbapi_conn.autocommit = False
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

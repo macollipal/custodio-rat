@@ -457,6 +457,7 @@ def actualizar_ticket(
             "con_respuesta": bool(ticket.respuesta_texto),
         },
     )
+    db.commit()
     logger.info(f"Ticket {ticket_id} actualizado por user {current_user.id}")
 
     respuesta_enviada_en_este_request = data.respuesta_texto or data.plantilla_id
