@@ -36,6 +36,7 @@ OUT_DIR = ROOT / "docs" / "documentacion_oficial"
 AUD_V110 = ROOT / "docs" / "auditorias" / "2026-07-18_auditoria_doc_v1.10" / "_scripts"
 AUD_V17  = ROOT / "docs" / "auditorias" / "2026-06-24_auditoria_v1.7" / "_scripts"
 AUD_V111 = ROOT / "docs" / "auditorias" / "2026-08-22_auditoria_qa_tests" / "_scripts"
+AUD_V19  = ROOT / "docs" / "auditorias" / "2026-07-05_auditoria_v1.9" / "_scripts"
 
 VERSION = "v1.13"
 COLOR_PRI = RGBColor(0x1F, 0x49, 0x7D)   # azul Custodio
@@ -433,6 +434,275 @@ def consolidar_10_plan_qa():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# 04 — Casos de Uso
+# ══════════════════════════════════════════════════════════════════════════════
+
+def consolidar_04_casos_uso():
+    print("\n[04] Casos de Uso...")
+
+    # Base: v1.7 — tiene "Listado consolidado" CU-001 a CU-068
+    ok = run_script(AUD_V17 / "build_04_casos_uso_v1_7.py")
+    if not ok:
+        return
+
+    base = find_docx("04_Casos_de_Uso")
+    if not base:
+        print("  WARN: no se encontró 04_Casos_de_Uso*.docx")
+        return
+
+    doc = Document(str(base))
+
+    # v1.8/v1.9: CU-069 a CU-082
+    section_heading(doc, "Casos de Uso v1.8–v1.9 (Iter 11+12 — Julio 2026)", level=1)
+    cu_v19 = [
+        ["CU-069", "Registrar 15 campos Tier 1+Tier 2 en RAT", "AC-02/03", "RF-141–155", "PUT /rats/{id}"],
+        ["CU-070", "BYTEA limitado a 10MB en archivo y adjunto ARCO", "Sistema", "RF-156", "CHECK constraint PostgreSQL"],
+        ["CU-071", "Test IL validado con mínimo 50 caracteres", "AC-02/03", "RF-157", "PUT /rats/{id} — validación Pydantic + frontend"],
+        ["CU-072", "Hash SHA-256 automático de evidencia ARCO al resolver TKT", "Sistema", "RF-158", "PATCH /tkt-solicitud-derecho/{id}"],
+        ["CU-073", "causal_rechazo con enum cerrado (7 causales Art. 29 RL)", "AC-01/02", "RF-159", "PATCH /tkt-solicitud-derecho/{id} — dropdown"],
+        ["CU-074", "Toggle ARCO con touch target 44x44px (mobile)", "AC-05", "RF-160", "UI: solicitud_derecho/page.tsx"],
+        ["CU-075", "Notificación APDC automatizada al crear brecha", "Sistema", "RF-161", "actualizar_brecha() — email_service"],
+        ["CU-076", "Notificación a titulares automatizada al cerrar brecha", "Sistema", "RF-162", "actualizar_brecha() — logging"],
+        ["CU-077", "TKT no puede resolverse sin evidencia ni hash", "AC-01/02", "RF-158", "PATCH /tkt → HTTP 400 si sin adjuntos ni respuesta"],
+        ["CU-078", "IDOR multi-tenant: empresa no puede acceder a RAT de otra", "AC-02/03", "RF-163", "get_rat_for_user() — retorna 404 en 6 endpoints"],
+        ["CU-079", "base_legal_valida strict contra enum taxativo", "Sistema", "RF-164", "base_legal_valida() — 6 opciones válidas"],
+        ["CU-080", "ConsentimientoAlert antes de guardar RAT con datos_sensibles", "Sistema", "RF-165", "handleSave() — listarConsentimientos()"],
+        ["CU-081", "Homologación orden campos RAT en wizard, drawer y PDF", "Sistema", "RF-166", "RatDetailView + RatEditForm + RatWizard + export_service"],
+        ["CU-082", "PDF con títulos de sección y alertas rojas", "Sistema", "RF-167", "export_service — PASOx con COLOR_PRIMARIO"],
+    ]
+    add_table(doc, ["ID", "Nombre", "Actores", "Trazabilidad RF", "Disparador"], cu_v19,
+              col_widths_cm=[1.5, 4.2, 2.0, 2.5, 4.8])
+
+    # v1.12: CU-083 a CU-087 (nombrados CU-31/35 en el script original)
+    section_heading(doc, "Casos de Uso v1.12 (Septiembre 2026)", level=1)
+    cu_v112 = [
+        ["CU-083", "Detección de titular repetido en formulario público", "AC-05 (Anónimo)", "RF-174", "GET /publico/verificar-titular — banner si ya tiene TKT abierto"],
+        ["CU-084", "Acuse de recibo automático al crear ticket ARCO", "AC-02/03 (editor+)", "RF-175", "POST /tkt-solicitud-derecho/ — email en ≤5 min con tracking token"],
+        ["CU-085", "Insertar placeholders dinámicos en respuesta ARCO", "AC-02/03 (editor+)", "RF-176", "Frontend TicketDrawer.tsx — chips {{nombre_titular}}, {{fecha}}, etc."],
+        ["CU-086", "Ver flujo ARCO con semáforo SLA y tiempos reales", "AC-02/03 (editor+)", "RF-177", "Frontend FlujoModal.tsx — días hábiles consumidos/restantes"],
+        ["CU-087", "Ficha de empresa con 4 tabs lazy (Datos/RATs/ARCO/Brechas)", "AC-01/02/03", "RF-178", "Frontend CompanyFichaPanel.tsx — Art. 16 Ley 21.719"],
+    ]
+    add_table(doc, ["ID", "Nombre", "Actores", "Trazabilidad RF", "Disparador"], cu_v112,
+              col_widths_cm=[1.5, 4.2, 2.5, 2.0, 4.8])
+
+    dest = rename_to_v113(base)
+    if dest.exists():
+        dest.unlink()
+    doc.save(str(dest))
+    if base != dest and base.exists():
+        base.unlink()
+    print(f"  ✓ {dest.name}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 08 — API REST
+# ══════════════════════════════════════════════════════════════════════════════
+
+def consolidar_08_api():
+    print("\n[08] API REST...")
+
+    # Base: v1.10 — tiene endpoints PATCH TKT + IDOR multi-tenant
+    ok = run_script(AUD_V110 / "build_08_api_v1_10.py")
+    if not ok:
+        return
+
+    base = find_docx("08_API_REST")
+    if not base:
+        base = find_docx("08_API")
+    if not base:
+        print("  WARN: no se encontró 08_API*.docx")
+        return
+
+    doc = Document(str(base))
+
+    # v1.11: POST /auth/users→201, GET /publico/csrf-token, PUT /transparencia, PATCH TKT metodo
+    section_heading(doc, "Endpoints nuevos/modificados v1.11 (Agosto 2026)", level=1)
+    ep_v111 = [
+        ["POST", "/auth/users", "JWT", "superadmin",
+         "UserCreate: username, email, full_name, password, rol_global",
+         "201 + UserOut (antes: 200)"],
+        ["GET", "/publico/csrf-token", "No", "Pública (rate 30/min)",
+         "—",
+         "200 + {token, header_name, expires_in_seconds}"],
+        ["PUT", "/transparencia/{company_id}", "JWT", "admin_empresa, superadmin",
+         "overrides_json: dict personalizado de items",
+         "200 + PoliticaTransparenciaResponse"],
+        ["PATCH", "/tkt-solicitud-derecho/{id}", "JWT", "editor+",
+         "estado, respuesta_texto, metodo_verificacion_identidad*, causal_rechazo*",
+         "200 + TktTicketResponse — metodo_verificacion ahora puede ir en body del PATCH"],
+    ]
+    add_table(doc, ["Método", "Path", "Auth", "RBAC", "Params", "Response"], ep_v111,
+              col_widths_cm=[1.4, 4.5, 1.0, 2.5, 4.5, 4.1])
+
+    # v1.12: GET /publico/verificar-titular + acuse recibo en POST TKT
+    section_heading(doc, "Endpoints nuevos/modificados v1.12 (Septiembre 2026)", level=1)
+    ep_v112 = [
+        ["GET", "/publico/verificar-titular", "No", "Pública (rate 20/min)",
+         "company_id, email (query params)",
+         "200 + {tiene_tickets_abiertos: bool, cantidad: int}"],
+        ["POST", "/publico/ejercer-derechos", "No", "Pública (10/hora/IP)",
+         "EjercerDerechosRequest (company_id, tipo, nombre, email, rut...)",
+         "201 + {tracking_token, mensaje} — envía acuse recibo automático (QW6)"],
+        ["POST", "/tkt-solicitud-derecho/", "JWT", "editor+",
+         "TktCreate",
+         "201 + TktOut — envía acuse de recibo al titular_email si presente (ARCO-QW6)"],
+    ]
+    add_table(doc, ["Método", "Path", "Auth", "RBAC", "Params", "Response"], ep_v112,
+              col_widths_cm=[1.4, 4.5, 1.0, 2.5, 4.5, 4.1])
+    add_italic_note(doc, "Nota v1.12: RNF-22 — GET /publico/verificar-titular tiene rate limit 20/min por IP "
+                        "para prevenir enumeración de emails. Nomenclatura APDP corregida en todo el sistema (RNF-21).")
+
+    dest = rename_to_v113(base)
+    if dest.exists():
+        dest.unlink()
+    doc.save(str(dest))
+    if base != dest and base.exists():
+        base.unlink()
+    print(f"  ✓ {dest.name}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 12 — Manual Técnico
+# ══════════════════════════════════════════════════════════════════════════════
+
+def consolidar_12_manual_tecnico():
+    print("\n[12] Manual Técnico...")
+
+    # Base: v1.10 — BYTEA 10MB, Test IL, Hash SHA-256, causal_rechazo, toggle 44px
+    ok = run_script(AUD_V110 / "build_12_manual_tecnico_v1_10.py")
+    if not ok:
+        return
+
+    base = find_docx("12_Manual_Tecnico")
+    if not base:
+        print("  WARN: no se encontró 12_Manual_Tecnico*.docx")
+        return
+
+    doc = Document(str(base))
+
+    # v1.11: fixes QA total + Sprint A+B+UX
+    section_heading(doc, "Cambios técnicos v1.11 (Agosto 2026 — QA Total)", level=1)
+    cambios_v111 = [
+        ["POST /auth/users → 201", "ALTO", "routes/auth.py:129",
+         "Agregado status_code=201. Antes retornaba 200 por default FastAPI."],
+        ["PATCH TKT: metodo_verificacion en body", "ALTO", "routes/tkt_solicitud_derecho.py",
+         "Condición corregida: verifica campo BD Y body del PATCH. Antes ignoraba el body."],
+        ["encrypt_existing_bytea: ENCRYPTION_KEY estricta", "MEDIO", "scripts/migration/encrypt_existing_bytea.py",
+         "Eliminado fallback a settings.ENCRYPTION_KEY. Exige key explícita en entorno."],
+        ["Sprint A: soft delete RAT (Art. 19)", "ALTO", "services/rat_crud.py, routes/rats.py",
+         "delete_rat() asigna deleted_at. Filtros excluyen deleted_at IS NOT NULL. RATs aprobados no eliminables (409)."],
+        ["Sprint A: EIPD gate aprobación (Art. 15 bis)", "ALTO", "services/rat_crud.py (aprobar_rat)",
+         "validar_eipd_obligatoria() bloquea APROBADO sin EIPD cuando datos_sensibles=True o transferencia_int=True."],
+        ["Sprint A: datos NNA (Art. 16 §4)", "ALTO", "models/rat.py, schemas/rat.py",
+         "Campo datos_nna boolean. Bloqueo aprobación si datos_nna=True sin EIPD."],
+        ["Sprint A: mutex anon/seudo", "MEDIO", "schemas/rat.py",
+         "No se puede marcar datos_anonimizados=True y datos_seudonimizados=True simultáneamente (validator Pydantic)."],
+        ["Sprint B: respuesta_texto obligatoria (Art. 12)", "ALTO", "services/ticket_service.py",
+         "Bloquea PATCH→resuelto sin respuesta_texto no vacía."],
+        ["Sprint B: SLA alerts 72h brechas", "ALTO", "services/breach_service.py",
+         "Alerta automática APDC si brecha sin notificación tras 72h (Art. 14 bis §3)."],
+        ["Sprint UX: política transparencia editable (Art. 14 ter)", "MEDIO", "routes/transparencia.py",
+         "PUT /transparencia/{company_id} con overrides_json. Hash SHA-256 recalculado en cada guardado."],
+    ]
+    add_table(doc, ["Cambio", "Severidad", "Archivos", "Descripción"], cambios_v111,
+              col_widths_cm=[3.0, 1.5, 4.0, 9.5])
+
+    # v1.12: QW5, QW6, QW7, QW8, Empresas-QW6, CI/CD, Nomenclatura
+    section_heading(doc, "Cambios técnicos v1.12 (Septiembre 2026)", level=1)
+    cambios_v112 = [
+        ["Público-QW5: verificar-titular", "MEDIO", "routes/publico_arco.py",
+         "GET /publico/verificar-titular. Rate 20/min. Detecta si email ya tiene TKTs abiertos "
+         "sin revelar si el email existe (solo indica estado abierto en esa empresa)."],
+        ["ARCO-QW6: acuse de recibo automático", "ALTO", "routes/tkt_solicitud_derecho.py, services/email_service.py",
+         "notificar_acuse_solicitud() al crear TKT con titular_email. Fallo registra warning, no revierte."],
+        ["ARCO-QW7: chips de placeholders", "MEDIO", "frontend-next/components/tkt/TicketDrawer.tsx",
+         "Chips de {{nombre_titular}}, {{empresa}}, {{fecha}}, {{numero_solicitud}}, {{dias_bloqueo}}, {{fecha_vencimiento}}."],
+        ["ARCO-QW8: banner SLA en FlujoModal", "MEDIO", "frontend-next/components/arco/FlujoModal.tsx",
+         "Semáforo verde/amarillo/rojo con días hábiles consumidos y restantes respecto al SLA legal (10 días hábiles Art. 12)."],
+        ["Empresas-QW6: CompanyFichaPanel", "ALTO", "frontend-next/components/companies/CompanyFichaPanel.tsx",
+         "Panel con 4 tabs lazy: Datos (edición), RATs, ARCO (tickets), Brechas."],
+        ["CI/CD: pip-audit CVE scan", "ALTO", ".github/workflows/tests.yml",
+         "CRITICAL bloquea deploy; HIGH genera advertencia. Env vars ALLOWED_ORIGINS y ENVIRONMENT hardcodeados para tests."],
+        ["Nomenclatura: APDC → APDP", "MEDIO", "Global (código, tests, docs)",
+         "Toda referencia a la agencia reguladora usa 'APDP' (Agencia de Protección de Datos Personales)."],
+    ]
+    add_table(doc, ["Cambio", "Severidad", "Archivos", "Descripción"], cambios_v112,
+              col_widths_cm=[3.0, 1.5, 4.0, 9.5])
+
+    dest = rename_to_v113(base)
+    if dest.exists():
+        dest.unlink()
+    doc.save(str(dest))
+    if base != dest and base.exists():
+        base.unlink()
+    print(f"  ✓ {dest.name}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MTX — Matriz de Trazabilidad
+# ══════════════════════════════════════════════════════════════════════════════
+
+def consolidar_mtx():
+    print("\n[MTX] Matriz de Trazabilidad...")
+
+    # Base: v1.7 — tiene tabla legal, hallazgos DTs, features→tests hasta Sprint 2
+    ok = run_script(AUD_V17 / "build_MTX_matriz_v1_7.py")
+    if not ok:
+        return
+
+    base = find_docx("Matriz_Trazabilidad")
+    if not base:
+        print("  WARN: no se encontró Matriz_Trazabilidad*.docx")
+        return
+
+    doc = Document(str(base))
+
+    # v1.9: RF-163 a RF-169
+    section_heading(doc, "Trazabilidad RF→HU→CU→TC — v1.9 (Julio 2026)", level=1)
+    mtx_v19 = [
+        ["RF-163", "HU-098", "CU-078", "TC-039–041, TC-043", "IDOR multi-tenant en 6 endpoints RAT (404 si empresa no coincide)", "CRÍTICO"],
+        ["RF-164", "HU-099", "CU-079", "TC-044", "base_legal_valida strict contra enum taxativo (6 opciones)", "ALTO"],
+        ["RF-165", "HU-100", "CU-080", "TC-045", "ConsentimientoAlert: listarConsentimientos() si datos_sensibles=True", "ALTO"],
+        ["RF-166", "HU-101", "CU-081", "N/A", "Homologación orden campos RAT (5 pasos canónicos)", "ALTO"],
+        ["RF-167", "HU-102", "CU-082", "TC-046", "PDF con títulos de sección y alertas rojas", "MEDIO"],
+        ["RF-168", "HU-103", "CU-082", "N/A", "Encoding UTF-8 corregido en backend", "MEDIO"],
+        ["RF-169", "N/A", "N/A", "N/A", "Código muerto eliminado (return duplicado, model_dump duplicado)", "BAJA"],
+    ]
+    add_table(doc, ["RF", "HU", "CU", "TC", "Descripción", "Severidad"], mtx_v19,
+              col_widths_cm=[1.5, 1.5, 1.5, 2.0, 7.5, 2.0])
+
+    # v1.12: RF-174 a RF-179, RNF-21, RNF-22
+    section_heading(doc, "Trazabilidad RF→HU→CU→TC — v1.12 (Septiembre 2026)", level=1)
+    mtx_v112 = [
+        ["RF-174", "HU-104", "CU-083", "TC-056–059", "GET /publico/verificar-titular: detecta titular con TKTs abiertos (Art. 12)", "MEDIO"],
+        ["RF-175", "HU-105", "CU-084", "TC-060–061", "POST TKT: acuse de recibo automático al titular con tracking token", "ALTO"],
+        ["RF-176", "HU-106", "CU-085", "—", "TicketDrawer: chips de placeholders dinámicos en respuesta ARCO", "MEDIO"],
+        ["RF-177", "HU-107", "CU-086", "—", "FlujoModal: semáforo SLA con días hábiles consumidos/restantes", "MEDIO"],
+        ["RF-178", "HU-108", "CU-087", "TC-062", "CompanyFichaPanel: ficha empresa con 4 tabs lazy (Art. 16)", "ALTO"],
+        ["RF-179", "—", "—", "—", "CI/CD pip-audit: cero vulnerabilidades CRITICAL en dependencias Python", "ALTO"],
+        ["RNF-21", "—", "—", "TC-063", "Nomenclatura APDP correcta en código, tests y docs", "MEDIO"],
+        ["RNF-22", "—", "—", "TC-059", "Rate limit 20/min/IP en GET /publico/verificar-titular", "MEDIO"],
+    ]
+    add_table(doc, ["RF", "HU", "CU", "TC", "Descripción", "Severidad"], mtx_v112,
+              col_widths_cm=[1.5, 1.5, 1.5, 2.0, 7.5, 2.0])
+
+    section_heading(doc, "Cobertura total v1.13", level=1)
+    doc.add_paragraph(
+        "Total RF documentados: 179 (RF-001 a RF-179) + 22 RNF (RNF-01 a RNF-22). "
+        "Total HU: 108 (HU-001 a HU-108). Total CU: 87 (CU-001 a CU-087). "
+        "Total TC: 63 (TC-001 a TC-063). RF con HU: 98%. RF con CU: 96%. RF con TC: 82%."
+    )
+
+    dest = rename_to_v113(base)
+    if dest.exists():
+        dest.unlink()
+    doc.save(str(dest))
+    if base != dest and base.exists():
+        base.unlink()
+    print(f"  ✓ {dest.name}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Main
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -446,8 +716,12 @@ if __name__ == "__main__":
 
     consolidar_02_requisitos()
     consolidar_03_historias()
+    consolidar_04_casos_uso()
+    consolidar_08_api()
     consolidar_09_backlog()
     consolidar_10_plan_qa()
+    consolidar_12_manual_tecnico()
+    consolidar_mtx()
 
     print(f"\n✓ Consolidación {VERSION} completada.")
     print("Archivos en docs/documentacion_oficial/:")
